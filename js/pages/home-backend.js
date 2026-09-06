@@ -12,6 +12,123 @@
   };
 
 
+  const AVATAR_BUCKET = "profile-avatars";
+  let firstHydrationDone = false;
+  let lastProfileRefreshAt = 0;
+  let profileRefreshPromise = null;
+  let currentProfile = {};
+
+  function rootHome() {
+    return document.querySelector("[data-home-root]");
+  }
+
+  function cleanName(value) {
+    const name = String(value ?? "").trim().replace(/\s+/g, " ");
+    if (["", "undefined", "null", "[object object]"].includes(name.toLowerCase())) {
+      return "";
+    }
+    return name;
+  }
+
+  function avatarPublicUrl(path, updatedAt) {
+    if (!path || !window.supabaseClient) return "";
+    const { data } = window.supabaseClient.storage
+      .from(AVATAR_BUCKET)
+      .getPublicUrl(path);
+    const raw = data?.publicUrl || "";
+    if (!raw) return "";
+    const version = updatedAt ? encodeURIComponent(String(updatedAt)) : "1";
+    return `${raw}${raw.includes("?") ? "&" : "?"}v=${version}`;
+  }
+
+  function renderHomeAvatar(profile) {
+    const el = document.querySelector("[data-avatar-pengguna]");
+    if (!el) return;
+
+    const displayName = cleanName(profile?.display_name) || "Pengguna";
+    const url = avatarPublicUrl(profile?.avatar_path, profile?.updated_at);
+
+    el.classList.add("avatar-pengguna", "home-hydrate-avatar");
+    el.classList.remove("is-avatar-ready");
+    el.classList.add("is-avatar-loading");
+    el.replaceChildren();
+
+    const ready = () => {
+      el.classList.remove("is-avatar-loading");
+      el.classList.add("is-avatar-ready");
+    };
+
+    if (!url) {
+      const icon = document.createElement("ion-icon");
+      icon.className = "avatar-pengguna-icon";
+      icon.setAttribute("name", "person-outline");
+      icon.setAttribute("aria-hidden", "true");
+      el.appendChild(icon);
+      ready();
+      return;
+    }
+
+    const img = document.createElement("img");
+    img.className = "avatar-pengguna-gambar";
+    img.alt = `Foto profil ${displayName}`;
+    img.decoding = "async";
+    img.loading = "eager";
+    img.addEventListener("load", ready, { once: true });
+    img.addEventListener("error", () => {
+      el.replaceChildren();
+      const icon = document.createElement("ion-icon");
+      icon.className = "avatar-pengguna-icon";
+      icon.setAttribute("name", "person-outline");
+      icon.setAttribute("aria-hidden", "true");
+      el.appendChild(icon);
+      ready();
+    }, { once: true });
+    img.src = url;
+    el.appendChild(img);
+
+    if (img.complete && img.naturalWidth > 0) ready();
+  }
+
+  function renderProfileHome(profile) {
+    currentProfile = { ...currentProfile, ...(profile || {}) };
+    const nameTarget = document.querySelector("[data-nama-pengguna]");
+    const displayName = cleanName(currentProfile?.display_name) || "Pengguna";
+    if (nameTarget) nameTarget.textContent = displayName;
+    renderHomeAvatar(currentProfile);
+  }
+
+  function panelSkeleton() {
+    return `
+      <div class="home-skeleton-transactions" aria-hidden="true">
+        <span class="home-skeleton-line home-skeleton-date"></span>
+        <span class="home-skeleton-transaction"></span>
+        <span class="home-skeleton-transaction"></span>
+        <span class="home-skeleton-line home-skeleton-date short"></span>
+        <span class="home-skeleton-transaction"></span>
+      </div>`;
+  }
+
+  function setPrimaryReady() {
+    const root = rootHome();
+    if (!root) return;
+    requestAnimationFrame(() => {
+      root.classList.remove("home-hydrating");
+      root.classList.add("home-primary-ready");
+    });
+  }
+
+  function setAllReady() {
+    const root = rootHome();
+    const panel = document.querySelector("[data-home-transaksi]");
+    root?.classList.remove("home-hydrating");
+    root?.classList.add("home-primary-ready", "home-ready");
+    root?.setAttribute("aria-busy", "false");
+    panel?.classList.remove("home-panel-loading");
+    panel?.setAttribute("aria-busy", "false");
+    firstHydrationDone = true;
+  }
+
+
   const LABEL_PERIODE = {
     week: "Week",
     month: "Month",
@@ -164,31 +281,20 @@
   }
 
   function tampilLoading() {
-    const panel =
-      document.querySelector(
-        "[data-home-transaksi]"
-      );
+    const panel = document.querySelector("[data-home-transaksi]");
+    const root = rootHome();
 
     if (panel) {
-      panel.innerHTML = `
-        <div class="kosong-data">
-          <ion-icon name="cloud-download-outline"></ion-icon>
-          Mengambil data keluarga...
-        </div>`;
+      panel.classList.add("home-panel-loading");
+      panel.setAttribute("aria-busy", "true");
+      panel.innerHTML = panelSkeleton();
     }
 
-    const total =
-      document.querySelector(
-        "[data-total-global]"
-      );
-
-    const saldo =
-      document.querySelector(
-        "[data-dompet-saldo]"
-      );
-
-    if (total) total.textContent = "...";
-    if (saldo) saldo.textContent = "...";
+    if (!firstHydrationDone) {
+      root?.classList.add("home-hydrating");
+      root?.classList.remove("home-primary-ready", "home-ready");
+      root?.setAttribute("aria-busy", "true");
+    }
   }
 
   function tampilError(error) {
@@ -228,6 +334,7 @@
 
     box.append(icon, teks);
     panel.appendChild(box);
+    setAllReady();
   }
 
   function filterTransaksiHome(transaksi, jenisAktif) {
@@ -691,16 +798,7 @@
           )
         ]);
 
-      const namaEl =
-        document.querySelector(
-          "[data-nama-pengguna]"
-        );
-
-      if (namaEl) {
-        namaEl.textContent =
-          profile.display_name ||
-          "Pengguna";
-      }
+      renderProfileHome(profile);
 
       const mataUang =
         family.default_currency ||
@@ -742,6 +840,8 @@
             Belum ada dompet pada keluarga backend ini.
           </div>`;
 
+        setPrimaryReady();
+        setAllReady();
         return;
       }
 
@@ -824,6 +924,7 @@
         detailLink.onclick = null;
       }
 
+      setPrimaryReady();
       pasangKontrol(preferensi);
 
       renderSheetDompet({
@@ -865,9 +966,31 @@
           dompetAktif.name
       });
 
+      setAllReady();
+
     } catch (error) {
       tampilError(error);
     }
+  }
+
+  async function refreshProfileOnly({ force = false } = {}) {
+    if (!firstHydrationDone) return;
+    const now = Date.now();
+    if (!force && now - lastProfileRefreshAt < 2000) return;
+    if (profileRefreshPromise) return profileRefreshPromise;
+
+    lastProfileRefreshAt = now;
+    profileRefreshPromise = (async () => {
+      try {
+        const profile = await FamilyService.ambilProfilSaya();
+        renderProfileHome(profile);
+      } catch (error) {
+        console.warn("[Home profile refresh]", error);
+      } finally {
+        profileRefreshPromise = null;
+      }
+    })();
+    return profileRefreshPromise;
   }
 
   document.addEventListener(
@@ -875,14 +998,26 @@
     renderHomeBackend
   );
 
-  /*
-   * Browser back-forward cache dapat mengembalikan DOM lama tanpa reload.
-   * Saat Home dipulihkan dari bfcache, baca ulang profile dari Supabase agar
-   * perubahan display_name di Pengaturan langsung terlihat.
-   */
+  /* Browser back-forward cache dapat mengembalikan DOM lama tanpa reload. */
   window.addEventListener("pageshow", event => {
     if (event.persisted) {
       renderHomeBackend();
+    } else {
+      refreshProfileOnly();
+    }
+  });
+
+  window.addEventListener("focus", () => refreshProfileOnly());
+  document.addEventListener("visibilitychange", () => {
+    if (document.visibilityState === "visible") refreshProfileOnly();
+  });
+
+  window.addEventListener("profil-pengguna-berubah", event => {
+    const detail = event?.detail || {};
+    if (detail.display_name !== undefined || detail.avatar_path !== undefined) {
+      renderProfileHome(detail);
+    } else {
+      refreshProfileOnly({ force: true });
     }
   });
 })();

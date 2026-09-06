@@ -17,6 +17,7 @@
   <link rel="apple-touch-icon" sizes="180x180" href="icons/apple-touch-icon.png">
   <script src="js/theme.js"></script>
   <title>Keuangan</title>
+  <link rel="preconnect" href="https://eipviruaffujxsfpupki.supabase.co" crossorigin>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -27,10 +28,10 @@
   <link rel="stylesheet" href="css/theme.css">
 </head>
 <body>
-<div class="aplikasi dengan-nav">
+<div class="aplikasi dengan-nav home-hydrating" data-home-root aria-busy="true">
   <header class="kepala-aplikasi">
     <div class="sapaan">
-      <h1>Halo, <span data-nama-pengguna>Pengguna</span></h1>
+      <h1>Halo, <span data-nama-pengguna class="home-hydrate-name" aria-live="polite"></span></h1>
       <p class="sapaan-quote">
         <span data-quote-teks>Hayo, bulan ini uangnya ke mana aja?</span>
         <span class="sapaan-quote-emoji" data-quote-emoji aria-hidden="true">👀</span>
@@ -40,6 +41,7 @@
       <span
         data-avatar-pengguna
         data-avatar-fallback="icon"
+        class="home-hydrate-avatar is-avatar-loading"
         aria-hidden="true">
       </span>
     </a>
@@ -50,15 +52,15 @@
       <span class="kartu-uang-ikon"><ion-icon name="wallet-outline"></ion-icon></span>
       <div class="kartu-uang-info">
         <p>Total Uang Global</p>
-        <strong data-total-global>Rp 0</strong>
+        <strong data-total-global class="home-hydrate-money"></strong>
       </div>
     </article>
 
     <button class="kartu-uang" type="button" data-buka-dompet>
       <span class="kartu-uang-ikon"><ion-icon data-dompet-ikon name="cash-outline"></ion-icon></span>
       <span class="kartu-uang-info">
-        <span data-dompet-label>Total Uang Cash</span>
-        <strong data-dompet-saldo>Rp 0</strong>
+        <span data-dompet-label class="home-hydrate-label"></span>
+        <strong data-dompet-saldo class="home-hydrate-money"></strong>
       </span>
       <ion-icon class="kartu-uang-chevron" name="chevron-down-outline"></ion-icon>
     </button>
@@ -73,7 +75,7 @@
         <ion-icon name="stats-chart-outline" aria-hidden="true"></ion-icon>
         <span>
           Lihat detail
-          <strong data-detail-dompet-nama>Cash</strong>
+          <strong data-detail-dompet-nama class="home-hydrate-detail"></strong>
         </span>
       </span>
 
@@ -99,7 +101,15 @@
       </button>
     </div>
 
-    <section class="panel-transaksi" data-home-transaksi></section>
+    <section class="panel-transaksi home-panel-loading" data-home-transaksi aria-busy="true">
+      <div class="home-skeleton-transactions" aria-hidden="true">
+        <span class="home-skeleton-line home-skeleton-date"></span>
+        <span class="home-skeleton-transaction"></span>
+        <span class="home-skeleton-transaction"></span>
+        <span class="home-skeleton-line home-skeleton-date short"></span>
+        <span class="home-skeleton-transaction"></span>
+      </div>
+    </section>
   </main>
 
   <nav class="navigasi-bawah">
@@ -160,9 +170,7 @@
 <script>window.HOME_BACKEND_MODE = true;</script>
 
 <script src="js/app.js"></script>
-<script src="js/pages/home-backend.js?v=20260907-1"></script>
-<script src="js/pages/home-profile-sync-v3.js?v=20260907-2"></script>
-<script src="js/components/avatar.js"></script>
+<script src="js/pages/home-backend.js?v=20260907-5"></script>
 <script src="js/components/quote.js"></script>
 <script src="js/pwa.js"></script>
 </body>

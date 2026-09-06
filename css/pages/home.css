@@ -67,3 +67,158 @@
 .tombol-detail-dompet:active {
   transform: scale(.99);
 }
+
+
+/* =========================================
+   HOME v1.0.5 — SMOOTH BACKEND HYDRATION
+   HTML tidak lagi menampilkan data dummy sebelum Supabase siap.
+========================================= */
+
+@keyframes family-home-shimmer {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+.home-hydrating [data-nama-pengguna],
+.home-hydrating [data-total-global],
+.home-hydrating [data-dompet-label],
+.home-hydrating [data-dompet-saldo],
+.home-hydrating [data-detail-dompet-nama] {
+  color: transparent !important;
+  user-select: none;
+}
+
+.home-hydrating [data-nama-pengguna],
+.home-hydrating [data-total-global],
+.home-hydrating [data-dompet-label],
+.home-hydrating [data-dompet-saldo],
+.home-hydrating [data-detail-dompet-nama],
+.home-hydrate-avatar.is-avatar-loading,
+.home-skeleton-line,
+.home-skeleton-transaction {
+  background-image: linear-gradient(
+    90deg,
+    var(--color-surface-soft) 20%,
+    var(--color-surface-strong) 42%,
+    var(--color-surface-soft) 64%
+  );
+  background-size: 240% 100%;
+  animation: family-home-shimmer 1.25s ease-in-out infinite;
+}
+
+.home-hydrating [data-nama-pengguna] {
+  display: inline-block;
+  width: min(42vw, 150px);
+  height: .88em;
+  border-radius: 9px;
+  vertical-align: -.02em;
+}
+
+.home-hydrating [data-total-global],
+.home-hydrating [data-dompet-saldo] {
+  display: block;
+  width: min(40vw, 138px);
+  height: 1.12em;
+  margin-top: 4px;
+  border-radius: 8px;
+}
+
+.home-hydrating [data-dompet-label] {
+  display: block;
+  width: min(34vw, 116px);
+  height: .9em;
+  border-radius: 7px;
+}
+
+.home-hydrating [data-detail-dompet-nama] {
+  display: inline-block;
+  width: 64px;
+  height: .82em;
+  border-radius: 7px;
+  vertical-align: middle;
+}
+
+.home-hydrate-avatar.is-avatar-loading {
+  width: 52px;
+  height: 52px;
+  border-radius: var(--radius-full);
+}
+
+.home-hydrate-avatar.is-avatar-loading > * {
+  opacity: 0;
+}
+
+.home-hydrate-avatar .avatar-pengguna-gambar {
+  opacity: 0;
+  transition: opacity .2s ease;
+}
+
+.home-hydrate-avatar.is-avatar-ready .avatar-pengguna-gambar,
+.home-hydrate-avatar.is-avatar-ready .avatar-pengguna-icon {
+  opacity: 1;
+}
+
+.home-hydrating .ringkasan-saldo,
+.home-hydrating .aksi-dompet-aktif,
+.home-hydrating .kepala-aplikasi {
+  transition: opacity .18s ease;
+}
+
+.home-primary-ready .kepala-aplikasi,
+.home-primary-ready .ringkasan-saldo,
+.home-primary-ready .aksi-dompet-aktif {
+  animation: family-home-reveal .18s ease both;
+}
+
+@keyframes family-home-reveal {
+  from { opacity: .72; transform: translateY(2px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.home-panel-loading {
+  min-height: 238px;
+}
+
+.home-skeleton-transactions {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.home-skeleton-line {
+  display: block;
+  width: 42%;
+  height: 13px;
+  border-radius: 999px;
+}
+
+.home-skeleton-line.short {
+  width: 31%;
+  margin-top: 4px;
+}
+
+.home-skeleton-transaction {
+  display: block;
+  width: 100%;
+  height: 48px;
+  border-radius: 14px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .home-hydrating [data-nama-pengguna],
+  .home-hydrating [data-total-global],
+  .home-hydrating [data-dompet-label],
+  .home-hydrating [data-dompet-saldo],
+  .home-hydrating [data-detail-dompet-nama],
+  .home-hydrate-avatar.is-avatar-loading,
+  .home-skeleton-line,
+  .home-skeleton-transaction {
+    animation: none;
+  }
+
+  .home-primary-ready .kepala-aplikasi,
+  .home-primary-ready .ringkasan-saldo,
+  .home-primary-ready .aksi-dompet-aktif {
+    animation: none;
+  }
+}
