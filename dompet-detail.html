@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="id" data-auth-guard="finance">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#0B0D0C">
+  <meta name="application-name" content="Family Superapp">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Family">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="robots" content="noindex,nofollow,noarchive">
+  <meta name="referrer" content="strict-origin-when-cross-origin">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32.png">
+  <link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png">
+  <link rel="apple-touch-icon" sizes="180x180" href="icons/apple-touch-icon.png">
+  <script src="js/theme.js"></script>
+  <title>Detail Dompet</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/pages/dompet-detail.css">
+  <link rel="stylesheet" href="css/pages/dompet-backend.css">
+  <link rel="stylesheet" href="css/theme.css">
+</head>
+
+<body>
+<div class="aplikasi">
+
+  <header class="header-halaman">
+    <a class="tombol-ikon" href="index.html" aria-label="Kembali">
+      <ion-icon name="arrow-back-outline"></ion-icon>
+    </a>
+
+    <h1>Detail Dompet</h1>
+    <a class="tombol-ikon" href="dompet-form.html" aria-label="Edit dompet" data-edit-dompet><ion-icon name="create-outline"></ion-icon></a>
+  </header>
+
+  <main class="konten-halaman detail-dompet">
+
+    <button
+      class="pemilih-dompet-detail"
+      type="button"
+      data-detail-buka-dompet>
+
+      <span class="pemilih-dompet-detail-kiri">
+        <span class="pemilih-dompet-detail-ikon">
+          <ion-icon data-pemilih-dompet-ikon name="wallet-outline"></ion-icon>
+        </span>
+
+        <span>
+          <small>Dompet</small>
+          <strong data-pemilih-dompet-nama>Dompet</strong>
+        </span>
+      </span>
+
+      <ion-icon name="chevron-down-outline"></ion-icon>
+    </button>
+
+    <section class="dompet-detail-hero">
+      <span class="dompet-detail-ikon">
+        <ion-icon data-detail-ikon name="wallet-outline"></ion-icon>
+      </span>
+
+      <span class="dompet-detail-label">Saldo saat ini</span>
+      <h2 data-detail-nama>Dompet</h2>
+      <strong data-detail-saldo>Rp 0</strong>
+    </section>
+
+    <button
+      class="pemilih-periode-detail"
+      type="button"
+      data-detail-buka-periode>
+
+      <span class="pemilih-periode-detail-kiri">
+        <ion-icon name="calendar-outline"></ion-icon>
+
+        <span>
+          <small>Periode</small>
+          <strong data-detail-label-periode>September 2026</strong>
+        </span>
+      </span>
+
+      <ion-icon name="chevron-down-outline"></ion-icon>
+    </button>
+
+    <section class="ringkasan-arus-detail">
+      <article class="kartu-ringkasan-detail">
+        <span class="ringkasan-detail-ikon pemasukan">
+          <ion-icon name="arrow-down-outline"></ion-icon>
+        </span>
+
+        <span>Pemasukan</span>
+        <strong class="nilai-pemasukan" data-total-pemasukan>Rp 0</strong>
+      </article>
+
+      <article class="kartu-ringkasan-detail">
+        <span class="ringkasan-detail-ikon pengeluaran">
+          <ion-icon name="arrow-up-outline"></ion-icon>
+        </span>
+
+        <span>Pengeluaran</span>
+        <strong class="nilai-pengeluaran" data-total-pengeluaran>Rp 0</strong>
+      </article>
+
+      <article class="kartu-ringkasan-detail arus-bersih">
+        <div>
+          <span>Arus Kas Bersih</span>
+          <small data-status-arus>Seimbang</small>
+        </div>
+
+        <strong data-arus-bersih>Rp 0</strong>
+      </article>
+    </section>
+
+    <section class="kartu-analisis-detail">
+      <div class="judul-seksi-detail">
+        <div>
+          <h2>Perbandingan Arus Kas</h2>
+          <p>Uang masuk dibanding uang keluar pada periode ini.</p>
+        </div>
+      </div>
+
+      <div class="baris-perbandingan">
+        <div class="label-perbandingan">
+          <span>Pemasukan</span>
+          <strong data-banding-pemasukan>Rp 0</strong>
+        </div>
+
+        <div class="jalur-perbandingan">
+          <span class="isi-perbandingan pemasukan" data-bar-pemasukan></span>
+        </div>
+      </div>
+
+      <div class="baris-perbandingan">
+        <div class="label-perbandingan">
+          <span>Pengeluaran</span>
+          <strong data-banding-pengeluaran>Rp 0</strong>
+        </div>
+
+        <div class="jalur-perbandingan">
+          <span class="isi-perbandingan pengeluaran" data-bar-pengeluaran></span>
+        </div>
+      </div>
+    </section>
+
+    <section class="kartu-analisis-detail">
+      <div class="judul-seksi-detail">
+        <div>
+          <h2>Pengeluaran Terbesar</h2>
+          <p>Ke mana uang paling banyak digunakan.</p>
+        </div>
+      </div>
+
+      <div class="daftar-kategori-detail" data-kategori-pengeluaran></div>
+    </section>
+
+    <section class="kartu-analisis-detail">
+      <div class="judul-seksi-detail">
+        <div>
+          <h2>Sumber Pemasukan</h2>
+          <p>Dari mana uang masuk ke dompet ini.</p>
+        </div>
+      </div>
+
+      <div class="daftar-kategori-detail" data-kategori-pemasukan></div>
+    </section>
+
+    <section class="kartu-analisis-detail">
+      <div class="judul-seksi-detail judul-seksi-transaksi">
+        <div>
+          <h2>Transaksi Dompet</h2>
+          <p data-subjudul-transaksi>Semua transaksi pada periode ini.</p>
+        </div>
+      </div>
+
+      <div class="daftar-transaksi-detail" data-transaksi-dompet></div>
+    </section>
+
+  </main>
+  <a
+    class="fab-detail-dompet"
+    href="transaksi.html"
+    data-tambah-transaksi-detail
+    aria-label="Tambah transaksi">
+    <ion-icon name="add-outline"></ion-icon>
+  </a>
+</div>
+
+<div class="lapisan" id="sheet-dompet-detail" hidden>
+  <section class="bottom-sheet">
+    <div class="sheet-handle"></div>
+
+    <div class="sheet-header">
+      <h2>Pilih Dompet</h2>
+
+      <button
+        class="tombol-ikon"
+        type="button"
+        data-detail-tutup-dompet>
+        <ion-icon name="close-outline"></ion-icon>
+      </button>
+    </div>
+
+    <div data-detail-daftar-dompet></div>
+  </section>
+</div>
+
+<div class="lapisan" id="sheet-periode-detail" hidden>
+  <section class="bottom-sheet">
+    <div class="sheet-handle"></div>
+
+    <div class="sheet-header">
+      <h2>Pilih Periode</h2>
+
+      <button
+        class="tombol-ikon"
+        type="button"
+        data-detail-tutup-periode>
+        <ion-icon name="close-outline"></ion-icon>
+      </button>
+    </div>
+
+    <button class="pilihan-sheet" type="button" data-detail-periode="week">
+      <ion-icon name="calendar-number-outline"></ion-icon>
+      <span>Week</span>
+    </button>
+
+    <button class="pilihan-sheet" type="button" data-detail-periode="month">
+      <ion-icon name="calendar-outline"></ion-icon>
+      <span>Month</span>
+    </button>
+
+    <button class="pilihan-sheet" type="button" data-detail-periode="year">
+      <ion-icon name="albums-outline"></ion-icon>
+      <span>Year</span>
+    </button>
+
+    <button class="pilihan-sheet" type="button" data-detail-periode="all">
+      <ion-icon name="infinite-outline"></ion-icon>
+      <span>Semua</span>
+    </button>
+  </section>
+</div>
+
+<script type="module" src="https://unpkg.com/ionicons@8.0.13/dist/ionicons/ionicons.esm.js"></script>
+<script nomodule src="https://unpkg.com/ionicons@8.0.13/dist/ionicons/ionicons.js"></script>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="js/backend/supabase.js"></script>
+<script src="js/backend/auth-service.js"></script>
+<script src="js/backend/family-service.js"></script>
+<script src="js/backend/finance-service.js"></script>
+<script src="js/backend/auth-router.js"></script>
+<script src="js/backend/auth-guard.js"></script>
+<script src="js/pages/dompet-detail-backend.js"></script>
+<script src="js/pwa.js"></script>
+</body>
+</html>

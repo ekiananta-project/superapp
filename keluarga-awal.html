@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="id" data-auth-guard="login">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#0B0D0C">
+  <meta name="application-name" content="Family Superapp">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Family">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="robots" content="noindex,nofollow,noarchive">
+  <meta name="referrer" content="strict-origin-when-cross-origin">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32.png">
+  <link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png">
+  <link rel="apple-touch-icon" sizes="180x180" href="icons/apple-touch-icon.png">
+  <script src="js/theme.js"></script>
+  <title>Mulai Keluarga</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/pages/keluarga-awal.css">
+  <link rel="stylesheet" href="css/pages/family-invitation.css">
+  <link rel="stylesheet" href="css/theme.css">
+</head>
+
+<body>
+<div class="aplikasi onboarding-keluarga">
+
+  <main class="konten-onboarding">
+
+    <section class="hero-onboarding">
+      <span class="hero-onboarding-ikon">
+        <ion-icon name="people-outline" aria-hidden="true"></ion-icon>
+      </span>
+
+      <span class="eyebrow-onboarding">Keuangan Keluarga</span>
+
+      <h1>Mulai dari keluarga dulu</h1>
+
+      <p>
+        Sebelum membuat dompet, tentukan dulu apakah kamu ingin
+        membuat ruang keluarga baru atau bergabung ke keluarga yang sudah ada.
+      </p>
+    </section>
+
+    <div class="notifikasi" data-notifikasi-awal hidden></div>
+
+    <section class="pilihan-keluarga" data-pilihan-keluarga>
+      <button
+        class="kartu-pilihan-keluarga"
+        type="button"
+        data-pilih-mode="buat">
+
+        <span class="kartu-pilihan-ikon">
+          <ion-icon name="add-circle-outline" aria-hidden="true"></ion-icon>
+        </span>
+
+        <span class="kartu-pilihan-info">
+          <strong>Belum punya keluarga</strong>
+          <span>Buat ruang keluarga baru untuk mulai mencatat bersama.</span>
+        </span>
+
+        <ion-icon
+          class="kartu-pilihan-chevron"
+          name="chevron-forward-outline"
+          aria-hidden="true">
+        </ion-icon>
+      </button>
+
+      <button
+        class="kartu-pilihan-keluarga"
+        type="button"
+        data-pilih-mode="gabung">
+
+        <span class="kartu-pilihan-ikon">
+          <ion-icon name="key-outline" aria-hidden="true"></ion-icon>
+        </span>
+
+        <span class="kartu-pilihan-info">
+          <strong>Sudah punya keluarga</strong>
+          <span>Gabung menggunakan kode undangan dari anggota keluarga.</span>
+        </span>
+
+        <ion-icon
+          class="kartu-pilihan-chevron"
+          name="chevron-forward-outline"
+          aria-hidden="true">
+        </ion-icon>
+      </button>
+    </section>
+
+    <section class="panel-onboarding" data-panel-buat hidden>
+      <button class="tombol-kembali-inline" type="button" data-kembali-pilihan>
+        <ion-icon name="arrow-back-outline"></ion-icon>
+        Kembali
+      </button>
+
+      <div class="judul-panel-onboarding">
+        <span class="panel-ikon">
+          <ion-icon name="home-outline"></ion-icon>
+        </span>
+
+        <div>
+          <h2>Buat Keluarga Baru</h2>
+          <p>Kenalan dulu, lalu beri nama ruang keuangan keluargamu.</p>
+        </div>
+      </div>
+
+      <form class="formulir" data-form-buat-keluarga>
+        <div class="grup-input">
+          <label for="nama-pengguna-awal">Nama Kamu</label>
+
+          <input
+            class="input"
+            id="nama-pengguna-awal"
+            name="namaPengguna"
+            placeholder="Nama kamu"
+            autocomplete="name"
+            required>
+        </div>
+
+        <div class="grup-input">
+          <label for="nama-keluarga-awal">Nama Keluarga</label>
+
+          <input
+            class="input"
+            id="nama-keluarga-awal"
+            name="namaKeluarga"
+            placeholder="Contoh: Keluarga Saya"
+            autocomplete="off"
+            required>
+        </div>
+
+        <button class="tombol-utama" type="submit">
+          Buat Keluarga
+          <ion-icon name="arrow-forward-outline"></ion-icon>
+        </button>
+      </form>
+
+      <p class="alur-setelah">
+        Setelah keluarga dibuat, kamu akan diminta menambahkan
+        <strong>dompet pertama</strong>.
+      </p>
+    </section>
+
+    <section class="panel-onboarding" data-panel-gabung hidden>
+      <button class="tombol-kembali-inline" type="button" data-kembali-pilihan>
+        <ion-icon name="arrow-back-outline"></ion-icon>
+        Kembali
+      </button>
+
+      <div class="judul-panel-onboarding">
+        <span class="panel-ikon">
+          <ion-icon name="enter-outline"></ion-icon>
+        </span>
+
+        <div>
+          <h2>Gabung Keluarga</h2>
+          <p>Masukkan namamu dan kode undangan dari anggota keluarga.</p>
+        </div>
+      </div>
+
+      <form class="formulir" data-form-gabung-keluarga>
+        <div class="grup-input">
+          <label for="nama-pengguna-gabung">Nama Kamu</label>
+
+          <input
+            class="input"
+            id="nama-pengguna-gabung"
+            name="namaPengguna"
+            placeholder="Contoh: Nama anggota"
+            autocomplete="name"
+            required>
+        </div>
+
+        <div class="grup-input">
+          <label for="kode-keluarga-awal">Kode Undangan</label>
+
+          <input
+            class="input input-kode-keluarga"
+            id="kode-keluarga-awal"
+            name="kode"
+            placeholder="ABCD-1234-EF56"
+            maxlength="14"
+            autocomplete="off"
+            required>
+        </div>
+
+        <button class="tombol-utama" type="submit">
+          Periksa Kode
+          <ion-icon name="arrow-forward-outline"></ion-icon>
+        </button>
+      </form>
+
+      <section class="preview-undangan-gabung" data-preview-undangan hidden>
+        <div class="preview-undangan-ikon">
+          <ion-icon name="people-circle-outline"></ion-icon>
+        </div>
+        <div class="preview-undangan-copy">
+          <span class="preview-undangan-label">Undangan ditemukan</span>
+          <h3 data-preview-nama-keluarga>Keluarga</h3>
+          <p>
+            Kamu akan bergabung sebagai <strong>Anggota</strong>
+            <span data-preview-hubungan-wrap hidden>· <span data-preview-hubungan></span></span>
+          </p>
+          <small>Berlaku sampai <span data-preview-kedaluwarsa>-</span></small>
+        </div>
+
+        <button class="tombol-utama" type="button" data-terima-undangan>
+          <ion-icon name="enter-outline"></ion-icon>
+          Gabung Sekarang
+        </button>
+      </section>
+
+      <div class="catatan-backend catatan-backend-aktif">
+        <ion-icon name="shield-checkmark-outline"></ion-icon>
+        <p>
+          Kode undangan diperiksa secara aman. Undangan hanya dapat dipakai satu kali
+          dan otomatis tidak berlaku setelah kedaluwarsa atau dicabut.
+        </p>
+      </div>
+    </section>
+
+  </main>
+</div>
+
+<script type="module" src="https://unpkg.com/ionicons@8.0.13/dist/ionicons/ionicons.esm.js"></script>
+<script nomodule src="https://unpkg.com/ionicons@8.0.13/dist/ionicons/ionicons.js"></script>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="js/backend/supabase.js"></script>
+<script src="js/backend/auth-service.js"></script>
+<script src="js/backend/family-service.js"></script>
+<script src="js/backend/finance-service.js"></script>
+<script src="js/backend/auth-router.js"></script>
+<script src="js/backend/auth-guard.js"></script>
+<script src="js/pages/keluarga-awal.js"></script>
+<script src="js/pwa.js"></script>
+</body>
+</html>

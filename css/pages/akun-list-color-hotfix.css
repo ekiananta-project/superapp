@@ -1,0 +1,6 @@
+/* Warna akun tersimpan langsung terlihat di akun.html. */
+.akun-ikon-berwarna {
+  background: color-mix(in srgb, var(--akun-warna, #E58A2B) 14%, var(--color-surface));
+  color: var(--akun-warna, #E58A2B);
+  border: 1px solid color-mix(in srgb, var(--akun-warna, #E58A2B) 24%, transparent);
+}

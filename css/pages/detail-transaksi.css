@@ -1,0 +1,58 @@
+/* =========================================
+   PAGE: DETAIL TRANSAKSI - BACKEND
+========================================= */
+
+.detail-status {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  padding: 6px 10px;
+  border-radius: var(--radius-full);
+  background: var(--color-surface-soft);
+  color: var(--color-primary);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-semibold);
+}
+
+.detail-status.is-void {
+  background: rgba(181, 58, 45, .10);
+  color: var(--color-danger);
+}
+
+.detail-status ion-icon {
+  font-size: 15px;
+}
+
+.detail-aksi {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  margin-top: var(--space-5);
+}
+
+.detail-catatan-izin {
+  margin: var(--space-3) 0 0;
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-sm);
+  line-height: 1.55;
+  text-align: center;
+}
+
+.void-peringatan {
+  margin: 0 0 var(--space-4);
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-sm);
+  line-height: 1.6;
+}
+
+.void-peringatan strong {
+  color: var(--color-text);
+}
+
+.detail-baris strong {
+  overflow-wrap: anywhere;
+}
+
+html[data-theme="dark"] .detail-status.is-void {
+  background: rgba(255, 123, 110, .12);
+}

@@ -1,0 +1,31 @@
+.bantuan-input {
+  display: block;
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-xs);
+  line-height: 1.5;
+}
+
+.pilih:disabled,
+.input:disabled {
+  opacity: .72;
+  cursor: not-allowed;
+}
+
+[data-hapus-akun] {
+  margin-top: var(--space-1);
+}
+
+.notifikasi[data-tipe="success"] {
+  border-color: rgba(79, 143, 88, .25);
+  background: rgba(79, 143, 88, .10);
+  color: var(--color-success);
+}
+
+.notifikasi[data-tipe="info"] {
+  border-color: var(--color-border);
+  background: var(--color-surface-soft);
+  color: var(--color-text-secondary);
+}
+
+/* Premium form: card section sudah menangani spacing sendiri. */
+.akun-form-premium .grup-input { margin: 0; }

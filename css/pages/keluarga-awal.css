@@ -1,0 +1,282 @@
+/* =========================================
+   PAGE: ONBOARDING KELUARGA
+========================================= */
+
+.onboarding-keluarga {
+  min-height: 100dvh;
+}
+
+.konten-onboarding {
+  display: flex;
+  flex-direction: column;
+
+  min-height: 100dvh;
+
+  padding:
+    max(32px, env(safe-area-inset-top))
+    var(--page-padding)
+    max(28px, env(safe-area-inset-bottom));
+}
+
+.hero-onboarding {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+
+  margin-bottom: var(--space-6);
+}
+
+.hero-onboarding-ikon {
+  display: grid;
+  place-items: center;
+
+  width: 58px;
+  height: 58px;
+
+  margin-bottom: var(--space-4);
+
+  border-radius: var(--radius-xl);
+
+  background: var(--color-surface-strong);
+  color: var(--color-secondary);
+}
+
+.hero-onboarding-ikon ion-icon {
+  font-size: 30px;
+}
+
+.eyebrow-onboarding {
+  margin-bottom: var(--space-1);
+
+  color: var(--color-secondary);
+
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-bold);
+
+  letter-spacing: .08em;
+  text-transform: uppercase;
+}
+
+.hero-onboarding h1 {
+  margin: 0 0 var(--space-2);
+
+  font-size: var(--font-size-3xl);
+  line-height: 1.15;
+}
+
+.hero-onboarding p {
+  margin: 0;
+
+  color: var(--color-text-secondary);
+
+  font-size: var(--font-size-md);
+  line-height: 1.65;
+}
+
+.pilihan-keluarga {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.kartu-pilihan-keluarga {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+
+  width: 100%;
+
+  padding: var(--space-4);
+
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-xl);
+
+  background: var(--color-surface);
+  color: var(--color-text);
+
+  text-align: left;
+
+  box-shadow: var(--shadow-sm);
+
+  transition:
+    transform .15s ease,
+    border-color .15s ease,
+    box-shadow .15s ease;
+}
+
+.kartu-pilihan-keluarga:hover {
+  border-color: rgba(192, 88, 0, .30);
+  box-shadow: var(--shadow-md);
+}
+
+.kartu-pilihan-keluarga:active {
+  transform: scale(.985);
+}
+
+.kartu-pilihan-ikon {
+  display: grid;
+  place-items: center;
+
+  width: 48px;
+  height: 48px;
+
+  flex-shrink: 0;
+
+  border-radius: var(--radius-full);
+
+  background: var(--color-surface-soft);
+  color: var(--color-primary);
+}
+
+.kartu-pilihan-ikon ion-icon {
+  font-size: 24px;
+}
+
+.kartu-pilihan-info {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 3px;
+
+  min-width: 0;
+}
+
+.kartu-pilihan-info strong {
+  font-size: var(--font-size-md);
+  font-weight: var(--font-weight-bold);
+}
+
+.kartu-pilihan-info span {
+  color: var(--color-text-secondary);
+
+  font-size: var(--font-size-sm);
+  line-height: 1.5;
+}
+
+.kartu-pilihan-chevron {
+  flex-shrink: 0;
+
+  color: var(--color-text-secondary);
+
+  font-size: 18px;
+}
+
+.panel-onboarding {
+  padding: var(--space-4);
+
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-xl);
+
+  background: var(--color-surface);
+  box-shadow: var(--shadow-sm);
+}
+
+.tombol-kembali-inline {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+
+  margin: 0 0 var(--space-5);
+  padding: 0;
+
+  border: 0;
+
+  background: transparent;
+  color: var(--color-primary);
+
+  font: inherit;
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-semibold);
+}
+
+.tombol-kembali-inline ion-icon {
+  font-size: 17px;
+}
+
+.judul-panel-onboarding {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-3);
+
+  margin-bottom: var(--space-5);
+}
+
+.panel-ikon {
+  display: grid;
+  place-items: center;
+
+  width: 44px;
+  height: 44px;
+
+  flex-shrink: 0;
+
+  border-radius: var(--radius-full);
+
+  background: var(--color-surface-strong);
+  color: var(--color-secondary);
+}
+
+.panel-ikon ion-icon {
+  font-size: 21px;
+}
+
+.judul-panel-onboarding h2 {
+  margin: 0 0 2px;
+
+  font-size: var(--font-size-lg);
+}
+
+.judul-panel-onboarding p {
+  margin: 0;
+
+  color: var(--color-text-secondary);
+
+  font-size: var(--font-size-sm);
+  line-height: 1.5;
+}
+
+.alur-setelah {
+  margin: var(--space-4) 0 0;
+
+  color: var(--color-text-secondary);
+
+  font-size: var(--font-size-xs);
+  line-height: 1.55;
+  text-align: center;
+}
+
+.input-kode-keluarga {
+  text-transform: uppercase;
+  letter-spacing: .12em;
+  font-weight: var(--font-weight-bold);
+}
+
+.catatan-backend {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-2);
+
+  margin-top: var(--space-4);
+  padding: var(--space-3);
+
+  border-radius: var(--radius-md);
+
+  background: var(--color-surface-soft);
+  color: var(--color-text-secondary);
+}
+
+.catatan-backend ion-icon {
+  margin-top: 2px;
+
+  flex-shrink: 0;
+
+  color: var(--color-secondary);
+  font-size: 17px;
+}
+
+.catatan-backend p {
+  margin: 0;
+
+  font-size: var(--font-size-xs);
+  line-height: 1.55;
+}

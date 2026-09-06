@@ -1,0 +1,15 @@
+/* =========================================
+   COMPONENT: QUOTE DINAMIS
+========================================= */
+
+.sapaan-quote {
+    display: flex;
+    align-items: center;
+    gap: var(--space-1);
+}
+
+.sapaan-quote-emoji {
+    flex-shrink: 0;
+    font-size: 16px;
+    line-height: 1;
+}

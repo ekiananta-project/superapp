@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="id" data-auth-guard="finance">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#0B0D0C">
+  <meta name="application-name" content="Family Superapp">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Family">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="robots" content="noindex,nofollow,noarchive">
+  <meta name="referrer" content="strict-origin-when-cross-origin">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32.png">
+  <link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png">
+  <link rel="apple-touch-icon" sizes="180x180" href="icons/apple-touch-icon.png">
+  <script src="js/theme.js"></script>
+  <title>Keuangan</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/components/quote.css">
+  <link rel="stylesheet" href="css/components/avatar.css">
+  <link rel="stylesheet" href="css/pages/home.css">
+  <link rel="stylesheet" href="css/theme.css">
+</head>
+<body>
+<div class="aplikasi dengan-nav">
+  <header class="kepala-aplikasi">
+    <div class="sapaan">
+      <h1>Halo, <span data-nama-pengguna>Pengguna</span></h1>
+      <p class="sapaan-quote">
+        <span data-quote-teks>Hayo, bulan ini uangnya ke mana aja?</span>
+        <span class="sapaan-quote-emoji" data-quote-emoji aria-hidden="true">👀</span>
+      </p>
+    </div>
+    <a class="tombol-profil" href="pengaturan.html" aria-label="Buka profil dan pengaturan">
+      <span
+        data-avatar-pengguna
+        data-avatar-fallback="icon"
+        aria-hidden="true">
+      </span>
+    </a>
+  </header>
+
+  <section class="ringkasan-saldo">
+    <article class="kartu-uang">
+      <span class="kartu-uang-ikon"><ion-icon name="wallet-outline"></ion-icon></span>
+      <div class="kartu-uang-info">
+        <p>Total Uang Global</p>
+        <strong data-total-global>Rp 0</strong>
+      </div>
+    </article>
+
+    <button class="kartu-uang" type="button" data-buka-dompet>
+      <span class="kartu-uang-ikon"><ion-icon data-dompet-ikon name="cash-outline"></ion-icon></span>
+      <span class="kartu-uang-info">
+        <span data-dompet-label>Total Uang Cash</span>
+        <strong data-dompet-saldo>Rp 0</strong>
+      </span>
+      <ion-icon class="kartu-uang-chevron" name="chevron-down-outline"></ion-icon>
+    </button>
+  </section>
+
+  <div class="aksi-dompet-aktif">
+    <a
+      class="tombol-detail-dompet"
+      href="dompet-detail.html"
+      data-detail-dompet>
+      <span class="tombol-detail-dompet-kiri">
+        <ion-icon name="stats-chart-outline" aria-hidden="true"></ion-icon>
+        <span>
+          Lihat detail
+          <strong data-detail-dompet-nama>Cash</strong>
+        </span>
+      </span>
+
+      <ion-icon
+        class="tombol-detail-dompet-panah"
+        name="arrow-forward-outline"
+        aria-hidden="true">
+      </ion-icon>
+    </a>
+  </div>
+
+  <main class="arus-kas">
+    <div class="kontrol-arus-kas">
+      <div class="tab-arus-kas">
+        <button class="tab-item" type="button" data-jenis="pengeluaran">PENGELUARAN</button>
+        <button class="tab-item" type="button" data-jenis="pemasukan">PEMASUKAN</button>
+      </div>
+      <span class="pemisah-kontrol"></span>
+      <button class="pilih-periode" type="button" data-buka-periode>
+        <ion-icon name="calendar-outline"></ion-icon>
+        <span data-label-periode>Month</span>
+        <ion-icon name="chevron-down-outline"></ion-icon>
+      </button>
+    </div>
+
+    <section class="panel-transaksi" data-home-transaksi></section>
+  </main>
+
+  <nav class="navigasi-bawah">
+    <a class="navigasi-item" href="akun.html">
+      <ion-icon name="grid-outline"></ion-icon><span>Akun</span>
+    </a>
+    <a class="tombol-tambah" href="transaksi.html" aria-label="Tambah transaksi">
+      <ion-icon name="add-outline"></ion-icon>
+    </a>
+    <a class="navigasi-item" href="dompet.html">
+      <ion-icon name="wallet-outline"></ion-icon><span>Dompet</span>
+    </a>
+  </nav>
+</div>
+
+<div class="lapisan" id="sheet-dompet" hidden>
+  <section class="bottom-sheet">
+    <div class="sheet-handle"></div>
+    <div class="sheet-header">
+      <h2>Pilih Dompet</h2>
+      <button class="tombol-ikon" type="button" data-sheet-close="sheet-dompet">
+        <ion-icon name="close-outline"></ion-icon>
+      </button>
+    </div>
+    <div data-sheet-dompet-list></div>
+  </section>
+</div>
+
+<div class="lapisan" id="sheet-periode" hidden>
+  <section class="bottom-sheet">
+    <div class="sheet-handle"></div>
+    <div class="sheet-header">
+      <h2>Pilih Periode</h2>
+      <button class="tombol-ikon" type="button" data-sheet-close="sheet-periode">
+        <ion-icon name="close-outline"></ion-icon>
+      </button>
+    </div>
+    <button class="pilihan-sheet" type="button" data-periode="week"><ion-icon name="calendar-number-outline"></ion-icon><span>Week</span></button>
+    <button class="pilihan-sheet" type="button" data-periode="month"><ion-icon name="calendar-outline"></ion-icon><span>Month</span></button>
+    <button class="pilihan-sheet" type="button" data-periode="year"><ion-icon name="albums-outline"></ion-icon><span>Year</span></button>
+    <button class="pilihan-sheet" type="button" data-periode="all"><ion-icon name="infinite-outline"></ion-icon><span>Semua</span></button>
+  </section>
+</div>
+
+<script type="module" src="https://unpkg.com/ionicons@8.0.13/dist/ionicons/ionicons.esm.js"></script>
+<script nomodule src="https://unpkg.com/ionicons@8.0.13/dist/ionicons/ionicons.js"></script>
+
+<!-- Supabase + Service Layer -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="js/backend/supabase.js"></script>
+<script src="js/backend/auth-service.js"></script>
+<script src="js/backend/family-service.js"></script>
+<script src="js/backend/finance-service.js"></script>
+<script src="js/backend/auth-router.js"></script>
+<script src="js/backend/auth-guard.js"></script>
+
+<!-- Beri tahu app.js bahwa Home sudah memakai backend. -->
+<script>window.HOME_BACKEND_MODE = true;</script>
+
+<script src="js/app.js"></script>
+<script src="js/pages/home-backend.js?v=20260907-1"></script>
+<script src="js/pages/home-profile-refresh-v2.js?v=20260907-1"></script>
+<script src="js/components/avatar.js"></script>
+<script src="js/components/quote.js"></script>
+<script src="js/pwa.js"></script>
+</body>
+</html>

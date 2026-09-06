@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="id" data-auth-guard="finance">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#0B0D0C">
+  <meta name="application-name" content="Family Superapp">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Family">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="robots" content="noindex,nofollow,noarchive">
+  <meta name="referrer" content="strict-origin-when-cross-origin">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32.png">
+  <link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png">
+  <link rel="apple-touch-icon" sizes="180x180" href="icons/apple-touch-icon.png">
+  <script src="js/theme.js"></script>
+  <title>Akun</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/theme.css">
+  <link rel="stylesheet" href="css/pages/akun-form-backend.css">
+  <link rel="stylesheet" href="css/components/account-visual-picker.css">
+</head>
+<body>
+<div class="aplikasi">
+  <header class="header-halaman">
+    <a class="tombol-ikon" href="akun.html" aria-label="Kembali">
+      <ion-icon name="arrow-back-outline"></ion-icon>
+    </a>
+    <h1><span data-judul-form>Tambah Akun</span></h1>
+    <span class="kosong"></span>
+  </header>
+
+  <main class="konten-halaman akun-form-premium">
+    <div class="notifikasi" data-notifikasi hidden></div>
+
+    <form class="formulir" data-form-akun>
+      <section class="akun-form-section" aria-labelledby="akun-dasar-title">
+        <div class="akun-section-heading">
+          <div>
+            <span class="akun-section-kicker">Dasar</span>
+            <h2 id="akun-dasar-title">Tentang akun</h2>
+          </div>
+        </div>
+
+        <div class="grup-input">
+          <label for="nama">Nama Akun</label>
+          <input class="input" id="nama" name="nama" maxlength="80" placeholder="Contoh: Makan" autocomplete="off" required>
+        </div>
+
+        <div class="grup-input">
+          <label for="jenis">Jenis Transaksi</label>
+          <select class="pilih" id="jenis" name="jenis">
+            <option value="pengeluaran">Pengeluaran</option>
+            <option value="pemasukan">Pemasukan</option>
+          </select>
+          <small class="bantuan-input" data-bantuan-jenis>
+            Pilih apakah akun ini dipakai untuk pengeluaran atau pemasukan.
+          </small>
+        </div>
+      </section>
+
+      <section class="akun-form-section akun-visual-section" aria-labelledby="akun-visual-title" data-account-visual-picker>
+        <div class="akun-section-heading akun-section-heading-visual">
+          <div>
+            <span class="akun-section-kicker">Tampilan</span>
+            <h2 id="akun-visual-title">Warna &amp; ikon</h2>
+          </div>
+          <span class="akun-visual-badge">Personal</span>
+        </div>
+
+        <div class="akun-preview-card" data-account-preview>
+          <div class="akun-preview-icon" data-account-preview-icon-wrap>
+            <ion-icon name="fast-food-outline" data-icon-preview aria-hidden="true"></ion-icon>
+          </div>
+          <div class="akun-preview-copy">
+            <span class="akun-preview-caption">Pratinjau akun</span>
+            <strong data-account-name-preview>Nama Akun</strong>
+            <span data-account-kind-preview>Pengeluaran</span>
+          </div>
+          <ion-icon class="akun-preview-chevron" name="chevron-forward-outline" aria-hidden="true"></ion-icon>
+        </div>
+
+        <div class="akun-saran" data-smart-suggestion hidden>
+          <span class="akun-saran-icon">
+            <ion-icon name="sparkles-outline" aria-hidden="true"></ion-icon>
+          </span>
+          <div class="akun-saran-copy">
+            <span>Saran pintar</span>
+            <strong data-suggestion-text></strong>
+          </div>
+          <button class="akun-saran-action" type="button" data-apply-suggestion>Pakai</button>
+        </div>
+
+        <div class="akun-picker-block">
+          <div class="akun-picker-label-row">
+            <div>
+              <strong>Warna akun</strong>
+              <span>Pilih aksen yang mudah dikenali</span>
+            </div>
+            <span class="akun-color-name" data-color-name>Caramel</span>
+          </div>
+
+          <div class="akun-color-grid" role="radiogroup" aria-label="Pilih warna akun" data-color-grid>
+            <button class="akun-color-item" type="button" role="radio" data-color="#E58A2B" data-color-name="Caramel" aria-label="Caramel" style="--swatch:#E58A2B"></button>
+            <button class="akun-color-item" type="button" role="radio" data-color="#D6A43A" data-color-name="Amber" aria-label="Amber" style="--swatch:#D6A43A"></button>
+            <button class="akun-color-item" type="button" role="radio" data-color="#7FA06D" data-color-name="Sage" aria-label="Sage" style="--swatch:#7FA06D"></button>
+            <button class="akun-color-item" type="button" role="radio" data-color="#5C9B92" data-color-name="Teal" aria-label="Teal" style="--swatch:#5C9B92"></button>
+            <button class="akun-color-item" type="button" role="radio" data-color="#6F8FAF" data-color-name="Dusty Blue" aria-label="Dusty Blue" style="--swatch:#6F8FAF"></button>
+            <button class="akun-color-item" type="button" role="radio" data-color="#7B78A8" data-color-name="Indigo" aria-label="Indigo" style="--swatch:#7B78A8"></button>
+            <button class="akun-color-item" type="button" role="radio" data-color="#A27792" data-color-name="Mauve" aria-label="Mauve" style="--swatch:#A27792"></button>
+            <button class="akun-color-item" type="button" role="radio" data-color="#B87070" data-color-name="Rose" aria-label="Rose" style="--swatch:#B87070"></button>
+            <button class="akun-color-item" type="button" role="radio" data-color="#9A7656" data-color-name="Cocoa" aria-label="Cocoa" style="--swatch:#9A7656"></button>
+            <button class="akun-color-item" type="button" role="radio" data-color="#7D858C" data-color-name="Slate" aria-label="Slate" style="--swatch:#7D858C"></button>
+          </div>
+        </div>
+
+        <div class="akun-picker-block akun-icon-block">
+          <div class="akun-picker-label-row">
+            <div>
+              <strong>Ikon akun</strong>
+              <span data-icon-count>Semua ikon</span>
+            </div>
+            <span class="akun-icon-current" data-icon-preview-label>Makanan</span>
+          </div>
+
+          <label class="akun-icon-search" for="cariIkon">
+            <ion-icon name="search-outline" aria-hidden="true"></ion-icon>
+            <input id="cariIkon" type="search" placeholder="Cari: makan, bensin, rumah..." autocomplete="off" data-icon-search>
+            <button type="button" aria-label="Hapus pencarian" data-clear-search hidden>
+              <ion-icon name="close-circle" aria-hidden="true"></ion-icon>
+            </button>
+          </label>
+
+          <div class="akun-icon-categories" data-icon-categories aria-label="Kategori ikon">
+            <button class="akun-category-chip is-aktif" type="button" data-category="all">Semua</button>
+            <button class="akun-category-chip" type="button" data-category="daily">Harian</button>
+            <button class="akun-category-chip" type="button" data-category="home">Rumah</button>
+            <button class="akun-category-chip" type="button" data-category="life">Lifestyle</button>
+            <button class="akun-category-chip" type="button" data-category="family">Keluarga</button>
+            <button class="akun-category-chip" type="button" data-category="money">Keuangan</button>
+          </div>
+
+          <div class="akun-icon-grid" role="radiogroup" aria-label="Pilih ikon akun" data-icon-grid></div>
+
+          <div class="akun-icon-empty" data-icon-empty hidden>
+            <ion-icon name="search-outline" aria-hidden="true"></ion-icon>
+            <strong>Ikon belum ketemu</strong>
+            <span>Coba kata lain atau pilih kategori Semua.</span>
+          </div>
+        </div>
+
+        <input id="ikon" name="ikon" type="hidden" value="fast-food-outline">
+        <input id="warna" name="warna" type="hidden" value="#E58A2B">
+      </section>
+
+      <div class="akun-form-actions">
+        <button class="tombol-utama" type="submit" data-simpan-akun>
+          <ion-icon name="checkmark-circle-outline" aria-hidden="true"></ion-icon>
+          <span>Simpan Akun</span>
+        </button>
+        <button class="tombol-bahaya" type="button" data-hapus-akun hidden>
+          <ion-icon name="archive-outline"></ion-icon>
+          Arsipkan Akun
+        </button>
+      </div>
+    </form>
+  </main>
+</div>
+
+<script type="module" src="https://unpkg.com/ionicons@8.0.13/dist/ionicons/ionicons.esm.js"></script>
+<script nomodule src="https://unpkg.com/ionicons@8.0.13/dist/ionicons/ionicons.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="js/backend/supabase.js"></script>
+<script src="js/backend/auth-service.js"></script>
+<script src="js/backend/family-service.js"></script>
+<script src="js/backend/finance-service.js"></script>
+<script src="js/backend/auth-router.js"></script>
+<script src="js/backend/auth-guard.js"></script>
+<script src="js/components/account-visual-picker.js"></script>
+<script src="js/pages/akun-form-backend.js"></script>
+<script src="js/pwa.js"></script>
+</body>
+</html>

@@ -1,0 +1,92 @@
+/* =========================================
+   COMPONENT: AVATAR PENGGUNA
+========================================= */
+
+.avatar-pengguna {
+  position: relative;
+
+  display: grid;
+  place-items: center;
+
+  overflow: hidden;
+
+  width: 100%;
+  height: 100%;
+
+  border-radius: var(--radius-full);
+
+  background: var(--color-surface-soft);
+  color: var(--color-primary);
+}
+
+.avatar-pengguna-gambar {
+  display: block;
+
+  width: 100%;
+  height: 100%;
+
+  object-fit: cover;
+  object-position: center;
+}
+
+.avatar-pengguna-icon {
+  font-size: 55%;
+}
+
+.avatar-pengguna-inisial {
+  display: grid;
+  place-items: center;
+
+  width: 100%;
+  height: 100%;
+
+  font-size: 36%;
+  font-weight: var(--font-weight-bold);
+  letter-spacing: .02em;
+}
+
+
+/* Home memakai ukuran tombol profil yang sudah ada di style.css */
+.tombol-profil .avatar-pengguna {
+  width: 52px;
+  height: 52px;
+}
+
+.tombol-profil .avatar-pengguna-icon {
+  font-size: 28px;
+}
+
+
+/* Foto Profil pada halaman Pengaturan */
+.avatar-profil-besar {
+  width: 88px;
+  height: 88px;
+
+  flex-shrink: 0;
+
+  border: 2px solid var(--color-border);
+  box-shadow: var(--shadow-sm);
+}
+
+.avatar-profil-besar .avatar-pengguna-icon {
+  font-size: 38px;
+}
+
+.avatar-profil-besar .avatar-pengguna-inisial {
+  font-size: 26px;
+}
+
+
+/* Avatar anggota keluarga */
+.avatar-anggota .avatar-pengguna {
+  width: 44px;
+  height: 44px;
+}
+
+.avatar-anggota .avatar-pengguna-inisial {
+  font-size: var(--font-size-md);
+}
+
+.avatar-anggota .avatar-pengguna-icon {
+  font-size: 21px;
+}

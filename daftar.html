@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#0B0D0C">
+  <meta name="application-name" content="Family Superapp">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Family">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="robots" content="noindex,nofollow,noarchive">
+  <meta name="referrer" content="strict-origin-when-cross-origin">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32.png">
+  <link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png">
+  <link rel="apple-touch-icon" sizes="180x180" href="icons/apple-touch-icon.png">
+  <script src="js/theme.js"></script>
+  <title>Daftar — Family Superapp</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/theme.css">
+  <link rel="stylesheet" href="css/pages/auth.css">
+</head>
+<body class="auth-page">
+  <main class="auth-shell">
+    <div class="auth-brand">
+      <span class="auth-brand-mark"><ion-icon name="people-outline"></ion-icon></span>
+      <div>
+        <strong>Family Superapp</strong>
+        <span>Satu akun untuk seluruh Family Superapp.</span>
+      </div>
+    </div>
+
+    <section class="auth-heading">
+      <span class="auth-eyebrow"><ion-icon name="sparkles-outline"></ion-icon> Akun baru</span>
+      <h1>Buat akunmu.</h1>
+      <p>Identitas login ini nanti bisa dipakai untuk bergabung ke keluarga yang sama dari perangkat berbeda.</p>
+    </section>
+
+    <div class="auth-notice" data-auth-notice hidden></div>
+
+    <section class="auth-card">
+      <form class="auth-form" data-daftar-form novalidate>
+        <div class="auth-field">
+          <label for="daftar-nama">Nama</label>
+          <div class="auth-input-wrap">
+            <input class="auth-input no-action" id="daftar-nama" name="nama" type="text" autocomplete="name" placeholder="Contoh: Nama Lengkap" maxlength="80" required>
+          </div>
+        </div>
+
+        <div class="auth-field">
+          <label for="daftar-email">Email</label>
+          <div class="auth-input-wrap">
+            <input class="auth-input no-action" id="daftar-email" name="email" type="email" autocomplete="email" placeholder="nama@email.com" required>
+          </div>
+        </div>
+
+        <div class="auth-field">
+          <label for="daftar-password">Password</label>
+          <div class="auth-input-wrap">
+            <input class="auth-input" id="daftar-password" name="password" type="password" autocomplete="new-password" placeholder="Minimal 8 karakter" minlength="8" required>
+            <button class="auth-input-icon" type="button" data-toggle-password="daftar-password" aria-label="Tampilkan password">
+              <ion-icon name="eye-outline"></ion-icon>
+            </button>
+          </div>
+          <p class="auth-help">Gunakan minimal 8 karakter. Jangan gunakan password yang sama dengan akun penting lain.</p>
+        </div>
+
+        <div class="auth-field">
+          <label for="daftar-konfirmasi">Konfirmasi Password</label>
+          <div class="auth-input-wrap">
+            <input class="auth-input" id="daftar-konfirmasi" name="konfirmasi" type="password" autocomplete="new-password" placeholder="Ulangi password" minlength="8" required>
+            <button class="auth-input-icon" type="button" data-toggle-password="daftar-konfirmasi" aria-label="Tampilkan password">
+              <ion-icon name="eye-outline"></ion-icon>
+            </button>
+          </div>
+        </div>
+
+        <button class="auth-submit" type="submit" data-auth-submit>
+          <span>Buat Akun</span>
+          <ion-icon name="arrow-forward-outline"></ion-icon>
+        </button>
+      </form>
+    </section>
+
+    <p class="auth-switch">Sudah punya akun? <a href="login.html">Masuk</a></p>
+
+    <div class="auth-security">
+      <ion-icon name="shield-checkmark-outline"></ion-icon>
+      <span>Setelah daftar, kamu mungkin diminta mengonfirmasi alamat email sebelum masuk.</span>
+    </div>
+  </main>
+
+  <script type="module" src="https://unpkg.com/ionicons@8.0.13/dist/ionicons/ionicons.esm.js"></script>
+  <script nomodule src="https://unpkg.com/ionicons@8.0.13/dist/ionicons/ionicons.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="js/backend/supabase.js"></script>
+  <script src="js/backend/auth-service.js"></script>
+  <script src="js/backend/family-service.js"></script>
+  <script src="js/backend/finance-service.js"></script>
+  <script src="js/backend/auth-router.js"></script>
+  <script src="js/pages/daftar.js"></script>
+<script src="js/pwa.js"></script>
+</body>
+</html>

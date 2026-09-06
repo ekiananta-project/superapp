@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="id" data-auth-guard="login">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#0B0D0C">
+  <meta name="application-name" content="Family Superapp">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Family">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="robots" content="noindex,nofollow,noarchive">
+  <meta name="referrer" content="strict-origin-when-cross-origin">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32.png">
+  <link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png">
+  <link rel="apple-touch-icon" sizes="180x180" href="icons/apple-touch-icon.png">
+  <script src="js/theme.js"></script>
+  <title>Pengaturan</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/components/avatar.css">
+  <link rel="stylesheet" href="css/pages/pengaturan.css">
+  <link rel="stylesheet" href="css/theme.css">
+</head>
+<body>
+<div class="aplikasi">
+  <header class="header-halaman">
+  <a class="tombol-ikon" href="index.html" aria-label="Kembali"><ion-icon name="arrow-back-outline"></ion-icon></a>
+  <h1>Pengaturan</h1>
+  <span class="kosong"></span>
+</header>
+  <main class="konten-halaman">
+    <div class="notifikasi" data-notifikasi hidden></div>
+
+    <h2 class="judul-grup judul-profil-saya">Profil Saya</h2>
+
+    <section class="kartu-profil-saya">
+      <div
+        class="avatar-profil-besar"
+        data-avatar-pengguna
+        data-avatar-fallback="icon">
+      </div>
+
+      <div class="info-profil-saya">
+        <strong data-nama-profil-preview>Pengguna</strong>
+        <span>Foto profil akan terlihat pada perangkat dan anggota keluarga.</span>
+
+        <div class="aksi-foto-profil">
+          <button
+            class="tombol-foto-profil"
+            type="button"
+            data-pilih-foto>
+            <ion-icon name="camera-outline"></ion-icon>
+            Ubah Foto
+          </button>
+
+          <button
+            class="tombol-hapus-foto"
+            type="button"
+            data-hapus-foto
+            hidden>
+            Hapus Foto
+          </button>
+        </div>
+      </div>
+
+      <input
+        type="file"
+        accept="image/jpeg,image/png,image/webp,image/heic,image/heif"
+        data-input-foto
+        hidden>
+    </section>
+
+    <p class="catatan-foto-profil">
+      Foto otomatis dipotong persegi dan diperkecil agar tetap ringan.
+    </p>
+
+    <form class="formulir formulir-profil" data-form-pengaturan>
+      <div class="grup-input">
+        <label for="nama">Nama Pengguna</label>
+        <input
+          class="input"
+          id="nama"
+          name="nama"
+          autocomplete="name"
+          required>
+      </div>
+
+      <button class="tombol-utama" type="submit">
+        Simpan Profil
+      </button>
+    </form>
+
+    <h2 class="judul-grup">Keluarga</h2>
+    <div class="kartu-pengaturan">
+      <a class="item-pengaturan tautan-pengaturan" href="keluarga.html">
+        <ion-icon name="people-outline"></ion-icon>
+        <span>Anggota Keluarga</span>
+        <small>Kelola akses</small>
+        <ion-icon class="chevron-pengaturan" name="chevron-forward-outline"></ion-icon>
+      </a>
+    </div>
+
+    <h2 class="judul-grup">Akun &amp; Keamanan</h2>
+
+    <div class="kartu-pengaturan">
+      <div class="item-pengaturan">
+        <ion-icon name="mail-outline"></ion-icon>
+        <span>Email Login</span>
+        <small data-auth-email>Memuat...</small>
+      </div>
+      <a class="item-pengaturan tautan-pengaturan" href="keamanan.html">
+        <ion-icon name="shield-checkmark-outline"></ion-icon>
+        <span>Perangkat &amp; Sesi</span>
+        <small>Kelola login</small>
+        <ion-icon class="chevron-pengaturan" name="chevron-forward-outline"></ion-icon>
+      </a>
+      <button class="item-pengaturan item-pengaturan-tombol" type="button" data-auth-logout>
+        <ion-icon name="log-out-outline"></ion-icon>
+        <span>Keluar</span>
+        <small>Perangkat ini</small>
+        <ion-icon class="chevron-pengaturan" name="chevron-forward-outline"></ion-icon>
+      </button>
+    </div>
+
+    <h2 class="judul-grup">Aplikasi</h2>
+    <div class="kartu-pengaturan">
+      <div class="item-pengaturan">
+        <ion-icon name="cash-outline"></ion-icon>
+        <span>Mata Uang</span>
+        <small>Rupiah (IDR)</small>
+      </div>
+      <button
+        class="item-pengaturan item-pengaturan-tombol"
+        type="button"
+        data-buka-tema>
+        <ion-icon name="contrast-outline"></ion-icon>
+        <span>Tampilan</span>
+        <small data-label-tema>Ikuti Perangkat</small>
+        <ion-icon class="chevron-pengaturan" name="chevron-forward-outline"></ion-icon>
+      </button>
+      <div class="item-pengaturan">
+        <ion-icon name="information-circle-outline"></ion-icon>
+        <span>Versi</span>
+        <small>1.0.0 PWA</small>
+      </div>
+    </div>
+
+    <button class="tombol-bahaya" type="button" data-hapus-semua-data style="margin-top:20px">
+      <ion-icon name="refresh-outline"></ion-icon> Reset Data Lokal Perangkat
+    </button>
+  </main>
+</div>
+
+<div class="lapisan" id="sheet-tema" hidden>
+  <section class="bottom-sheet">
+    <div class="sheet-handle"></div>
+
+    <div class="sheet-header">
+      <div>
+        <h2>Tampilan</h2>
+        <p class="sheet-subjudul">Pilih tampilan aplikasi di perangkat ini.</p>
+      </div>
+
+      <button
+        class="tombol-ikon"
+        type="button"
+        data-tutup-tema
+        aria-label="Tutup">
+        <ion-icon name="close-outline"></ion-icon>
+      </button>
+    </div>
+
+    <button
+      class="pilihan-sheet pilihan-tema"
+      type="button"
+      data-tema-pilihan="system">
+      <ion-icon name="phone-portrait-outline"></ion-icon>
+
+      <span class="pilihan-tema-info">
+        <strong>Ikuti Perangkat</strong>
+        <small>Mengikuti mode terang atau gelap perangkat.</small>
+      </span>
+
+      <ion-icon
+        class="cek"
+        name="checkmark-circle"
+        data-tema-cek
+        hidden>
+      </ion-icon>
+    </button>
+
+    <button
+      class="pilihan-sheet pilihan-tema"
+      type="button"
+      data-tema-pilihan="light">
+      <ion-icon name="sunny-outline"></ion-icon>
+
+      <span class="pilihan-tema-info">
+        <strong>Terang</strong>
+        <small>Graphite Emerald dengan latar terang netral.</small>
+      </span>
+
+      <ion-icon
+        class="cek"
+        name="checkmark-circle"
+        data-tema-cek
+        hidden>
+      </ion-icon>
+    </button>
+
+    <button
+      class="pilihan-sheet pilihan-tema"
+      type="button"
+      data-tema-pilihan="dark">
+      <ion-icon name="moon-outline"></ion-icon>
+
+      <span class="pilihan-tema-info">
+        <strong>Gelap</strong>
+        <small>Graphite Emerald versi charcoal.</small>
+      </span>
+
+      <ion-icon
+        class="cek"
+        name="checkmark-circle"
+        data-tema-cek
+        hidden>
+      </ion-icon>
+    </button>
+  </section>
+</div>
+
+<script type="module" src="https://unpkg.com/ionicons@8.0.13/dist/ionicons/ionicons.esm.js"></script>
+<script nomodule src="https://unpkg.com/ionicons@8.0.13/dist/ionicons/ionicons.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="js/backend/supabase.js"></script>
+<script src="js/backend/auth-service.js"></script>
+<script src="js/backend/family-service.js"></script>
+<script src="js/backend/finance-service.js"></script>
+<script src="js/backend/auth-router.js"></script>
+<script src="js/backend/auth-guard.js"></script>
+<script>window.AUTH_BACKEND_MODE = true;</script>
+<script src="js/pages/pengaturan-profile-backend-v2.js?v=20260907-1"></script>
+<script src="js/app.js"></script>
+<script src="js/components/avatar.js"></script>
+<script src="js/pages/pengaturan-profil.js"></script>
+<script src="js/pages/pengaturan-tema.js"></script>
+<script src="js/pages/pengaturan-auth.js"></script>
+<script src="js/pwa.js"></script>
+</body>
+</html>

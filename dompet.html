@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="id" data-auth-guard="finance">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#0B0D0C">
+  <meta name="application-name" content="Family Superapp">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Family">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="robots" content="noindex,nofollow,noarchive">
+  <meta name="referrer" content="strict-origin-when-cross-origin">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32.png">
+  <link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png">
+  <link rel="apple-touch-icon" sizes="180x180" href="icons/apple-touch-icon.png">
+  <script src="js/theme.js"></script>
+  <title>Daftar Dompet</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/pages/dompet-backend.css">
+  <link rel="stylesheet" href="css/theme.css">
+</head>
+<body>
+<div class="aplikasi dengan-nav">
+  <header class="header-halaman">
+    <a class="tombol-ikon" href="index.html" aria-label="Kembali"><ion-icon name="arrow-back-outline"></ion-icon></a>
+    <h1>Daftar Dompet</h1>
+    <a class="tombol-ikon" href="dompet-form.html" aria-label="Tambah dompet"><ion-icon name="add-outline"></ion-icon></a>
+  </header>
+
+  <main class="konten-halaman">
+    <div class="daftar-kartu" data-daftar-dompet>
+      <div class="kosong-data">
+        <ion-icon name="cloud-download-outline"></ion-icon>
+        Mengambil dompet keluarga...
+      </div>
+    </div>
+  </main>
+
+  <nav class="navigasi-bawah">
+    <a class="navigasi-item" href="akun.html"><ion-icon name="grid-outline"></ion-icon><span>Akun</span></a>
+    <a class="tombol-tambah" href="transaksi.html"><ion-icon name="add-outline"></ion-icon></a>
+    <a class="navigasi-item is-aktif" href="dompet.html"><ion-icon name="wallet-outline"></ion-icon><span>Dompet</span></a>
+  </nav>
+</div>
+
+<script type="module" src="https://unpkg.com/ionicons@8.0.13/dist/ionicons/ionicons.esm.js"></script>
+<script nomodule src="https://unpkg.com/ionicons@8.0.13/dist/ionicons/ionicons.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="js/backend/supabase.js"></script>
+<script src="js/backend/auth-service.js"></script>
+<script src="js/backend/family-service.js"></script>
+<script src="js/backend/finance-service.js"></script>
+<script src="js/backend/auth-router.js"></script>
+<script src="js/backend/auth-guard.js"></script>
+<script src="js/pages/dompet-backend.js"></script>
+<script src="js/pwa.js"></script>
+</body>
+</html>

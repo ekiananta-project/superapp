@@ -1,0 +1,88 @@
+.akun-backend-intro {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-2);
+  margin-bottom: var(--space-2);
+  padding: var(--space-3);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-surface-soft);
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-sm);
+  line-height: 1.5;
+}
+
+.akun-backend-intro ion-icon {
+  flex: 0 0 auto;
+  margin-top: 2px;
+  color: var(--color-secondary);
+  font-size: 20px;
+}
+
+.akun-grup + .akun-grup {
+  margin-top: var(--space-5);
+}
+
+.akun-grup-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+}
+
+.akun-grup-heading .judul-grup {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin-top: var(--space-4);
+}
+
+.akun-grup-heading .judul-grup ion-icon {
+  color: var(--color-secondary);
+  font-size: 18px;
+}
+
+.akun-jumlah {
+  display: grid;
+  place-items: center;
+  min-width: 28px;
+  height: 28px;
+  padding: 0 8px;
+  border-radius: var(--radius-full);
+  background: var(--color-surface-soft);
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-semibold);
+}
+
+.akun-daftar {
+  gap: var(--space-2);
+}
+
+.akun-kartu {
+  transition: transform .15s ease, border-color .15s ease;
+}
+
+.akun-kartu:active {
+  transform: scale(.99);
+}
+
+.akun-grup-kosong {
+  padding: var(--space-4);
+  border: 1px dashed var(--color-border);
+  border-radius: var(--radius-md);
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-sm);
+  text-align: center;
+}
+
+.akun-kosong-semua .tombol-utama {
+  width: min(100%, 240px);
+  margin: var(--space-4) auto 0;
+}
+
+.akun-loading span,
+.akun-backend-error span,
+.akun-kosong-semua span {
+  display: block;
+}

@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="id" data-auth-guard="login">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#0B0D0C">
+  <meta name="application-name" content="Family Superapp">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Family">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="robots" content="noindex,nofollow,noarchive">
+  <meta name="referrer" content="strict-origin-when-cross-origin">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32.png">
+  <link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png">
+  <link rel="apple-touch-icon" sizes="180x180" href="icons/apple-touch-icon.png">
+  <script src="js/theme.js"></script>
+
+  <title>Perangkat & Sesi</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/pages/keamanan.css">
+  <link rel="stylesheet" href="css/theme.css">
+</head>
+
+<body>
+<div class="aplikasi">
+
+  <header class="header-halaman">
+    <a class="tombol-ikon" href="pengaturan.html" aria-label="Kembali">
+      <ion-icon name="arrow-back-outline"></ion-icon>
+    </a>
+
+    <h1>Perangkat &amp; Sesi</h1>
+    <span class="kosong"></span>
+  </header>
+
+  <main class="konten-halaman keamanan-halaman">
+
+    <section class="kartu-keamanan-info">
+      <span class="ikon-keamanan">
+        <ion-icon name="shield-checkmark-outline"></ion-icon>
+      </span>
+
+      <div>
+        <h2>Login di perangkat</h2>
+        <p>
+          Nanti setiap login akan mempunyai sesi sendiri. Jika sebuah HP hilang,
+          sesi perangkat itu dapat dicabut tanpa menghapus anggota dari keluarga.
+        </p>
+      </div>
+    </section>
+
+    <h2 class="judul-grup">Perangkat Ini</h2>
+
+    <section class="kartu-sesi">
+      <span class="ikon-perangkat">
+        <ion-icon data-ikon-perangkat name="phone-portrait-outline"></ion-icon>
+      </span>
+
+      <div class="info-sesi">
+        <strong data-nama-perangkat>Perangkat ini</strong>
+        <span data-detail-perangkat>Browser saat ini</span>
+        <small>Aktif sekarang</small>
+      </div>
+
+      <span class="badge-sesi-aktif">Saat ini</span>
+    </section>
+
+    <h2 class="judul-grup">Perangkat Lain</h2>
+
+    <section class="kartu-sesi-kosong" data-daftar-sesi-lain>
+      <ion-icon name="devices-outline"></ion-icon>
+      <strong>Sesi akun aktif</strong>
+      <p>
+        Perangkat ini sedang login. Daftar perangkat lengkap dan tombol <b>Cabut Sesi</b>
+        untuk perangkat lain akan tersedia pada pembaruan berikutnya.
+      </p>
+    </section>
+
+    <section class="penjelasan-keamanan">
+      <div>
+        <ion-icon name="person-remove-outline"></ion-icon>
+        <p>
+          <strong>Hapus anggota</strong> mencabut akses orang tersebut dari
+          keluarga.
+        </p>
+      </div>
+
+      <div>
+        <ion-icon name="log-out-outline"></ion-icon>
+        <p>
+          <strong>Cabut sesi</strong> hanya mengeluarkan satu perangkat.
+          Orangnya tetap menjadi anggota keluarga dan bisa login lagi dari HP baru.
+        </p>
+      </div>
+    </section>
+
+    <section class="catatan-keamanan-backend">
+      <ion-icon name="information-circle-outline"></ion-icon>
+
+      <p>
+        Logout perangkat aktif sudah tersedia. Pengelolaan sesi perangkat lain
+        belum tersedia pada versi ini.
+      </p>
+    </section>
+
+  </main>
+</div>
+
+<script type="module" src="https://unpkg.com/ionicons@8.0.13/dist/ionicons/ionicons.esm.js"></script>
+<script nomodule src="https://unpkg.com/ionicons@8.0.13/dist/ionicons/ionicons.js"></script>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="js/backend/supabase.js"></script>
+<script src="js/backend/auth-service.js"></script>
+<script src="js/backend/family-service.js"></script>
+<script src="js/backend/finance-service.js"></script>
+<script src="js/backend/auth-router.js"></script>
+<script src="js/backend/auth-guard.js"></script>
+<script>window.AUTH_BACKEND_MODE = true;</script>
+<script src="js/app.js"></script>
+<script src="js/pages/keamanan.js"></script>
+<script src="js/pwa.js"></script>
+</body>
+</html>

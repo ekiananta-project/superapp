@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="id" data-auth-guard="finance">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#0B0D0C">
+  <meta name="application-name" content="Family Superapp">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Family">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="robots" content="noindex,nofollow,noarchive">
+  <meta name="referrer" content="strict-origin-when-cross-origin">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32.png">
+  <link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png">
+  <link rel="apple-touch-icon" sizes="180x180" href="icons/apple-touch-icon.png">
+  <script src="js/theme.js"></script>
+  <title>Tambah Transaksi</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/theme.css">
+</head>
+<body>
+<div class="aplikasi">
+  <header class="header-halaman">
+  <a class="tombol-ikon" href="index.html" data-kembali-transaksi aria-label="Kembali"><ion-icon name="arrow-back-outline"></ion-icon></a>
+  <h1><span data-judul-form>Tambah Transaksi</span></h1>
+  <span class="kosong"></span>
+</header>
+  <main class="konten-halaman">
+    <div class="notifikasi" data-notifikasi hidden></div>
+    <form class="formulir" data-form-transaksi>
+      <div class="segmentasi">
+        <button class="segmentasi-item" type="button" data-form-jenis="pengeluaran">Pengeluaran</button>
+        <button class="segmentasi-item" type="button" data-form-jenis="pemasukan">Pemasukan</button>
+        <button class="segmentasi-item" type="button" data-form-jenis="transfer">Transfer</button>
+      </div>
+
+      <div class="grup-input">
+        <label for="tanggal">Tanggal</label>
+        <input class="input" id="tanggal" name="tanggal" type="date" required>
+      </div>
+
+      <div class="grup-input">
+        <label for="dompet" data-label-dompet>Dompet</label>
+        <select class="pilih" id="dompet" name="dompet" required></select>
+      </div>
+
+      <div class="grup-input" data-grup-tujuan hidden>
+        <label for="dompetTujuan">Dompet Tujuan</label>
+        <select class="pilih" id="dompetTujuan" name="dompetTujuan"></select>
+      </div>
+
+      <div class="grup-input" data-grup-akun>
+        <label for="akun">Akun</label>
+        <select class="pilih" id="akun" name="akun"></select>
+      </div>
+
+      <div class="grup-input">
+        <label for="keterangan">Nama / Keterangan</label>
+        <input class="input" id="keterangan" name="keterangan" placeholder="Contoh: Makan siang">
+      </div>
+
+      <div class="grup-input">
+        <label for="jumlah">Jumlah</label>
+        <input class="input" id="jumlah" name="jumlah" type="number" min="1" step="1" placeholder="25000" required>
+      </div>
+
+      <div class="grup-input" data-grup-biaya-transfer hidden>
+        <label for="biayaAdmin">Biaya Admin <span aria-hidden="true">(opsional)</span></label>
+        <input class="input" id="biayaAdmin" name="biayaAdmin" type="number" min="0" step="1" value="0" placeholder="0">
+      </div>
+
+      <div class="grup-input" data-grup-mode-biaya hidden>
+        <label for="modeBiaya">Cara Biaya Admin</label>
+        <select class="pilih" id="modeBiaya" name="modeBiaya">
+          <option value="added">Ditambahkan ke nominal</option>
+          <option value="deducted">Dipotong dari nominal transfer</option>
+        </select>
+      </div>
+
+      <div class="notifikasi" data-ringkasan-transfer hidden></div>
+
+      <button class="tombol-utama" type="submit">Simpan Transaksi</button>
+    </form>
+  </main>
+</div>
+<script type="module" src="https://unpkg.com/ionicons@8.0.13/dist/ionicons/ionicons.esm.js"></script>
+<script nomodule src="https://unpkg.com/ionicons@8.0.13/dist/ionicons/ionicons.js"></script>
+
+<!-- Supabase + Service Layer -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="js/backend/supabase.js"></script>
+<script src="js/backend/auth-service.js"></script>
+<script src="js/backend/family-service.js"></script>
+<script src="js/backend/finance-service.js"></script>
+<script src="js/backend/auth-router.js"></script>
+<script src="js/backend/auth-guard.js"></script>
+
+<!-- Form transaksi backend: CREATE + EDIT expense/income/transfer + biaya admin transfer. Jangan load js/app.js di halaman ini. -->
+<script src="js/pages/transaksi-backend.js"></script>
+<script src="js/pwa.js"></script>
+</body>
+</html>

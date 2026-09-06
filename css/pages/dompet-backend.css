@@ -1,0 +1,40 @@
+/* =========================================
+   DOMPET BACKEND V1
+========================================= */
+
+.bantuan-input {
+  display: block;
+  margin-top: 6px;
+  color: var(--color-text-secondary);
+  font-size: 12px;
+  line-height: 1.55;
+}
+
+.input[readonly] {
+  opacity: .78;
+  cursor: not-allowed;
+}
+
+.status-backend-dompet {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 16px;
+  padding: 12px 14px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  background: var(--color-surface);
+  color: var(--color-text-secondary);
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.status-backend-dompet ion-icon {
+  flex: 0 0 auto;
+  font-size: 20px;
+  color: var(--color-secondary);
+}
+
+.dompet-backend-error {
+  white-space: pre-line;
+}

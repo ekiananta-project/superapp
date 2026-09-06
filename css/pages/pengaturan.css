@@ -1,0 +1,186 @@
+/* =========================================
+   PAGE: PENGATURAN
+========================================= */
+
+.tautan-pengaturan {
+  color: var(--color-text);
+  text-decoration: none;
+}
+
+.tautan-pengaturan .chevron-pengaturan,
+.item-pengaturan-tombol .chevron-pengaturan {
+  color: var(--color-text-secondary);
+  font-size: 18px;
+}
+
+
+/* Item pengaturan yang benar-benar clickable */
+.item-pengaturan-tombol {
+  width: 100%;
+
+  border-top: 0;
+  border-right: 0;
+  border-left: 0;
+
+  background: transparent;
+  color: var(--color-text);
+
+  text-align: left;
+}
+
+.item-pengaturan-tombol:last-child {
+  border-bottom: 0;
+}
+
+.item-pengaturan-tombol:active {
+  background: var(--color-surface-soft);
+}
+
+
+/* Bottom sheet pilihan tampilan */
+.sheet-subjudul {
+  margin: 3px 0 0;
+
+  color: var(--color-text-secondary);
+
+  font-size: var(--font-size-xs);
+}
+
+.pilihan-tema-info {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 2px;
+
+  min-width: 0;
+}
+
+.pilihan-tema-info strong {
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-semibold);
+}
+
+.pilihan-tema-info small {
+  color: var(--color-text-secondary);
+
+  font-size: var(--font-size-xs);
+  line-height: 1.45;
+}
+
+.pilihan-tema.is-aktif {
+  background: var(--color-surface-soft);
+}
+/* =========================================
+   PROFIL SAYA
+========================================= */
+
+.judul-profil-saya {
+  margin-top: 0;
+}
+
+.kartu-profil-saya {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+
+  padding: var(--space-4);
+
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-xl);
+
+  background: var(--color-surface);
+  box-shadow: var(--shadow-sm);
+}
+
+.info-profil-saya {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: var(--space-1);
+
+  min-width: 0;
+}
+
+.info-profil-saya > strong {
+  overflow: hidden;
+
+  font-size: var(--font-size-lg);
+  font-weight: var(--font-weight-bold);
+
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.info-profil-saya > span {
+  color: var(--color-text-secondary);
+
+  font-size: var(--font-size-xs);
+  line-height: 1.5;
+}
+
+.aksi-foto-profil {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+
+  margin-top: var(--space-2);
+}
+
+.tombol-foto-profil,
+.tombol-hapus-foto {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+
+  padding: 0;
+
+  border: 0;
+
+  background: transparent;
+
+  font: inherit;
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-semibold);
+}
+
+.tombol-foto-profil {
+  color: var(--color-secondary);
+}
+
+.tombol-hapus-foto {
+  color: var(--color-danger);
+}
+
+.tombol-foto-profil ion-icon {
+  font-size: 17px;
+}
+
+.catatan-foto-profil {
+  margin: var(--space-2) 0 var(--space-5);
+
+  color: var(--color-text-secondary);
+
+  font-size: var(--font-size-xs);
+  line-height: 1.5;
+}
+
+.formulir-profil {
+  margin-bottom: var(--space-6);
+}
+
+@media (max-width: 350px) {
+  .kartu-profil-saya {
+    align-items: flex-start;
+  }
+
+  .avatar-profil-besar {
+    width: 72px;
+    height: 72px;
+  }
+
+  .aksi-foto-profil {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: var(--space-2);
+  }
+}

@@ -1,0 +1,238 @@
+/* =========================================
+   PAGE: PERANGKAT & SESI
+========================================= */
+
+.keamanan-halaman {
+  display: flex;
+  flex-direction: column;
+}
+
+.kartu-keamanan-info {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-3);
+
+  padding: var(--space-4);
+
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-xl);
+
+  background: var(--color-surface);
+  box-shadow: var(--shadow-sm);
+}
+
+.ikon-keamanan {
+  display: grid;
+  place-items: center;
+
+  width: 48px;
+  height: 48px;
+
+  flex-shrink: 0;
+
+  border-radius: var(--radius-full);
+
+  background: var(--color-surface-strong);
+  color: var(--color-secondary);
+}
+
+.ikon-keamanan ion-icon {
+  font-size: 24px;
+}
+
+.kartu-keamanan-info h2 {
+  margin: 0 0 3px;
+
+  font-size: var(--font-size-md);
+}
+
+.kartu-keamanan-info p {
+  margin: 0;
+
+  color: var(--color-text-secondary);
+
+  font-size: var(--font-size-xs);
+  line-height: 1.55;
+}
+
+.kartu-sesi {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+
+  padding: var(--space-3);
+
+  border-radius: var(--radius-lg);
+
+  background: var(--color-surface);
+  box-shadow: var(--shadow-sm);
+}
+
+.ikon-perangkat {
+  display: grid;
+  place-items: center;
+
+  width: 44px;
+  height: 44px;
+
+  flex-shrink: 0;
+
+  border-radius: var(--radius-full);
+
+  background: var(--color-surface-soft);
+  color: var(--color-primary);
+}
+
+.ikon-perangkat ion-icon {
+  font-size: 22px;
+}
+
+.info-sesi {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 2px;
+
+  min-width: 0;
+}
+
+.info-sesi strong {
+  overflow: hidden;
+
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-semibold);
+
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.info-sesi span,
+.info-sesi small {
+  color: var(--color-text-secondary);
+
+  font-size: var(--font-size-xs);
+}
+
+.badge-sesi-aktif {
+  flex-shrink: 0;
+
+  padding: 5px 9px;
+
+  border-radius: var(--radius-full);
+
+  background: rgba(82, 122, 67, .12);
+  color: var(--color-success);
+
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-semibold);
+}
+
+.kartu-sesi-kosong {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-2);
+
+  padding: var(--space-6) var(--space-4);
+
+  border: 1px dashed var(--color-border);
+  border-radius: var(--radius-lg);
+
+  color: var(--color-text-secondary);
+
+  text-align: center;
+}
+
+.kartu-sesi-kosong > ion-icon {
+  color: var(--color-secondary);
+
+  font-size: 28px;
+}
+
+.kartu-sesi-kosong strong {
+  color: var(--color-text);
+
+  font-size: var(--font-size-sm);
+}
+
+.kartu-sesi-kosong p {
+  max-width: 320px;
+  margin: 0;
+
+  font-size: var(--font-size-xs);
+  line-height: 1.55;
+}
+
+.penjelasan-keamanan {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+
+  margin-top: var(--space-5);
+}
+
+.penjelasan-keamanan > div {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-2);
+
+  padding: var(--space-3);
+
+  border-radius: var(--radius-md);
+
+  background: var(--color-surface);
+}
+
+.penjelasan-keamanan ion-icon {
+  margin-top: 2px;
+
+  flex-shrink: 0;
+
+  color: var(--color-secondary);
+
+  font-size: 18px;
+}
+
+.penjelasan-keamanan p {
+  margin: 0;
+
+  color: var(--color-text-secondary);
+
+  font-size: var(--font-size-xs);
+  line-height: 1.55;
+}
+
+.penjelasan-keamanan strong {
+  color: var(--color-text);
+}
+
+.catatan-keamanan-backend {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-2);
+
+  margin-top: var(--space-4);
+  padding: var(--space-3);
+
+  border-radius: var(--radius-md);
+
+  background: var(--color-surface-soft);
+  color: var(--color-text-secondary);
+}
+
+.catatan-keamanan-backend ion-icon {
+  margin-top: 2px;
+
+  flex-shrink: 0;
+
+  color: var(--color-secondary);
+
+  font-size: 17px;
+}
+
+.catatan-keamanan-backend p {
+  margin: 0;
+
+  font-size: var(--font-size-xs);
+  line-height: 1.55;
+}

@@ -1,0 +1,440 @@
+/* ==========================================================
+   COMPONENT: ACCOUNT VISUAL PICKER — PREMIUM v1
+   Scoped khusus akun-form agar tidak mengubah picker Dompet.
+========================================================== */
+
+.akun-form-premium {
+  padding-bottom: calc(var(--space-8) + 16px);
+}
+
+.akun-form-premium .formulir {
+  gap: var(--space-4);
+}
+
+.akun-form-section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  padding: var(--space-4);
+  border: 1px solid var(--color-border);
+  border-radius: 22px;
+  background: var(--color-surface);
+  box-shadow: var(--shadow-sm);
+}
+
+.akun-section-heading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-3);
+}
+
+.akun-section-heading h2 {
+  margin: 2px 0 0;
+  font-size: 17px;
+  line-height: 1.25;
+  font-weight: var(--font-weight-bold);
+}
+
+.akun-section-kicker {
+  display: block;
+  color: var(--color-secondary);
+  font-size: 10px;
+  font-weight: var(--font-weight-bold);
+  letter-spacing: .12em;
+  text-transform: uppercase;
+}
+
+.akun-visual-badge {
+  padding: 6px 9px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-full);
+  background: var(--color-surface-soft);
+  color: var(--color-text-secondary);
+  font-size: 10px;
+  font-weight: var(--font-weight-semibold);
+}
+
+/* Preview */
+.akun-preview-card {
+  --akun-warna: #E58A2B;
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  min-height: 86px;
+  padding: var(--space-4);
+  border: 1px solid color-mix(in srgb, var(--akun-warna) 34%, var(--color-border));
+  border-radius: 20px;
+  background:
+    radial-gradient(circle at 12% 20%, color-mix(in srgb, var(--akun-warna) 16%, transparent), transparent 36%),
+    var(--color-surface-soft);
+  transition: border-color .18s ease, background .18s ease;
+}
+
+.akun-preview-icon {
+  display: grid;
+  place-items: center;
+  width: 58px;
+  height: 58px;
+  flex: 0 0 58px;
+  border: 1px solid color-mix(in srgb, var(--akun-warna) 35%, transparent);
+  border-radius: 18px;
+  background: color-mix(in srgb, var(--akun-warna) 15%, var(--color-surface));
+  color: var(--akun-warna);
+  box-shadow: 0 8px 18px color-mix(in srgb, var(--akun-warna) 12%, transparent);
+}
+
+.akun-preview-icon ion-icon { font-size: 29px; }
+
+.akun-preview-copy {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-width: 0;
+  gap: 1px;
+}
+
+.akun-preview-caption {
+  color: var(--color-text-secondary);
+  font-size: 10px;
+  font-weight: var(--font-weight-medium);
+}
+
+.akun-preview-copy strong {
+  overflow: hidden;
+  color: var(--color-text);
+  font-size: 17px;
+  font-weight: var(--font-weight-bold);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.akun-preview-copy > span:last-child {
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-sm);
+}
+
+.akun-preview-chevron {
+  color: color-mix(in srgb, var(--akun-warna) 75%, var(--color-text));
+  font-size: 20px;
+}
+
+/* Saran pintar */
+.akun-saran {
+  --akun-warna: #E58A2B;
+  display: grid;
+  grid-template-columns: 36px 1fr auto;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 11px;
+  border: 1px dashed color-mix(in srgb, var(--akun-warna) 38%, var(--color-border));
+  border-radius: 16px;
+  background: color-mix(in srgb, var(--akun-warna) 7%, var(--color-surface));
+}
+
+.akun-saran-icon {
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 12px;
+  background: color-mix(in srgb, var(--akun-warna) 14%, var(--color-surface));
+  color: var(--akun-warna);
+}
+
+.akun-saran-icon ion-icon { font-size: 19px; }
+
+.akun-saran-copy {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.akun-saran-copy span {
+  color: var(--color-text-secondary);
+  font-size: 10px;
+}
+
+.akun-saran-copy strong {
+  overflow: hidden;
+  font-size: 12px;
+  font-weight: var(--font-weight-semibold);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.akun-saran-action {
+  min-height: 34px;
+  padding: 0 11px;
+  border: 0;
+  border-radius: 11px;
+  background: var(--akun-warna);
+  color: #fff;
+  font-size: 11px;
+  font-weight: var(--font-weight-bold);
+}
+
+/* Picker blocks */
+.akun-picker-block {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.akun-picker-block + .akun-picker-block {
+  padding-top: var(--space-4);
+  border-top: 1px solid var(--color-border);
+}
+
+.akun-picker-label-row {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: var(--space-3);
+}
+
+.akun-picker-label-row > div {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.akun-picker-label-row strong {
+  font-size: var(--font-size-md);
+  font-weight: var(--font-weight-bold);
+}
+
+.akun-picker-label-row span {
+  color: var(--color-text-secondary);
+  font-size: 11px;
+}
+
+.akun-color-name,
+.akun-icon-current {
+  max-width: 42%;
+  overflow: hidden;
+  color: var(--color-secondary) !important;
+  font-weight: var(--font-weight-semibold);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Color swatches */
+.akun-color-grid {
+  display: grid;
+  grid-template-columns: repeat(10, minmax(0, 1fr));
+  gap: 7px;
+}
+
+.akun-color-item {
+  --swatch: #E58A2B;
+  position: relative;
+  aspect-ratio: 1;
+  min-width: 0;
+  padding: 0;
+  border: 2px solid transparent;
+  border-radius: 50%;
+  background: var(--swatch);
+  box-shadow: inset 0 0 0 1px rgba(255,255,255,.20);
+  transition: transform .15s ease, box-shadow .15s ease, border-color .15s ease;
+}
+
+.akun-color-item:hover { transform: translateY(-1px); }
+.akun-color-item:active { transform: scale(.92); }
+
+.akun-color-item.is-aktif {
+  border-color: var(--color-surface);
+  box-shadow:
+    0 0 0 2px var(--swatch),
+    0 5px 12px color-mix(in srgb, var(--swatch) 25%, transparent);
+}
+
+.akun-color-item.is-aktif::after {
+  content: "✓";
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  color: #fff;
+  font-size: 11px;
+  font-weight: 800;
+  text-shadow: 0 1px 4px rgba(0,0,0,.28);
+}
+
+/* Search */
+.akun-icon-search {
+  display: grid;
+  grid-template-columns: 20px 1fr auto;
+  align-items: center;
+  gap: 8px;
+  min-height: 46px;
+  padding: 0 12px;
+  border: 1px solid var(--color-border);
+  border-radius: 15px;
+  background: var(--color-surface-soft);
+  color: var(--color-text-secondary);
+  transition: border-color .15s ease, box-shadow .15s ease;
+}
+
+.akun-icon-search:focus-within {
+  border-color: color-mix(in srgb, var(--color-secondary) 50%, var(--color-border));
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-secondary) 10%, transparent);
+}
+
+.akun-icon-search > ion-icon { font-size: 18px; }
+
+.akun-icon-search input {
+  min-width: 0;
+  padding: 0;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  color: var(--color-text);
+  font-size: 12px;
+}
+
+.akun-icon-search input::placeholder { color: var(--color-text-secondary); }
+
+.akun-icon-search button {
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--color-text-secondary);
+}
+
+.akun-icon-search button ion-icon { font-size: 18px; }
+
+/* Category chips */
+.akun-icon-categories {
+  display: flex;
+  gap: 7px;
+  margin-inline: -2px;
+  padding: 2px;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.akun-icon-categories::-webkit-scrollbar { display: none; }
+
+.akun-category-chip {
+  flex: 0 0 auto;
+  min-height: 34px;
+  padding: 0 12px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-full);
+  background: var(--color-surface);
+  color: var(--color-text-secondary);
+  font-size: 11px;
+  font-weight: var(--font-weight-semibold);
+  transition: .15s ease;
+}
+
+.akun-category-chip.is-aktif {
+  border-color: color-mix(in srgb, var(--color-secondary) 38%, var(--color-border));
+  background: var(--color-surface-strong);
+  color: var(--color-secondary);
+}
+
+/* Icon grid */
+.akun-icon-grid {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.akun-icon-item {
+  --akun-warna: #E58A2B;
+  position: relative;
+  display: grid;
+  place-items: center;
+  aspect-ratio: 1;
+  min-width: 0;
+  padding: 0;
+  border: 1px solid var(--color-border);
+  border-radius: 14px;
+  background: var(--color-surface-soft);
+  color: var(--color-text-secondary);
+  transition: transform .14s ease, border-color .14s ease, background .14s ease, color .14s ease;
+}
+
+.akun-icon-item ion-icon { font-size: 22px; }
+
+.akun-icon-item:hover {
+  border-color: color-mix(in srgb, var(--akun-warna) 35%, var(--color-border));
+  color: var(--akun-warna);
+}
+
+.akun-icon-item:active { transform: scale(.94); }
+
+.akun-icon-item.is-aktif {
+  border-color: color-mix(in srgb, var(--akun-warna) 68%, var(--color-border));
+  background: color-mix(in srgb, var(--akun-warna) 14%, var(--color-surface));
+  color: var(--akun-warna);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--akun-warna) 18%, transparent);
+}
+
+.akun-icon-item.is-aktif::after {
+  content: "✓";
+  position: absolute;
+  top: 4px;
+  right: 5px;
+  color: var(--akun-warna);
+  font-size: 9px;
+  font-weight: 800;
+}
+
+.akun-icon-empty {
+  display: flex;
+  align-items: center;
+  flex-direction: column;
+  gap: 4px;
+  padding: 22px 12px;
+  border: 1px dashed var(--color-border);
+  border-radius: 15px;
+  color: var(--color-text-secondary);
+  text-align: center;
+}
+
+.akun-icon-empty ion-icon { margin-bottom: 4px; font-size: 24px; }
+.akun-icon-empty strong { color: var(--color-text); font-size: 12px; }
+.akun-icon-empty span { font-size: 11px; }
+
+/* Actions */
+.akun-form-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding-top: 2px;
+}
+
+.akun-form-actions .tombol-utama {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 54px;
+  border-radius: 17px;
+}
+
+.akun-form-actions .tombol-utama ion-icon { font-size: 20px; }
+
+@media (max-width: 360px) {
+  .akun-color-grid { grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 10px; }
+  .akun-icon-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+}
+
+html[data-theme="dark"] .akun-preview-card {
+  background:
+    radial-gradient(circle at 12% 20%, color-mix(in srgb, var(--akun-warna) 12%, transparent), transparent 36%),
+    var(--color-surface-soft);
+}
+
+html[data-theme="dark"] .akun-saran-action {
+  color: #1B120A;
+}

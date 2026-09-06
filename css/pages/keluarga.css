@@ -1,0 +1,431 @@
+/* =========================================
+   PAGE: KELUARGA
+========================================= */
+
+.kartu-keluarga-utama {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-3);
+
+  padding: var(--space-4);
+
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-xl);
+
+  background: var(--color-surface);
+  box-shadow: var(--shadow-sm);
+}
+
+.ikon-keluarga-utama {
+  display: grid;
+  place-items: center;
+
+  width: 52px;
+  height: 52px;
+
+  flex-shrink: 0;
+
+  border-radius: var(--radius-full);
+
+  background: var(--color-surface-strong);
+  color: var(--color-secondary);
+}
+
+.ikon-keluarga-utama ion-icon {
+  font-size: 26px;
+}
+
+.info-keluarga-utama {
+  min-width: 0;
+}
+
+.info-keluarga-utama > span {
+  color: var(--color-text-secondary);
+
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-semibold);
+
+  text-transform: uppercase;
+  letter-spacing: .04em;
+}
+
+.info-keluarga-utama h2 {
+  margin: 2px 0 var(--space-1);
+
+  font-size: var(--font-size-xl);
+  line-height: 1.25;
+}
+
+.info-keluarga-utama p {
+  margin: 0;
+
+  color: var(--color-text-secondary);
+
+  font-size: var(--font-size-sm);
+  line-height: 1.55;
+}
+
+.formulir-nama-keluarga {
+  margin-top: var(--space-4);
+}
+
+.daftar-anggota {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.kartu-anggota {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+
+  padding: var(--space-3);
+
+  border-radius: var(--radius-lg);
+
+  background: var(--color-surface);
+  box-shadow: var(--shadow-sm);
+}
+
+.avatar-anggota {
+  display: grid;
+  place-items: center;
+
+  width: 44px;
+  height: 44px;
+
+  flex-shrink: 0;
+
+  border-radius: var(--radius-full);
+
+  background: var(--color-surface-soft);
+  color: var(--color-primary);
+
+  font-size: var(--font-size-md);
+  font-weight: var(--font-weight-bold);
+}
+
+.info-anggota {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 2px;
+
+  min-width: 0;
+}
+
+.info-anggota strong {
+  overflow: hidden;
+
+  font-size: var(--font-size-md);
+  font-weight: var(--font-weight-semibold);
+
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.info-anggota span {
+  color: var(--color-text-secondary);
+
+  font-size: var(--font-size-sm);
+}
+
+.badge-peran {
+  padding: 5px 9px;
+
+  border-radius: var(--radius-full);
+
+  background: var(--color-surface-soft);
+  color: var(--color-primary);
+
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-semibold);
+}
+
+.tombol-tambah-anggota {
+  margin-top: var(--space-4);
+}
+
+.panel-undangan {
+  margin-top: var(--space-4);
+  padding: var(--space-4);
+
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-xl);
+
+  background: var(--color-surface);
+  box-shadow: var(--shadow-sm);
+}
+
+.panel-undangan-header {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-3);
+}
+
+.panel-undangan-ikon {
+  display: grid;
+  place-items: center;
+
+  width: 44px;
+  height: 44px;
+
+  flex-shrink: 0;
+
+  border-radius: var(--radius-full);
+
+  background: var(--color-surface-strong);
+  color: var(--color-secondary);
+}
+
+.panel-undangan-ikon ion-icon {
+  font-size: 22px;
+}
+
+.panel-undangan-header h2 {
+  margin: 0 0 2px;
+
+  font-size: var(--font-size-lg);
+}
+
+.panel-undangan-header p {
+  margin: 0;
+
+  color: var(--color-text-secondary);
+
+  font-size: var(--font-size-sm);
+  line-height: 1.5;
+}
+
+.kode-undangan {
+  margin: var(--space-5) 0 var(--space-2);
+  padding: var(--space-4);
+
+  border: 1px dashed rgba(192, 88, 0, .35);
+  border-radius: var(--radius-lg);
+
+  background: var(--color-surface-strong);
+  color: var(--color-primary);
+
+  font-size: var(--font-size-2xl);
+  font-weight: var(--font-weight-bold);
+  letter-spacing: .12em;
+  text-align: center;
+}
+
+.masa-undangan {
+  margin: 0 0 var(--space-4);
+
+  color: var(--color-text-secondary);
+
+  font-size: var(--font-size-sm);
+  text-align: center;
+}
+
+.catatan-prototype {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-2);
+
+  margin: var(--space-4) 0 0;
+  padding-top: var(--space-3);
+
+  border-top: 1px solid var(--color-border);
+
+  color: var(--color-text-secondary);
+
+  font-size: var(--font-size-xs);
+  line-height: 1.5;
+}
+
+.catatan-prototype ion-icon {
+  margin-top: 2px;
+
+  flex-shrink: 0;
+
+  color: var(--color-secondary);
+  font-size: 16px;
+}
+
+
+/* Link di halaman Pengaturan.
+   Ditaruh di page family CSS juga agar style global tidak perlu disentuh. */
+.tautan-pengaturan {
+  color: var(--color-text);
+  text-decoration: none;
+}
+
+.tautan-pengaturan .chevron-pengaturan {
+  color: var(--color-text-secondary);
+
+  font-size: 18px;
+}
+/* Avatar anggota sekarang dapat berisi foto */
+.avatar-anggota {
+  overflow: hidden;
+  padding: 0;
+}
+/* =========================================
+   ROLE + HUBUNGAN ANGGOTA
+========================================= */
+
+.meta-anggota {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.penanda-akun-ini {
+  padding: 2px 7px;
+
+  border-radius: var(--radius-full);
+
+  background: var(--color-surface-soft);
+  color: var(--color-primary) !important;
+
+  font-size: var(--font-size-xs) !important;
+  font-weight: var(--font-weight-semibold);
+}
+
+.aksi-anggota {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+
+  flex-shrink: 0;
+}
+
+.tombol-kelola-anggota {
+  display: grid;
+  place-items: center;
+
+  width: 34px;
+  height: 34px;
+
+  padding: 0;
+
+  border: 0;
+  border-radius: var(--radius-full);
+
+  background: transparent;
+  color: var(--color-text-secondary);
+}
+
+.tombol-kelola-anggota:active {
+  background: var(--color-surface-soft);
+}
+
+.tombol-kelola-anggota ion-icon {
+  font-size: 20px;
+}
+
+
+/* =========================================
+   SHEET KELOLA ANGGOTA
+========================================= */
+
+.sheet-kelola-anggota {
+  max-height: min(86dvh, 720px);
+  overflow-y: auto;
+}
+
+.sheet-subjudul-keluarga {
+  margin: 3px 0 0;
+
+  color: var(--color-text-secondary);
+
+  font-size: var(--font-size-xs);
+}
+
+.bantuan-field {
+  display: block;
+
+  margin-top: var(--space-1);
+
+  color: var(--color-text-secondary);
+
+  font-size: var(--font-size-xs);
+  line-height: 1.5;
+}
+
+.zona-bahaya-anggota {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-4);
+
+  margin-top: var(--space-5);
+  padding-top: var(--space-4);
+
+  border-top: 1px solid var(--color-border);
+}
+
+.zona-bahaya-anggota > div {
+  min-width: 0;
+}
+
+.zona-bahaya-anggota strong {
+  color: var(--color-danger);
+
+  font-size: var(--font-size-sm);
+}
+
+.zona-bahaya-anggota p {
+  margin: 3px 0 0;
+
+  color: var(--color-text-secondary);
+
+  font-size: var(--font-size-xs);
+  line-height: 1.5;
+}
+
+.tombol-hapus-anggota {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-1);
+
+  flex-shrink: 0;
+
+  padding: 10px 12px;
+
+  border: 0;
+  border-radius: var(--radius-md);
+
+  background: rgba(181, 58, 45, .10);
+  color: var(--color-danger);
+
+  font: inherit;
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-semibold);
+}
+
+.tombol-hapus-anggota ion-icon {
+  font-size: 17px;
+}
+
+.catatan-hak-akses {
+  margin: var(--space-4) 0 0;
+  padding: var(--space-3);
+
+  border-radius: var(--radius-md);
+
+  background: var(--color-surface-soft);
+  color: var(--color-text-secondary);
+
+  font-size: var(--font-size-xs);
+  line-height: 1.5;
+}
+
+@media (max-width: 350px) {
+  .zona-bahaya-anggota {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .tombol-hapus-anggota {
+    width: 100%;
+  }
+}

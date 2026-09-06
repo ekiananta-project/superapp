@@ -1,0 +1,230 @@
+/* Family Invitation Backend v1 — additive styles only */
+
+.preview-undangan-gabung {
+  margin-top: 16px;
+  padding: 16px;
+  border: 1px solid var(--color-border, #dce1dc);
+  border-radius: 18px;
+  background: var(--color-surface, #fff);
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 12px;
+  align-items: start;
+}
+
+.preview-undangan-ikon {
+  width: 46px;
+  height: 46px;
+  border-radius: 14px;
+  display: grid;
+  place-items: center;
+  background: color-mix(in srgb, var(--color-secondary, #24984a) 14%, transparent);
+  color: var(--color-secondary, #24984a);
+  font-size: 24px;
+}
+
+.preview-undangan-copy {
+  min-width: 0;
+}
+
+.preview-undangan-label {
+  display: block;
+  margin-bottom: 4px;
+  color: var(--color-secondary, #24984a);
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+}
+
+.preview-undangan-copy h3 {
+  margin: 0 0 5px;
+  color: var(--color-text, #1c211e);
+  font-size: 18px;
+}
+
+.preview-undangan-copy p,
+.preview-undangan-copy small {
+  margin: 0;
+  color: var(--color-text-secondary, #777f79);
+}
+
+.preview-undangan-gabung > .tombol-utama {
+  grid-column: 1 / -1;
+  width: 100%;
+  margin-top: 4px;
+}
+
+.catatan-backend-aktif {
+  border-color: color-mix(in srgb, var(--color-secondary, #24984a) 28%, transparent) !important;
+}
+
+.panel-undangan-backend {
+  margin-top: 14px;
+}
+
+.undangan-hubungan-field {
+  margin-top: 16px;
+}
+
+.tombol-generate-undangan {
+  width: 100%;
+  margin-top: 4px;
+}
+
+.undangan-hasil {
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 1px solid var(--color-border, #dce1dc);
+}
+
+.kode-undangan {
+  letter-spacing: .14em;
+  font-variant-numeric: tabular-nums;
+  user-select: all;
+}
+
+.hubungan-undangan-ringkas {
+  margin: 8px 0 0;
+  text-align: center;
+  color: var(--color-text-secondary, #777f79);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.catatan-undangan-backend {
+  display: flex;
+  gap: 8px;
+  align-items: flex-start;
+  margin: 14px 0 0;
+  padding: 10px 12px;
+  border-radius: 12px;
+  background: color-mix(in srgb, var(--color-secondary, #24984a) 8%, transparent);
+  color: var(--color-text-secondary, #777f79);
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.catatan-undangan-backend ion-icon {
+  flex: 0 0 auto;
+  margin-top: 2px;
+  color: var(--color-secondary, #24984a);
+}
+
+.tombol-link-bahaya {
+  width: 100%;
+  margin-top: 12px;
+  padding: 10px 12px;
+  border: 0;
+  background: transparent;
+  color: var(--color-danger, #d65f5f);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 750;
+  cursor: pointer;
+}
+
+.tombol-link-bahaya:disabled,
+.tombol-generate-undangan:disabled,
+.preview-undangan-gabung button:disabled {
+  opacity: .6;
+  cursor: wait;
+}
+
+.avatar-anggota-backend {
+  font-weight: 800;
+  letter-spacing: .02em;
+}
+
+.notifikasi[data-tipe="success"] {
+  border-color: color-mix(in srgb, var(--color-secondary, #24984a) 38%, transparent);
+}
+
+.notifikasi[data-tipe="error"] {
+  border-color: color-mix(in srgb, var(--color-danger, #d65f5f) 38%, transparent);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .preview-undangan-gabung,
+  .panel-undangan-backend {
+    scroll-behavior: auto;
+  }
+}
+
+
+/* ------------------------------------------------------------
+   UX FIX v2 — floating copied toast + visible join status
+   ------------------------------------------------------------ */
+.toast-salin-kode {
+  position: fixed;
+  left: 50%;
+  bottom: calc(88px + env(safe-area-inset-bottom, 0px));
+  z-index: 9999;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  max-width: calc(100vw - 32px);
+  padding: 10px 14px;
+  border: 1px solid color-mix(in srgb, var(--color-secondary, #37c961) 38%, transparent);
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--color-surface, #1b1d1c) 94%, transparent);
+  color: var(--color-text, #f1f3f0);
+  box-shadow: 0 12px 32px rgba(0, 0, 0, .28);
+  font-size: 13px;
+  font-weight: 800;
+  line-height: 1;
+  pointer-events: none;
+  opacity: 0;
+  transform: translate(-50%, 12px) scale(.96);
+  transition: opacity .18s ease, transform .18s ease;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+
+.toast-salin-kode ion-icon {
+  flex: 0 0 auto;
+  color: var(--color-secondary, #37c961);
+  font-size: 18px;
+}
+
+.toast-salin-kode.is-show {
+  opacity: 1;
+  transform: translate(-50%, 0) scale(1);
+}
+
+.status-gabung-undangan {
+  grid-column: 1 / -1;
+  margin: 2px 0 0;
+  padding: 10px 12px;
+  border-radius: 12px;
+  background: var(--color-surface-soft, #232624);
+  color: var(--color-text-secondary, #909791);
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1.45;
+  text-align: center;
+}
+
+.status-gabung-undangan[data-tipe="loading"] {
+  color: var(--color-text, #f1f3f0);
+}
+
+.status-gabung-undangan[data-tipe="success"] {
+  background: color-mix(in srgb, var(--color-secondary, #37c961) 12%, transparent);
+  color: var(--color-secondary, #37c961);
+}
+
+.status-gabung-undangan[data-tipe="error"] {
+  background: color-mix(in srgb, var(--color-danger, #ef6b6b) 12%, transparent);
+  color: var(--color-danger, #ef6b6b);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .toast-salin-kode {
+    transition: none;
+  }
+}

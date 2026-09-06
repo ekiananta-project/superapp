@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="id" data-auth-guard="finance">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#0B0D0C">
+  <meta name="application-name" content="Family Superapp">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Family">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="robots" content="noindex,nofollow,noarchive">
+  <meta name="referrer" content="strict-origin-when-cross-origin">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32.png">
+  <link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png">
+  <link rel="apple-touch-icon" sizes="180x180" href="icons/apple-touch-icon.png">
+  <script src="js/theme.js"></script>
+  <title>Detail Transaksi</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/theme.css">
+  <link rel="stylesheet" href="css/pages/detail-transaksi.css">
+</head>
+<body>
+<div class="aplikasi">
+  <header class="header-halaman">
+    <a class="tombol-ikon" href="index.html" aria-label="Kembali">
+      <ion-icon name="arrow-back-outline"></ion-icon>
+    </a>
+    <h1>Detail Transaksi</h1>
+    <span class="kosong"></span>
+  </header>
+
+  <main class="konten-halaman">
+    <div class="notifikasi" data-notifikasi hidden></div>
+    <div data-detail-transaksi>
+      <div class="kosong-data">
+        <ion-icon name="cloud-download-outline"></ion-icon>
+        Mengambil detail transaksi...
+      </div>
+    </div>
+  </main>
+</div>
+
+<!-- Konfirmasi VOID. Bukan hard delete. -->
+<div class="lapisan" id="sheet-void-transaksi" hidden>
+  <section class="bottom-sheet" role="dialog" aria-modal="true" aria-labelledby="judul-void-transaksi">
+    <div class="sheet-handle"></div>
+    <div class="sheet-header">
+      <h2 id="judul-void-transaksi">Batalkan transaksi?</h2>
+      <button class="tombol-ikon" type="button" data-batal-void aria-label="Tutup">
+        <ion-icon name="close-outline"></ion-icon>
+      </button>
+    </div>
+
+    <p class="void-peringatan">
+      Transaksi <strong>tidak akan dihapus dari histori</strong>. Statusnya menjadi dibatalkan dan saldo akan dihitung ulang oleh database.
+    </p>
+
+    <div class="grup-input">
+      <label for="alasan-void">Alasan pembatalan <span aria-hidden="true">(opsional)</span></label>
+      <textarea class="area-teks" id="alasan-void" data-alasan-void maxlength="500" placeholder="Contoh: Salah input nominal"></textarea>
+    </div>
+
+    <div class="baris-tombol" style="margin-top: var(--space-4);">
+      <button class="tombol-sekunder" type="button" data-batal-void>Batal</button>
+      <button class="tombol-bahaya" type="button" data-konfirmasi-void>
+        <ion-icon name="close-circle-outline"></ion-icon>
+        Batalkan Transaksi
+      </button>
+    </div>
+  </section>
+</div>
+
+<script type="module" src="https://unpkg.com/ionicons@8.0.13/dist/ionicons/ionicons.esm.js"></script>
+<script nomodule src="https://unpkg.com/ionicons@8.0.13/dist/ionicons/ionicons.js"></script>
+
+<!-- Supabase + Service Layer -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="js/backend/supabase.js"></script>
+<script src="js/backend/auth-service.js"></script>
+<script src="js/backend/family-service.js"></script>
+<script src="js/backend/finance-service.js"></script>
+<script src="js/backend/auth-router.js"></script>
+<script src="js/backend/auth-guard.js"></script>
+
+<!-- Detail backend. Jangan load js/app.js di halaman ini. -->
+<script src="js/pages/detail-transaksi-backend.js"></script>
+<script src="js/pwa.js"></script>
+</body>
+</html>
