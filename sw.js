@@ -1,4 +1,4 @@
-const CACHE_NAME = "family-superapp-v1.0.3";
+const CACHE_NAME = "family-superapp-v1.0.4";
 const OFFLINE_URL = "./offline.html";
 
 const APP_FILES = [
@@ -53,7 +53,7 @@ const APP_FILES = [
   "./js/pages/dompet-detail-backend.js",
   "./js/pages/dompet-form-backend.js",
   "./js/pages/home-backend.js",
-  "./js/pages/home-profile-refresh-v2.js",
+  "./js/pages/home-profile-sync-v3.js",
   "./js/pages/keamanan.js",
   "./js/pages/keluarga-awal.js",
   "./js/pages/keluarga.js",
