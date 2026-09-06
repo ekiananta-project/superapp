@@ -65,6 +65,7 @@
       email: emailFinal,
       password,
       options: {
+        emailRedirectTo: new URL("login.html", window.location.href).href,
         data: {
           display_name: displayName
         }

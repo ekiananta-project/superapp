@@ -12,16 +12,16 @@
   "theme_color": "#0B0D0C",
   "icons": [
     {
-      "src": "icons/icon-192.png",
+      "src": "icons/icon-192-v2.png",
       "sizes": "192x192",
       "type": "image/png",
-      "purpose": "any maskable"
+      "purpose": "any"
     },
     {
-      "src": "icons/icon-512.png",
+      "src": "icons/icon-512-v2.png",
       "sizes": "512x512",
       "type": "image/png",
-      "purpose": "any maskable"
+      "purpose": "any"
     }
   ],
   "shortcuts": [
@@ -39,5 +39,11 @@
   "categories": [
     "finance",
     "lifestyle"
-  ]
+  ],
+  "launch_handler": {
+    "client_mode": [
+      "navigate-existing",
+      "auto"
+    ]
+  }
 }
