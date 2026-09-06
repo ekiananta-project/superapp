@@ -39,6 +39,28 @@
     );
   }
 
+  function angkaDariNominal(value) {
+    const digit = String(value ?? "").replace(/\D/g, "");
+    if (!digit) return 0;
+    const n = Number(digit);
+    return Number.isSafeInteger(n) ? n : Number.NaN;
+  }
+
+  function formatNominal(value) {
+    const n = typeof value === "number" ? value : angkaDariNominal(value);
+    if (!Number.isFinite(n)) return "";
+    return new Intl.NumberFormat("id-ID", { maximumFractionDigits: 0 }).format(n);
+  }
+
+  function pasangFormatSaldo() {
+    const el = form.elements.saldo;
+    if (!el) return;
+    el.addEventListener("input", () => {
+      const n = angkaDariNominal(el.value);
+      el.value = Number.isFinite(n) ? formatNominal(n) : "";
+    });
+  }
+
   function tampilPesan(message, tipe = "error") {
     if (!notif) return;
     notif.hidden = false;
@@ -87,7 +109,7 @@
 
     form.elements.nama.value = wallet.name || "";
     form.elements.jenis.value = wallet.wallet_type || "other";
-    form.elements.saldo.value = Number(wallet.current_balance || 0);
+    form.elements.saldo.value = formatNominal(Number(wallet.current_balance || 0));
     form.elements.saldo.readOnly = true;
     form.elements.ikon.value = wallet.icon_value || "wallet-outline";
 
@@ -106,6 +128,8 @@
     bantuanSaldo.textContent = "Saldo awal hanya dipakai sekali saat dompet dibuat.";
     simpan.textContent = setupAwal ? "Mulai Menggunakan Aplikasi" : "Simpan Dompet";
   }
+
+  pasangFormatSaldo();
 
   async function init() {
     if (window.AUTH_READY) {
@@ -149,7 +173,7 @@
     const name = form.elements.nama.value.trim();
     const walletType = form.elements.jenis.value;
     const iconValue = form.elements.ikon.value || "wallet-outline";
-    const openingBalance = Number(form.elements.saldo.value || 0);
+    const openingBalance = angkaDariNominal(form.elements.saldo.value);
 
     if (!name) {
       tampilPesan("Nama dompet wajib diisi.");

@@ -1,145 +1,121 @@
 (() => {
   "use strict";
 
-  const KUNCI_KELUARGA = "keuangan_keluarga_v1";
-
-  function bacaKeluarga() {
-    const isi = localStorage.getItem(KUNCI_KELUARGA);
-
-    if (!isi) return null;
-
-    try {
-      return JSON.parse(isi);
-    } catch {
-      return null;
-    }
-  }
-
-  function anggotaSaatIni(keluarga = bacaKeluarga()) {
-    return (
-      keluarga?.anggota?.find(item => item.saatIni) ||
-      keluarga?.anggota?.[0] ||
-      null
-    );
-  }
+  const BUCKET = "profile-avatars";
+  let profileCache = null;
+  let loadPromise = null;
 
   function inisial(nama) {
     return String(nama || "?")
-      .trim()
-      .split(/\s+/)
-      .filter(Boolean)
-      .slice(0, 2)
-      .map(kata => kata[0]?.toUpperCase() || "")
-      .join("") || "?";
+      .trim().split(/\s+/).filter(Boolean).slice(0, 2)
+      .map(kata => kata[0]?.toUpperCase() || "").join("") || "?";
   }
 
-  function fotoValid(foto) {
-    return (
-      typeof foto === "string" &&
-      (
-        foto.startsWith("data:image/") ||
-        foto.startsWith("https://") ||
-        foto.startsWith("http://")
-      )
-    );
+  function publicUrl(path) {
+    if (!path || !window.supabaseClient) return "";
+    const { data } = window.supabaseClient.storage.from(BUCKET).getPublicUrl(path);
+    return data?.publicUrl || "";
   }
 
-  function render(elemen, anggota, opsi = {}) {
+  function render(elemen, profile = profileCache, opsi = {}) {
     if (!elemen) return;
-
-    const fallback =
-      opsi.fallback ||
-      elemen.dataset.avatarFallback ||
-      "icon";
-
-    const nama =
-      anggota?.nama ||
-      "Pengguna";
+    const fallback = opsi.fallback || elemen.dataset.avatarFallback || "icon";
+    const nama = profile?.display_name || profile?.nama || "Pengguna";
+    const foto = profile?.avatar_url || publicUrl(profile?.avatar_path) || profile?.fotoProfil || "";
 
     elemen.classList.add("avatar-pengguna");
     elemen.replaceChildren();
 
-    if (fotoValid(anggota?.fotoProfil)) {
-      const gambar = document.createElement("img");
-
-      gambar.className =
-        "avatar-pengguna-gambar";
-
-      gambar.src =
-        anggota.fotoProfil;
-
-      gambar.alt =
-        `Foto profil ${nama}`;
-
-      elemen.appendChild(gambar);
+    if (foto) {
+      const img = document.createElement("img");
+      img.className = "avatar-pengguna-gambar";
+      img.src = foto;
+      img.alt = `Foto profil ${nama}`;
+      elemen.appendChild(img);
       return;
     }
 
     if (fallback === "initials") {
-      const teks = document.createElement("span");
-
-      teks.className =
-        "avatar-pengguna-inisial";
-
-      teks.textContent =
-        inisial(nama);
-
-      teks.setAttribute(
-        "aria-label",
-        `Avatar ${nama}`
-      );
-
-      elemen.appendChild(teks);
+      const span = document.createElement("span");
+      span.className = "avatar-pengguna-inisial";
+      span.textContent = inisial(nama);
+      span.setAttribute("aria-label", `Avatar ${nama}`);
+      elemen.appendChild(span);
       return;
     }
 
-    const ikon =
-      document.createElement("ion-icon");
-
-    ikon.className =
-      "avatar-pengguna-icon";
-
-    ikon.setAttribute(
-      "name",
-      "person-outline"
-    );
-
-    ikon.setAttribute(
-      "aria-hidden",
-      "true"
-    );
-
-    elemen.appendChild(ikon);
+    const icon = document.createElement("ion-icon");
+    icon.className = "avatar-pengguna-icon";
+    icon.setAttribute("name", "person-outline");
+    icon.setAttribute("aria-hidden", "true");
+    elemen.appendChild(icon);
   }
 
-  function renderPenggunaAktif() {
-    const keluarga = bacaKeluarga();
-    const anggota = anggotaSaatIni(keluarga);
+  function renderSemua(profile = profileCache) {
+    document.querySelectorAll("[data-avatar-pengguna]").forEach(el => render(el, profile));
+  }
 
-    document
-      .querySelectorAll("[data-avatar-pengguna]")
-      .forEach(elemen => {
-        render(elemen, anggota);
-      });
+  async function loadBackend({ force = false } = {}) {
+    if (!window.supabaseClient) {
+      renderSemua();
+      return null;
+    }
+    if (loadPromise && !force) return loadPromise;
 
-    return anggota;
+    loadPromise = (async () => {
+      try {
+        if (window.AUTH_READY) {
+          const ok = await window.AUTH_READY;
+          if (ok === false) return null;
+        }
+        const { data: authData } = await window.supabaseClient.auth.getUser();
+        const user = authData?.user;
+        if (!user) return null;
+
+        const { data, error } = await window.supabaseClient
+          .from("profiles")
+          .select("display_name,avatar_path")
+          .eq("id", user.id)
+          .maybeSingle();
+        if (error) throw error;
+
+        profileCache = data || { display_name: user.user_metadata?.display_name || "Pengguna", avatar_path: null };
+        renderSemua(profileCache);
+        return profileCache;
+      } catch (error) {
+        console.warn("[Avatar backend]", error);
+        renderSemua(profileCache);
+        return null;
+      } finally {
+        loadPromise = null;
+      }
+    })();
+
+    return loadPromise;
   }
 
   window.AvatarAplikasi = {
-    bacaKeluarga,
-    anggotaSaatIni,
     inisial,
     render,
-    renderPenggunaAktif
+    renderPenggunaAktif: () => renderSemua(profileCache),
+    loadBackend
   };
 
-  document.addEventListener(
-    "DOMContentLoaded",
-    renderPenggunaAktif
-  );
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", () => loadBackend(), { once: true });
+  } else {
+    loadBackend();
+  }
 
-  window.addEventListener(
-    "profil-pengguna-berubah",
-    renderPenggunaAktif
-  );
+  window.addEventListener("profil-pengguna-berubah", event => {
+    const detail = event?.detail || {};
+    if (detail.avatar_path !== undefined || detail.avatar_url !== undefined || detail.display_name !== undefined) {
+      profileCache = { ...(profileCache || {}), ...detail };
+      renderSemua(profileCache);
+    } else {
+      loadBackend({ force: true });
+    }
+  });
+
+  window.addEventListener("pageshow", () => loadBackend({ force: true }));
 })();

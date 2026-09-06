@@ -106,6 +106,14 @@
     }, 3500);
   }
 
+  function avatarUrl(path) {
+    if (!path || !window.supabaseClient) return "";
+    const { data } = window.supabaseClient.storage
+      .from("profile-avatars")
+      .getPublicUrl(path);
+    return data?.publicUrl || "";
+  }
+
   function inisial(nama) {
     return String(nama || "?")
       .trim()
@@ -253,7 +261,16 @@
 
       const avatar = document.createElement("span");
       avatar.className = "avatar-anggota avatar-anggota-backend";
-      avatar.textContent = inisial(nama);
+      const foto = avatarUrl(item.profile?.avatar_path);
+      if (foto) {
+        const img = document.createElement("img");
+        img.src = foto;
+        img.alt = `Foto ${nama}`;
+        img.loading = "lazy";
+        avatar.appendChild(img);
+      } else {
+        avatar.textContent = inisial(nama);
+      }
 
       const info = document.createElement("span");
       info.className = "info-anggota";

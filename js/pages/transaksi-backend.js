@@ -113,6 +113,35 @@
     tombolSimpan.textContent = aktif ? "Menyimpan..." : labelSimpan();
   }
 
+  function angkaDariInput(el) {
+    const digit = String(el?.value || "").replace(/\D/g, "");
+    if (!digit) return 0;
+    const nilai = Number(digit);
+    return Number.isSafeInteger(nilai) ? nilai : Number.NaN;
+  }
+
+  function formatNominal(nilai) {
+    const digit = String(nilai ?? "").replace(/\D/g, "").replace(/^0+(?=\d)/, "");
+    if (!digit) return "";
+    return new Intl.NumberFormat("id-ID", { maximumFractionDigits: 0 }).format(Number(digit));
+  }
+
+  function pasangFormatNominal(el, { allowZero = false } = {}) {
+    if (!el) return;
+    el.addEventListener("input", () => {
+      const angka = angkaDariInput(el);
+      if (!Number.isFinite(angka)) {
+        el.value = "";
+        return;
+      }
+      if (angka === 0 && !allowZero && !String(el.value).replace(/\D/g, "")) {
+        el.value = "";
+        return;
+      }
+      el.value = formatNominal(angka);
+    });
+  }
+
   function tanggalHariIni() {
     const now = new Date();
     const y = now.getFullYear();
@@ -130,7 +159,7 @@
   }
 
   function nilaiBiayaAdmin() {
-    const nilai = Number(biayaAdmin?.value || 0);
+    const nilai = angkaDariInput(biayaAdmin);
     return Number.isSafeInteger(nilai) && nilai >= 0 ? nilai : 0;
   }
 
@@ -142,7 +171,7 @@
       return;
     }
 
-    const nominal = Number(jumlah.value || 0);
+    const nominal = angkaDariInput(jumlah);
     const fee = nilaiBiayaAdmin();
     const mode = fee > 0 ? modeBiaya?.value : null;
     const sumber = dompetById(dompetEl.value);
@@ -247,7 +276,10 @@
   }
 
   function renderJenis() {
-    document.querySelectorAll("[data-form-jenis]").forEach(btn => {
+    pasangFormatNominal(jumlah);
+  pasangFormatNominal(biayaAdmin, { allowZero: true });
+
+  document.querySelectorAll("[data-form-jenis]").forEach(btn => {
       btn.classList.toggle(
         "is-aktif",
         btn.dataset.formJenis === jenisAktif
@@ -453,8 +485,8 @@
 
     tanggal.value = detailEdit.occurred_on;
     keterangan.value = detailEdit.note || "";
-    jumlah.value = detailEdit.amount;
-    if (biayaAdmin) biayaAdmin.value = String(detailEdit.transfer_fee || 0);
+    jumlah.value = formatNominal(detailEdit.amount);
+    if (biayaAdmin) biayaAdmin.value = formatNominal(detailEdit.transfer_fee || 0) || "0";
     if (modeBiaya) modeBiaya.value = detailEdit.transfer_fee_mode || "added";
 
     isiDompet(walletId);
@@ -512,6 +544,9 @@
     }
   }
 
+  pasangFormatNominal(jumlah);
+  pasangFormatNominal(biayaAdmin, { allowZero: true });
+
   document.querySelectorAll("[data-form-jenis]").forEach(btn => {
     btn.addEventListener("click", () => pilihJenis(btn.dataset.formJenis));
   });
@@ -546,10 +581,10 @@
 
     sembunyikanPesan();
 
-    const nilai = Number(jumlah.value);
+    const nilai = angkaDariInput(jumlah);
     const kind = KIND_DB[jenisAktif];
     const isTransfer = kind === "transfer";
-    const transferFee = isTransfer ? Number(biayaAdmin?.value || 0) : 0;
+    const transferFee = isTransfer ? angkaDariInput(biayaAdmin) : 0;
     const transferFeeMode = isTransfer && transferFee > 0
       ? modeBiaya?.value
       : null;

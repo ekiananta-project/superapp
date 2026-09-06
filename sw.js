@@ -1,4 +1,4 @@
-const CACHE_NAME = "family-superapp-v1.0.2";
+const CACHE_NAME = "family-superapp-v1.0.3";
 const OFFLINE_URL = "./offline.html";
 
 const APP_FILES = [
@@ -59,7 +59,7 @@ const APP_FILES = [
   "./js/pages/keluarga.js",
   "./js/pages/login.js",
   "./js/pages/pengaturan-auth.js",
-  "./js/pages/pengaturan-profil.js",
+  "./js/pages/pengaturan-avatar-backend-v1.js",
   "./js/pages/pengaturan-profile-backend-v2.js",
   "./js/pages/pengaturan-tema.js",
   "./js/pages/transaksi-backend.js",
