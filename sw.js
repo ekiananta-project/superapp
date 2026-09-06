@@ -1,4 +1,4 @@
-const CACHE_NAME = "family-superapp-v1.0.0";
+const CACHE_NAME = "family-superapp-v1.0.1";
 const OFFLINE_URL = "./offline.html";
 
 const APP_FILES = [
@@ -44,6 +44,7 @@ const APP_FILES = [
   "./js/components/account-visual-picker.js",
   "./js/components/avatar.js",
   "./js/components/quote.js",
+  "./js/pages/account-deletion.js",
   "./js/pages/akun-backend.js",
   "./js/pages/akun-form-backend.js",
   "./js/pages/daftar.js",

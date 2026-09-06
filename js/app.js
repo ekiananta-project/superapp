@@ -836,7 +836,7 @@
 
   function renderPengaturan() {
     const form = document.querySelector("[data-form-pengaturan]");
-    if (!form) return;
+    if (!form || window.AUTH_BACKEND_MODE === true) return;
 
     let { pengaturan } = dataAplikasi();
     form.elements.nama.value = pengaturan.nama;
@@ -894,7 +894,8 @@
       tampilPesan("Profil disimpan.");
     };
 
-    document.querySelector("[data-hapus-semua-data]").onclick = () => {
+    const tombolResetLokal = document.querySelector("[data-hapus-semua-data]");
+    if (tombolResetLokal) tombolResetLokal.onclick = () => {
       const setuju = confirm(
         window.AUTH_BACKEND_MODE === true
           ? "Reset data lokal pada perangkat ini? Data Supabase (dompet, akun, transaksi, dan keluarga backend) TIDAK dihapus."

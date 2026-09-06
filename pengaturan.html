@@ -145,13 +145,22 @@
       <div class="item-pengaturan">
         <ion-icon name="information-circle-outline"></ion-icon>
         <span>Versi</span>
-        <small>1.0.0 PWA</small>
+        <small>1.0.1 PWA</small>
       </div>
     </div>
 
-    <button class="tombol-bahaya" type="button" data-hapus-semua-data style="margin-top:20px">
-      <ion-icon name="refresh-outline"></ion-icon> Reset Data Lokal Perangkat
-    </button>
+    <h2 class="judul-grup judul-zona-bahaya">Zona Berbahaya</h2>
+    <div class="kartu-pengaturan kartu-zona-bahaya">
+      <button
+        class="item-pengaturan item-pengaturan-tombol item-hapus-akun"
+        type="button"
+        data-buka-hapus-akun>
+        <ion-icon name="trash-outline"></ion-icon>
+        <span>Hapus Akun</span>
+        <small>Permanen</small>
+        <ion-icon class="chevron-pengaturan" name="chevron-forward-outline"></ion-icon>
+      </button>
+    </div>
   </main>
 </div>
 
@@ -233,6 +242,72 @@
   </section>
 </div>
 
+
+<div class="lapisan" id="sheet-hapus-akun" data-sheet-hapus-akun hidden>
+  <section class="bottom-sheet sheet-hapus-akun" role="dialog" aria-modal="true" aria-labelledby="judul-hapus-akun">
+    <div class="sheet-handle"></div>
+
+    <div class="sheet-header">
+      <div>
+        <h2 id="judul-hapus-akun">Hapus Akun</h2>
+        <p class="sheet-subjudul">Tindakan ini permanen dan tidak dapat dibatalkan.</p>
+      </div>
+
+      <button
+        class="tombol-ikon"
+        type="button"
+        data-tutup-hapus-akun
+        aria-label="Tutup">
+        <ion-icon name="close-outline"></ion-icon>
+      </button>
+    </div>
+
+    <div class="peringatan-hapus-akun">
+      <ion-icon name="warning-outline"></ion-icon>
+      <div>
+        <strong>Akun login akan dihapus permanen.</strong>
+        <p>Riwayat transaksi di keluarga yang masih memiliki anggota lain tetap tersimpan. Jika kamu adalah owner dan masih ada anggota lain, penghapusan akan ditolak agar keluarga tidak kehilangan owner.</p>
+        <p>Jika kamu adalah satu-satunya anggota sekaligus owner, keluarga tersebut dan data keuangannya ikut dihapus.</p>
+      </div>
+    </div>
+
+    <form class="formulir formulir-hapus-akun" data-form-hapus-akun>
+      <div class="grup-input">
+        <label for="hapus-akun-password">Password saat ini</label>
+        <input
+          class="input"
+          id="hapus-akun-password"
+          name="password"
+          type="password"
+          autocomplete="current-password"
+          placeholder="Masukkan password"
+          required>
+      </div>
+
+      <div class="grup-input">
+        <label for="hapus-akun-konfirmasi">Ketik <strong>HAPUS AKUN</strong> untuk konfirmasi</label>
+        <input
+          class="input"
+          id="hapus-akun-konfirmasi"
+          name="konfirmasi"
+          type="text"
+          autocomplete="off"
+          autocapitalize="characters"
+          spellcheck="false"
+          placeholder="HAPUS AKUN"
+          required>
+      </div>
+
+      <p class="pesan-hapus-akun" data-pesan-hapus-akun hidden></p>
+
+      <button class="tombol-bahaya tombol-hapus-akun-final" type="submit" data-hapus-akun-final disabled>
+        <ion-icon name="trash-outline"></ion-icon>
+        Hapus Akun Permanen
+      </button>
+    </form>
+  </section>
+</div>
+
 <script type="module" src="https://unpkg.com/ionicons@8.0.13/dist/ionicons/ionicons.esm.js"></script>
 <script nomodule src="https://unpkg.com/ionicons@8.0.13/dist/ionicons/ionicons.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -249,6 +324,7 @@
 <script src="js/pages/pengaturan-profil.js"></script>
 <script src="js/pages/pengaturan-tema.js"></script>
 <script src="js/pages/pengaturan-auth.js"></script>
+<script src="js/pages/account-deletion.js?v=20260907-1"></script>
 <script src="js/pwa.js"></script>
 </body>
 </html>
