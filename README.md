@@ -32,7 +32,7 @@ Setiap versi diselesaikan dulu sebelum lanjut ke versi berikutnya.
 [X] Empty state yang konsisten
 [X] Error state internet putus / lambat
 [X] Loading state halaman selain Home
-[ ] Final regression test sebelum naik ke v1.1
+[X] Final regression test sebelum naik ke v1.1
 
 ------------------------------------
 2. v1.1 — COMPLETE FAMILY MANAGEMENT
