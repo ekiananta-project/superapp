@@ -26,36 +26,36 @@
 }
 
 .auth-brand-mark {
-  position: relative;
   width: 46px;
   height: 46px;
   flex: 0 0 46px;
   border-radius: 16px;
-  display: block;
+  display: grid;
+  place-items: center;
+  line-height: 0;
   background: var(--color-secondary);
   color: #071109;
   box-shadow: 0 10px 26px rgba(55, 201, 97, .17);
 }
 
 .auth-brand-mark ion-icon {
-  position: absolute;
-  left: 50%;
-  top: 50%;
+  display: block;
   width: 25px;
   height: 25px;
   margin: 0;
   font-size: 25px;
   line-height: 1;
-  transform: translate(-50%, -50%);
+  align-self: center;
+  justify-self: center;
 }
 
-.auth-brand strong {
+.auth-brand > div > strong {
   display: block;
   font-size: 17px;
   line-height: 1.2;
 }
 
-.auth-brand span {
+.auth-brand > div > span {
   display: block;
   margin-top: 3px;
   color: var(--color-text-secondary);
@@ -217,7 +217,11 @@
 }
 
 .auth-switch {
-  margin: 22px 0 0;
+  display: block;
+  width: 100%;
+  align-self: stretch;
+  margin: 22px auto 0;
+  text-align: center !important;
   color: var(--color-text-secondary);
   font-size: 13px;
 }
