@@ -1,144 +1,164 @@
-FAMILY SUPERAPP v1.0.6 — STABILIZATION & UX AUDIT
-==================================================
+FAMILY SUPERAPP — ROADMAP DEVELOPMENT
+=====================================
 
-BASELINE
-========
-Upgrade dari v1.0.5 Smooth Loading.
+Current baseline:
+v1.0.5 — Smooth Loading
 
-TUJUAN PATCH
-============
-Merangkum hasil audit UX v1.0.x sebelum final regression test dan v1.1.
-Backend/table lama tetap dipertahankan sebisa mungkin; istilah "Kategori"
-adalah istilah user-facing, sedangkan finance_accounts tetap nama internal.
+Tujuan:
+Mengembangkan Family Superapp secara bertahap, stabil, dan mudah diuji.
+Setiap versi diselesaikan dulu sebelum lanjut ke versi berikutnya.
 
-PERUBAHAN UTAMA
-===============
-1. LOGIN & AKUN
-- "Selamat datang kembali." -> "Selamat datang."
-- Error login tetap general: email/password tidak dibedakan demi keamanan.
-- Lupa password + reset password melalui email.
-- Pengaturan: Email Login dapat diubah dengan re-autentikasi password.
-- Pengaturan: Ubah Password.
-- Nomor HP/MFA belum diwajibkan; recovery tambahan tetap fitur opt-in di masa depan.
 
-2. DAFTAR AKUN USER
-- Feedback hasil pendaftaran memakai modal di tengah layar.
-- State sukses, email sudah digunakan (jika provider mengembalikan status tersebut),
-  serta gangguan jaringan/server.
-- Validasi field tetap inline dan fokus ke field pertama yang salah.
-- Tombol menjadi "Membuat akun..." selama request untuk mencegah double submit.
+1. v1.0.x — STABILIZATION & POLISHING
+-------------------------------------
+[x] Supabase Auth
+[x] Profile display_name
+[x] Foto profil Supabase Storage
+[x] Create / Join Family
+[x] Invitation code
+[x] Owner / Member
+[x] Remove member
+[x] Dompet / akun keuangan
+[x] Pemasukan
+[x] Pengeluaran
+[x] Transfer antar akun + biaya admin
+[x] Void transaksi
+[x] Hapus akun
+[x] PWA
+[x] Formatting nominal 1.000.000
+[x] Smooth Loading
 
-3. RUANG KELUARGA
-- Terminologi onboarding dirapikan menjadi "ruang keluarga".
-- "Buat Keluarga Baru" -> "Buat Ruang Keluarga Baru".
-- "Buat Keluarga" -> "Buat Ruang Keluarga".
-- Join flow juga memakai istilah "Gabung Ruang Keluarga".
+[X] Audit seluruh halaman di HP
+[X] Empty state yang konsisten
+[X] Error state internet putus / lambat
+[X] Loading state halaman selain Home
+[ ] Final regression test sebelum naik ke v1.1
 
-4. AKUN KEUANGAN -> KATEGORI
-- Judul dan copy user-facing memakai "Kategori".
-- "Daftar Akun" -> "Daftar Kategori".
-- Transaksi memakai label "Kategori".
-- Backend tetap public.finance_accounts untuk kompatibilitas.
 
-5. KATEGORI PARENT / CHILD
-- Maksimal 2 tingkat: kategori utama -> subkategori.
-- Kategori utama menampilkan "x subkategori" sebagai kontrol buka/tutup.
-- Chevron kanan utama tetap untuk membuka/edit kategori.
-- Child mewarisi icon + warna parent.
-- Perubahan visual parent ikut diterapkan ke child aktif.
-- Parent/child aman terhadap riwayat transaksi:
-  * belum pernah dipakai -> dapat dihapus permanen;
-  * sudah pernah dipakai -> diarsipkan agar history tetap utuh.
+2. v1.1 — COMPLETE FAMILY MANAGEMENT
+------------------------------------
+NEXT PRIORITY
 
-6. KATEGORI DEFAULT UNTUK RUANG KELUARGA BARU
-Pengeluaran mencakup antara lain:
-- Makan & Minum -> Makan Harian, Cemilan, Kopi / Minuman
-- Transportasi -> Bensin, Parkir, Ojol / Transportasi Umum
-- Belanja Harian -> Sembako, Keperluan Pribadi
-- Tagihan -> Listrik, Internet, Pulsa
-- Rumah Tangga -> Dapur, Kebersihan, Perlengkapan Rumah
-- Kesehatan -> Obat, Dokter / Klinik
-- Pendidikan -> Sekolah / Kuliah, Buku / Kursus
-- Hiburan -> Nongkrong, Streaming, Game
-- Cicilan -> Pinjaman, Kartu Kredit
-- Lain-lain
+[ ] Transfer kepemilikan keluarga
+[ ] Member bisa keluar dari keluarga
+[ ] Owner tidak bisa keluar jika belum transfer ownership
+[ ] Owner bisa melihat status anggota
+[ ] Riwayat anggota keluar / dikeluarkan
+[ ] Riwayat undangan
+[ ] Cabut undangan aktif
+[ ] Perbaikan role / relationship anggota bila diperlukan
+[ ] Flow hapus akun owner setelah ownership dipindahkan
 
-Pemasukan:
-- Gaji
-- Bonus / THR
-- Usaha
-- Transfer Masuk
-- Lain-lain
+Rencana checkpoint:
+v1.1.0 — Transfer Kepemilikan
+v1.1.1 — Keluar dari Keluarga
+v1.1.2 — Riwayat Anggota & Undangan
+v1.1.3 — Final Family Management Polish
 
-Kategori default hanya otomatis dibuat untuk Ruang Keluarga BARU setelah migration
-003N aktif. Ruang keluarga lama tidak dipaksa menerima kategori default baru.
 
-7. ICON PICKER
-- Grid icon dibatasi tinggi agar halaman tidak terlalu panjang.
-- Scroll berada di dalam container.
-- Scrollbar native disembunyikan.
-- Fade + chevron atas/bawah menunjukkan masih ada icon yang dapat digulir.
+3. v1.2 — BUDGET & TAGIHAN
+--------------------------
+[ ] Budget bulanan
+[ ] Budget per kategori
+[ ] Progress pemakaian budget
+[ ] Warning budget hampir habis
+[ ] Tagihan rutin
+[ ] Tanggal jatuh tempo
+[ ] Status lunas / belum lunas
+[ ] Transaksi berulang otomatis / semiotomatis
 
-8. RUPIAH & NOMINAL
-- Fokus Indonesia / Rupiah-only untuk versi ini.
-- "Jumlah" -> "Nominal".
-- Input uang memakai prefix Rp.
-- Nominal tetap diformat 25.000 / 1.000.000 saat mengetik.
-- Prefix Rp diterapkan ke nominal transaksi, biaya admin, dan saldo awal dompet.
-- Multi-currency ditunda ke fitur besar terpisah.
 
-9. KEAMANAN
-- keamanan.html fokus ke sesi/perangkat.
-- Penjelasan "Hapus anggota" dihapus karena pengelolaan anggota sudah berada di
-  keluarga.html.
+4. v1.3 — TARGET TABUNGAN
+-------------------------
+[ ] Buat target tabungan
+[ ] Nominal target
+[ ] Deadline
+[ ] Progress tabungan
+[ ] Sumber dana dari akun / dompet
+[ ] Tambah / kurangi dana target
+[ ] Status target tercapai
+[ ] Target bersama keluarga
 
-10. PERFORMANCE NAVIGASI
-- Home menyiapkan cache session untuk Kategori + Dompet.
-- Halaman Kategori/Dompet dapat render cache lebih dulu lalu refresh Supabase.
-- Cache dibedakan per family/user dan hanya berlaku selama session browser.
-- Cache wallet dihapus setelah transaksi/void/archive agar saldo lama tidak tampil.
-- Tidak melakukan refactor SPA besar pada tahap ini.
 
-11. PWA
-- Cache version: family-superapp-v1.0.6.
-- Service worker memakai skipWaiting + clients.claim agar build baru lebih cepat aktif.
+5. v1.4 — LAPORAN & INSIGHT
+---------------------------
+[ ] Grafik pemasukan vs pengeluaran
+[ ] Pengeluaran per kategori
+[ ] Perbandingan bulan sebelumnya
+[ ] Tren cashflow
+[ ] Pengeluaran terbesar
+[ ] Ringkasan bulanan
+[ ] Insight otomatis, contoh:
+    "Pengeluaran bulan ini naik 8%."
+[ ] Filter anggota keluarga
 
-SQL WAJIB
-=========
-Jalankan terlebih dahulu:
-003N - Category Hierarchy & Defaults v1.sql
 
-Migration ini menambah parent_id, RPC kategori baru, aturan hierarchy,
-penghapusan/arsip kategori aman, serta seeding kategori default untuk family baru.
+6. v1.5 — EXPORT & DATA SAFETY
+------------------------------
+[ ] Export Excel / CSV
+[ ] Export PDF
+[ ] Filter periode export
+[ ] Backup data
+[ ] Restore / import bila dibutuhkan
+[ ] Audit log aktivitas penting
+[ ] Riwayat perubahan transaksi
 
-URUTAN DEPLOY
-=============
-1. Supabase -> SQL Editor.
-2. Jalankan seluruh isi "003N - Category Hierarchy & Defaults v1.sql".
-3. Pastikan SQL selesai tanpa error.
-4. Upload/replace isi folder production ke ROOT repo GitHub Pages.
-5. Tunggu GitHub Pages selesai deploy.
-6. Buka website dan lakukan hard refresh sekali bila masih mendapat cache lama.
-7. Tutup/buka ulang PWA.
-8. Pengaturan harus menampilkan "1.0.6 PWA".
 
-SMOKE TEST SETELAH DEPLOY
-=========================
-- Login salah -> pesan tetap general.
-- Lupa password -> respons tidak membocorkan status email.
-- Daftar akun -> hasil submit muncul sebagai modal.
-- Buat Ruang Keluarga BARU -> kategori default parent/child otomatis muncul.
-- Daftar Kategori -> child bisa expand tanpa mengganggu chevron edit.
-- Tambah child -> icon mengikuti parent.
-- Edit icon parent -> child aktif ikut mengikuti visual parent.
-- Hapus parent kosong -> child ikut terhapus.
-- Parent/child yang sudah dipakai transaksi -> diarsipkan, history tetap ada.
-- Input nominal -> Rp + format titik ribuan.
-- Buat transaksi -> Home/Dompet menampilkan saldo terbaru.
-- Pengaturan -> Ubah Email / Ubah Password.
-- keamanan.html -> tidak ada lagi penjelasan Hapus Anggota.
-- Pindah Home -> Kategori/Dompet terasa lebih cepat setelah cache tersedia.
+7. v1.6 — NOTIFICATION
+---------------------
+[ ] Tagihan jatuh tempo
+[ ] Budget hampir habis
+[ ] Target tabungan tercapai
+[ ] Anggota keluarga baru
+[ ] Transaksi besar
+[ ] Web Push Notification
+[ ] Pengaturan jenis notifikasi per user
+
+
+8. v2.0 — NATIVE ANDROID
+------------------------
+[ ] Migrasi / wrap dengan Capacitor
+[ ] APK untuk install langsung
+[ ] AAB untuk Play Store
+[ ] Native splash screen
+[ ] Android Back handling
+[ ] Deep link email confirmation
+[ ] Fingerprint / biometric
+[ ] Native share
+[ ] Push notification Android
+[ ] Update aplikasi
+
+
+9. LATER / OPTIONAL
+-------------------
+[ ] Custom domain
+[ ] Tema terang / gelap
+[ ] PIN app
+[ ] Multi-family
+[ ] Multi-currency
+[ ] Scan struk
+[ ] Import rekening bank
+[ ] AI financial insight
+[ ] Web admin / dashboard keluarga
+
+
+URUTAN KERJA YANG DISEPAKATI
+============================
+1. Stabilkan v1.0.5 terlebih dahulu.
+2. Jangan lompat-lompat versi.
+3. Selesaikan satu checkpoint lalu regression test.
+4. Setelah v1.0.x stabil, lanjut ke v1.1.
+5. Prioritas besar berikutnya:
+   Transfer Kepemilikan + Keluar dari Keluarga.
+6. Setelah Family Management matang, lanjut ke:
+   Budget & Tagihan.
+7. Fitur besar seperti grafik, notifikasi, dan APK dikerjakan setelah
+   core aplikasi benar-benar stabil.
+
 
 CATATAN
 =======
-Final regression test v1.0.x tetap dilakukan setelah patch ini lolos smoke test di HP.
+- Backend yang sudah stabil sebisa mungkin tidak diubah tanpa kebutuhan.
+- Setiap patch perlu bump versi dan service worker cache.
+- Setiap perubahan besar sebaiknya punya checkpoint / rollback.
+- Uji utama tetap dilakukan dari HP karena target utama penggunaan adalah PWA mobile.
