@@ -94,7 +94,7 @@
 
     const families = await FamilyService.ambilKeluargaSaya();
     if (!families.length) {
-      throw new Error("Akun ini belum tergabung ke keluarga backend.");
+      throw new Error("Akun ini belum tergabung ke ruang keluarga.");
     }
 
     const pref = bacaPreferensi();
@@ -221,6 +221,7 @@
         dompetAktif: walletId
       });
 
+      window.FinanceCache?.remove("wallets", familyAktif.id);
       tampilPesan(walletAktif ? "Perubahan dompet tersimpan." : "Dompet berhasil dibuat.", "success");
 
       setTimeout(() => {
@@ -255,6 +256,7 @@
 
     try {
       await FinanceService.arsipDompet(walletAktif.wallet_id);
+      window.FinanceCache?.remove("wallets", familyAktif.id);
 
       const sisaWallet = semuaWallet.filter(item => item.wallet_id !== walletAktif.wallet_id);
       const pref = bacaPreferensi();

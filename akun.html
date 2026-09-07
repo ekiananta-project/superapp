@@ -16,7 +16,7 @@
   <link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png">
   <link rel="apple-touch-icon" sizes="180x180" href="icons/apple-touch-icon.png">
 <script src="js/theme.js"></script>
-  <title>Daftar Akun</title>
+  <title>Daftar Kategori</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -29,25 +29,25 @@
 <div class="aplikasi dengan-nav">
   <header class="header-halaman">
     <a class="tombol-ikon" href="index.html" aria-label="Kembali"><ion-icon name="arrow-back-outline"></ion-icon></a>
-    <h1>Daftar Akun</h1>
-    <a class="tombol-ikon" href="akun-form.html" aria-label="Tambah akun"><ion-icon name="add-outline"></ion-icon></a>
+    <h1>Daftar Kategori</h1>
+    <a class="tombol-ikon" href="akun-form.html" aria-label="Tambah kategori"><ion-icon name="add-outline"></ion-icon></a>
   </header>
 
   <main class="konten-halaman">
     <div class="akun-backend-intro">
       <ion-icon name="pricetags-outline" aria-hidden="true"></ion-icon>
-      <span>Akun adalah kategori untuk mengelompokkan pemasukan dan pengeluaran. Saldo tetap berada di Dompet.</span>
+      <span>Kategori membantu mengelompokkan pemasukan dan pengeluaran. Saldo tetap tersimpan di Dompet.</span>
     </div>
     <div data-daftar-akun>
       <div class="kosong-data akun-loading">
         <ion-icon name="cloud-download-outline"></ion-icon>
-        <span>Memuat akun...</span>
+        <span>Memuat kategori...</span>
       </div>
     </div>
   </main>
 
   <nav class="navigasi-bawah">
-    <a class="navigasi-item is-aktif" href="akun.html"><ion-icon name="grid-outline"></ion-icon><span>Akun</span></a>
+    <a class="navigasi-item is-aktif" href="akun.html"><ion-icon name="grid-outline"></ion-icon><span>Kategori</span></a>
     <a class="tombol-tambah" href="transaksi.html"><ion-icon name="add-outline"></ion-icon></a>
     <a class="navigasi-item" href="dompet.html"><ion-icon name="wallet-outline"></ion-icon><span>Dompet</span></a>
   </nav>
@@ -60,6 +60,7 @@
 <script src="js/backend/auth-service.js"></script>
 <script src="js/backend/family-service.js"></script>
 <script src="js/backend/finance-service.js"></script>
+<script src="js/backend/finance-cache.js"></script>
 <script src="js/backend/auth-router.js"></script>
 <script src="js/backend/auth-guard.js"></script>
 <script src="js/pages/akun-backend.js"></script>

@@ -28,10 +28,10 @@ Setiap versi diselesaikan dulu sebelum lanjut ke versi berikutnya.
 [x] Formatting nominal 1.000.000
 [x] Smooth Loading
 
-[ ] Audit seluruh halaman di HP
-[ ] Empty state yang konsisten
-[ ] Error state internet putus / lambat
-[ ] Loading state halaman selain Home
+[X] Audit seluruh halaman di HP
+[X] Empty state yang konsisten
+[X] Error state internet putus / lambat
+[X] Loading state halaman selain Home
 [ ] Final regression test sebelum naik ke v1.1
 
 

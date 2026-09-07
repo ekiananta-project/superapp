@@ -196,7 +196,7 @@
     }
 
     submit.disabled = true;
-    submit.innerHTML = '<ion-icon name="sync-outline"></ion-icon> Membuat keluarga...';
+    submit.innerHTML = '<ion-icon name="sync-outline"></ion-icon> Membuat ruang keluarga...';
 
     try {
       await AuthService.ubahNamaProfil(namaPengguna);
@@ -209,10 +209,10 @@
       simpanFamilyAktif(familyId);
       location.replace("dompet-form.html?setup=awal");
     } catch (error) {
-      console.error("[Buat Keluarga Backend]", error);
-      tampilPesan(error?.message || "Keluarga gagal dibuat.");
+      console.error("[Buat Ruang Keluarga Backend]", error);
+      tampilPesan(error?.message || "Ruang keluarga gagal dibuat.");
       submit.disabled = false;
-      submit.innerHTML = 'Buat Keluarga <ion-icon name="arrow-forward-outline"></ion-icon>';
+      submit.innerHTML = 'Buat Ruang Keluarga <ion-icon name="arrow-forward-outline"></ion-icon>';
     }
   });
 

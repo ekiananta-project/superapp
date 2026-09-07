@@ -38,7 +38,7 @@
 
     <section class="auth-heading">
       <span class="auth-eyebrow"><ion-icon name="lock-closed-outline"></ion-icon> Akun keluarga</span>
-      <h1>Selamat datang kembali.</h1>
+      <h1>Selamat datang.</h1>
       <p>Masuk untuk membuka dompet, transaksi, dan data keluarga yang tersimpan dengan aman.</p>
     </section>
 
@@ -54,7 +54,10 @@
         </div>
 
         <div class="auth-field">
-          <label for="login-password">Password</label>
+          <div class="auth-label-row">
+            <label for="login-password">Password</label>
+            <button class="auth-text-action" type="button" data-forgot-password>Lupa password?</button>
+          </div>
           <div class="auth-input-wrap">
             <input class="auth-input" id="login-password" name="password" type="password" autocomplete="current-password" placeholder="Masukkan password" required>
             <button class="auth-input-icon" type="button" data-toggle-password="login-password" aria-label="Tampilkan password">
@@ -77,6 +80,52 @@
       <span>Password diproses melalui layanan autentikasi yang aman dan tidak disimpan sebagai data keuangan di aplikasi.</span>
     </div>
   </main>
+
+
+  <div class="auth-modal-layer" data-forgot-modal hidden>
+    <section class="auth-modal-card" role="dialog" aria-modal="true" aria-labelledby="forgot-title">
+      <span class="auth-modal-icon"><ion-icon name="mail-unread-outline"></ion-icon></span>
+      <h2 id="forgot-title">Atur ulang password</h2>
+      <p>Masukkan email login. Demi keamanan, kami tidak akan memberitahu apakah email tersebut terdaftar.</p>
+      <div class="auth-field">
+        <label for="forgot-email">Email</label>
+        <div class="auth-input-wrap">
+          <input class="auth-input no-action" id="forgot-email" type="email" autocomplete="email" placeholder="nama@email.com" data-forgot-email>
+        </div>
+      </div>
+      <p class="auth-modal-message" data-forgot-message hidden></p>
+      <div class="auth-modal-actions">
+        <button class="auth-modal-secondary" type="button" data-close-forgot>Batal</button>
+        <button class="auth-modal-primary" type="button" data-send-reset>Kirim Tautan</button>
+      </div>
+    </section>
+  </div>
+
+  <div class="auth-modal-layer" data-reset-modal hidden>
+    <section class="auth-modal-card" role="dialog" aria-modal="true" aria-labelledby="reset-title">
+      <span class="auth-modal-icon"><ion-icon name="key-outline"></ion-icon></span>
+      <h2 id="reset-title">Buat password baru</h2>
+      <p>Masukkan password baru untuk akun Family Superapp kamu.</p>
+      <div class="auth-field">
+        <label for="reset-password">Password Baru</label>
+        <div class="auth-input-wrap">
+          <input class="auth-input" id="reset-password" type="password" autocomplete="new-password" placeholder="Minimal 8 karakter" data-reset-password>
+          <button class="auth-input-icon" type="button" data-toggle-password="reset-password" aria-label="Tampilkan password"><ion-icon name="eye-outline"></ion-icon></button>
+        </div>
+      </div>
+      <div class="auth-field">
+        <label for="reset-confirm">Konfirmasi Password</label>
+        <div class="auth-input-wrap">
+          <input class="auth-input" id="reset-confirm" type="password" autocomplete="new-password" placeholder="Ulangi password" data-reset-confirm>
+          <button class="auth-input-icon" type="button" data-toggle-password="reset-confirm" aria-label="Tampilkan password"><ion-icon name="eye-outline"></ion-icon></button>
+        </div>
+      </div>
+      <p class="auth-modal-message" data-reset-message hidden></p>
+      <div class="auth-modal-actions single">
+        <button class="auth-modal-primary" type="button" data-save-reset>Simpan Password Baru</button>
+      </div>
+    </section>
+  </div>
 
   <script type="module" src="https://unpkg.com/ionicons@8.0.13/dist/ionicons/ionicons.esm.js"></script>
   <script nomodule src="https://unpkg.com/ionicons@8.0.13/dist/ionicons/ionicons.js"></script>

@@ -60,7 +60,7 @@
     let query = client
       .from("finance_accounts")
       .select(
-        "id,family_id,name,kind,icon_type,icon_value,color,sort_order,created_by,created_at,updated_at,archived_at"
+        "id,family_id,name,kind,parent_id,icon_type,icon_value,color,sort_order,created_by,created_at,updated_at,archived_at"
       )
       .is("archived_at", null)
       .order("sort_order", { ascending: true });
@@ -294,21 +294,77 @@
     return data;
   }
 
-  async function buatAkun({
+  async function buatKategori({
     familyId,
     name,
     kind,
+    parentId = null,
     iconType = "ionicon",
     iconValue = "ellipse-outline",
     color = null,
     sortOrder = 0
   }) {
     const { data, error } = await client.rpc(
-      "finance_create_account",
+      "finance_create_category",
       {
         p_family_id: familyId,
         p_name: name,
         p_kind: kind,
+        p_parent_id: parentId || null,
+        p_icon_type: iconType,
+        p_icon_value: iconValue,
+        p_color: color,
+        p_sort_order: sortOrder
+      }
+    );
+
+    lemparJikaError(error);
+    if (window.FinanceCache) window.FinanceCache.remove("categories", familyId);
+    return data;
+  }
+
+  async function buatAkun(args) {
+    return buatKategori(args);
+  }
+
+  async function ambilAkunById(accountId, familyId = null) {
+    if (!accountId) {
+      throw new Error("categoryId wajib diisi.");
+    }
+
+    let query = client
+      .from("finance_accounts")
+      .select(
+        "id,family_id,name,kind,parent_id,icon_type,icon_value,color,sort_order,created_by,created_at,updated_at,archived_at"
+      )
+      .eq("id", accountId);
+
+    if (familyId) query = query.eq("family_id", familyId);
+
+    const { data, error } = await query.maybeSingle();
+    lemparJikaError(error);
+    return data;
+  }
+
+  async function ubahKategori({
+    accountId,
+    name,
+    kind,
+    parentId = null,
+    iconType = "ionicon",
+    iconValue = "ellipse-outline",
+    color = null,
+    sortOrder = 0
+  }) {
+    if (!accountId) throw new Error("categoryId wajib diisi.");
+
+    const { data, error } = await client.rpc(
+      "finance_update_category",
+      {
+        p_category_id: accountId,
+        p_name: name,
+        p_kind: kind,
+        p_parent_id: parentId || null,
         p_icon_type: iconType,
         p_icon_value: iconValue,
         p_color: color,
@@ -320,51 +376,16 @@
     return data;
   }
 
-  async function ambilAkunById(accountId, familyId = null) {
-    if (!accountId) {
-      throw new Error("accountId wajib diisi.");
-    }
-
-    let query = client
-      .from("finance_accounts")
-      .select(
-        "id,family_id,name,kind,icon_type,icon_value,color,sort_order,created_by,created_at,updated_at,archived_at"
-      )
-      .eq("id", accountId);
-
-    if (familyId) {
-      query = query.eq("family_id", familyId);
-    }
-
-    const { data, error } = await query.maybeSingle();
-    lemparJikaError(error);
-    return data;
+  async function ubahAkun(args) {
+    return ubahKategori(args);
   }
 
-  async function ubahAkun({
-    accountId,
-    name,
-    kind,
-    iconType = "ionicon",
-    iconValue = "ellipse-outline",
-    color = null,
-    sortOrder = 0
-  }) {
-    if (!accountId) {
-      throw new Error("accountId wajib diisi.");
-    }
+  async function hapusKategori(accountId) {
+    if (!accountId) throw new Error("categoryId wajib diisi.");
 
     const { data, error } = await client.rpc(
-      "finance_update_account",
-      {
-        p_account_id: accountId,
-        p_name: name,
-        p_kind: kind,
-        p_icon_type: iconType,
-        p_icon_value: iconValue,
-        p_color: color,
-        p_sort_order: sortOrder
-      }
+      "finance_remove_category",
+      { p_category_id: accountId }
     );
 
     lemparJikaError(error);
@@ -372,17 +393,7 @@
   }
 
   async function arsipAkun(accountId) {
-    if (!accountId) {
-      throw new Error("accountId wajib diisi.");
-    }
-
-    const { data, error } = await client.rpc(
-      "finance_archive_account",
-      { p_account_id: accountId }
-    );
-
-    lemparJikaError(error);
-    return data;
+    return hapusKategori(accountId);
   }
 
   async function buatTransaksi({
@@ -702,6 +713,9 @@
     buatDompet,
     ubahDompet,
     arsipDompet,
+    buatKategori,
+    ubahKategori,
+    hapusKategori,
     buatAkun,
     ubahAkun,
     arsipAkun,

@@ -314,6 +314,9 @@
           alasanVoid?.value || null
         );
 
+        // VOID mengubah saldo; jangan biarkan cache dompet lama dipakai.
+        window.FinanceCache?.remove("wallets", detailAktif.family_id);
+
         tutupVoid();
         tampilPesan("Transaksi berhasil dibatalkan. Saldo sudah dihitung ulang oleh database.");
         await muatDetail();

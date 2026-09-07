@@ -96,6 +96,19 @@
     </div>
   </main>
 
+
+  <div class="auth-modal-layer" data-register-modal hidden>
+    <section class="auth-modal-card" role="dialog" aria-modal="true" aria-labelledby="register-modal-title">
+      <span class="auth-modal-icon" data-register-modal-icon><ion-icon name="checkmark-circle-outline"></ion-icon></span>
+      <h2 id="register-modal-title" data-register-modal-title>Status pendaftaran</h2>
+      <p data-register-modal-message></p>
+      <div class="auth-modal-actions" data-register-modal-actions>
+        <button class="auth-modal-secondary" type="button" data-register-secondary hidden></button>
+        <button class="auth-modal-primary" type="button" data-register-primary>Mengerti</button>
+      </div>
+    </section>
+  </div>
+
   <script type="module" src="https://unpkg.com/ionicons@8.0.13/dist/ionicons/ionicons.esm.js"></script>
   <script nomodule src="https://unpkg.com/ionicons@8.0.13/dist/ionicons/ionicons.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>

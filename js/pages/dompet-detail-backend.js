@@ -111,7 +111,7 @@
     if (!session) throw new Error("Belum ada session Supabase. Login melalui login.html.");
 
     const families = await FamilyService.ambilKeluargaSaya();
-    if (!families.length) throw new Error("Akun ini belum tergabung ke keluarga backend.");
+    if (!families.length) throw new Error("Akun ini belum tergabung ke ruang keluarga.");
 
     preferensi = bacaPreferensi();
     const family = families.find(item => item.id === preferensi.familyAktif) || families[0];
@@ -153,7 +153,7 @@
       const dataAkun = akun.find(item => item.id === accountId);
       return {
         akunId: accountId,
-        nama: dataAkun?.name || "Akun",
+        nama: dataAkun?.name || "Kategori",
         ikon: dataAkun?.icon_value || "ellipse-outline",
         jumlah
       };

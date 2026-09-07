@@ -19,6 +19,9 @@
   const colorNameEl = root.querySelector("[data-color-name]");
   const iconCountEl = root.querySelector("[data-icon-count]");
   const iconGrid = root.querySelector("[data-icon-grid]");
+  const iconScrollShell = root.querySelector("[data-icon-scroll-shell]");
+  const iconScrollUp = root.querySelector("[data-icon-scroll-up]");
+  const iconScrollDown = root.querySelector("[data-icon-scroll-down]");
   const iconEmpty = root.querySelector("[data-icon-empty]");
   const searchInput = root.querySelector("[data-icon-search]");
   const clearSearch = root.querySelector("[data-clear-search]");
@@ -144,7 +147,7 @@
   function iconMeta(icon) {
     return CATALOG.find(item => item.icon === icon) || {
       icon,
-      label: "Ikon akun",
+      label: "Ikon kategori",
       category: "all",
       terms: ""
     };
@@ -161,7 +164,7 @@
 
   function refreshPreview() {
     const meta = iconMeta(selectedIcon);
-    const accountName = nameInput?.value.trim() || "Nama Akun";
+    const accountName = nameInput?.value.trim() || "Nama Kategori";
     const kind = kindSelect?.value === "pemasukan" ? "Pemasukan" : "Pengeluaran";
 
     if (previewIcon) previewIcon.setAttribute("name", selectedIcon);
@@ -207,6 +210,19 @@
     }
   }
 
+  function updateIconScrollControls() {
+    if (!iconGrid || !iconScrollShell) return;
+    const max = Math.max(0, iconGrid.scrollHeight - iconGrid.clientHeight);
+    const top = iconGrid.scrollTop;
+    const canUp = max > 4 && top > 4;
+    const canDown = max > 4 && top < max - 4;
+
+    iconScrollShell.classList.toggle("can-scroll-up", canUp);
+    iconScrollShell.classList.toggle("can-scroll-down", canDown);
+    if (iconScrollUp) iconScrollUp.hidden = !canUp;
+    if (iconScrollDown) iconScrollDown.hidden = !canDown;
+  }
+
   function renderIcons() {
     if (!iconGrid) return;
     const query = normalize(searchInput?.value);
@@ -246,6 +262,8 @@
     if (clearSearch) clearSearch.hidden = !query;
 
     refreshPreview();
+    iconGrid.scrollTop = 0;
+    requestAnimationFrame(updateIconScrollControls);
   }
 
   function updateSuggestion() {
@@ -311,6 +329,15 @@
     if (!activeSuggestion) return;
     setSelection(activeSuggestion.icon, activeSuggestion.color, { revealIcon: true });
     updateSuggestion();
+  });
+
+  iconGrid?.addEventListener("scroll", updateIconScrollControls, { passive: true });
+  window.addEventListener("resize", updateIconScrollControls);
+  iconScrollUp?.addEventListener("click", () => {
+    iconGrid?.scrollBy({ top: -(iconGrid.clientHeight * .82), behavior: "smooth" });
+  });
+  iconScrollDown?.addEventListener("click", () => {
+    iconGrid?.scrollBy({ top: iconGrid.clientHeight * .82, behavior: "smooth" });
   });
 
   // Public API dipakai akun-form-backend.js setelah data edit selesai diambil dari Supabase.

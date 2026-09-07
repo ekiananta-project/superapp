@@ -15,8 +15,8 @@
     /* User baru benar-benar mulai tanpa dompet. */
     dompet: [],
 
-    /* Akun starter bukan data transaksi contoh.
-       User tetap bisa edit / hapus / tambah akun sendiri. */
+    /* Kategori starter bukan data transaksi contoh.
+       User tetap bisa edit / hapus / tambah kategori sendiri. */
     akun: [
       { id: "a1", nama: "Makan", jenis: "pengeluaran", ikon: "fast-food-outline" },
       { id: "a2", nama: "Bensin", jenis: "pengeluaran", ikon: "car-sport-outline" },
@@ -42,7 +42,7 @@
     },
 
     /* Keluarga tidak dibuat otomatis.
-       User harus memilih: Buat Keluarga Baru atau Gabung Keluarga. */
+       User harus memilih: Buat Ruang Keluarga Baru atau Gabung Ruang Keluarga. */
     keluarga: null
   };
 
@@ -353,7 +353,7 @@
             <ion-icon name="${akunT?.ikon || "ellipse-outline"}"></ion-icon>
           </span>
           <span class="transaksi-info">
-            <strong>${akunT?.nama || "Akun"}</strong>
+            <strong>${akunT?.nama || "Kategori"}</strong>
             <span>${rupiah(t.jumlah)}</span>
           </span>
           <ion-icon class="transaksi-chevron" name="chevron-forward-outline"></ion-icon>`;
@@ -451,7 +451,7 @@
       tampilPesan("Buat dompet terlebih dahulu.");
     }
     if (!akun.some(a => a.jenis === state.jenis)) {
-      tampilPesan("Belum ada akun untuk jenis transaksi ini.");
+      tampilPesan("Belum ada kategori untuk jenis transaksi ini.");
     }
 
     judul.textContent = lama ? "Edit Transaksi" : "Tambah Transaksi";
@@ -496,7 +496,7 @@
 
       const nilai = Number(jumlah.value);
       if (!tanggal.value || !dompetEl.value || !akunEl.value || nilai <= 0) {
-        return tampilPesan("Lengkapi tanggal, dompet, akun, dan nominal.");
+        return tampilPesan("Lengkapi tanggal, dompet, kategori, dan nominal.");
       }
 
       const pencatat = anggotaSaatIni(keluarga);
@@ -565,14 +565,14 @@
     root.innerHTML = `
       <div class="detail-utama">
         <div class="detail-ikon"><ion-icon name="${a?.ikon || "ellipse-outline"}"></ion-icon></div>
-        <h2>${a?.nama || "Akun"}</h2>
+        <h2>${a?.nama || "Kategori"}</h2>
         <p class="detail-nominal ${t.jenis === "pemasukan" ? "pemasukan" : ""}">${tanda}${rupiah(t.jumlah)}</p>
       </div>
 
       <div class="detail-list">
         <div class="detail-baris"><span>Tanggal</span><strong>${tanggalID(t.tanggal)}</strong></div>
         <div class="detail-baris"><span>Dompet</span><strong>${d?.nama || "-"}</strong></div>
-        <div class="detail-baris"><span>Akun</span><strong>${a?.nama || "-"}</strong></div>
+        <div class="detail-baris"><span>Kategori</span><strong>${a?.nama || "-"}</strong></div>
         <div class="detail-baris"><span>Dicatat oleh</span><strong>${namaPencatat}</strong></div>
         <div class="detail-baris"><span>Keterangan</span><strong>${t.keterangan || "-"}</strong></div>
       </div>
@@ -792,7 +792,7 @@
     const lama = id ? cari(akun, id) : null;
 
     document.querySelector("[data-judul-form]").textContent =
-      lama ? "Edit Akun" : "Tambah Akun";
+      lama ? "Edit Kategori" : "Tambah Kategori";
 
     if (lama) {
       form.elements.nama.value = lama.nama;
@@ -811,7 +811,7 @@
         ikon: form.elements.ikon.value
       };
 
-      if (!item.nama) return tampilPesan("Nama akun wajib diisi.");
+      if (!item.nama) return tampilPesan("Nama kategori wajib diisi.");
 
       if (lama) akun = akun.map(a => a.id === lama.id ? item : a);
       else akun.push(item);
@@ -824,9 +824,9 @@
     if (hapus) hapus.onclick = () => {
       if (!lama) return;
       if (transaksi.some(t => t.akunId === lama.id)) {
-        return tampilPesan("Akun masih dipakai transaksi dan belum bisa dihapus.");
+        return tampilPesan("Kategori masih dipakai transaksi dan belum bisa dihapus.");
       }
-      if (!confirm(`Hapus akun ${lama.nama}?`)) return;
+      if (!confirm(`Hapus kategori ${lama.nama}?`)) return;
 
       akun = akun.filter(a => a.id !== lama.id);
       simpan(KUNCI.akun, akun);
@@ -898,8 +898,8 @@
     if (tombolResetLokal) tombolResetLokal.onclick = () => {
       const setuju = confirm(
         window.AUTH_BACKEND_MODE === true
-          ? "Reset data lokal pada perangkat ini? Data Supabase (dompet, akun, transaksi, dan keluarga backend) TIDAK dihapus."
-          : "Hapus SEMUA dompet, akun, transaksi, keluarga, pengaturan, dan preferensi tampilan? Data ini tidak bisa dikembalikan."
+          ? "Reset data lokal pada perangkat ini? Data Supabase (dompet, kategori, transaksi, dan ruang keluarga) TIDAK dihapus."
+          : "Hapus SEMUA dompet, kategori, transaksi, ruang keluarga, pengaturan, dan preferensi tampilan? Data ini tidak bisa dikembalikan."
       );
 
       if (setuju) {

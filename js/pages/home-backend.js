@@ -509,7 +509,7 @@
       nama.textContent =
         transfer
           ? transferInfo.nama
-          : (akunItem?.name || "Akun");
+          : (akunItem?.name || "Kategori");
 
       const nominal =
         document.createElement("span");
@@ -762,7 +762,7 @@
 
       if (!families.length) {
         throw new Error(
-          "Akun ini belum tergabung ke keluarga backend."
+          "Akun ini belum tergabung ke ruang keluarga."
         );
       }
 
@@ -798,6 +798,12 @@
           )
         ]);
 
+      // Navigation cache: kategori + dompet siap untuk halaman berikutnya.
+      if (window.FinanceCache) {
+        FinanceCache.write("wallets", family.id, dompet || [], session.user?.id || null);
+        FinanceCache.write("categories", family.id, akun || [], session.user?.id || null);
+      }
+
       renderProfileHome(profile);
 
       const mataUang =
@@ -828,7 +834,7 @@
         document.querySelector(
           "[data-dompet-label]"
         ).textContent =
-          "Belum ada dompet backend";
+          "Belum ada dompet";
 
         document.querySelector(
           "[data-dompet-saldo]"
@@ -837,7 +843,7 @@
         panel.innerHTML = `
           <div class="kosong-data">
             <ion-icon name="wallet-outline"></ion-icon>
-            Belum ada dompet pada keluarga backend ini.
+            Belum ada dompet pada ruang keluarga ini.
           </div>`;
 
         setPrimaryReady();

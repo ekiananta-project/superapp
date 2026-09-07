@@ -81,6 +81,75 @@
     };
   }
 
+  async function kirimResetPassword(email) {
+    const emailFinal = emailBersih(email);
+    if (!emailFinal) throw new Error("Email wajib diisi.");
+
+    const redirectTo = new URL("login.html?mode=reset", window.location.href).href;
+    const { error } = await client.auth.resetPasswordForEmail(emailFinal, {
+      redirectTo
+    });
+    lemparJikaError(error);
+    return true;
+  }
+
+  async function ubahPasswordBaru(password) {
+    if (!password || String(password).length < 8) {
+      throw new Error("Password minimal 8 karakter.");
+    }
+
+    const { data, error } = await client.auth.updateUser({ password });
+    lemparJikaError(error);
+    return data.user || null;
+  }
+
+  async function reautentikasi(password) {
+    if (!password) throw new Error("Password saat ini wajib diisi.");
+
+    const user = await ambilUserAktif();
+    const email = emailBersih(user?.email);
+    if (!email) throw new Error("Email akun aktif tidak ditemukan.");
+
+    const { data, error } = await client.auth.signInWithPassword({
+      email,
+      password
+    });
+    lemparJikaError(error);
+    return data.user || null;
+  }
+
+  async function ubahEmailLogin(emailBaru, passwordSaatIni) {
+    const emailFinal = emailBersih(emailBaru);
+    if (!emailFinal) throw new Error("Email baru wajib diisi.");
+
+    const user = await ambilUserAktif();
+    if (!user) throw new Error("User belum login.");
+    if (emailBersih(user.email) === emailFinal) {
+      throw new Error("Email baru masih sama dengan email login saat ini.");
+    }
+
+    await reautentikasi(passwordSaatIni);
+
+    const { data, error } = await client.auth.updateUser(
+      { email: emailFinal },
+      { emailRedirectTo: new URL("pengaturan.html", window.location.href).href }
+    );
+    lemparJikaError(error);
+    return data.user || null;
+  }
+
+  async function gantiPassword(passwordSaatIni, passwordBaru) {
+    if (!passwordBaru || String(passwordBaru).length < 8) {
+      throw new Error("Password baru minimal 8 karakter.");
+    }
+    if (passwordSaatIni === passwordBaru) {
+      throw new Error("Password baru harus berbeda dari password saat ini.");
+    }
+
+    await reautentikasi(passwordSaatIni);
+    return ubahPasswordBaru(passwordBaru);
+  }
+
   async function logout(scope = "local") {
     const scopeValid = ["local", "global", "others"].includes(scope)
       ? scope
@@ -211,6 +280,11 @@
   window.AuthService = {
     login,
     daftar,
+    kirimResetPassword,
+    ubahPasswordBaru,
+    reautentikasi,
+    ubahEmailLogin,
+    gantiPassword,
     logout,
     ambilSession,
     ambilUserAktif,

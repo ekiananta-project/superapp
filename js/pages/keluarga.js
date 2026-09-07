@@ -457,7 +457,7 @@
       ? ` sebagai ${labelHubungan(undanganAktif.relationship)}`
       : "";
 
-    const teks = `Gabung ke ${family.name}${hubungan} dengan kode ${kode}. Buka aplikasi, pilih Gabung Keluarga, lalu masukkan kode tersebut.`;
+    const teks = `Gabung ke ${family.name}${hubungan} dengan kode ${kode}. Buka aplikasi, pilih Gabung Ruang Keluarga, lalu masukkan kode tersebut.`;
 
     if (navigator.share) {
       try {

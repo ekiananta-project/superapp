@@ -29,3 +29,19 @@
 
 /* Premium form: card section sudah menangani spacing sendiri. */
 .akun-form-premium .grup-input { margin: 0; }
+
+.label-opsional { color: var(--color-text-secondary); font-weight: 500; }
+
+.kategori-visual-inherit {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 10px 12px;
+  border: 1px solid var(--color-border);
+  border-radius: 14px;
+  background: var(--color-surface-soft);
+  color: var(--color-text-secondary);
+  font-size: 11px;
+  line-height: 1.45;
+}
+.kategori-visual-inherit ion-icon { flex: 0 0 auto; color: var(--color-secondary); font-size: 18px; }

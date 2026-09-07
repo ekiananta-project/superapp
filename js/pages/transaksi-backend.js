@@ -249,28 +249,39 @@
 
   function isiAkun(nilaiPilihan = "") {
     akunEl.innerHTML = "";
-
-    if (jenisAktif === "transfer") {
-      return;
-    }
+    if (jenisAktif === "transfer") return;
 
     const kind = KIND_DB[jenisAktif];
-    const list = akun.filter(item => item.kind === kind);
+    const list = akun.filter(item => item.kind === kind && !item.archived_at);
+    const parents = list
+      .filter(item => !item.parent_id)
+      .sort((a, b) => Number(a.sort_order || 0) - Number(b.sort_order || 0));
 
-    list.forEach(item => {
+    parents.forEach(parent => {
       const option = document.createElement("option");
-      option.value = item.id;
-      option.textContent = item.name;
-      option.selected = item.id === nilaiPilihan;
+      option.value = parent.id;
+      option.textContent = parent.name;
+      option.selected = parent.id === nilaiPilihan;
       akunEl.appendChild(option);
+
+      list
+        .filter(item => item.parent_id === parent.id)
+        .sort((a, b) => Number(a.sort_order || 0) - Number(b.sort_order || 0))
+        .forEach(child => {
+          const childOption = document.createElement("option");
+          childOption.value = child.id;
+          childOption.textContent = `↳ ${child.name}`;
+          childOption.selected = child.id === nilaiPilihan;
+          akunEl.appendChild(childOption);
+        });
     });
 
     if (!list.length) {
       const option = document.createElement("option");
       option.value = "";
       option.textContent = jenisAktif === "pengeluaran"
-        ? "Belum ada akun pengeluaran"
-        : "Belum ada akun pemasukan";
+        ? "Belum ada kategori pengeluaran"
+        : "Belum ada kategori pemasukan";
       akunEl.appendChild(option);
     }
   }
@@ -331,7 +342,7 @@
     const families = await FamilyService.ambilKeluargaSaya();
 
     if (!families.length) {
-      throw new Error("Akun ini belum tergabung ke keluarga backend.");
+      throw new Error("Akun ini belum tergabung ke ruang keluarga.");
     }
 
     const family = families.find(item => item.id === preferensi.familyAktif) || families[0];
@@ -348,7 +359,7 @@
     const family = families.find(item => item.id === detail.family_id);
 
     if (!family) {
-      throw new Error("Keluarga transaksi tidak dapat diakses oleh akun ini.");
+      throw new Error("Ruang keluarga transaksi tidak dapat diakses oleh akun ini.");
     }
 
     return family;
@@ -384,9 +395,13 @@
   async function muatCreate() {
     familyAktif = await dapatKeluargaAktif();
 
+    const sessionNow = await AuthService.ambilSession();
+    const cachedWallets = window.FinanceCache?.read("wallets", familyAktif.id, sessionNow?.user?.id);
+    const cachedCategories = window.FinanceCache?.read("categories", familyAktif.id, sessionNow?.user?.id);
+
     [dompet, akun] = await Promise.all([
-      FinanceService.ambilSaldoDompet(familyAktif.id),
-      FinanceService.ambilAkun(familyAktif.id)
+      cachedWallets ? Promise.resolve(cachedWallets) : FinanceService.ambilSaldoDompet(familyAktif.id),
+      cachedCategories ? Promise.resolve(cachedCategories) : FinanceService.ambilAkun(familyAktif.id)
     ]);
 
     if (!dompet.length) {
@@ -451,9 +466,13 @@
       throw new Error("Hanya pencatat transaksi atau owner keluarga yang dapat mengedit transaksi ini.");
     }
 
+    const sessionNow = await AuthService.ambilSession();
+    const cachedWallets = window.FinanceCache?.read("wallets", familyAktif.id, sessionNow?.user?.id);
+    const cachedCategories = window.FinanceCache?.read("categories", familyAktif.id, sessionNow?.user?.id);
+
     [dompet, akun] = await Promise.all([
-      FinanceService.ambilSaldoDompet(familyAktif.id),
-      FinanceService.ambilAkun(familyAktif.id)
+      cachedWallets ? Promise.resolve(cachedWallets) : FinanceService.ambilSaldoDompet(familyAktif.id),
+      cachedCategories ? Promise.resolve(cachedCategories) : FinanceService.ambilAkun(familyAktif.id)
     ]);
 
     if (!dompet.length) {
@@ -480,7 +499,7 @@
       detailEdit.kind !== "transfer" &&
       !akun.some(item => item.id === detailEdit.account_id)
     ) {
-      throw new Error("Akun transaksi sudah diarsipkan atau tidak tersedia.");
+      throw new Error("Kategori transaksi sudah diarsipkan atau tidak tersedia.");
     }
 
     tanggal.value = detailEdit.occurred_on;
@@ -517,7 +536,7 @@
     tampilPesan(
       idEdit
         ? "Mengambil transaksi dari backend..."
-        : "Mengambil dompet dan akun dari backend..."
+        : "Mengambil dompet dan kategori..."
     );
 
     try {
@@ -640,14 +659,14 @@
       destinationWalletId = tujuanEl.value;
     } else {
       if (!akunEl.value) {
-        tampilPesan("Pilih akun transaksi.");
+        tampilPesan("Pilih kategori transaksi.");
         return;
       }
 
       const akunDipilih = akun.find(item => item.id === akunEl.value);
 
       if (!akunDipilih || akunDipilih.kind !== kind) {
-        tampilPesan("Akun tidak sesuai dengan jenis transaksi.");
+        tampilPesan("Kategori tidak sesuai dengan jenis transaksi.");
         return;
       }
 
@@ -724,6 +743,9 @@
         dompetAktif: dompetEl.value
       });
       simpanPreferensiJenis();
+
+      // Saldo dompet berubah setelah CREATE/EDIT transaksi.
+      window.FinanceCache?.remove("wallets", familyAktif.id);
 
       if (!idEdit) operationId = null;
 

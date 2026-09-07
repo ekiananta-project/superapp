@@ -6,45 +6,37 @@
   if (!form) return;
 
   const params = new URLSearchParams(location.search);
-  const accountId = params.get("id");
+  const categoryId = params.get("id");
 
   const judul = document.querySelector("[data-judul-form]");
   const simpan = document.querySelector("[data-simpan-akun]");
-  const arsip = document.querySelector("[data-hapus-akun]");
+  const hapus = document.querySelector("[data-hapus-akun]");
   const bantuanJenis = document.querySelector("[data-bantuan-jenis]");
+  const bantuanParent = document.querySelector("[data-bantuan-parent]");
   const notif = document.querySelector("[data-notifikasi]");
+  const parentEl = form.elements.parentKategori;
+  const visualInherit = document.querySelector("[data-visual-inherit]");
+  const visualBadge = document.querySelector(".akun-visual-badge");
+  const visualPickers = Array.from(document.querySelectorAll(".akun-picker-block"));
 
   let familyAktif = null;
   let userAktif = null;
-  let accountAktif = null;
-  let semuaAkun = [];
+  let categoryAktif = null;
+  let semuaKategori = [];
   let bolehKelola = true;
   let sedangProses = false;
 
-  const KIND_DB = {
-    pengeluaran: "expense",
-    pemasukan: "income"
-  };
-
-  const KIND_UI = {
-    expense: "pengeluaran",
-    income: "pemasukan"
-  };
+  const KIND_DB = { pengeluaran: "expense", pemasukan: "income" };
+  const KIND_UI = { expense: "pengeluaran", income: "pemasukan" };
 
   function bacaPreferensi() {
-    try {
-      return JSON.parse(localStorage.getItem(KUNCI_PENGATURAN) || "{}");
-    } catch {
-      return {};
-    }
+    try { return JSON.parse(localStorage.getItem(KUNCI_PENGATURAN) || "{}"); }
+    catch { return {}; }
   }
 
   function simpanPreferensi(data) {
     const lama = bacaPreferensi();
-    localStorage.setItem(
-      KUNCI_PENGATURAN,
-      JSON.stringify({ ...lama, ...data })
-    );
+    localStorage.setItem(KUNCI_PENGATURAN, JSON.stringify({ ...lama, ...data }));
   }
 
   function tampilPesan(message, tipe = "error") {
@@ -61,35 +53,67 @@
   }
 
   function setFormDisabled(disabled) {
-    Array.from(form.elements).forEach(el => {
-      el.disabled = disabled;
-    });
+    Array.from(form.elements).forEach(el => { el.disabled = disabled; });
   }
 
   function setVisual(iconValue, colorValue) {
     const icon = iconValue || "ellipse-outline";
     const color = colorValue || "#E58A2B";
-
     if (form.elements.ikon) form.elements.ikon.value = icon;
     if (form.elements.warna) form.elements.warna.value = color;
+    window.AccountVisualPicker?.setSelection(icon, color);
+  }
 
-    if (window.AccountVisualPicker) {
-      window.AccountVisualPicker.setSelection(icon, color);
+  function kindAktif() {
+    return categoryAktif?.kind || KIND_DB[form.elements.jenis.value] || "expense";
+  }
+
+  function rootCategories(kind) {
+    return semuaKategori
+      .filter(item => !item.archived_at && item.kind === kind && !item.parent_id && item.id !== categoryAktif?.id)
+      .sort((a, b) => Number(a.sort_order || 0) - Number(b.sort_order || 0));
+  }
+
+  function renderParentOptions(selected = "") {
+    const kind = kindAktif();
+    const roots = rootCategories(kind);
+    parentEl.innerHTML = '<option value="">Tidak ada — jadikan kategori utama</option>';
+
+    roots.forEach(item => {
+      const option = document.createElement("option");
+      option.value = item.id;
+      option.textContent = item.name;
+      option.selected = item.id === selected;
+      parentEl.appendChild(option);
+    });
+
+    const punyaChild = categoryAktif && semuaKategori.some(item => item.parent_id === categoryAktif.id);
+    if (punyaChild) {
+      parentEl.value = "";
+      parentEl.disabled = true;
+      if (bantuanParent) bantuanParent.textContent = "Kategori ini memiliki subkategori sehingga tetap menjadi kategori utama.";
+    } else if (bantuanParent) {
+      bantuanParent.textContent = "Pilih kategori induk jika ingin membuat subkategori. Maksimal dua tingkat.";
     }
+  }
+
+  function applyParentVisual() {
+    const parent = semuaKategori.find(item => item.id === parentEl.value) || null;
+    const inherited = Boolean(parent);
+
+    if (inherited) setVisual(parent.icon_value, parent.color);
+    if (visualInherit) visualInherit.hidden = !inherited;
+    if (visualBadge) visualBadge.textContent = inherited ? "Ikuti induk" : "Personal";
+    visualPickers.forEach(el => { el.hidden = inherited; });
   }
 
   async function ambilFamily() {
     const session = await AuthService.ambilSession();
-    if (!session) {
-      throw new Error("Belum ada session Supabase. Login melalui login.html.");
-    }
-
-    userAktif = await AuthService.ambilUserAktif();
+    if (!session) throw new Error("Belum ada session. Silakan login kembali.");
+    userAktif = session.user || await AuthService.ambilUserAktif();
 
     const families = await FamilyService.ambilKeluargaSaya();
-    if (!families.length) {
-      throw new Error("Akun ini belum tergabung ke keluarga backend.");
-    }
+    if (!families.length) throw new Error("Akun ini belum tergabung ke ruang keluarga.");
 
     const pref = bacaPreferensi();
     const family = families.find(item => item.id === pref.familyAktif) || families[0];
@@ -97,142 +121,126 @@
     return family;
   }
 
-  function cekBolehKelola(account, family) {
-    if (!account) return true;
-    return Boolean(
-      family?.membership?.role === "owner" ||
-      (userAktif?.id && account.created_by === userAktif.id)
-    );
+  function cekBolehKelola(category, family) {
+    if (!category) return true;
+    return Boolean(family?.membership?.role === "owner" || (userAktif?.id && category.created_by === userAktif.id));
   }
 
   function isiFormBaru() {
-    judul.textContent = "Tambah Akun";
-    arsip.hidden = true;
-    const simpanText = simpan.querySelector("span");
-    if (simpanText) simpanText.textContent = "Simpan Akun";
-    else simpan.textContent = "Simpan Akun";
-    bantuanJenis.textContent = "Pilih apakah akun ini dipakai untuk pengeluaran atau pemasukan.";
+    judul.textContent = "Tambah Kategori";
+    hapus.hidden = true;
+    simpan.querySelector("span") ? simpan.querySelector("span").textContent = "Simpan Kategori" : simpan.textContent = "Simpan Kategori";
+    bantuanJenis.textContent = "Pilih apakah kategori ini dipakai untuk pengeluaran atau pemasukan.";
+    renderParentOptions("");
     setVisual(form.elements.ikon.value || "fast-food-outline", form.elements.warna?.value || "#E58A2B");
+    applyParentVisual();
   }
 
-  function isiFormEdit(account) {
-    judul.textContent = "Edit Akun";
-    const simpanText = simpan.querySelector("span");
-    if (simpanText) simpanText.textContent = "Simpan Perubahan";
-    else simpan.textContent = "Simpan Perubahan";
-    arsip.hidden = false;
+  function isiFormEdit(category) {
+    judul.textContent = "Edit Kategori";
+    simpan.querySelector("span") ? simpan.querySelector("span").textContent = "Simpan Perubahan" : simpan.textContent = "Simpan Perubahan";
+    hapus.hidden = false;
 
-    form.elements.nama.value = account.name || "";
-    form.elements.jenis.value = KIND_UI[account.kind] || "pengeluaran";
-    setVisual(account.icon_value || "ellipse-outline", account.color || "#E58A2B");
+    form.elements.nama.value = category.name || "";
+    form.elements.jenis.value = KIND_UI[category.kind] || "pengeluaran";
+    setVisual(category.icon_value || "ellipse-outline", category.color || "#E58A2B");
 
-    // Jenis akun adalah identitas semantik. Tidak boleh expense <-> income.
     form.elements.jenis.disabled = true;
-    bantuanJenis.textContent =
-      "Jenis akun dikunci setelah dibuat agar transaksi lama tidak berubah makna. Jika salah jenis, buat akun baru lalu arsipkan akun ini.";
+    bantuanJenis.textContent = "Jenis kategori dikunci setelah dibuat agar transaksi lama tidak berubah makna.";
+    renderParentOptions(category.parent_id || "");
+    parentEl.value = category.parent_id || "";
+    applyParentVisual();
   }
 
   async function init() {
     if (window.AUTH_READY) {
-      const authOK = await window.AUTH_READY;
-      if (authOK === false) return;
+      const ok = await window.AUTH_READY;
+      if (ok === false) return;
     }
 
     try {
       setFormDisabled(true);
       familyAktif = await ambilFamily();
-      semuaAkun = await FinanceService.ambilAkun(familyAktif.id);
 
-      if (accountId) {
-        accountAktif = semuaAkun.find(item => item.id === accountId) || null;
-        if (!accountAktif) {
-          throw new Error("Akun tidak ditemukan atau sudah diarsipkan.");
-        }
+      const cached = window.FinanceCache?.read("categories", familyAktif.id, userAktif?.id);
+      semuaKategori = cached || await FinanceService.ambilAkun(familyAktif.id);
+      if (!cached) window.FinanceCache?.write("categories", familyAktif.id, semuaKategori, userAktif?.id);
 
-        bolehKelola = cekBolehKelola(accountAktif, familyAktif);
-        isiFormEdit(accountAktif);
+      if (categoryId) {
+        categoryAktif = semuaKategori.find(item => item.id === categoryId) || null;
+        if (!categoryAktif) throw new Error("Kategori tidak ditemukan atau sudah diarsipkan.");
+        bolehKelola = cekBolehKelola(categoryAktif, familyAktif);
+        isiFormEdit(categoryAktif);
       } else {
         isiFormBaru();
       }
 
       setFormDisabled(false);
-
-      if (accountAktif) {
-        form.elements.jenis.disabled = true;
-      }
+      if (categoryAktif) form.elements.jenis.disabled = true;
+      const punyaChild = categoryAktif && semuaKategori.some(item => item.parent_id === categoryAktif.id);
+      if (punyaChild) parentEl.disabled = true;
 
       if (!bolehKelola) {
         setFormDisabled(true);
         simpan.hidden = true;
-        arsip.hidden = true;
-        tampilPesan("Mode baca: hanya pembuat akun atau owner keluarga yang dapat mengubah akun ini.", "info");
+        hapus.hidden = true;
+        tampilPesan("Mode baca: hanya pembuat kategori atau pemilik ruang keluarga yang dapat mengubah kategori ini.", "info");
       }
     } catch (error) {
-      console.error("[Akun Form Backend]", error);
-      tampilPesan(error?.message || "Form akun belum dapat dimuat.");
+      console.error("[Kategori Form Backend]", error);
+      tampilPesan(error?.message || "Form kategori belum dapat dimuat.");
       setFormDisabled(true);
     }
   }
 
+  form.elements.jenis.addEventListener("change", () => {
+    if (categoryAktif) return;
+    renderParentOptions("");
+    applyParentVisual();
+  });
+
+  parentEl.addEventListener("change", applyParentVisual);
+
   form.addEventListener("submit", async event => {
     event.preventDefault();
     if (sedangProses || !familyAktif || !bolehKelola) return;
-
     bersihkanPesan();
 
     const name = form.elements.nama.value.trim();
-    const kindUI = accountAktif
-      ? (KIND_UI[accountAktif.kind] || "pengeluaran")
-      : form.elements.jenis.value;
-    const kind = KIND_DB[kindUI];
-    const iconValue = form.elements.ikon.value || "ellipse-outline";
-    const colorValue = form.elements.warna?.value || "#E58A2B";
+    const kind = kindAktif();
+    const parentId = parentEl.value || null;
+    const parent = semuaKategori.find(item => item.id === parentId) || null;
+    const iconValue = parent?.icon_value || form.elements.ikon.value || "ellipse-outline";
+    const colorValue = parent?.color || form.elements.warna?.value || "#E58A2B";
 
-    if (!name) {
-      tampilPesan("Nama akun wajib diisi.");
-      return;
-    }
-
-    if (name.length > 80) {
-      tampilPesan("Nama akun maksimal 80 karakter.");
-      return;
-    }
-
-    if (!kind) {
-      tampilPesan("Jenis akun tidak valid.");
-      return;
-    }
+    if (!name) return tampilPesan("Nama kategori wajib diisi.");
+    if (name.length > 80) return tampilPesan("Nama kategori maksimal 80 karakter.");
+    if (!kind) return tampilPesan("Jenis kategori tidak valid.");
 
     sedangProses = true;
     simpan.disabled = true;
-    const simpanTextProses = simpan.querySelector("span");
-    const teksProses = accountAktif ? "Menyimpan..." : "Membuat Akun...";
-    if (simpanTextProses) simpanTextProses.textContent = teksProses;
-    else simpan.textContent = teksProses;
+    const label = categoryAktif ? "Menyimpan..." : "Membuat Kategori...";
+    simpan.querySelector("span") ? simpan.querySelector("span").textContent = label : simpan.textContent = label;
 
     try {
-      let idHasil;
-
-      if (accountAktif) {
-        idHasil = await FinanceService.ubahAkun({
-          accountId: accountAktif.id,
+      if (categoryAktif) {
+        await FinanceService.ubahKategori({
+          accountId: categoryAktif.id,
           name,
-          kind: accountAktif.kind,
-          iconType: accountAktif.icon_type || "ionicon",
+          kind: categoryAktif.kind,
+          parentId,
+          iconType: categoryAktif.icon_type || "ionicon",
           iconValue,
           color: colorValue,
-          sortOrder: Number(accountAktif.sort_order || 0)
+          sortOrder: Number(categoryAktif.sort_order || 0)
         });
       } else {
-        const sortOrder = semuaAkun.reduce(
-          (max, item) => Math.max(max, Number(item.sort_order || 0)),
-          -1
-        ) + 1;
-
-        idHasil = await FinanceService.buatAkun({
+        const sortOrder = semuaKategori.reduce((max, item) => Math.max(max, Number(item.sort_order || 0)), -1) + 1;
+        await FinanceService.buatKategori({
           familyId: familyAktif.id,
           name,
           kind,
+          parentId,
           iconType: "ionicon",
           iconValue,
           color: colorValue,
@@ -240,45 +248,47 @@
         });
       }
 
-      tampilPesan(accountAktif ? "Perubahan akun tersimpan." : "Akun berhasil dibuat.", "success");
-
-      setTimeout(() => {
-        location.href = "akun.html";
-      }, 350);
+      window.FinanceCache?.remove("categories", familyAktif.id);
+      tampilPesan(categoryAktif ? "Perubahan kategori tersimpan." : "Kategori berhasil dibuat.", "success");
+      setTimeout(() => { location.href = "akun.html"; }, 300);
     } catch (error) {
-      console.error("[Simpan Akun]", error);
-      tampilPesan(error?.message || "Akun gagal disimpan.");
+      console.error("[Simpan Kategori]", error);
+      tampilPesan(error?.message || "Kategori gagal disimpan.");
       sedangProses = false;
       simpan.disabled = false;
-      const simpanTextError = simpan.querySelector("span");
-      const teksNormal = accountAktif ? "Simpan Perubahan" : "Simpan Akun";
-      if (simpanTextError) simpanTextError.textContent = teksNormal;
-      else simpan.textContent = teksNormal;
+      const normal = categoryAktif ? "Simpan Perubahan" : "Simpan Kategori";
+      simpan.querySelector("span") ? simpan.querySelector("span").textContent = normal : simpan.textContent = normal;
     }
   });
 
-  arsip.addEventListener("click", async () => {
-    if (!accountAktif || sedangProses || !bolehKelola) return;
+  hapus.addEventListener("click", async () => {
+    if (!categoryAktif || sedangProses || !bolehKelola) return;
 
-    const jenis = accountAktif.kind === "income" ? "pemasukan" : "pengeluaran";
+    const children = semuaKategori.filter(item => item.parent_id === categoryAktif.id);
+    const isChild = Boolean(categoryAktif.parent_id);
+    const message = children.length
+      ? `Hapus kategori “${categoryAktif.name}”?\n\nKategori ini memiliki ${children.length} subkategori. Semua subkategori di dalamnya juga akan ikut dihapus. Jika kategori atau subkategori sudah pernah dipakai dalam transaksi, sistem akan mengarsipkannya agar riwayat tetap tersimpan.`
+      : isChild
+        ? `Hapus subkategori “${categoryAktif.name}”?\n\nJika subkategori sudah pernah dipakai dalam transaksi, sistem akan mengarsipkannya agar riwayat tetap tersimpan.`
+        : `Hapus kategori “${categoryAktif.name}”?\n\nJika kategori sudah pernah dipakai dalam transaksi, sistem akan mengarsipkannya agar riwayat tetap tersimpan.`;
 
-    if (!confirm(
-      `Arsipkan akun ${accountAktif.name}?\n\nAkun akan hilang dari pilihan transaksi ${jenis} baru, tetapi seluruh history transaksi lama tetap tersimpan.`
-    )) return;
+    if (!confirm(message)) return;
 
     sedangProses = true;
     simpan.disabled = true;
-    arsip.disabled = true;
+    hapus.disabled = true;
 
     try {
-      await FinanceService.arsipAkun(accountAktif.id);
+      const result = await FinanceService.hapusKategori(categoryAktif.id);
+      window.FinanceCache?.remove("categories", familyAktif.id);
+      console.info("[Hapus/Arsip Kategori]", result);
       location.href = "akun.html";
     } catch (error) {
-      console.error("[Arsip Akun]", error);
-      tampilPesan(error?.message || "Akun gagal diarsipkan.");
+      console.error("[Hapus Kategori]", error);
+      tampilPesan(error?.message || "Kategori belum berhasil dihapus/diarsipkan.");
       sedangProses = false;
       simpan.disabled = false;
-      arsip.disabled = false;
+      hapus.disabled = false;
     }
   });
 

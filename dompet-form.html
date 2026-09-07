@@ -64,7 +64,7 @@
 
       <div class="grup-input">
         <label for="saldo" data-label-saldo>Saldo Awal</label>
-        <input class="input" id="saldo" name="saldo" type="text" inputmode="numeric" autocomplete="off" value="0">
+        <div class="input-uang"><span class="input-uang-prefix">Rp</span><input class="input" id="saldo" name="saldo" type="text" inputmode="numeric" autocomplete="off" value="0"></div>
         <small class="bantuan-input" data-bantuan-saldo>
           Saldo awal hanya dipakai saat membuat dompet baru.
         </small>
@@ -93,6 +93,7 @@
 <script src="js/backend/auth-service.js"></script>
 <script src="js/backend/family-service.js"></script>
 <script src="js/backend/finance-service.js"></script>
+<script src="js/backend/finance-cache.js"></script>
 <script src="js/backend/auth-router.js"></script>
 <script src="js/backend/auth-guard.js"></script>
 <script src="js/pages/dompet-form-backend.js"></script>

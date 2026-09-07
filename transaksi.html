@@ -55,7 +55,7 @@
       </div>
 
       <div class="grup-input" data-grup-akun>
-        <label for="akun">Akun</label>
+        <label for="akun">Kategori</label>
         <select class="pilih" id="akun" name="akun"></select>
       </div>
 
@@ -65,13 +65,13 @@
       </div>
 
       <div class="grup-input">
-        <label for="jumlah">Jumlah</label>
-        <input class="input" id="jumlah" name="jumlah" type="text" inputmode="numeric" autocomplete="off" placeholder="25.000" required>
+        <label for="jumlah">Nominal</label>
+        <div class="input-uang"><span class="input-uang-prefix">Rp</span><input class="input" id="jumlah" name="jumlah" type="text" inputmode="numeric" autocomplete="off" placeholder="25.000" required></div>
       </div>
 
       <div class="grup-input" data-grup-biaya-transfer hidden>
         <label for="biayaAdmin">Biaya Admin <span aria-hidden="true">(opsional)</span></label>
-        <input class="input" id="biayaAdmin" name="biayaAdmin" type="text" inputmode="numeric" autocomplete="off" value="0" placeholder="0">
+        <div class="input-uang"><span class="input-uang-prefix">Rp</span><input class="input" id="biayaAdmin" name="biayaAdmin" type="text" inputmode="numeric" autocomplete="off" value="0" placeholder="0"></div>
       </div>
 
       <div class="grup-input" data-grup-mode-biaya hidden>
@@ -97,6 +97,7 @@
 <script src="js/backend/auth-service.js"></script>
 <script src="js/backend/family-service.js"></script>
 <script src="js/backend/finance-service.js"></script>
+<script src="js/backend/finance-cache.js"></script>
 <script src="js/backend/auth-router.js"></script>
 <script src="js/backend/auth-guard.js"></script>
 

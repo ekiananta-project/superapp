@@ -16,7 +16,7 @@
   <link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png">
   <link rel="apple-touch-icon" sizes="180x180" href="icons/apple-touch-icon.png">
 <script src="js/theme.js"></script>
-  <title>Akun</title>
+  <title>Kategori</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -31,7 +31,7 @@
     <a class="tombol-ikon" href="akun.html" aria-label="Kembali">
       <ion-icon name="arrow-back-outline"></ion-icon>
     </a>
-    <h1><span data-judul-form>Tambah Akun</span></h1>
+    <h1><span data-judul-form>Tambah Kategori</span></h1>
     <span class="kosong"></span>
   </header>
 
@@ -43,12 +43,12 @@
         <div class="akun-section-heading">
           <div>
             <span class="akun-section-kicker">Dasar</span>
-            <h2 id="akun-dasar-title">Tentang akun</h2>
+            <h2 id="akun-dasar-title">Tentang kategori</h2>
           </div>
         </div>
 
         <div class="grup-input">
-          <label for="nama">Nama Akun</label>
+          <label for="nama">Nama Kategori</label>
           <input class="input" id="nama" name="nama" maxlength="80" placeholder="Contoh: Makan" autocomplete="off" required>
         </div>
 
@@ -59,7 +59,17 @@
             <option value="pemasukan">Pemasukan</option>
           </select>
           <small class="bantuan-input" data-bantuan-jenis>
-            Pilih apakah akun ini dipakai untuk pengeluaran atau pemasukan.
+            Pilih apakah kategori ini dipakai untuk pengeluaran atau pemasukan.
+          </small>
+        </div>
+
+        <div class="grup-input">
+          <label for="parentKategori">Kategori Induk <span class="label-opsional">(opsional)</span></label>
+          <select class="pilih" id="parentKategori" name="parentKategori">
+            <option value="">Tidak ada — jadikan kategori utama</option>
+          </select>
+          <small class="bantuan-input" data-bantuan-parent>
+            Pilih kategori induk jika ingin membuat subkategori. Maksimal dua tingkat.
           </small>
         </div>
       </section>
@@ -73,13 +83,18 @@
           <span class="akun-visual-badge">Personal</span>
         </div>
 
+        <div class="kategori-visual-inherit" data-visual-inherit hidden>
+          <ion-icon name="git-branch-outline"></ion-icon>
+          <span>Subkategori mengikuti warna dan ikon kategori induk.</span>
+        </div>
+
         <div class="akun-preview-card" data-account-preview>
           <div class="akun-preview-icon" data-account-preview-icon-wrap>
             <ion-icon name="fast-food-outline" data-icon-preview aria-hidden="true"></ion-icon>
           </div>
           <div class="akun-preview-copy">
-            <span class="akun-preview-caption">Pratinjau akun</span>
-            <strong data-account-name-preview>Nama Akun</strong>
+            <span class="akun-preview-caption">Pratinjau kategori</span>
+            <strong data-account-name-preview>Nama Kategori</strong>
             <span data-account-kind-preview>Pengeluaran</span>
           </div>
           <ion-icon class="akun-preview-chevron" name="chevron-forward-outline" aria-hidden="true"></ion-icon>
@@ -99,13 +114,13 @@
         <div class="akun-picker-block">
           <div class="akun-picker-label-row">
             <div>
-              <strong>Warna akun</strong>
+              <strong>Warna kategori</strong>
               <span>Pilih aksen yang mudah dikenali</span>
             </div>
             <span class="akun-color-name" data-color-name>Caramel</span>
           </div>
 
-          <div class="akun-color-grid" role="radiogroup" aria-label="Pilih warna akun" data-color-grid>
+          <div class="akun-color-grid" role="radiogroup" aria-label="Pilih warna kategori" data-color-grid>
             <button class="akun-color-item" type="button" role="radio" data-color="#E58A2B" data-color-name="Caramel" aria-label="Caramel" style="--swatch:#E58A2B"></button>
             <button class="akun-color-item" type="button" role="radio" data-color="#D6A43A" data-color-name="Amber" aria-label="Amber" style="--swatch:#D6A43A"></button>
             <button class="akun-color-item" type="button" role="radio" data-color="#7FA06D" data-color-name="Sage" aria-label="Sage" style="--swatch:#7FA06D"></button>
@@ -122,7 +137,7 @@
         <div class="akun-picker-block akun-icon-block">
           <div class="akun-picker-label-row">
             <div>
-              <strong>Ikon akun</strong>
+              <strong>Ikon kategori</strong>
               <span data-icon-count>Semua ikon</span>
             </div>
             <span class="akun-icon-current" data-icon-preview-label>Makanan</span>
@@ -145,7 +160,15 @@
             <button class="akun-category-chip" type="button" data-category="money">Keuangan</button>
           </div>
 
-          <div class="akun-icon-grid" role="radiogroup" aria-label="Pilih ikon akun" data-icon-grid></div>
+          <div class="akun-icon-scroll-shell" data-icon-scroll-shell>
+            <button class="akun-icon-scroll-control is-up" type="button" data-icon-scroll-up aria-label="Gulir ikon ke atas" hidden>
+              <ion-icon name="chevron-up-outline"></ion-icon>
+            </button>
+            <div class="akun-icon-grid" role="radiogroup" aria-label="Pilih ikon kategori" data-icon-grid></div>
+            <button class="akun-icon-scroll-control is-down" type="button" data-icon-scroll-down aria-label="Gulir ikon ke bawah" hidden>
+              <ion-icon name="chevron-down-outline"></ion-icon>
+            </button>
+          </div>
 
           <div class="akun-icon-empty" data-icon-empty hidden>
             <ion-icon name="search-outline" aria-hidden="true"></ion-icon>
@@ -161,11 +184,11 @@
       <div class="akun-form-actions">
         <button class="tombol-utama" type="submit" data-simpan-akun>
           <ion-icon name="checkmark-circle-outline" aria-hidden="true"></ion-icon>
-          <span>Simpan Akun</span>
+          <span>Simpan Kategori</span>
         </button>
         <button class="tombol-bahaya" type="button" data-hapus-akun hidden>
           <ion-icon name="archive-outline"></ion-icon>
-          Arsipkan Akun
+          Hapus / Arsipkan Kategori
         </button>
       </div>
     </form>
@@ -179,6 +202,7 @@
 <script src="js/backend/auth-service.js"></script>
 <script src="js/backend/family-service.js"></script>
 <script src="js/backend/finance-service.js"></script>
+<script src="js/backend/finance-cache.js"></script>
 <script src="js/backend/auth-router.js"></script>
 <script src="js/backend/auth-guard.js"></script>
 <script src="js/components/account-visual-picker.js"></script>

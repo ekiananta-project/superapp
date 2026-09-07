@@ -1,4 +1,4 @@
-const CACHE_NAME = "family-superapp-v1.0.5";
+const CACHE_NAME = "family-superapp-v1.0.6";
 const OFFLINE_URL = "./offline.html";
 
 const APP_FILES = [
@@ -31,6 +31,7 @@ const APP_FILES = [
   "./dompet.html",
   "./icons/apple-touch-icon.png",
   "./icons/favicon-32.png",
+  "./icons/icon-192.png",
   "./icons/icon-192-v2.png",
   "./icons/icon-512-v2.png",
   "./index.html",
@@ -40,6 +41,7 @@ const APP_FILES = [
   "./js/backend/auth-service.js",
   "./js/backend/family-service.js",
   "./js/backend/finance-service.js",
+  "./js/backend/finance-cache.js",
   "./js/backend/supabase.js",
   "./js/components/account-visual-picker.js",
   "./js/components/avatar.js",
