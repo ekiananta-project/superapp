@@ -8,9 +8,9 @@ Tujuan:
 Mengembangkan Family Superapp secara bertahap, stabil, dan mudah diuji.
 Setiap versi diselesaikan dulu sebelum lanjut ke versi berikutnya.
 
-
-1. v1.0.x — STABILIZATION & POLISHING
 -------------------------------------
+1. v1.0.x — STABILIZATION & POLISHING
+
 [x] Supabase Auth
 [x] Profile display_name
 [x] Foto profil Supabase Storage
@@ -34,9 +34,8 @@ Setiap versi diselesaikan dulu sebelum lanjut ke versi berikutnya.
 [X] Loading state halaman selain Home
 [ ] Final regression test sebelum naik ke v1.1
 
-
-2. v1.1 — COMPLETE FAMILY MANAGEMENT
 ------------------------------------
+2. v1.1 — COMPLETE FAMILY MANAGEMENT
 NEXT PRIORITY
 
 [ ] Transfer kepemilikan keluarga
@@ -55,9 +54,9 @@ v1.1.1 — Keluar dari Keluarga
 v1.1.2 — Riwayat Anggota & Undangan
 v1.1.3 — Final Family Management Polish
 
-
-3. v1.2 — BUDGET & TAGIHAN
 --------------------------
+3. v1.2 — BUDGET & TAGIHAN
+
 [ ] Budget bulanan
 [ ] Budget per kategori
 [ ] Progress pemakaian budget
@@ -67,9 +66,9 @@ v1.1.3 — Final Family Management Polish
 [ ] Status lunas / belum lunas
 [ ] Transaksi berulang otomatis / semiotomatis
 
-
-4. v1.3 — TARGET TABUNGAN
 -------------------------
+4. v1.3 — TARGET TABUNGAN
+
 [ ] Buat target tabungan
 [ ] Nominal target
 [ ] Deadline
@@ -79,9 +78,9 @@ v1.1.3 — Final Family Management Polish
 [ ] Status target tercapai
 [ ] Target bersama keluarga
 
-
-5. v1.4 — LAPORAN & INSIGHT
 ---------------------------
+5. v1.4 — LAPORAN & INSIGHT
+
 [ ] Grafik pemasukan vs pengeluaran
 [ ] Pengeluaran per kategori
 [ ] Perbandingan bulan sebelumnya
@@ -92,9 +91,9 @@ v1.1.3 — Final Family Management Polish
     "Pengeluaran bulan ini naik 8%."
 [ ] Filter anggota keluarga
 
-
-6. v1.5 — EXPORT & DATA SAFETY
 ------------------------------
+6. v1.5 — EXPORT & DATA SAFETY
+
 [ ] Export Excel / CSV
 [ ] Export PDF
 [ ] Filter periode export
@@ -103,9 +102,9 @@ v1.1.3 — Final Family Management Polish
 [ ] Audit log aktivitas penting
 [ ] Riwayat perubahan transaksi
 
-
-7. v1.6 — NOTIFICATION
 ---------------------
+7. v1.6 — NOTIFICATION
+
 [ ] Tagihan jatuh tempo
 [ ] Budget hampir habis
 [ ] Target tabungan tercapai
@@ -128,9 +127,9 @@ v1.1.3 — Final Family Management Polish
 [ ] Push notification Android
 [ ] Update aplikasi
 
-
-9. LATER / OPTIONAL
 -------------------
+9. LATER / OPTIONAL
+
 [ ] Custom domain
 [ ] Tema terang / gelap
 [ ] PIN app
