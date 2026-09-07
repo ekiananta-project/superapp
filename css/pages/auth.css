@@ -17,44 +17,42 @@
 }
 
 .auth-brand {
-  width: 100%;
+  width: fit-content;
   max-width: 100%;
   margin: 0 auto 34px;
   display: flex;
-  flex-direction: column;
   align-items: center;
-  justify-content: center;
-  gap: 10px;
-  text-align: center;
-}
-
-.auth-brand > div {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  max-width: 100%;
+  gap: 12px;
 }
 
 .auth-brand-mark {
+  position: relative;
   width: 46px;
   height: 46px;
+  flex: 0 0 46px;
   border-radius: 16px;
-  display: grid;
-  place-items: center;
+  display: block;
   background: var(--color-secondary);
   color: #071109;
   box-shadow: 0 10px 26px rgba(55, 201, 97, .17);
 }
 
 .auth-brand-mark ion-icon {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 25px;
+  height: 25px;
+  margin: 0;
   font-size: 25px;
+  line-height: 1;
+  transform: translate(-50%, -50%);
 }
 
 .auth-brand strong {
   display: block;
   font-size: 17px;
   line-height: 1.2;
-  text-align: center;
 }
 
 .auth-brand span {
@@ -62,7 +60,6 @@
   margin-top: 3px;
   color: var(--color-text-secondary);
   font-size: 12px;
-  text-align: center;
 }
 
 .auth-heading {
@@ -221,7 +218,6 @@
 
 .auth-switch {
   margin: 22px 0 0;
-  text-align: center;
   color: var(--color-text-secondary);
   font-size: 13px;
 }
