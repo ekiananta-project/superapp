@@ -17,10 +17,12 @@
 }
 
 .auth-brand {
+  width: fit-content;
+  max-width: 100%;
+  margin: 0 auto 34px;
   display: flex;
   align-items: center;
   gap: 12px;
-  margin-bottom: 34px;
 }
 
 .auth-brand-mark {
