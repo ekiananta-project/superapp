@@ -1,4 +1,4 @@
-const CACHE_NAME = "family-superapp-v1.1.1-transfer-ownership-1";
+const CACHE_NAME = "family-superapp-v1.1.1a-ownership-polish-1";
 const OFFLINE_URL = "./offline.html";
 
 const APP_FILES = [
@@ -20,7 +20,7 @@ const APP_FILES = [
   "./css/pages/keamanan.css",
   "./css/pages/keluarga-awal.css",
   "./css/pages/keluarga-member-management.css",
-  "./css/pages/keluarga-member-management.css?v=20260908-1",
+  "./css/pages/keluarga-member-management.css?v=20260908-2",
   "./css/pages/keluarga.css",
   "./css/pages/pengaturan.css",
   "./css/style.css",
@@ -41,7 +41,7 @@ const APP_FILES = [
   "./js/backend/auth-router.js",
   "./js/backend/auth-service.js",
   "./js/backend/family-service.js",
-  "./js/backend/family-service.js?v=20260908-1",
+  "./js/backend/family-service.js?v=20260908-2",
   "./js/backend/finance-service.js",
   "./js/backend/finance-cache.js",
   "./js/backend/supabase.js",
@@ -60,7 +60,7 @@ const APP_FILES = [
   "./js/pages/keamanan.js",
   "./js/pages/keluarga-awal.js",
   "./js/pages/keluarga.js",
-  "./js/pages/keluarga.js?v=20260908-1",
+  "./js/pages/keluarga.js?v=20260908-2",
   "./js/pages/login.js",
   "./js/pages/pengaturan-auth.js",
   "./js/pages/pengaturan-avatar-backend-v1.js",
