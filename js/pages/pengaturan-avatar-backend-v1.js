@@ -38,10 +38,13 @@
     return data.user;
   }
 
-  function publicUrl(path) {
+  function publicUrl(path, version = "") {
     if (!path) return "";
     const { data } = client.storage.from(BUCKET).getPublicUrl(path);
-    return data?.publicUrl ? `${data.publicUrl}?v=${Date.now()}` : "";
+    const url = data?.publicUrl || "";
+    if (!url) return "";
+    const token = String(version || Date.now()).trim();
+    return `${url}?v=${encodeURIComponent(token)}`;
   }
 
   async function decodeImage(file) {
@@ -122,14 +125,14 @@
       const user = await userAktif();
       const { data: profile, error } = await client
         .from("profiles")
-        .select("display_name,avatar_path")
+        .select("display_name,avatar_path,updated_at")
         .eq("id", user.id)
         .single();
       if (error) throw error;
 
       currentPath = profile?.avatar_path || null;
       hapus.hidden = !currentPath;
-      applyAvatar(publicUrl(currentPath), profile?.display_name || "Pengguna");
+      applyAvatar(publicUrl(currentPath, profile?.updated_at), profile?.display_name || "Pengguna");
     } catch (error) {
       console.error("[Avatar load]", error);
     }
@@ -152,36 +155,49 @@
     try {
       const user = await userAktif();
       const output = await toAvatarBlob(file);
-      const path = `${user.id}/avatar.${output.ext}`;
+      const previousPath = currentPath;
+      const version = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+      const path = `${user.id}/avatar-${version}.${output.ext}`;
 
       const { error: uploadError } = await client.storage
         .from(BUCKET)
         .upload(path, output.blob, {
-          upsert: true,
+          upsert: false,
           contentType: output.contentType,
           cacheControl: "3600"
         });
       if (uploadError) throw uploadError;
 
-      if (currentPath && currentPath !== path) {
-        await client.storage.from(BUCKET).remove([currentPath]).catch(() => {});
-      }
-
+      const changedAt = new Date().toISOString();
       const { data: profile, error: profileError } = await client
         .from("profiles")
-        .update({ avatar_path: path })
+        .update({ avatar_path: path, updated_at: changedAt })
         .eq("id", user.id)
-        .select("display_name,avatar_path")
+        .select("display_name,avatar_path,updated_at")
         .single();
-      if (profileError) throw profileError;
+
+      if (profileError) {
+        await client.storage.from(BUCKET).remove([path]).catch(() => {});
+        throw profileError;
+      }
 
       currentPath = profile.avatar_path;
       hapus.hidden = false;
-      const url = publicUrl(currentPath);
+      const url = publicUrl(currentPath, profile.updated_at || changedAt);
       applyAvatar(url, profile.display_name || "Pengguna");
 
+      if (previousPath && previousPath !== currentPath) {
+        client.storage.from(BUCKET).remove([previousPath]).catch(error => {
+          console.warn("[Avatar old object cleanup]", error);
+        });
+      }
+
       window.dispatchEvent(new CustomEvent("profil-pengguna-berubah", {
-        detail: { avatar_path: currentPath, avatar_url: url }
+        detail: {
+          avatar_path: currentPath,
+          avatar_url: url,
+          updated_at: profile.updated_at || changedAt
+        }
       }));
       show("Foto profil diperbarui.", "success");
     } catch (error) {
@@ -205,21 +221,24 @@
     try {
       const user = await userAktif();
       const path = currentPath;
-
-      const { error: removeError } = await client.storage.from(BUCKET).remove([path]);
-      if (removeError) throw removeError;
+      const changedAt = new Date().toISOString();
 
       const { error: profileError } = await client
         .from("profiles")
-        .update({ avatar_path: null })
+        .update({ avatar_path: null, updated_at: changedAt })
         .eq("id", user.id);
       if (profileError) throw profileError;
 
       currentPath = null;
       hapus.hidden = true;
       applyAvatar("", "Pengguna");
+
+      client.storage.from(BUCKET).remove([path]).catch(error => {
+        console.warn("[Avatar deleted object cleanup]", error);
+      });
+
       window.dispatchEvent(new CustomEvent("profil-pengguna-berubah", {
-        detail: { avatar_path: null, avatar_url: "" }
+        detail: { avatar_path: null, avatar_url: "", updated_at: changedAt }
       }));
       show("Foto profil dihapus.", "success");
     } catch (error) {

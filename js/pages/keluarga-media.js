@@ -41,6 +41,26 @@
     return currentMembership()?.role === "owner";
   }
 
+  // family-core-ready bisa saja terlewat bila data keluarga selesai dimuat
+  // sebelum listener media terpasang. Sinkronkan state terbaru secara
+  // sinkron dari window agar klik user tetap mempertahankan user activation
+  // (penting untuk membuka native file picker).
+  function syncCoreStateFromWindow({ render = true } = {}) {
+    const state = window.FAMILY_CORE_STATE;
+    if (!state?.family || !state?.user) return false;
+
+    family = state.family;
+    user = state.user;
+    members = Array.isArray(state.anggota) ? state.anggota : [];
+
+    if (render) {
+      renderFamilyPhoto();
+      decorateMemberAvatars();
+    }
+
+    return true;
+  }
+
   function showNotice(text, type = "info") {
     const notice = document.querySelector("[data-notifikasi-keluarga]");
     if (!notice) {
@@ -328,20 +348,39 @@
   }
 
   familyPhotoButton.addEventListener("click", () => {
-    if (!familyPhotoUrl) {
+    syncCoreStateFromWindow();
+
+    const hasStoredPhoto = Boolean(clean(family?.family_photo_path));
+
+    if (!hasStoredPhoto) {
       if (isOwner()) {
+        // Tetap langsung dari event click user. Jangan await sebelum click()
+        // supaya browser/PWA tidak memblokir file picker.
         familyPhotoInput?.click();
         return;
       }
 
-      // Member tetap boleh membuka preview fallback, tetapi tidak mendapat
-      // kontrol upload/ganti/hapus.
       openPreview({
         mode: "family",
         url: "",
         title: family?.name || "Ruang Keluarga",
         subtitle: "Ruang Keluarga belum memiliki foto"
       });
+      return;
+    }
+
+    if (!familyPhotoUrl) {
+      loadFamilyPhoto({ force: true })
+        .then(() => openPreview({
+          mode: "family",
+          url: familyPhotoUrl,
+          title: family?.name || "Ruang Keluarga",
+          subtitle: familyPhotoUrl ? "Foto Ruang Keluarga" : "Foto belum dapat dimuat"
+        }))
+        .catch(error => {
+          console.warn("[Family photo preview]", error);
+          showNotice("Foto Ruang Keluarga belum dapat dimuat.", "error");
+        });
       return;
     }
 
@@ -355,10 +394,12 @@
 
   familyPhotoEdit?.addEventListener("click", event => {
     event.stopPropagation();
+    syncCoreStateFromWindow();
     if (isOwner() && !busy) familyPhotoInput?.click();
   });
 
   familyPhotoChange?.addEventListener("click", () => {
+    syncCoreStateFromWindow();
     if (isOwner() && !busy) familyPhotoInput?.click();
   });
 
@@ -415,4 +456,10 @@
       console.warn("[Family media initial state]", error);
     });
   }
+
+  window.addEventListener("pageshow", () => {
+    if (syncCoreStateFromWindow()) {
+      loadFamilyPhoto().catch(() => {});
+    }
+  });
 })();

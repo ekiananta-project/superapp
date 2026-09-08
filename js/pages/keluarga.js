@@ -120,12 +120,15 @@
     }, 3500);
   }
 
-  function avatarUrl(path) {
+  function avatarUrl(path, version = "") {
     if (!path || !window.supabaseClient) return "";
     const { data } = window.supabaseClient.storage
       .from("profile-avatars")
       .getPublicUrl(path);
-    return data?.publicUrl || "";
+    const url = data?.publicUrl || "";
+    if (!url) return "";
+    const token = String(version || "").trim();
+    return token ? `${url}?v=${encodeURIComponent(token)}` : url;
   }
 
   function inisial(nama) {
@@ -416,7 +419,7 @@
 
       const avatar = document.createElement("span");
       avatar.className = "avatar-anggota avatar-anggota-backend";
-      const foto = avatarUrl(item.profile?.avatar_path);
+      const foto = avatarUrl(item.profile?.avatar_path, item.profile?.updated_at);
       if (foto) {
         const img = document.createElement("img");
         img.src = foto;
@@ -533,12 +536,16 @@
 
       renderAnggota();
       renderHakAkses();
-      await muatUndanganAktif();
 
+      // Publikasikan Family Core segera setelah family + anggota siap.
+      // Jangan menunggu query undangan aktif, supaya fitur media/permission
+      // tidak tertahan oleh request yang tidak terkait.
       window.FAMILY_CORE_STATE = { family, user, anggota };
       window.dispatchEvent(new CustomEvent("family-core-ready", {
         detail: window.FAMILY_CORE_STATE
       }));
+
+      await muatUndanganAktif();
     } catch (error) {
       console.error("[Keluarga Backend]", error);
       tampilPesan(error?.message || "Data keluarga belum dapat dimuat.", "error");
