@@ -5,7 +5,7 @@ CURRENT BASELINE
 ----------------
 v1.0.6 — Finance Core Stabilization Complete
 
-VISI PRODUK
+VISI PRODUK 
 -----------
 Family Superapp adalah platform keluarga modular.
 
