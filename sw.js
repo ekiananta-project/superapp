@@ -1,4 +1,4 @@
-const CACHE_NAME = "family-superapp-v1.2.0d1-wallet-quickadd-bill-sync-1";
+const CACHE_NAME = "family-superapp-v1.2.0d2-bill-partial-payment-integrity-1";
 const OFFLINE_URL = "./offline.html";
 
 const APP_FILES = [

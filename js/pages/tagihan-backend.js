@@ -144,11 +144,20 @@
     return { key: "pending", text: "Belum Lunas", className: "" };
   }
 
+  function paidAmount(item) {
+    return Math.max(0, Number(item.paid_amount || 0));
+  }
+
+  function remainingAmount(item) {
+    const fallback = Math.max(0, Number(item.amount || 0) - paidAmount(item));
+    return Math.max(0, Number(item.remaining_amount ?? fallback));
+  }
+
   function renderSummary() {
     const pending = bills.filter(item => item.status !== "paid");
     const paid = bills.filter(item => item.status === "paid");
-    const pendingTotal = pending.reduce((sum, item) => sum + Number(item.amount || 0), 0);
-    const paidTotal = paid.reduce((sum, item) => sum + Number(item.amount || 0), 0);
+    const pendingTotal = pending.reduce((sum, item) => sum + remainingAmount(item), 0);
+    const paidTotal = bills.reduce((sum, item) => sum + paidAmount(item), 0);
     const overdue = pending.filter(item => billState(item).key === "overdue").length;
 
     if (pendingTotalEl) pendingTotalEl.textContent = rupiah(pendingTotal);
@@ -164,7 +173,7 @@
       if (summaryNote) summaryNote.textContent = `${pending.length} tagihan belum lunas, ${overdue} di antaranya melewati jatuh tempo.`;
     } else if (pending.length) {
       if (summaryBadge) summaryBadge.textContent = `${pending.length} belum lunas`;
-      if (summaryNote) summaryNote.textContent = `${paid.length} tagihan sudah lunas dan ${pending.length} masih menunggu pembayaran.`;
+      if (summaryNote) summaryNote.textContent = `${rupiah(pendingTotal)} masih harus dibayar dari tagihan aktif.`;
     } else {
       summaryBadge?.classList.add("is-good");
       if (summaryBadge) summaryBadge.textContent = "Semua lunas";
@@ -177,6 +186,9 @@
   function cardFor(item) {
     const article = document.createElement("article");
     const state = billState(item);
+    const paid = paidAmount(item);
+    const remaining = remainingAmount(item);
+    const isPartial = item.status !== "paid" && paid > 0;
     article.className = `bill-card ${state.className}`.trim();
     article.dataset.billPeriodId = item.period_id;
 
@@ -184,9 +196,12 @@
       ? `${item.parent_name} · ${item.account_name}`
       : item.account_name || "Kategori";
 
-    const paidMeta = item.status === "paid"
-      ? `Dibayar ${shortDate(item.paid_on)}${item.paid_wallet_name ? ` · ${escapeHTML(item.paid_wallet_name)}` : ""}`
-      : `Jatuh tempo ${shortDate(item.due_on)}`;
+    let paidMeta = `Jatuh tempo ${shortDate(item.due_on)}`;
+    if (item.status === "paid") {
+      paidMeta = `Dibayar ${shortDate(item.paid_on)}${item.paid_wallet_name ? ` · ${escapeHTML(item.paid_wallet_name)}` : ""}`;
+    } else if (isPartial) {
+      paidMeta = `Sudah dibayar ${rupiah(paid)} · Sisa ${rupiah(remaining)}`;
+    }
 
     article.innerHTML = `
       <div class="bill-card-head">
@@ -209,7 +224,7 @@
         </button>
         ${item.status !== "paid" ? `
           <button class="bill-card-button primary" type="button" data-bill-pay="${escapeHTML(item.period_id)}" ${item.category_archived ? "disabled" : ""}>
-            <ion-icon name="checkmark-circle-outline"></ion-icon><span>${item.category_archived ? "Perbaiki Kategori" : "Bayar"}</span>
+            <ion-icon name="checkmark-circle-outline"></ion-icon><span>${item.category_archived ? "Perbaiki Kategori" : (isPartial ? "Bayar Sisa" : "Bayar")}</span>
           </button>
         ` : ""}
       </div>
@@ -550,7 +565,7 @@
     paymentItem = item;
     fillWalletOptions();
     if (payName) payName.textContent = item.bill_name || "Tagihan";
-    if (payAmount) payAmount.textContent = rupiah(item.amount);
+    if (payAmount) payAmount.textContent = rupiah(remainingAmount(item));
     if (payPeriod) payPeriod.textContent = `Jatuh tempo ${shortDate(item.due_on)}`;
     if (payDate) payDate.value = todayISO();
     if (payLayer) payLayer.hidden = false;
@@ -584,7 +599,7 @@
       });
       window.FinanceCache?.remove("wallets", family.id);
       closePay();
-      show("Tagihan lunas dan transaksi pengeluaran sudah dicatat.", "success");
+      show("Pembayaran tagihan dicatat dan sisa tagihan sudah diperbarui.", "success");
       wallets = await (FinanceService.ambilSaldoDompetFresh || FinanceService.ambilSaldoDompet)(family.id);
       await loadBills();
     } catch (error) {
@@ -601,7 +616,7 @@
     family = await AuthRouter.ambilFamilyAktif();
     if (!family) return;
 
-    /* v1.2.0d: daftar tagihan tidak perlu menunggu kategori/dompet.
+    /* v1.2.0d2: daftar tagihan mendukung partial payment; tetap tidak perlu menunggu kategori/dompet.
        Kategori boleh datang dari shared SWR cache, tetapi saldo dompet pembayaran
        tetap diambil fresh. */
     const accountPromise = FinanceService.ambilAkun(family.id, "expense");
