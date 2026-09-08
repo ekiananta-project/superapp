@@ -4,6 +4,7 @@
   const client = window.supabaseClient;
   const FAMILY_PHOTO_BUCKET = "family-photos";
   const FAMILY_PHOTO_CACHE_PREFIX = "family-photo-signed-url-v1:";
+  const DISSOLVE_CLEANUP_KEY = "family_superapp_dissolve_cleanup_v1";
 
   if (!client) {
     throw new Error("supabaseClient belum tersedia.");
@@ -483,6 +484,109 @@
     return barisPertama(data);
   }
 
+
+  function bacaCleanupBubarkanTertunda() {
+    try {
+      const value = JSON.parse(localStorage.getItem(DISSOLVE_CLEANUP_KEY) || "[]");
+      return Array.isArray(value) ? value : [];
+    } catch {
+      return [];
+    }
+  }
+
+  function simpanCleanupBubarkanTertunda(items) {
+    try {
+      if (!items?.length) {
+        localStorage.removeItem(DISSOLVE_CLEANUP_KEY);
+        return;
+      }
+      localStorage.setItem(DISSOLVE_CLEANUP_KEY, JSON.stringify(items));
+    } catch {}
+  }
+
+  function antrekanCleanupBubarkan(familyId, photoPath = "") {
+    if (!familyId) return;
+    const items = bacaCleanupBubarkanTertunda()
+      .filter(item => item?.family_id !== familyId);
+    items.push({
+      family_id: familyId,
+      photo_path: String(photoPath || "").trim(),
+      queued_at: Date.now()
+    });
+    simpanCleanupBubarkanTertunda(items);
+  }
+
+  async function prosesCleanupBubarkanTertunda() {
+    const items = bacaCleanupBubarkanTertunda();
+    if (!items.length) return { selesai: 0, tertunda: 0 };
+
+    const remaining = [];
+    let selesai = 0;
+
+    for (const item of items) {
+      const familyId = String(item?.family_id || "").trim();
+      const photoPath = String(item?.photo_path || "").trim();
+      if (!familyId) continue;
+
+      try {
+        if (photoPath) {
+          const { error: removeError } = await client.storage
+            .from(FAMILY_PHOTO_BUCKET)
+            .remove([photoPath]);
+          lemparJikaError(removeError);
+          hapusCacheFotoKeluarga(photoPath);
+        }
+
+        const { error: purgeError } = await client.rpc(
+          "family_purge_dissolved",
+          { p_family_id: familyId }
+        );
+        lemparJikaError(purgeError);
+        selesai += 1;
+      } catch (error) {
+        console.warn("[Dissolve cleanup pending]", familyId, error);
+        remaining.push(item);
+      }
+    }
+
+    simpanCleanupBubarkanTertunda(remaining);
+    return { selesai, tertunda: remaining.length };
+  }
+
+  async function bubarkanKeluarga(familyId, confirmation) {
+    if (!familyId) {
+      throw new Error("familyId wajib diisi.");
+    }
+
+    const phrase = String(confirmation || "").trim();
+    if (phrase.toUpperCase() !== "BUBARKAN RUANG KELUARGA") {
+      throw new Error("Konfirmasi pembubaran tidak cocok.");
+    }
+
+    const { data, error } = await client.rpc(
+      "family_dissolve",
+      {
+        p_family_id: familyId,
+        p_confirmation: phrase
+      }
+    );
+    lemparJikaError(error);
+
+    const result = barisPertama(data);
+    if (!result?.family_id) {
+      throw new Error("Backend tidak mengembalikan hasil pembubaran Ruang Keluarga.");
+    }
+
+    // Queue ditulis SEBELUM cleanup Storage agar crash/network putus tetap retryable.
+    antrekanCleanupBubarkan(result.family_id, result.photo_path || "");
+    const cleanup = await prosesCleanupBubarkanTertunda();
+
+    return {
+      ...result,
+      cleanup_pending: cleanup.tertunda > 0
+    };
+  }
+
   async function keluarkanAnggota(familyId, userId) {
     if (!familyId) {
       throw new Error("familyId wajib diisi.");
@@ -536,6 +640,8 @@
     ubahHubunganAnggota,
     transferKepemilikan,
     keluarDariKeluarga,
+    bubarkanKeluarga,
+    prosesCleanupBubarkanTertunda,
     keluarkanAnggota,
     cabutUndangan
   };
