@@ -25,7 +25,7 @@
   <link rel="stylesheet" href="css/style.css">
   <link rel="stylesheet" href="css/components/avatar.css">
   <link rel="stylesheet" href="css/pages/keluarga.css">
-  <link rel="stylesheet" href="css/pages/keluarga-member-management.css?v=20260907-1">
+  <link rel="stylesheet" href="css/pages/keluarga-member-management.css?v=20260908-1">
   <link rel="stylesheet" href="css/pages/family-invitation.css">
   <link rel="stylesheet" href="css/theme.css">
 </head>
@@ -153,6 +153,70 @@
   </main>
 </div>
 
+<div class="lapisan" data-transfer-ownership-sheet hidden>
+  <section
+    class="bottom-sheet sheet-transfer-ownership"
+    role="dialog"
+    aria-modal="true"
+    aria-labelledby="judul-transfer-ownership">
+
+    <div class="sheet-handle"></div>
+
+    <div class="sheet-header">
+      <div>
+        <h2 id="judul-transfer-ownership">Transfer Kepemilikan</h2>
+        <p class="sheet-subjudul-keluarga">Pindahkan hak Pemilik ke anggota aktif lain.</p>
+      </div>
+
+      <button
+        class="tombol-ikon"
+        type="button"
+        aria-label="Tutup"
+        data-transfer-ownership-close>
+        <ion-icon name="close-outline"></ion-icon>
+      </button>
+    </div>
+
+    <div class="peringatan-transfer-ownership">
+      <ion-icon name="shield-checkmark-outline" aria-hidden="true"></ion-icon>
+      <div>
+        <strong data-transfer-ownership-target>Anggota</strong>
+        <p>
+          Anggota ini akan menjadi Pemilik Ruang Keluarga. Kamu tetap bergabung
+          sebagai Anggota. Dompet, kategori, transaksi, dan histori keluarga tidak berubah.
+        </p>
+      </div>
+    </div>
+
+    <form class="formulir-transfer-ownership" data-transfer-ownership-form>
+      <div class="grup-input">
+        <label for="password-transfer-ownership">Password saat ini</label>
+        <input
+          class="input"
+          id="password-transfer-ownership"
+          name="password"
+          type="password"
+          autocomplete="current-password"
+          placeholder="Masukkan password akunmu"
+          required>
+        <small class="bantuan-field">Konfirmasi keamanan sebelum kepemilikan dipindahkan.</small>
+      </div>
+
+      <p class="pesan-transfer-ownership" data-transfer-ownership-message hidden></p>
+
+      <div class="aksi-transfer-ownership">
+        <button class="tombol-sekunder" type="button" data-transfer-ownership-close>
+          Batal
+        </button>
+        <button class="tombol-utama" type="submit" data-transfer-ownership-submit>
+          <ion-icon name="swap-horizontal-outline"></ion-icon>
+          Transfer Kepemilikan
+        </button>
+      </div>
+    </form>
+  </section>
+</div>
+
 
 <script type="module" src="https://unpkg.com/ionicons@8.0.13/dist/ionicons/ionicons.esm.js"></script>
 <script nomodule src="https://unpkg.com/ionicons@8.0.13/dist/ionicons/ionicons.js"></script>
@@ -160,14 +224,14 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="js/backend/supabase.js"></script>
 <script src="js/backend/auth-service.js"></script>
-<script src="js/backend/family-service.js"></script>
+<script src="js/backend/family-service.js?v=20260908-1"></script>
 <script src="js/backend/finance-service.js"></script>
 <script src="js/backend/auth-router.js"></script>
 <script src="js/backend/auth-guard.js"></script>
 <script>window.AUTH_BACKEND_MODE = true;</script>
 <script src="js/app.js"></script>
 <script src="js/components/avatar.js"></script>
-<script src="js/pages/keluarga.js?v=20260907-1"></script>
+<script src="js/pages/keluarga.js?v=20260908-1"></script>
 <script src="js/pwa.js"></script>
 </body>
 </html>
