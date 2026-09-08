@@ -29,7 +29,17 @@
 <div class="aplikasi">
   <header class="header-halaman">
     <a class="tombol-ikon" href="dompet.html" aria-label="Kembali" data-kembali-dompet><ion-icon name="arrow-back-outline"></ion-icon></a>
-    <h1><span data-judul-form>Tambah Dompet</span></h1>
+    <h1><span data-judul-form>Dompet</span></h1>
+    <script>
+      (() => {
+        const el = document.querySelector("[data-judul-form]");
+        const params = new URLSearchParams(location.search);
+        if (!el) return;
+        el.textContent = params.get("id")
+          ? "Edit Dompet"
+          : (params.get("setup") === "awal" ? "Siapkan Dompet Pertamamu" : "Tambah Dompet");
+      })();
+    </script>
     <span class="kosong"></span>
   </header>
 
@@ -96,7 +106,7 @@
 <script src="js/backend/finance-cache.js"></script>
 <script src="js/backend/auth-router.js"></script>
 <script src="js/backend/auth-guard.js"></script>
-<script src="js/pages/dompet-form-backend.js"></script>
-<script src="js/pwa.js"></script>
+<script src="js/pages/dompet-form-backend.js?v=20260908-2"></script>
+<script src="js/pwa.js?v=20260908-4"></script>
 </body>
 </html>

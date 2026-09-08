@@ -23,6 +23,12 @@
   let semuaWallet = [];
   let sedangSimpan = false;
 
+  // HTML static tidak boleh sempat terlihat sebagai mode "Tambah" ketika URL
+  // sebenarnya sedang membuka dompet untuk diedit. Kunci form sejak awal
+  // sampai family + wallet selesai di-resolve.
+  form.setAttribute("aria-busy", "true");
+  Array.from(form.elements).forEach(el => { el.disabled = true; });
+
   function bacaPreferensi() {
     try {
       return JSON.parse(localStorage.getItem(KUNCI_PENGATURAN) || "{}");
@@ -75,6 +81,7 @@
   }
 
   function setDisabled(disabled) {
+    form.setAttribute("aria-busy", disabled ? "true" : "false");
     Array.from(form.elements).forEach(el => {
       if (el === form.elements.saldo && walletAktif) return;
       el.disabled = disabled;

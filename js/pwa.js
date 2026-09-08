@@ -43,17 +43,46 @@
   if ("serviceWorker" in navigator) {
     window.addEventListener("load", async () => {
       try {
-        const registration = await navigator.serviceWorker.register("./sw.js", {
+        const registration = await navigator.serviceWorker.register("./sw.js?v=20260908-4", {
           scope: "./"
         });
 
         // Cek versi baru tanpa mengganggu startup aplikasi.
         registration.update().catch(() => {});
+
+        // Saat aplikasi kembali aktif, cek build baru lagi. Ini membantu PWA
+        // yang dibiarkan terbuka lama agar tidak hidup dengan shell lama.
+        document.addEventListener("visibilitychange", () => {
+          if (document.visibilityState === "visible") {
+            registration.update().catch(() => {});
+          }
+        });
       } catch (error) {
         console.warn("[PWA] Service worker gagal didaftarkan.", error);
       }
     });
   }
+
+  // Browser/PWA dapat mengembalikan dokumen lama dari Back-Forward Cache tanpa
+  // meminta HTML baru. Saat itu halaman terlihat seperti belum menerima patch
+  // sampai user refresh manual. Jika page benar-benar dipulihkan dari bfcache,
+  // reload sekali agar shell, CSS, dan bottom-nav berasal dari build aktif.
+  window.addEventListener("pageshow", event => {
+    if (event.persisted) {
+      location.reload();
+    }
+  });
+
+  // skipWaiting + clients.claim membuat SW baru bisa mengambil alih tab yang
+  // sedang terbuka. Reload hanya sekali ketika controller benar-benar berganti.
+  navigator.serviceWorker?.addEventListener("controllerchange", () => {
+    const key = "family_pwa_controller_reload";
+    const now = Date.now();
+    const last = Number(sessionStorage.getItem(key) || 0);
+    if (now - last < 10000) return;
+    sessionStorage.setItem(key, String(now));
+    location.reload();
+  });
 
 
   function setupDoubleBackExit() {
