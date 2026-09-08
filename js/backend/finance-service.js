@@ -116,13 +116,40 @@
     return data;
   }
 
+  async function ambilRingkasanPeriodeDompet({
+    familyId,
+    walletId,
+    startDate = null,
+    endDate = null
+  } = {}) {
+    if (!familyId) throw new Error("familyId wajib diisi.");
+    if (!walletId) throw new Error("walletId wajib diisi.");
+
+    const { data, error } = await client.rpc(
+      "finance_wallet_period_summary",
+      {
+        p_family_id: familyId,
+        p_wallet_id: walletId,
+        p_start_date: startDate || null,
+        p_end_date: endDate || null
+      }
+    );
+
+    lemparJikaError(error);
+    const row = Array.isArray(data) ? data[0] : data;
+    return {
+      incomeTotal: Number(row?.income_total || 0),
+      expenseTotal: Number(row?.expense_total || 0)
+    };
+  }
+
   async function ambilTransaksiDompet({
     familyId,
     walletId,
     kind = null,
     startDate = null,
     endDate = null,
-    limit = 200
+    limit = 300
   } = {}) {
     if (!familyId) {
       throw new Error("familyId wajib diisi.");
@@ -132,30 +159,32 @@
       throw new Error("walletId wajib diisi.");
     }
 
-    /* Ambil semua transaction_id yang menyentuh wallet aktif.
-       Untuk transfer, kemudian ambil KEDUA ledger entry supaya UI Home
-       tahu dompet lawan (Transfer ke / Transfer dari). */
+    /* v1.1.7: transaction_id difilter di PostgreSQL berdasarkan wallet + periode
+       terlebih dahulu. Ini menghindari mengambil seluruh ledger wallet ke browser. */
     const {
-      data: walletEntries,
-      error: walletEntryError
-    } = await client
-      .from("finance_transaction_entries")
-      .select("transaction_id,wallet_id,amount_delta")
-      .eq("family_id", familyId)
-      .eq("wallet_id", walletId)
-      .limit(Math.max(limit * 4, 400));
+      data: idRows,
+      error: idError
+    } = await client.rpc(
+      "finance_wallet_transaction_ids",
+      {
+        p_family_id: familyId,
+        p_wallet_id: walletId,
+        p_kind: kind || null,
+        p_start_date: startDate || null,
+        p_end_date: endDate || null,
+        p_limit: limit
+      }
+    );
 
-    lemparJikaError(walletEntryError);
+    lemparJikaError(idError);
 
-    if (!walletEntries.length) {
+    const transactionIds = (idRows || [])
+      .map(item => item.transaction_id)
+      .filter(Boolean);
+
+    if (!transactionIds.length) {
       return [];
     }
-
-    const transactionIds = [
-      ...new Set(
-        walletEntries.map(item => item.transaction_id)
-      )
-    ];
 
     let query = client
       .from("finance_transactions")
@@ -171,14 +200,6 @@
 
     if (kind) {
       query = query.eq("kind", kind);
-    }
-
-    if (startDate) {
-      query = query.gte("occurred_on", startDate);
-    }
-
-    if (endDate) {
-      query = query.lte("occurred_on", endDate);
     }
 
     const {
@@ -707,6 +728,7 @@
     ambilAkunById,
     ambilTransaksi,
     ambilTransaksiDompet,
+    ambilRingkasanPeriodeDompet,
     ambilDetailTransaksi,
     updateTransaksi,
     voidTransaksi,

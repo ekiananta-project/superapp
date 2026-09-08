@@ -762,3 +762,62 @@
 .fab-detail-dompet:active {
   transform: scale(.96);
 }
+
+/* =========================================
+   v1.1.7 — LAYER 2 / LAYER 3 NAVIGATION
+========================================= */
+.tombol-laporan-dompet {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  width: 100%;
+  min-height: 52px;
+  padding: var(--space-3) var(--space-4);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  background: var(--color-surface);
+  color: var(--color-primary);
+  text-decoration: none;
+}
+
+.tombol-laporan-dompet-kiri {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  min-width: 0;
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-semibold);
+}
+
+.tombol-laporan-dompet ion-icon {
+  flex-shrink: 0;
+  color: var(--color-secondary);
+  font-size: 20px;
+}
+
+.tombol-laporan-dompet > ion-icon:last-child {
+  color: var(--color-secondary);
+}
+
+.tombol-laporan-dompet:active {
+  transform: scale(.99);
+}
+
+.daftar-transaksi-card {
+  padding-top: var(--space-3);
+}
+
+.transaksi-detail-item.pengeluaran .transaksi-detail-ikon {
+  background: rgba(239, 107, 107, .12);
+  color: var(--color-danger);
+}
+
+.transaksi-detail-item.pengeluaran .transaksi-detail-nilai {
+  color: var(--color-danger);
+}
+
+.transaksi-detail-item.transfer .transaksi-detail-ikon,
+.transaksi-detail-item.transfer .transaksi-detail-nilai {
+  color: var(--color-secondary);
+}

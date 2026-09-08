@@ -24,7 +24,8 @@
   <link rel="stylesheet" href="css/style.css">
   <link rel="stylesheet" href="css/components/quote.css">
   <link rel="stylesheet" href="css/components/avatar.css">
-  <link rel="stylesheet" href="css/pages/home.css">
+  <link rel="stylesheet" href="css/components/finance-period.css?v=20260908-1">
+  <link rel="stylesheet" href="css/pages/home.css?v=20260908-1">
   <link rel="stylesheet" href="css/theme.css">
 </head>
 <body>
@@ -38,12 +39,7 @@
       </p>
     </div>
     <a class="tombol-profil" href="pengaturan.html" aria-label="Buka profil dan pengaturan">
-      <span
-        data-avatar-pengguna
-        data-avatar-fallback="icon"
-        class="home-hydrate-avatar is-avatar-loading"
-        aria-hidden="true">
-      </span>
+      <span data-avatar-pengguna data-avatar-fallback="icon" class="home-hydrate-avatar is-avatar-loading" aria-hidden="true"></span>
     </a>
   </header>
 
@@ -51,7 +47,7 @@
     <article class="kartu-uang">
       <span class="kartu-uang-ikon"><ion-icon name="wallet-outline"></ion-icon></span>
       <div class="kartu-uang-info">
-        <p>Total Uang Global</p>
+        <p>Total Semua Dompet</p>
         <strong data-total-global class="home-hydrate-money"></strong>
       </div>
     </article>
@@ -67,61 +63,46 @@
   </section>
 
   <div class="aksi-dompet-aktif">
-    <a
-      class="tombol-detail-dompet"
-      href="dompet-detail.html"
-      data-detail-dompet>
+    <a class="tombol-detail-dompet" href="dompet-detail.html" data-daftar-transaksi>
       <span class="tombol-detail-dompet-kiri">
-        <ion-icon name="stats-chart-outline" aria-hidden="true"></ion-icon>
-        <span>
-          Lihat detail
-          <strong data-detail-dompet-nama class="home-hydrate-detail"></strong>
-        </span>
+        <ion-icon name="receipt-outline" aria-hidden="true"></ion-icon>
+        <span>Daftar Transaksi</span>
       </span>
-
-      <ion-icon
-        class="tombol-detail-dompet-panah"
-        name="arrow-forward-outline"
-        aria-hidden="true">
-      </ion-icon>
+      <ion-icon class="tombol-detail-dompet-panah" name="arrow-forward-outline" aria-hidden="true"></ion-icon>
     </a>
   </div>
 
-  <main class="arus-kas">
-    <div class="kontrol-arus-kas">
-      <div class="tab-arus-kas">
-        <button class="tab-item" type="button" data-jenis="pengeluaran">PENGELUARAN</button>
-        <button class="tab-item" type="button" data-jenis="pemasukan">PEMASUKAN</button>
-      </div>
-      <span class="pemisah-kontrol"></span>
-      <button class="pilih-periode" type="button" data-buka-periode>
+  <main class="home-finance-summary">
+    <button class="finance-period-trigger" type="button" data-finance-period-trigger>
+      <span class="finance-period-trigger-main">
         <ion-icon name="calendar-outline"></ion-icon>
-        <span data-label-periode>Month</span>
-        <ion-icon name="chevron-down-outline"></ion-icon>
-      </button>
-    </div>
+        <span class="finance-period-trigger-copy">
+          <small>Periode</small>
+          <strong data-finance-period-label>September 2026</strong>
+        </span>
+      </span>
+      <ion-icon name="chevron-down-outline"></ion-icon>
+    </button>
 
-    <section class="panel-transaksi home-panel-loading" data-home-transaksi aria-busy="true">
-      <div class="home-skeleton-transactions" aria-hidden="true">
-        <span class="home-skeleton-line home-skeleton-date"></span>
-        <span class="home-skeleton-transaction"></span>
-        <span class="home-skeleton-transaction"></span>
-        <span class="home-skeleton-line home-skeleton-date short"></span>
-        <span class="home-skeleton-transaction"></span>
-      </div>
+    <section class="home-cash-summary" aria-label="Ringkasan arus kas">
+      <article class="home-cash-card pemasukan">
+        <span class="home-cash-icon"><ion-icon name="arrow-down-outline"></ion-icon></span>
+        <span>Pemasukan</span>
+        <strong data-home-pemasukan class="home-hydrate-summary">Rp 0</strong>
+      </article>
+
+      <article class="home-cash-card pengeluaran">
+        <span class="home-cash-icon"><ion-icon name="arrow-up-outline"></ion-icon></span>
+        <span>Pengeluaran</span>
+        <strong data-home-pengeluaran class="home-hydrate-summary">Rp 0</strong>
+      </article>
     </section>
   </main>
 
   <nav class="navigasi-bawah">
-    <a class="navigasi-item" href="akun.html">
-      <ion-icon name="grid-outline"></ion-icon><span>Kategori</span>
-    </a>
-    <a class="tombol-tambah" href="transaksi.html" aria-label="Tambah transaksi">
-      <ion-icon name="add-outline"></ion-icon>
-    </a>
-    <a class="navigasi-item" href="dompet.html">
-      <ion-icon name="wallet-outline"></ion-icon><span>Dompet</span>
-    </a>
+    <a class="navigasi-item" href="akun.html"><ion-icon name="grid-outline"></ion-icon><span>Kategori</span></a>
+    <a class="tombol-tambah" href="transaksi.html" aria-label="Tambah transaksi"><ion-icon name="add-outline"></ion-icon></a>
+    <a class="navigasi-item" href="dompet.html"><ion-icon name="wallet-outline"></ion-icon><span>Dompet</span></a>
   </nav>
 </div>
 
@@ -130,48 +111,26 @@
     <div class="sheet-handle"></div>
     <div class="sheet-header">
       <h2>Pilih Dompet</h2>
-      <button class="tombol-ikon" type="button" data-sheet-close="sheet-dompet">
-        <ion-icon name="close-outline"></ion-icon>
-      </button>
+      <button class="tombol-ikon" type="button" data-sheet-close="sheet-dompet"><ion-icon name="close-outline"></ion-icon></button>
     </div>
     <div data-sheet-dompet-list></div>
   </section>
 </div>
 
-<div class="lapisan" id="sheet-periode" hidden>
-  <section class="bottom-sheet">
-    <div class="sheet-handle"></div>
-    <div class="sheet-header">
-      <h2>Pilih Periode</h2>
-      <button class="tombol-ikon" type="button" data-sheet-close="sheet-periode">
-        <ion-icon name="close-outline"></ion-icon>
-      </button>
-    </div>
-    <button class="pilihan-sheet" type="button" data-periode="week"><ion-icon name="calendar-number-outline"></ion-icon><span>Week</span></button>
-    <button class="pilihan-sheet" type="button" data-periode="month"><ion-icon name="calendar-outline"></ion-icon><span>Month</span></button>
-    <button class="pilihan-sheet" type="button" data-periode="year"><ion-icon name="albums-outline"></ion-icon><span>Year</span></button>
-    <button class="pilihan-sheet" type="button" data-periode="all"><ion-icon name="infinite-outline"></ion-icon><span>Semua</span></button>
-  </section>
-</div>
-
 <script type="module" src="https://unpkg.com/ionicons@8.0.13/dist/ionicons/ionicons.esm.js"></script>
 <script nomodule src="https://unpkg.com/ionicons@8.0.13/dist/ionicons/ionicons.js"></script>
-
-<!-- Supabase + Service Layer -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="js/backend/supabase.js"></script>
 <script src="js/backend/auth-service.js"></script>
 <script src="js/backend/family-service.js"></script>
-<script src="js/backend/finance-service.js"></script>
+<script src="js/backend/finance-service.js?v=20260908-2"></script>
 <script src="js/backend/finance-cache.js"></script>
 <script src="js/backend/auth-router.js"></script>
 <script src="js/backend/auth-guard.js"></script>
-
-<!-- Beri tahu app.js bahwa Home sudah memakai backend. -->
+<script src="js/components/finance-period.js?v=20260908-1"></script>
 <script>window.HOME_BACKEND_MODE = true;</script>
-
 <script src="js/app.js"></script>
-<script src="js/pages/home-backend.js?v=20260907-5"></script>
+<script src="js/pages/home-backend.js?v=20260908-6"></script>
 <script src="js/components/quote.js"></script>
 <script src="js/pwa.js"></script>
 </body>

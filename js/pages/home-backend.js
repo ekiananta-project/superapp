@@ -1,22 +1,25 @@
 (() => {
   "use strict";
 
-  const KUNCI_PENGATURAN =
-    "keuangan_pengaturan_v1";
-
+  const KUNCI_PENGATURAN = "keuangan_pengaturan_v1";
   const DEFAULT_PREFERENSI = {
     dompetAktif: "",
     jenisAktif: "pengeluaran",
     periodeAktif: "month",
+    periodeMulai: "",
+    periodeSelesai: "",
     familyAktif: ""
   };
-
-
   const AVATAR_BUCKET = "profile-avatars";
+
   let firstHydrationDone = false;
   let lastProfileRefreshAt = 0;
   let profileRefreshPromise = null;
   let currentProfile = {};
+  let familyAktif = null;
+  let dompetList = [];
+  let dompetAktif = null;
+  let currentUserId = null;
 
   function rootHome() {
     return document.querySelector("[data-home-root]");
@@ -24,17 +27,13 @@
 
   function cleanName(value) {
     const name = String(value ?? "").trim().replace(/\s+/g, " ");
-    if (["", "undefined", "null", "[object object]"].includes(name.toLowerCase())) {
-      return "";
-    }
+    if (["", "undefined", "null", "[object object]"].includes(name.toLowerCase())) return "";
     return name;
   }
 
   function avatarPublicUrl(path, updatedAt) {
     if (!path || !window.supabaseClient) return "";
-    const { data } = window.supabaseClient.storage
-      .from(AVATAR_BUCKET)
-      .getPublicUrl(path);
+    const { data } = window.supabaseClient.storage.from(AVATAR_BUCKET).getPublicUrl(path);
     const raw = data?.publicUrl || "";
     if (!raw) return "";
     const version = updatedAt ? encodeURIComponent(String(updatedAt)) : "1";
@@ -47,7 +46,6 @@
 
     const displayName = cleanName(profile?.display_name) || "Pengguna";
     const url = avatarPublicUrl(profile?.avatar_path, profile?.updated_at);
-
     el.classList.add("avatar-pengguna", "home-hydrate-avatar");
     el.classList.remove("is-avatar-ready");
     el.classList.add("is-avatar-loading");
@@ -85,7 +83,6 @@
     }, { once: true });
     img.src = url;
     el.appendChild(img);
-
     if (img.complete && img.naturalWidth > 0) ready();
   }
 
@@ -97,633 +94,153 @@
     renderHomeAvatar(currentProfile);
   }
 
-  function panelSkeleton() {
-    return `
-      <div class="home-skeleton-transactions" aria-hidden="true">
-        <span class="home-skeleton-line home-skeleton-date"></span>
-        <span class="home-skeleton-transaction"></span>
-        <span class="home-skeleton-transaction"></span>
-        <span class="home-skeleton-line home-skeleton-date short"></span>
-        <span class="home-skeleton-transaction"></span>
-      </div>`;
-  }
-
-  function setPrimaryReady() {
-    const root = rootHome();
-    if (!root) return;
-    requestAnimationFrame(() => {
-      root.classList.remove("home-hydrating");
-      root.classList.add("home-primary-ready");
-    });
-  }
-
-  function setAllReady() {
-    const root = rootHome();
-    const panel = document.querySelector("[data-home-transaksi]");
-    root?.classList.remove("home-hydrating");
-    root?.classList.add("home-primary-ready", "home-ready");
-    root?.setAttribute("aria-busy", "false");
-    panel?.classList.remove("home-panel-loading");
-    panel?.setAttribute("aria-busy", "false");
-    firstHydrationDone = true;
-  }
-
-
-  const LABEL_PERIODE = {
-    week: "Week",
-    month: "Month",
-    year: "Year",
-    all: "Semua"
-  };
-
-  function rupiah(angka) {
+  function rupiah(value, currency = "IDR") {
     return new Intl.NumberFormat("id-ID", {
       style: "currency",
-      currency: "IDR",
+      currency: currency || "IDR",
       minimumFractionDigits: 0
-    }).format(Number(angka || 0));
-  }
-
-  function tanggalID(teks) {
-    if (!teks) return "-";
-
-    const [y, m, d] =
-      teks.split("-").map(Number);
-
-    return new Date(
-      y,
-      m - 1,
-      d
-    ).toLocaleDateString(
-      "id-ID",
-      {
-        day: "numeric",
-        month: "long",
-        year: "numeric"
-      }
-    );
+    }).format(Number(value || 0));
   }
 
   function bacaPreferensi() {
     try {
-      const isi = JSON.parse(
-        localStorage.getItem(
-          KUNCI_PENGATURAN
-        ) || "{}"
-      );
-
       return {
         ...DEFAULT_PREFERENSI,
-        ...isi
+        ...JSON.parse(localStorage.getItem(KUNCI_PENGATURAN) || "{}")
       };
     } catch {
-      return {
-        ...DEFAULT_PREFERENSI
-      };
+      return { ...DEFAULT_PREFERENSI };
     }
   }
 
   function simpanPreferensi(data) {
     const lama = bacaPreferensi();
-
-    localStorage.setItem(
-      KUNCI_PENGATURAN,
-      JSON.stringify({
-        ...lama,
-        ...data
-      })
-    );
+    localStorage.setItem(KUNCI_PENGATURAN, JSON.stringify({ ...lama, ...data }));
   }
 
   function bukaSheet(id) {
-    const el =
-      document.getElementById(id);
-
+    const el = document.getElementById(id);
     if (el) el.hidden = false;
   }
 
   function tutupSheet(id) {
-    const el =
-      document.getElementById(id);
-
+    const el = document.getElementById(id);
     if (el) el.hidden = true;
   }
 
-  function tanggalLokal(date) {
-    const y = date.getFullYear();
-    const m = String(
-      date.getMonth() + 1
-    ).padStart(2, "0");
-    const d = String(
-      date.getDate()
-    ).padStart(2, "0");
-
-    return `${y}-${m}-${d}`;
+  function setSummaryLoading(loading) {
+    document.querySelectorAll(".home-hydrate-summary").forEach(el => {
+      el.classList.toggle("is-loading", loading);
+    });
   }
 
-  function rentangPeriode(mode) {
-    if (mode === "all") {
-      return {
-        startDate: null,
-        endDate: null
-      };
-    }
-
-    const sekarang = new Date();
-    let awal;
-    let akhir;
-
-    if (mode === "week") {
-      awal = new Date(sekarang);
-      const hari =
-        (awal.getDay() + 6) % 7;
-
-      awal.setDate(
-        awal.getDate() - hari
-      );
-
-      akhir = new Date(awal);
-      akhir.setDate(
-        akhir.getDate() + 6
-      );
-    } else if (mode === "year") {
-      awal = new Date(
-        sekarang.getFullYear(),
-        0,
-        1
-      );
-
-      akhir = new Date(
-        sekarang.getFullYear(),
-        11,
-        31
-      );
-    } else {
-      awal = new Date(
-        sekarang.getFullYear(),
-        sekarang.getMonth(),
-        1
-      );
-
-      akhir = new Date(
-        sekarang.getFullYear(),
-        sekarang.getMonth() + 1,
-        0
-      );
-    }
-
-    return {
-      startDate:
-        tanggalLokal(awal),
-      endDate:
-        tanggalLokal(akhir)
-    };
-  }
-
-  function tampilLoading() {
-    const panel = document.querySelector("[data-home-transaksi]");
+  function setAllReady() {
     const root = rootHome();
-
-    if (panel) {
-      panel.classList.add("home-panel-loading");
-      panel.setAttribute("aria-busy", "true");
-      panel.innerHTML = panelSkeleton();
-    }
-
-    if (!firstHydrationDone) {
-      root?.classList.add("home-hydrating");
-      root?.classList.remove("home-primary-ready", "home-ready");
-      root?.setAttribute("aria-busy", "true");
-    }
+    root?.classList.remove("home-hydrating");
+    root?.classList.add("home-primary-ready", "home-ready");
+    root?.setAttribute("aria-busy", "false");
+    firstHydrationDone = true;
   }
 
-  function tampilError(error) {
-    console.error(
-      "[Home Backend]",
-      error
-    );
-
-    const panel =
-      document.querySelector(
-        "[data-home-transaksi]"
-      );
-
-    if (!panel) return;
-
-    panel.innerHTML = "";
-
-    const box =
-      document.createElement("div");
-
-    box.className = "kosong-data";
-
-    const icon =
-      document.createElement("ion-icon");
-
-    icon.setAttribute(
-      "name",
-      "cloud-offline-outline"
-    );
-
-    const teks =
-      document.createElement("span");
-
-    teks.textContent =
-      error?.message ||
-      "Data backend belum dapat dimuat.";
-
-    box.append(icon, teks);
-    panel.appendChild(box);
-    setAllReady();
-  }
-
-  function filterTransaksiHome(transaksi, jenisAktif) {
-    return transaksi.filter(item => {
-      if (jenisAktif === "pemasukan") {
-        return (
-          item.kind === "income" ||
-          (
-            item.kind === "transfer" &&
-            Number(item.amount_delta || 0) > 0
-          )
-        );
-      }
-
-      return (
-        item.kind === "expense" ||
-        (
-          item.kind === "transfer" &&
-          Number(item.amount_delta || 0) < 0
-        )
-      );
-    });
-  }
-
-  function infoTransfer(item) {
-    const delta = Number(item.amount_delta || 0);
-    const keluar = delta < 0;
-    const fee = Number(item.transfer_fee || 0);
-    const mode = item.transfer_fee_mode || null;
-
-    const lawanEntry =
-      (item.entries || []).find(
-        entry => entry.wallet_id !== item.wallet_id
-      );
-
-    const namaLawan =
-      lawanEntry?.wallet?.name || "Dompet lain";
-
-    const totalKeluar =
-      Number(item.amount || 0) +
-      (mode === "added" ? fee : 0);
-
-    const diterima =
-      Number(item.amount || 0) -
-      (mode === "deducted" ? fee : 0);
-
-    return {
-      keluar,
-      nama:
-        keluar
-          ? `Transfer ke ${namaLawan}`
-          : `Transfer dari ${namaLawan}`,
-      ikon: "swap-horizontal-outline",
-      nominal: rupiah(item.amount),
-      meta:
-        fee > 0
-          ? (
-              keluar
-                ? `Biaya admin ${rupiah(fee)} • Total keluar ${rupiah(totalKeluar)}`
-                : `Biaya admin ${rupiah(fee)} • Diterima ${rupiah(diterima)}`
-            )
-          : "Transfer antar dompet"
-    };
-  }
-
-  function renderTransaksi({
-    transaksi,
-    akun,
-    jenisAktif,
-    namaDompet
-  }) {
-    const panel =
-      document.querySelector(
-        "[data-home-transaksi]"
-      );
-
-    panel.innerHTML = "";
-
-    if (!transaksi.length) {
-      panel.innerHTML = `
-        <div class="kosong-data">
-          <ion-icon name="receipt-outline"></ion-icon>
-          Belum ada transaksi ${jenisAktif}
-          untuk ${namaDompet} pada periode ini.
-        </div>`;
-      return;
-    }
-
-    const akunMap = new Map(
-      akun.map(item => [
-        item.id,
-        item
-      ])
-    );
-
-    let tanggalSebelumnya = "";
-
-    transaksi.forEach(item => {
-      if (
-        tanggalSebelumnya !==
-        item.occurred_on
-      ) {
-        const h2 =
-          document.createElement("h2");
-
-        h2.textContent =
-          tanggalID(item.occurred_on);
-
-        panel.appendChild(h2);
-
-        tanggalSebelumnya =
-          item.occurred_on;
-      }
-
-      const transfer =
-        item.kind === "transfer";
-
-      const akunItem =
-        akunMap.get(item.account_id);
-
-      const transferInfo =
-        transfer
-          ? infoTransfer(item)
-          : null;
-
-      const btn =
-        document.createElement("button");
-
-      btn.className = "transaksi";
-      btn.type = "button";
-
-      const ikonWrap =
-        document.createElement("span");
-
-      const tampakMasuk =
-        item.kind === "income" ||
-        (
-          transfer &&
-          Number(item.amount_delta || 0) > 0
-        );
-
-      ikonWrap.className =
-        "transaksi-ikon" +
-        (tampakMasuk
-          ? " pemasukan"
-          : "");
-
-      const ikon =
-        document.createElement("ion-icon");
-
-      ikon.setAttribute(
-        "name",
-        transfer
-          ? transferInfo.ikon
-          : (
-              akunItem?.icon_value ||
-              "ellipse-outline"
-            )
-      );
-
-      ikonWrap.appendChild(ikon);
-
-      const info =
-        document.createElement("span");
-
-      info.className =
-        "transaksi-info";
-
-      const nama =
-        document.createElement("strong");
-
-      nama.textContent =
-        transfer
-          ? transferInfo.nama
-          : (akunItem?.name || "Kategori");
-
-      const nominal =
-        document.createElement("span");
-
-      nominal.textContent =
-        transfer
-          ? transferInfo.nominal
-          : rupiah(item.amount);
-
-      info.append(nama, nominal);
-
-      if (transfer) {
-        const meta =
-          document.createElement("span");
-
-        meta.textContent =
-          transferInfo.meta;
-
-        info.appendChild(meta);
-      }
-
-      const chevron =
-        document.createElement("ion-icon");
-
-      chevron.className =
-        "transaksi-chevron";
-
-      chevron.setAttribute(
-        "name",
-        "chevron-forward-outline"
-      );
-
-      btn.append(
-        ikonWrap,
-        info,
-        chevron
-      );
-
-      btn.onclick = () => {
-        location.href =
-          `detail-transaksi.html?id=${encodeURIComponent(item.id)}`;
-      };
-
-      panel.appendChild(btn);
-    });
-  }
-
-  function renderSheetDompet({
-    dompet,
-    dompetAktif
-  }) {
-    const root =
-      document.querySelector(
-        "[data-sheet-dompet-list]"
-      );
-
+  function renderSheetDompet() {
+    const root = document.querySelector("[data-sheet-dompet-list]");
     if (!root) return;
-
     root.innerHTML = "";
 
-    dompet.forEach(item => {
-      const btn =
-        document.createElement("button");
+    dompetList.forEach(item => {
+      const btn = document.createElement("button");
+      btn.className = "pilihan-sheet";
 
-      btn.className =
-        "pilihan-sheet";
+      const icon = document.createElement("ion-icon");
+      icon.setAttribute("name", item.icon_value || "wallet-outline");
 
-      const ikon =
-        document.createElement("ion-icon");
+      const info = document.createElement("span");
+      const name = document.createElement("strong");
+      name.textContent = item.name;
+      const br = document.createElement("br");
+      const balance = document.createElement("small");
+      balance.textContent = rupiah(item.current_balance, item.currency_code);
+      info.append(name, br, balance);
+      btn.append(icon, info);
 
-      ikon.setAttribute(
-        "name",
-        item.icon_value ||
-          "wallet-outline"
-      );
-
-      const info =
-        document.createElement("span");
-
-      const nama =
-        document.createElement("strong");
-
-      nama.textContent = item.name;
-
-      const br =
-        document.createElement("br");
-
-      const saldo =
-        document.createElement("small");
-
-      saldo.textContent =
-        rupiah(item.current_balance);
-
-      info.append(
-        nama,
-        br,
-        saldo
-      );
-
-      btn.append(ikon, info);
-
-      if (
-        item.wallet_id ===
-        dompetAktif?.wallet_id
-      ) {
-        const cek =
-          document.createElement(
-            "ion-icon"
-          );
-
-        cek.className = "cek";
-        cek.setAttribute(
-          "name",
-          "checkmark-circle"
-        );
-
-        btn.appendChild(cek);
+      if (item.wallet_id === dompetAktif?.wallet_id) {
+        const check = document.createElement("ion-icon");
+        check.className = "cek";
+        check.setAttribute("name", "checkmark-circle");
+        btn.appendChild(check);
       }
 
-      btn.onclick = () => {
-        simpanPreferensi({
-          dompetAktif:
-            item.wallet_id
-        });
-
-        tutupSheet(
-          "sheet-dompet"
-        );
-
-        renderHomeBackend();
-      };
+      btn.addEventListener("click", async () => {
+        dompetAktif = item;
+        simpanPreferensi({ dompetAktif: item.wallet_id });
+        tutupSheet("sheet-dompet");
+        renderWalletPrimary();
+        renderSheetDompet();
+        await refreshPeriodSummary();
+      });
 
       root.appendChild(btn);
     });
   }
 
-  function pasangKontrol(preferensi) {
-    document
-      .querySelectorAll(
-        "[data-jenis]"
-      )
-      .forEach(btn => {
-        btn.classList.toggle(
-          "is-aktif",
-          btn.dataset.jenis ===
-            preferensi.jenisAktif
-        );
+  function renderWalletPrimary() {
+    if (!dompetAktif) return;
+    const label = document.querySelector("[data-dompet-label]");
+    const saldo = document.querySelector("[data-dompet-saldo]");
+    const icon = document.querySelector("[data-dompet-ikon]");
+    const listLink = document.querySelector("[data-daftar-transaksi]");
 
-        btn.onclick = () => {
-          simpanPreferensi({
-            jenisAktif:
-              btn.dataset.jenis
-          });
+    if (label) label.textContent = `Total Uang ${dompetAktif.name}`;
+    if (saldo) saldo.textContent = rupiah(dompetAktif.current_balance, dompetAktif.currency_code);
+    if (icon) icon.setAttribute("name", dompetAktif.icon_value || "wallet-outline");
+    if (listLink) listLink.href = `dompet-detail.html?id=${encodeURIComponent(dompetAktif.wallet_id)}`;
+  }
 
-          renderHomeBackend();
-        };
+  async function refreshPeriodSummary() {
+    const incomeEl = document.querySelector("[data-home-pemasukan]");
+    const expenseEl = document.querySelector("[data-home-pengeluaran]");
+
+    if (!familyAktif || !dompetAktif || !window.FinancePeriod) {
+      if (incomeEl) incomeEl.textContent = rupiah(0);
+      if (expenseEl) expenseEl.textContent = rupiah(0);
+      return;
+    }
+
+    setSummaryLoading(true);
+    try {
+      const range = FinancePeriod.getRange();
+      const summary = await FinanceService.ambilRingkasanPeriodeDompet({
+        familyId: familyAktif.id,
+        walletId: dompetAktif.wallet_id,
+        startDate: range.startDate,
+        endDate: range.endDate
       });
-
-    const label =
-      document.querySelector(
-        "[data-label-periode]"
-      );
-
-    if (label) {
-      label.textContent =
-        LABEL_PERIODE[
-          preferensi.periodeAktif
-        ] || "Month";
+      if (incomeEl) incomeEl.textContent = rupiah(summary.incomeTotal, dompetAktif.currency_code);
+      if (expenseEl) expenseEl.textContent = rupiah(summary.expenseTotal, dompetAktif.currency_code);
+    } catch (error) {
+      console.error("[Home period summary]", error);
+      if (incomeEl) incomeEl.textContent = rupiah(0, dompetAktif.currency_code);
+      if (expenseEl) expenseEl.textContent = rupiah(0, dompetAktif.currency_code);
+    } finally {
+      setSummaryLoading(false);
     }
+  }
 
-    document
-      .querySelectorAll(
-        "[data-periode]"
-      )
-      .forEach(btn => {
-        btn.classList.toggle(
-          "is-aktif",
-          btn.dataset.periode ===
-            preferensi.periodeAktif
-        );
+  function setupControls() {
+    const walletButton = document.querySelector("[data-buka-dompet]");
+    walletButton?.addEventListener("click", () => bukaSheet("sheet-dompet"));
 
-        btn.onclick = () => {
-          simpanPreferensi({
-            periodeAktif:
-              btn.dataset.periode
-          });
+    document.querySelectorAll('[data-sheet-close="sheet-dompet"]').forEach(button => {
+      button.addEventListener("click", () => tutupSheet("sheet-dompet"));
+    });
 
-          tutupSheet(
-            "sheet-periode"
-          );
+    const sheet = document.getElementById("sheet-dompet");
+    sheet?.addEventListener("click", event => {
+      if (event.target === sheet) tutupSheet("sheet-dompet");
+    });
 
-          renderHomeBackend();
-        };
-      });
-
-    const bukaDompet =
-      document.querySelector(
-        "[data-buka-dompet]"
-      );
-
-    const bukaPeriode =
-      document.querySelector(
-        "[data-buka-periode]"
-      );
-
-    if (bukaDompet) {
-      bukaDompet.onclick = () =>
-        bukaSheet("sheet-dompet");
-    }
-
-    if (bukaPeriode) {
-      bukaPeriode.onclick = () =>
-        bukaSheet("sheet-periode");
-    }
+    FinancePeriod?.mount();
+    window.addEventListener("finance-period-change", refreshPeriodSummary);
   }
 
   async function renderHomeBackend() {
@@ -732,250 +249,64 @@
       if (authOK === false) return;
     }
 
-    const panel =
-      document.querySelector(
-        "[data-home-transaksi]"
-      );
-
-    if (!panel) return;
-
-    tampilLoading();
-
     try {
-      const session =
-        await AuthService.ambilSession();
+      const session = await AuthService.ambilSession();
+      if (!session) throw new Error("Belum ada session Supabase. Login melalui login.html.");
+      currentUserId = session.user?.id || null;
 
-      if (!session) {
-        throw new Error(
-          "Belum ada session Supabase. Login melalui login.html."
-        );
-      }
+      const preferensi = bacaPreferensi();
+      const [profile, families] = await Promise.all([
+        FamilyService.ambilProfilSaya(),
+        FamilyService.ambilKeluargaSaya()
+      ]);
 
-      const preferensi =
-        bacaPreferensi();
+      if (!families.length) throw new Error("Akun ini belum tergabung ke ruang keluarga.");
+      familyAktif = families.find(item => item.id === preferensi.familyAktif) || families[0];
+      if (familyAktif.id !== preferensi.familyAktif) simpanPreferensi({ familyAktif: familyAktif.id });
 
-      const [profile, families] =
-        await Promise.all([
-          FamilyService.ambilProfilSaya(),
-          FamilyService.ambilKeluargaSaya()
-        ]);
+      const [wallets, totalRows, accounts] = await Promise.all([
+        FinanceService.ambilSaldoDompet(familyAktif.id),
+        FinanceService.ambilTotalKeluarga(familyAktif.id),
+        FinanceService.ambilAkun(familyAktif.id)
+      ]);
 
-      if (!families.length) {
-        throw new Error(
-          "Akun ini belum tergabung ke ruang keluarga."
-        );
-      }
-
-      let family =
-        families.find(
-          item =>
-            item.id ===
-            preferensi.familyAktif
-        ) || families[0];
-
-      if (
-        family.id !==
-        preferensi.familyAktif
-      ) {
-        preferensi.familyAktif =
-          family.id;
-
-        simpanPreferensi({
-          familyAktif: family.id
-        });
-      }
-
-      const [dompet, totalRows, akun] =
-        await Promise.all([
-          FinanceService.ambilSaldoDompet(
-            family.id
-          ),
-          FinanceService.ambilTotalKeluarga(
-            family.id
-          ),
-          FinanceService.ambilAkun(
-            family.id
-          )
-        ]);
-
-      // Navigation cache: kategori + dompet siap untuk halaman berikutnya.
+      dompetList = wallets || [];
       if (window.FinanceCache) {
-        FinanceCache.write("wallets", family.id, dompet || [], session.user?.id || null);
-        FinanceCache.write("categories", family.id, akun || [], session.user?.id || null);
+        FinanceCache.write("wallets", familyAktif.id, dompetList, currentUserId);
+        FinanceCache.write("categories", familyAktif.id, accounts || [], currentUserId);
       }
 
       renderProfileHome(profile);
 
-      const mataUang =
-        family.default_currency ||
-        "IDR";
+      const currency = familyAktif.default_currency || "IDR";
+      const totalFamily = (totalRows || []).find(row => row.currency_code === currency);
+      const totalEl = document.querySelector("[data-total-global]");
+      if (totalEl) totalEl.textContent = rupiah(totalFamily?.total_balance || 0, currency);
 
-      const totalFamily =
-        totalRows.find(
-          row =>
-            row.currency_code ===
-            mataUang
-        );
-
-      const totalEl =
-        document.querySelector(
-          "[data-total-global]"
-        );
-
-      if (totalEl) {
-        totalEl.textContent =
-          rupiah(
-            totalFamily?.total_balance ||
-            0
-          );
-      }
-
-      if (!dompet.length) {
-        document.querySelector(
-          "[data-dompet-label]"
-        ).textContent =
-          "Belum ada dompet";
-
-        document.querySelector(
-          "[data-dompet-saldo]"
-        ).textContent = rupiah(0);
-
-        panel.innerHTML = `
-          <div class="kosong-data">
-            <ion-icon name="wallet-outline"></ion-icon>
-            Belum ada dompet pada ruang keluarga ini.
-          </div>`;
-
-        setPrimaryReady();
+      if (!dompetList.length) {
+        const label = document.querySelector("[data-dompet-label]");
+        const saldo = document.querySelector("[data-dompet-saldo]");
+        if (label) label.textContent = "Belum ada dompet";
+        if (saldo) saldo.textContent = rupiah(0, currency);
+        document.querySelector("[data-daftar-transaksi]")?.setAttribute("aria-disabled", "true");
+        document.querySelector("[data-daftar-transaksi]")?.removeAttribute("href");
+        document.querySelector("[data-home-pemasukan]").textContent = rupiah(0, currency);
+        document.querySelector("[data-home-pengeluaran]").textContent = rupiah(0, currency);
         setAllReady();
         return;
       }
 
-      let dompetAktif =
-        dompet.find(
-          item =>
-            item.wallet_id ===
-            preferensi.dompetAktif
-        ) || dompet[0];
+      dompetAktif = dompetList.find(item => item.wallet_id === preferensi.dompetAktif) || dompetList[0];
+      if (dompetAktif.wallet_id !== preferensi.dompetAktif) simpanPreferensi({ dompetAktif: dompetAktif.wallet_id });
 
-      if (
-        dompetAktif.wallet_id !==
-        preferensi.dompetAktif
-      ) {
-        preferensi.dompetAktif =
-          dompetAktif.wallet_id;
-
-        simpanPreferensi({
-          dompetAktif:
-            dompetAktif.wallet_id
-        });
-      }
-
-      const labelDompet =
-        document.querySelector(
-          "[data-dompet-label]"
-        );
-
-      const saldoDompet =
-        document.querySelector(
-          "[data-dompet-saldo]"
-        );
-
-      const ikonDompet =
-        document.querySelector(
-          "[data-dompet-ikon]"
-        );
-
-      if (labelDompet) {
-        labelDompet.textContent =
-          `Total Uang ${dompetAktif.name}`;
-      }
-
-      if (saldoDompet) {
-        saldoDompet.textContent =
-          rupiah(
-            dompetAktif.current_balance
-          );
-      }
-
-      if (ikonDompet) {
-        ikonDompet.setAttribute(
-          "name",
-          dompetAktif.icon_value ||
-            "wallet-outline"
-        );
-      }
-
-      const detailNama =
-        document.querySelector(
-          "[data-detail-dompet-nama]"
-        );
-
-      const detailLink =
-        document.querySelector(
-          "[data-detail-dompet]"
-        );
-
-      if (detailNama) {
-        detailNama.textContent =
-          dompetAktif.name;
-      }
-
-      if (detailLink) {
-        detailLink.href =
-          `dompet-detail.html?id=${encodeURIComponent(dompetAktif.id)}`;
-
-        // Bersihkan handler placeholder lama jika file ini
-        // dipakai setelah patch Home sebelumnya.
-        detailLink.onclick = null;
-      }
-
-      setPrimaryReady();
-      pasangKontrol(preferensi);
-
-      renderSheetDompet({
-        dompet,
-        dompetAktif
-      });
-
-      const rentang =
-        rentangPeriode(
-          preferensi.periodeAktif
-        );
-
-      const semuaTransaksiDompet =
-        await FinanceService
-          .ambilTransaksiDompet({
-            familyId: family.id,
-            walletId:
-              dompetAktif.wallet_id,
-            kind: null,
-            startDate:
-              rentang.startDate,
-            endDate:
-              rentang.endDate,
-            limit: 200
-          });
-
-      const transaksi =
-        filterTransaksiHome(
-          semuaTransaksiDompet,
-          preferensi.jenisAktif
-        );
-
-      renderTransaksi({
-        transaksi,
-        akun,
-        jenisAktif:
-          preferensi.jenisAktif,
-        namaDompet:
-          dompetAktif.name
-      });
-
+      renderWalletPrimary();
+      renderSheetDompet();
+      FinancePeriod?.sync();
+      await refreshPeriodSummary();
       setAllReady();
-
     } catch (error) {
-      tampilError(error);
+      console.error("[Home Backend]", error);
+      setAllReady();
     }
   }
 
@@ -999,31 +330,22 @@
     return profileRefreshPromise;
   }
 
-  document.addEventListener(
-    "DOMContentLoaded",
-    renderHomeBackend
-  );
-
-  /* Browser back-forward cache dapat mengembalikan DOM lama tanpa reload. */
-  window.addEventListener("pageshow", event => {
-    if (event.persisted) {
-      renderHomeBackend();
-    } else {
-      refreshProfileOnly();
-    }
+  document.addEventListener("DOMContentLoaded", () => {
+    setupControls();
+    renderHomeBackend();
   });
 
+  window.addEventListener("pageshow", event => {
+    if (event.persisted) renderHomeBackend();
+    else refreshProfileOnly();
+  });
   window.addEventListener("focus", () => refreshProfileOnly());
   document.addEventListener("visibilitychange", () => {
     if (document.visibilityState === "visible") refreshProfileOnly();
   });
-
   window.addEventListener("profil-pengguna-berubah", event => {
     const detail = event?.detail || {};
-    if (detail.display_name !== undefined || detail.avatar_path !== undefined) {
-      renderProfileHome(detail);
-    } else {
-      refreshProfileOnly({ force: true });
-    }
+    if (detail.display_name !== undefined || detail.avatar_path !== undefined) renderProfileHome(detail);
+    else refreshProfileOnly({ force: true });
   });
 })();

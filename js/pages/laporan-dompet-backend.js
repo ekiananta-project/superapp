@@ -2,7 +2,7 @@
   "use strict";
 
   const KUNCI_PENGATURAN = "keuangan_pengaturan_v1";
-  const root = document.querySelector("[data-daftar-transaksi-root]");
+  const root = document.querySelector("[data-laporan-dompet-root]");
   if (!root) return;
 
   let familyAktif = null;
@@ -28,23 +28,9 @@
       .replaceAll("'", "&#039;");
   }
 
-  function tanggalID(teks) {
-    if (!teks) return "-";
-    const [y, m, d] = String(teks).split("-").map(Number);
-    return new Date(y, m - 1, d).toLocaleDateString("id-ID", {
-      day: "numeric",
-      month: "long",
-      year: "numeric"
-    });
-  }
-
   function bacaPreferensi() {
     try {
-      return {
-        dompetAktif: "",
-        familyAktif: "",
-        ...JSON.parse(localStorage.getItem(KUNCI_PENGATURAN) || "{}")
-      };
+      return { dompetAktif: "", familyAktif: "", ...JSON.parse(localStorage.getItem(KUNCI_PENGATURAN) || "{}") };
     } catch {
       return { dompetAktif: "", familyAktif: "" };
     }
@@ -70,134 +56,132 @@
     return item.entries?.find(entry => entry.wallet_id === dompetAktif.wallet_id) || null;
   }
 
-  function entryLawan(item) {
-    return item.entries?.find(entry => entry.wallet_id !== dompetAktif.wallet_id) || null;
+  function totalArus(daftar) {
+    let masuk = 0;
+    let keluar = 0;
+    daftar.forEach(item => {
+      const delta = Number(entryAktif(item)?.amount_delta ?? item.amount_delta ?? 0);
+      if (delta > 0) masuk += delta;
+      if (delta < 0) keluar += Math.abs(delta);
+    });
+    return { masuk, keluar };
   }
 
-  function infoTransaksi(item) {
-    const active = entryAktif(item);
-    const delta = Number(active?.amount_delta ?? item.amount_delta ?? 0);
-    const dataAkun = akun.find(x => x.id === item.account_id);
+  function kelompokAkun(daftar, kind) {
+    const map = new Map();
+    daftar.filter(item => item.kind === kind && item.account_id).forEach(item => {
+      map.set(item.account_id, (map.get(item.account_id) || 0) + Number(item.amount || 0));
+    });
 
-    if (item.kind === "transfer") {
-      const lawan = entryLawan(item);
-      const keluar = delta < 0;
-      const fee = Number(item.transfer_fee || 0);
-      const feeInfo = fee > 0 ? ` • Admin ${rupiah(fee, dompetAktif.currency_code)}` : "";
+    const hasil = [...map.entries()].map(([accountId, jumlah]) => {
+      const dataAkun = akun.find(item => item.id === accountId);
       return {
-        nama: keluar ? `Transfer ke ${lawan?.wallet?.name || "Dompet"}` : `Transfer dari ${lawan?.wallet?.name || "Dompet"}`,
-        sub: `${item.note || "Transfer antar dompet"}${feeInfo}`,
-        ikon: "swap-horizontal-outline",
-        nilai: Math.abs(delta),
-        tanda: delta >= 0 ? "+" : "−",
-        tone: "transfer"
+        akunId: accountId,
+        nama: dataAkun?.name || "Kategori",
+        ikon: dataAkun?.icon_value || "ellipse-outline",
+        jumlah
       };
+    });
+
+    if (kind === "expense") {
+      const fee = daftar.reduce((total, item) => {
+        if (item.kind !== "transfer" || Number(item.transfer_fee || 0) <= 0) return total;
+        const delta = Number(entryAktif(item)?.amount_delta ?? item.amount_delta ?? 0);
+        return delta < 0 ? total + Number(item.transfer_fee || 0) : total;
+      }, 0);
+      if (fee > 0) {
+        hasil.push({ akunId: "__transfer_fee__", nama: "Biaya Admin Transfer", ikon: "card-outline", jumlah: fee });
+      }
     }
 
-    if (item.kind === "adjustment") {
-      return {
-        nama: "Penyesuaian Saldo",
-        sub: item.note || "Penyesuaian saldo dompet",
-        ikon: "options-outline",
-        nilai: Math.abs(delta),
-        tanda: delta >= 0 ? "+" : "−",
-        tone: "transfer"
-      };
-    }
-
-    const income = item.kind === "income";
-    return {
-      nama: dataAkun?.name || (income ? "Pemasukan" : "Pengeluaran"),
-      sub: item.note || (income ? "Pemasukan" : "Pengeluaran"),
-      ikon: dataAkun?.icon_value || "ellipse-outline",
-      nilai: Number(item.amount || Math.abs(delta)),
-      tanda: income ? "+" : "−",
-      tone: income ? "pemasukan" : "pengeluaran"
-    };
+    return hasil.sort((a, b) => b.jumlah - a.jumlah);
   }
 
-  function renderTransaksi() {
-    const container = document.querySelector("[data-transaksi-dompet]");
-    const subtitle = document.querySelector("[data-subjudul-transaksi]");
-    if (!container) return;
-
-    container.innerHTML = "";
-    if (subtitle) subtitle.textContent = `${transaksiAktif.length} transaksi • ${FinancePeriod.getLabel()}`;
-
-    if (!transaksiAktif.length) {
-      container.innerHTML = `
-        <div class="kosong-detail">
-          <ion-icon name="receipt-outline"></ion-icon>
-          Belum ada transaksi untuk ${escapeHTML(dompetAktif.name)} pada periode ini.
-        </div>`;
+  function renderKategori(elemen, daftar, jenis, total) {
+    if (!elemen) return;
+    elemen.innerHTML = "";
+    if (!daftar.length) {
+      elemen.innerHTML = `<div class="kosong-detail"><ion-icon name="pie-chart-outline"></ion-icon>Belum ada ${jenis} pada periode ini.</div>`;
       return;
     }
 
-    let tanggalSebelumnya = "";
-    transaksiAktif.forEach(item => {
-      if (tanggalSebelumnya !== item.occurred_on) {
-        const date = document.createElement("h3");
-        date.className = "tanggal-transaksi-detail";
-        date.textContent = tanggalID(item.occurred_on);
-        container.appendChild(date);
-        tanggalSebelumnya = item.occurred_on;
-      }
-
-      const info = infoTransaksi(item);
-      const button = document.createElement("button");
-      button.type = "button";
-      button.className = `transaksi-detail-item ${info.tone}`;
-      button.innerHTML = `
-        <span class="transaksi-detail-ikon"><ion-icon name="${escapeHTML(info.ikon)}"></ion-icon></span>
-        <span class="transaksi-detail-info">
-          <strong>${escapeHTML(info.nama)}</strong>
-          <span>${escapeHTML(info.sub)}</span>
+    daftar.forEach(item => {
+      const persen = total > 0 ? (item.jumlah / total) * 100 : 0;
+      const node = document.createElement("div");
+      node.className = `item-kategori-detail ${jenis === "pemasukan" ? "pemasukan" : ""}`;
+      node.innerHTML = `
+        <span class="item-kategori-ikon"><ion-icon name="${escapeHTML(item.ikon)}"></ion-icon></span>
+        <span class="item-kategori-info">
+          <span class="item-kategori-header"><strong>${escapeHTML(item.nama)}</strong><span>${Math.round(persen)}%</span></span>
+          <span class="item-kategori-track"><span class="item-kategori-fill" style="width:${Math.min(persen, 100)}%"></span></span>
         </span>
-        <strong class="transaksi-detail-nilai">${info.tanda} ${rupiah(info.nilai, dompetAktif.currency_code)}</strong>
-        <ion-icon name="chevron-forward-outline"></ion-icon>`;
-      button.addEventListener("click", () => {
-        location.href = `detail-transaksi.html?id=${encodeURIComponent(item.id)}`;
-      });
-      container.appendChild(button);
+        <strong class="item-kategori-nilai">${rupiah(item.jumlah, dompetAktif.currency_code)}</strong>`;
+      elemen.appendChild(node);
     });
   }
 
   function renderUtama() {
     if (!dompetAktif) return;
+    const { masuk, keluar } = totalArus(transaksiAktif);
+    const arusBersih = masuk - keluar;
+
     document.querySelector("[data-pemilih-dompet-ikon]")?.setAttribute("name", dompetAktif.icon_value || "wallet-outline");
     document.querySelector("[data-pemilih-dompet-nama]").textContent = dompetAktif.name;
     document.querySelector("[data-detail-ikon]")?.setAttribute("name", dompetAktif.icon_value || "wallet-outline");
     document.querySelector("[data-detail-nama]").textContent = dompetAktif.name;
     document.querySelector("[data-detail-saldo]").textContent = rupiah(dompetAktif.current_balance, dompetAktif.currency_code);
-    document.querySelector("[data-laporan-dompet]").href = `laporan-dompet.html?id=${encodeURIComponent(dompetAktif.wallet_id)}`;
+    document.querySelector("[data-total-pemasukan]").textContent = rupiah(masuk, dompetAktif.currency_code);
+    document.querySelector("[data-total-pengeluaran]").textContent = rupiah(keluar, dompetAktif.currency_code);
+    document.querySelector("[data-banding-pemasukan]").textContent = rupiah(masuk, dompetAktif.currency_code);
+    document.querySelector("[data-banding-pengeluaran]").textContent = rupiah(keluar, dompetAktif.currency_code);
     document.querySelector("[data-tambah-transaksi-detail]").href = `transaksi.html?dompet=${encodeURIComponent(dompetAktif.wallet_id)}`;
-    history.replaceState(null, "", `dompet-detail.html?id=${encodeURIComponent(dompetAktif.wallet_id)}`);
+    document.querySelector("[data-edit-dompet]").href = `dompet-form.html?id=${encodeURIComponent(dompetAktif.wallet_id)}`;
+    document.querySelector("[data-kembali-daftar]").href = `dompet-detail.html?id=${encodeURIComponent(dompetAktif.wallet_id)}`;
+    history.replaceState(null, "", `laporan-dompet.html?id=${encodeURIComponent(dompetAktif.wallet_id)}`);
+
+    const arusEl = document.querySelector("[data-arus-bersih]");
+    arusEl.textContent = `${arusBersih > 0 ? "+ " : ""}${rupiah(arusBersih, dompetAktif.currency_code)}`;
+    const kartuArus = document.querySelector(".kartu-ringkasan-detail.arus-bersih");
+    const statusArus = document.querySelector("[data-status-arus]");
+    kartuArus.classList.remove("is-surplus", "is-defisit");
+    if (arusBersih > 0) {
+      kartuArus.classList.add("is-surplus");
+      statusArus.textContent = "Surplus";
+    } else if (arusBersih < 0) {
+      kartuArus.classList.add("is-defisit");
+      statusArus.textContent = "Defisit";
+    } else {
+      statusArus.textContent = "Seimbang";
+    }
+
+    const max = Math.max(masuk, keluar, 1);
+    document.querySelector("[data-bar-pemasukan]").style.width = `${(masuk / max) * 100}%`;
+    document.querySelector("[data-bar-pengeluaran]").style.width = `${(keluar / max) * 100}%`;
+
+    const pengeluaranKategori = kelompokAkun(transaksiAktif, "expense");
+    const pemasukanKategori = kelompokAkun(transaksiAktif, "income");
+    renderKategori(document.querySelector("[data-kategori-pengeluaran]"), pengeluaranKategori, "pengeluaran", pengeluaranKategori.reduce((a, b) => a + b.jumlah, 0));
+    renderKategori(document.querySelector("[data-kategori-pemasukan]"), pemasukanKategori, "pemasukan", pemasukanKategori.reduce((a, b) => a + b.jumlah, 0));
     FinancePeriod.sync();
-    renderTransaksi();
   }
 
   async function muatTransaksi() {
     if (!familyAktif || !dompetAktif) return;
     const range = FinancePeriod.getRange();
-    const container = document.querySelector("[data-transaksi-dompet]");
-    if (container) {
-      container.innerHTML = `<div class="kosong-detail"><ion-icon name="cloud-download-outline"></ion-icon>Mengambil transaksi...</div>`;
-    }
     transaksiAktif = await FinanceService.ambilTransaksiDompet({
       familyId: familyAktif.id,
       walletId: dompetAktif.wallet_id,
       startDate: range.startDate,
       endDate: range.endDate,
-      limit: 300
+      limit: 500
     });
-    renderTransaksi();
+    renderUtama();
   }
 
   function renderPilihanDompet() {
     const list = document.querySelector("[data-detail-daftar-dompet]");
     if (!list) return;
     list.innerHTML = "";
-
     dompet.forEach(item => {
       const button = document.createElement("button");
       button.type = "button";
@@ -210,7 +194,6 @@
         dompetAktif = item;
         simpanPreferensi({ dompetAktif: item.wallet_id });
         document.getElementById("sheet-dompet-detail").hidden = true;
-        renderUtama();
         renderPilihanDompet();
         await muatTransaksi();
       });
@@ -223,7 +206,6 @@
       const authOK = await window.AUTH_READY;
       if (authOK === false) return;
     }
-
     try {
       familyAktif = await ambilFamily();
       const [walletRows, accountRows] = await Promise.all([
@@ -243,12 +225,9 @@
 
       FinancePeriod.mount();
       renderPilihanDompet();
-      renderUtama();
       await muatTransaksi();
     } catch (error) {
-      console.error("[Daftar Transaksi]", error);
-      const container = document.querySelector("[data-transaksi-dompet]");
-      if (container) container.innerHTML = `<div class="kosong-detail"><ion-icon name="alert-circle-outline"></ion-icon>${escapeHTML(error?.message || "Data belum dapat dimuat.")}</div>`;
+      console.error("[Laporan Dompet]", error);
     }
   }
 
@@ -262,7 +241,6 @@
   document.getElementById("sheet-dompet-detail")?.addEventListener("click", event => {
     if (event.target === event.currentTarget) event.currentTarget.hidden = true;
   });
-
   window.addEventListener("finance-period-change", muatTransaksi);
   document.addEventListener("DOMContentLoaded", init);
 })();

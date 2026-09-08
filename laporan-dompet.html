@@ -16,12 +16,10 @@
   <link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png">
   <link rel="apple-touch-icon" sizes="180x180" href="icons/apple-touch-icon.png">
   <script src="js/theme.js"></script>
-  <title>Daftar Transaksi</title>
-
+  <title>Laporan Dompet</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet">
-
   <link rel="stylesheet" href="css/style.css">
   <link rel="stylesheet" href="css/components/finance-period.css?v=20260908-1">
   <link rel="stylesheet" href="css/pages/dompet-detail.css?v=20260908-2">
@@ -31,12 +29,12 @@
 <body>
 <div class="aplikasi">
   <header class="header-halaman">
-    <a class="tombol-ikon" href="index.html" aria-label="Kembali"><ion-icon name="arrow-back-outline"></ion-icon></a>
-    <h1>Daftar Transaksi</h1>
-    <span class="kosong"></span>
+    <a class="tombol-ikon" href="dompet-detail.html" data-kembali-daftar aria-label="Kembali"><ion-icon name="arrow-back-outline"></ion-icon></a>
+    <h1>Laporan Dompet</h1>
+    <a class="tombol-ikon" href="dompet-form.html" aria-label="Edit dompet" data-edit-dompet><ion-icon name="create-outline"></ion-icon></a>
   </header>
 
-  <main class="konten-halaman detail-dompet" data-daftar-transaksi-root>
+  <main class="konten-halaman detail-dompet" data-laporan-dompet-root>
     <button class="pemilih-dompet-detail" type="button" data-detail-buka-dompet>
       <span class="pemilih-dompet-detail-kiri">
         <span class="pemilih-dompet-detail-ikon"><ion-icon data-pemilih-dompet-ikon name="wallet-outline"></ion-icon></span>
@@ -52,33 +50,51 @@
       <strong data-detail-saldo>Rp 0</strong>
     </section>
 
-    <a class="tombol-laporan-dompet" href="laporan-dompet.html" data-laporan-dompet>
-      <span class="tombol-laporan-dompet-kiri">
-        <ion-icon name="stats-chart-outline"></ion-icon>
-        <span>Lihat Laporan Dompet</span>
-      </span>
-      <ion-icon name="arrow-forward-outline"></ion-icon>
-    </a>
-
     <button class="finance-period-trigger" type="button" data-finance-period-trigger>
       <span class="finance-period-trigger-main">
         <ion-icon name="calendar-outline"></ion-icon>
-        <span class="finance-period-trigger-copy">
-          <small>Periode</small>
-          <strong data-finance-period-label>September 2026</strong>
-        </span>
+        <span class="finance-period-trigger-copy"><small>Periode</small><strong data-finance-period-label>September 2026</strong></span>
       </span>
       <ion-icon name="chevron-down-outline"></ion-icon>
     </button>
 
-    <section class="kartu-analisis-detail daftar-transaksi-card">
-      <div class="judul-seksi-detail judul-seksi-transaksi">
-        <div>
-          <h2>Daftar Transaksi</h2>
-          <p data-subjudul-transaksi>Mengambil transaksi...</p>
-        </div>
+    <section class="ringkasan-arus-detail">
+      <article class="kartu-ringkasan-detail">
+        <span class="ringkasan-detail-ikon pemasukan"><ion-icon name="arrow-down-outline"></ion-icon></span>
+        <span>Pemasukan</span>
+        <strong class="nilai-pemasukan" data-total-pemasukan>Rp 0</strong>
+      </article>
+      <article class="kartu-ringkasan-detail">
+        <span class="ringkasan-detail-ikon pengeluaran"><ion-icon name="arrow-up-outline"></ion-icon></span>
+        <span>Pengeluaran</span>
+        <strong class="nilai-pengeluaran" data-total-pengeluaran>Rp 0</strong>
+      </article>
+      <article class="kartu-ringkasan-detail arus-bersih">
+        <div><span>Arus Kas Bersih</span><small data-status-arus>Seimbang</small></div>
+        <strong data-arus-bersih>Rp 0</strong>
+      </article>
+    </section>
+
+    <section class="kartu-analisis-detail">
+      <div class="judul-seksi-detail"><div><h2>Perbandingan Arus Kas</h2><p>Uang masuk dibanding uang keluar pada periode ini.</p></div></div>
+      <div class="baris-perbandingan">
+        <div class="label-perbandingan"><span>Pemasukan</span><strong data-banding-pemasukan>Rp 0</strong></div>
+        <div class="jalur-perbandingan"><span class="isi-perbandingan pemasukan" data-bar-pemasukan></span></div>
       </div>
-      <div class="daftar-transaksi-detail" data-transaksi-dompet></div>
+      <div class="baris-perbandingan">
+        <div class="label-perbandingan"><span>Pengeluaran</span><strong data-banding-pengeluaran>Rp 0</strong></div>
+        <div class="jalur-perbandingan"><span class="isi-perbandingan pengeluaran" data-bar-pengeluaran></span></div>
+      </div>
+    </section>
+
+    <section class="kartu-analisis-detail">
+      <div class="judul-seksi-detail"><div><h2>Pengeluaran Terbesar</h2><p>Ke mana uang paling banyak digunakan.</p></div></div>
+      <div class="daftar-kategori-detail" data-kategori-pengeluaran></div>
+    </section>
+
+    <section class="kartu-analisis-detail">
+      <div class="judul-seksi-detail"><div><h2>Sumber Pemasukan</h2><p>Dari mana uang masuk ke dompet ini.</p></div></div>
+      <div class="daftar-kategori-detail" data-kategori-pemasukan></div>
     </section>
   </main>
 
@@ -107,7 +123,7 @@
 <script src="js/backend/auth-router.js"></script>
 <script src="js/backend/auth-guard.js"></script>
 <script src="js/components/finance-period.js?v=20260908-1"></script>
-<script src="js/pages/dompet-detail-backend.js?v=20260908-2"></script>
+<script src="js/pages/laporan-dompet-backend.js?v=20260908-1"></script>
 <script src="js/pwa.js"></script>
 </body>
 </html>
