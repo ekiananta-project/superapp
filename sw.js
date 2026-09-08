@@ -1,4 +1,4 @@
-const CACHE_NAME = "family-superapp-v1.2.0b-perencanaan-tagihan-1";
+const CACHE_NAME = "family-superapp-v1.2.0c-custom-range-planning-1";
 const OFFLINE_URL = "./offline.html";
 
 const APP_FILES = [

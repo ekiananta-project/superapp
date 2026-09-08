@@ -20,7 +20,7 @@
   const formClose = document.querySelector("[data-bill-form-close]");
   const nameInput = document.querySelector("[data-bill-name]");
   const amountInput = document.querySelector("[data-bill-amount]");
-  const dueDaySelect = document.querySelector("[data-bill-due-day]");
+  const dueDateInput = document.querySelector("[data-bill-due-date]");
   const noteInput = document.querySelector("[data-bill-note]");
   const editInfo = document.querySelector("[data-bill-edit-info]");
   const deleteButton = document.querySelector("[data-bill-delete]");
@@ -301,15 +301,6 @@
     }
   }
 
-  function prepareDueDays() {
-    if (!dueDaySelect || dueDaySelect.options.length) return;
-    for (let day = 1; day <= 31; day += 1) {
-      const option = document.createElement("option");
-      option.value = String(day);
-      option.textContent = `Tanggal ${day}`;
-      dueDaySelect.appendChild(option);
-    }
-  }
 
   function categoryById(id) {
     return categories.find(item => item.id === id) || null;
@@ -437,15 +428,14 @@
   }
 
   function openForm(item = null) {
-    prepareDueDays();
     editingItem = item;
     selectedCategoryId = item?.account_id || "";
 
     if (formTitle) formTitle.textContent = item ? "Atur Tagihan" : "Tambah Tagihan";
-    if (formPeriod) formPeriod.textContent = item ? `Perubahan mulai ${monthText()}` : `Mulai ${monthText()}`;
+    if (formPeriod) formPeriod.textContent = item ? `Jatuh tempo saat ini ${shortDate(item.due_on)}` : "Pilih tanggal jatuh tempo pertama";
     if (nameInput) nameInput.value = item?.bill_name || "";
     if (amountInput) amountInput.value = item ? formatNumberInput(item.amount) : "";
-    if (dueDaySelect) dueDaySelect.value = String(item?.due_day || 1);
+    if (dueDateInput) dueDateInput.value = item?.due_on || "";
     if (noteInput) noteInput.value = item?.bill_note || "";
     if (deleteButton) deleteButton.hidden = !item;
     if (editInfo) editInfo.hidden = !item;
@@ -477,7 +467,7 @@
 
     const name = String(nameInput?.value || "").trim();
     const amount = Number(digits(amountInput?.value));
-    const dueDay = Number(dueDaySelect?.value || 0);
+    const dueDate = String(dueDateInput?.value || "");
     const note = String(noteInput?.value || "").trim();
 
     if (!name) {
@@ -488,6 +478,11 @@
     if (!amount || amount <= 0) {
       show("Nominal tagihan harus lebih dari Rp 0.", "error");
       amountInput?.focus();
+      return;
+    }
+    if (!dueDate || !parseLocalDate(dueDate)) {
+      show("Pilih tanggal jatuh tempo dari kalender.", "error");
+      dueDateInput?.focus();
       return;
     }
     if (!selectedCategoryId) {
@@ -503,15 +498,19 @@
       await FinanceService.simpanTagihan({
         familyId: family.id,
         billId: editingItem?.bill_id || null,
-        periodMonth: monthDate(),
+        dueDate,
         name,
         amount,
-        dueDay,
         accountId: selectedCategoryId,
         note
       });
       const editedPaidHistory = wasEditing && editingItem?.status === "paid";
+      const due = parseLocalDate(dueDate);
       closeForm();
+      if (due) {
+        month = firstDay(due);
+        syncMonthUI();
+      }
       show(
         editedPaidHistory
           ? "Pengaturan tagihan berikutnya diperbarui. Periode yang sudah lunas tetap sebagai histori."

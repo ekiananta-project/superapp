@@ -435,3 +435,13 @@
 @media (prefers-reduced-motion: reduce) {
   .bills-loading-card { animation: none; }
 }
+
+/* v1.2.0c — calendar date picker for due date */
+.bill-form .input[type="date"] {
+  min-height: 52px;
+  color-scheme: dark;
+}
+
+html[data-theme="light"] .bill-form .input[type="date"] {
+  color-scheme: light;
+}

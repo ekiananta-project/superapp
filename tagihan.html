@@ -24,7 +24,7 @@
   <link rel="stylesheet" href="css/theme.css">
   <link rel="stylesheet" href="css/pages/transaksi-category-picker.css?v=20260908-1">
   <link rel="stylesheet" href="css/pages/finance-nav-v117f.css?v=20260908-2">
-  <link rel="stylesheet" href="css/pages/tagihan.css?v=20260908-1">
+  <link rel="stylesheet" href="css/pages/tagihan.css?v=20260908-2">
 </head>
 <body>
 <div class="aplikasi dengan-nav">
@@ -118,9 +118,9 @@
       </div>
 
       <div class="grup-input">
-        <label for="billDueDay">Tanggal Jatuh Tempo</label>
-        <select class="pilih" id="billDueDay" required data-bill-due-day></select>
-        <small class="bill-field-help">Jika tanggal 29–31 tidak ada di suatu bulan, jatuh tempo otomatis memakai hari terakhir bulan.</small>
+        <label for="billDueDate">Tanggal Jatuh Tempo</label>
+        <input class="input" id="billDueDate" type="date" required data-bill-due-date>
+        <small class="bill-field-help">Pilih tanggal langsung dari kalender. Untuk tagihan rutin, bulan berikutnya mengikuti tanggal yang sama; jika tanggal itu tidak ada, otomatis memakai hari terakhir bulan.</small>
       </div>
 
       <div class="grup-input">
@@ -141,7 +141,7 @@
 
       <div class="bill-form-info" data-bill-edit-info hidden>
         <ion-icon name="information-circle-outline"></ion-icon>
-        <p>Perubahan berlaku untuk tagihan yang belum lunas mulai periode ini. Riwayat yang sudah lunas tidak diubah.</p>
+        <p>Perubahan berlaku untuk tagihan yang belum lunas mulai bulan dari tanggal jatuh tempo yang dipilih. Riwayat yang sudah lunas tidak diubah.</p>
       </div>
 
       <div class="bill-form-actions">
@@ -214,11 +214,11 @@
 <script src="js/backend/supabase.js"></script>
 <script src="js/backend/auth-service.js"></script>
 <script src="js/backend/family-service.js"></script>
-<script src="js/backend/finance-service.js?v=20260908-8"></script>
+<script src="js/backend/finance-service.js?v=20260908-9"></script>
 <script src="js/backend/finance-cache.js"></script>
 <script src="js/backend/auth-router.js"></script>
 <script src="js/backend/auth-guard.js"></script>
-<script src="js/pages/tagihan-backend.js?v=20260908-1"></script>
-<script src="js/pwa.js?v=20260908-8"></script>
+<script src="js/pages/tagihan-backend.js?v=20260908-2"></script>
+<script src="js/pwa.js?v=20260908-9"></script>
 </body>
 </html>

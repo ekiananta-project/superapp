@@ -552,323 +552,114 @@
   opacity: .35;
 }
 
+
 /* ==========================================================
-   v1.2.0a2 — Payday / custom monthly cycle
+   v1.2.0c — Custom date range budget
 ========================================================== */
 
-.budget-cycle-button {
-  grid-column: 1 / -1;
-  min-width: 0;
-  margin-top: 2px;
-  padding: 10px 12px;
-  border: 0;
-  border-top: 1px solid var(--color-border);
-  display: grid;
-  grid-template-columns: 34px minmax(0, 1fr) auto;
-  align-items: center;
-  gap: 10px;
-  background: transparent;
-  color: var(--color-text);
-  font: inherit;
-  text-align: left;
-  cursor: pointer;
+.budget-month-nav:disabled {
+  opacity: .28;
+  cursor: default;
 }
 
-.budget-cycle-icon {
-  width: 34px;
-  height: 34px;
-  border-radius: 11px;
-  display: grid;
-  place-items: center;
-  background: var(--color-surface-soft);
-  color: var(--color-primary);
+.budget-month-nav:disabled:active {
+  transform: none;
 }
 
-.budget-cycle-icon ion-icon {
-  font-size: 18px;
+.budget-period-sheet {
+  max-height: min(86vh, 680px);
 }
 
-.budget-cycle-copy {
-  min-width: 0;
+.budget-period-form {
   display: flex;
   flex-direction: column;
-  gap: 2px;
-}
-
-.budget-cycle-copy small {
-  color: var(--color-text-secondary);
-  font-size: 11px;
-}
-
-.budget-cycle-copy strong {
-  overflow: hidden;
-  font-size: var(--font-size-xs);
-  font-weight: var(--font-weight-semibold);
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.budget-cycle-chevron {
-  color: var(--color-text-secondary);
-  font-size: 18px;
-}
-
-.budget-cycle-form {
+  gap: var(--space-3);
   padding: 10px 16px 18px;
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
 }
 
-.budget-cycle-option {
-  position: relative;
-  min-height: 68px;
-  padding: 12px 13px;
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-md);
+.budget-period-grid {
   display: grid;
-  grid-template-columns: 22px minmax(0, 1fr);
-  align-items: flex-start;
-  gap: 10px;
-  background: var(--color-surface-soft);
-  cursor: pointer;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-3);
 }
 
-.budget-cycle-option:has(input:checked) {
-  border-color: var(--color-primary);
-  background: var(--color-surface);
-}
-
-.budget-cycle-option input {
-  width: 18px;
-  height: 18px;
-  margin: 2px 0 0;
-  accent-color: var(--color-primary);
-}
-
-.budget-cycle-radio-copy {
-  min-width: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 3px;
-}
-
-.budget-cycle-radio-copy strong {
-  font-size: var(--font-size-sm);
-}
-
-.budget-cycle-radio-copy small,
-.budget-cycle-day-wrap > small,
-.budget-cycle-info {
-  color: var(--color-text-secondary);
-  font-size: var(--font-size-xs);
-  line-height: 1.5;
-}
-
-.budget-cycle-day-wrap {
-  margin-top: 2px;
-  padding: 12px 13px;
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-md);
-  background: var(--color-surface);
-}
-
-.budget-cycle-day-wrap[hidden] {
-  display: none !important;
-}
-
-.budget-cycle-day-wrap > label {
-  display: block;
-  margin-bottom: 8px;
-  font-size: var(--font-size-xs);
-  font-weight: var(--font-weight-semibold);
-}
-
-.budget-cycle-day-control {
-  display: grid;
-  grid-template-columns: auto minmax(0, 1fr);
-  align-items: center;
-  gap: 10px;
-}
-
-.budget-cycle-day-control > span {
-  color: var(--color-text-secondary);
-  font-size: var(--font-size-xs);
-}
-
-.budget-cycle-day-control .input {
-  min-height: 44px;
-}
-
-.budget-cycle-day-wrap > small {
-  display: block;
-  margin-top: 8px;
-}
-
-.budget-cycle-info {
-  padding: 10px 12px;
-  border-radius: var(--radius-md);
-  display: grid;
-  grid-template-columns: 20px minmax(0, 1fr);
-  gap: 8px;
-  background: var(--color-surface-soft);
-}
-
-.budget-cycle-info ion-icon {
-  margin-top: 1px;
-  color: var(--color-primary);
-  font-size: 18px;
-}
-
-.budget-cycle-info p {
+.budget-period-grid .grup-input {
   margin: 0;
 }
 
-[data-budget-cycle-save] {
-  margin-top: 4px;
+.budget-period-grid .input[type="date"] {
+  min-height: 52px;
+  color-scheme: dark;
 }
 
-[data-budget-cycle-save]:disabled {
-  opacity: .55;
-  cursor: wait;
+html[data-theme="light"] .budget-period-grid .input[type="date"] {
+  color-scheme: light;
 }
 
-
-/* ==========================================================
-   v1.2.0a3 — Budget cycle isolation + explicit carry-forward
-========================================================== */
-
-.budget-cycle-confirm-layer {
-  z-index: 640;
-}
-
-.budget-cycle-confirm-sheet {
-  max-height: min(88vh, 720px);
-}
-
-.budget-cycle-confirm-body {
-  padding: 8px 16px 18px;
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
-
-.budget-cycle-route {
+.budget-period-info {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 28px minmax(0, 1fr);
-  align-items: center;
-  gap: 8px;
-}
-
-.budget-cycle-route > ion-icon {
-  justify-self: center;
-  color: var(--color-text-secondary);
-  font-size: 18px;
-}
-
-.budget-cycle-route-card {
-  min-width: 0;
-  min-height: 70px;
-  padding: 11px 12px;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 9px;
+  padding: 12px;
   border: 1px solid var(--color-border);
   border-radius: var(--radius-md);
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  gap: 3px;
   background: var(--color-surface-soft);
-}
-
-.budget-cycle-route-card small {
   color: var(--color-text-secondary);
-  font-size: 11px;
 }
 
-.budget-cycle-route-card strong {
-  font-size: var(--font-size-xs);
-  line-height: 1.35;
+.budget-period-info ion-icon {
+  margin-top: 1px;
+  color: var(--color-primary);
+  font-size: 20px;
 }
 
-.budget-cycle-confirm-message {
-  padding: 12px 13px;
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-md);
-  background: var(--color-surface);
-  color: var(--color-text);
+.budget-period-info p {
+  margin: 0;
   font-size: var(--font-size-xs);
   line-height: 1.55;
 }
 
-.budget-cycle-confirm-info {
-  padding: 10px 12px;
-  border-radius: var(--radius-md);
-  display: grid;
-  grid-template-columns: 20px minmax(0, 1fr);
-  gap: 8px;
-  background: var(--color-surface-soft);
-  color: var(--color-text-secondary);
-  font-size: var(--font-size-xs);
-  line-height: 1.5;
-}
-
-.budget-cycle-confirm-info ion-icon {
-  margin-top: 1px;
-  color: var(--color-primary);
-  font-size: 18px;
-}
-
-.budget-cycle-confirm-info p {
-  margin: 0;
-}
-
-.budget-cycle-confirm-actions {
-  display: grid;
-  grid-template-columns: minmax(0, .8fr) minmax(0, 1fr);
-  gap: 8px;
-}
-
-.budget-cycle-confirm-actions .tombol-utama {
-  grid-column: 1 / -1;
-  min-height: 48px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-}
-
-.budget-cycle-confirm-cancel,
-.budget-cycle-confirm-empty {
+.budget-period-new {
   min-height: 46px;
   border: 1px solid var(--color-border);
   border-radius: var(--radius-md);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
   background: var(--color-surface-soft);
-  color: var(--color-text);
+  color: var(--color-primary);
   font: inherit;
-  font-size: var(--font-size-xs);
   font-weight: var(--font-weight-semibold);
   cursor: pointer;
 }
 
-.budget-cycle-confirm-empty {
-  border-color: color-mix(in srgb, var(--color-primary) 45%, var(--color-border));
-  color: var(--color-primary);
+.budget-period-new[hidden] {
+  display: none !important;
 }
 
-.budget-cycle-confirm-actions button:disabled {
+.budget-period-new ion-icon {
+  font-size: 19px;
+}
+
+[data-budget-period-save]:disabled {
   opacity: .55;
   cursor: wait;
 }
 
-@media (max-width: 390px) {
-  .budget-cycle-route {
-    grid-template-columns: 1fr;
-  }
-
-  .budget-cycle-route > ion-icon {
-    transform: rotate(90deg);
-  }
+.budget-empty-action {
+  width: 100%;
+  border: 1px dashed var(--color-border);
+  font: inherit;
+  cursor: pointer;
 }
 
-.budget-cycle-confirm-copy[hidden] {
-  display: none !important;
+.budget-empty-action:active {
+  transform: scale(.995);
+}
+
+@media (max-width: 420px) {
+  .budget-period-grid {
+    grid-template-columns: 1fr;
+  }
 }

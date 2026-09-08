@@ -721,40 +721,6 @@
   }
 
 
-  async function ambilSiklusBudget(familyId) {
-    if (!familyId) throw new Error("familyId wajib diisi.");
-
-    const { data, error } = await client.rpc(
-      "finance_budget_cycle_get",
-      { p_family_id: familyId }
-    );
-
-    lemparJikaError(error);
-    const row = Array.isArray(data) ? data[0] : data;
-    const cycleDay = Number(row?.cycle_day || 1);
-    return Math.min(31, Math.max(1, cycleDay));
-  }
-
-  async function simpanSiklusBudget({ familyId, cycleDay } = {}) {
-    if (!familyId) throw new Error("familyId wajib diisi.");
-
-    const day = Number(cycleDay);
-    if (!Number.isInteger(day) || day < 1 || day > 31) {
-      throw new Error("Tanggal siklus budget harus antara 1 sampai 31.");
-    }
-
-    const { data, error } = await client.rpc(
-      "finance_budget_cycle_set",
-      {
-        p_family_id: familyId,
-        p_cycle_day: day
-      }
-    );
-
-    lemparJikaError(error);
-    return Number(data || day);
-  }
-
   function normalizeBudgetRows(data) {
     return (data || []).map(item => ({
       ...item,
@@ -766,86 +732,57 @@
     }));
   }
 
-  async function ambilBudgetSiklus({
-    familyId,
-    periodMonth,
-    cycleDay
-  } = {}) {
+  async function ambilPeriodeBudget(familyId) {
     if (!familyId) throw new Error("familyId wajib diisi.");
-    if (!periodMonth) throw new Error("periodMonth wajib diisi.");
-
-    const day = Number(cycleDay);
-    if (!Number.isInteger(day) || day < 1 || day > 31) {
-      throw new Error("Tanggal siklus budget harus antara 1 sampai 31.");
-    }
 
     const { data, error } = await client.rpc(
-      "finance_budget_list_cycle",
+      "finance_budget_period_list",
+      { p_family_id: familyId }
+    );
+
+    lemparJikaError(error);
+    return (data || []).map(item => ({
+      ...item,
+      budget_count: Number(item.budget_count || 0)
+    }));
+  }
+
+  async function simpanPeriodeBudget({
+    familyId,
+    periodId = null,
+    startDate,
+    endDate
+  } = {}) {
+    if (!familyId) throw new Error("familyId wajib diisi.");
+    if (!startDate) throw new Error("Tanggal mulai budget wajib diisi.");
+    if (!endDate) throw new Error("Tanggal selesai budget wajib diisi.");
+
+    const { data, error } = await client.rpc(
+      "finance_budget_period_save",
       {
         p_family_id: familyId,
-        p_period_month: periodMonth,
-        p_cycle_day: day
+        p_period_id: periodId || null,
+        p_start_date: startDate,
+        p_end_date: endDate
       }
     );
 
     lemparJikaError(error);
-    return normalizeBudgetRows(data);
+    return data;
   }
 
-  async function ubahSiklusBudget({
+  async function ambilBudgetPeriode({
     familyId,
-    cycleDay,
-    fromPeriodMonth,
-    fromCycleDay,
-    toPeriodMonth,
-    copyBudget = false
+    periodId
   } = {}) {
     if (!familyId) throw new Error("familyId wajib diisi.");
-    if (!fromPeriodMonth) throw new Error("Periode budget sumber wajib diisi.");
-    if (!toPeriodMonth) throw new Error("Periode budget tujuan wajib diisi.");
-
-    const nextDay = Number(cycleDay);
-    const previousDay = Number(fromCycleDay);
-
-    if (!Number.isInteger(nextDay) || nextDay < 1 || nextDay > 31) {
-      throw new Error("Tanggal siklus budget harus antara 1 sampai 31.");
-    }
-    if (!Number.isInteger(previousDay) || previousDay < 1 || previousDay > 31) {
-      throw new Error("Siklus budget sebelumnya tidak valid.");
-    }
+    if (!periodId) throw new Error("Periode budget wajib dipilih.");
 
     const { data, error } = await client.rpc(
-      "finance_budget_cycle_change",
+      "finance_budget_list_period",
       {
         p_family_id: familyId,
-        p_cycle_day: nextDay,
-        p_from_period_month: fromPeriodMonth,
-        p_from_cycle_day: previousDay,
-        p_to_period_month: toPeriodMonth,
-        p_copy_budget: Boolean(copyBudget)
-      }
-    );
-
-    lemparJikaError(error);
-    const row = Array.isArray(data) ? data[0] : data;
-    return {
-      cycleDay: Number(row?.cycle_day || nextDay),
-      copiedCount: Number(row?.copied_count || 0)
-    };
-  }
-
-  async function ambilBudgetBulan({
-    familyId,
-    periodMonth
-  } = {}) {
-    if (!familyId) throw new Error("familyId wajib diisi.");
-    if (!periodMonth) throw new Error("periodMonth wajib diisi.");
-
-    const { data, error } = await client.rpc(
-      "finance_budget_list_month",
-      {
-        p_family_id: familyId,
-        p_period_month: periodMonth
+        p_period_id: periodId
       }
     );
 
@@ -856,25 +793,34 @@
   async function simpanBudget({
     familyId,
     accountId,
-    periodMonth,
+    periodId = null,
+    periodMonth = null,
     amount,
     warningPercent = 80
   } = {}) {
     if (!familyId) throw new Error("familyId wajib diisi.");
     if (!accountId) throw new Error("Kategori budget wajib dipilih.");
-    if (!periodMonth) throw new Error("Periode budget wajib diisi.");
 
-    const { data, error } = await client.rpc(
-      "finance_budget_upsert",
-      {
-        p_family_id: familyId,
-        p_account_id: accountId,
-        p_period_month: periodMonth,
-        p_amount: Number(amount || 0),
-        p_warning_percent: Number(warningPercent || 80)
-      }
-    );
+    const rpcName = periodId ? "finance_budget_upsert_range" : "finance_budget_upsert";
+    if (!periodId && !periodMonth) throw new Error("Periode budget wajib dipilih.");
 
+    const params = periodId
+      ? {
+          p_family_id: familyId,
+          p_account_id: accountId,
+          p_period_id: periodId,
+          p_amount: Number(amount || 0),
+          p_warning_percent: Number(warningPercent || 80)
+        }
+      : {
+          p_family_id: familyId,
+          p_account_id: accountId,
+          p_period_month: periodMonth,
+          p_amount: Number(amount || 0),
+          p_warning_percent: Number(warningPercent || 80)
+        };
+
+    const { data, error } = await client.rpc(rpcName, params);
     lemparJikaError(error);
     return data;
   }
@@ -891,6 +837,82 @@
     return data;
   }
 
+  // Legacy compatibility untuk tab lama yang masih tersisa di cache.
+  // UI v1.2.0c tidak lagi menampilkan atau memakai siklus budget.
+  async function ambilSiklusBudget(familyId) {
+    if (!familyId) throw new Error("familyId wajib diisi.");
+    const { data, error } = await client.rpc("finance_budget_cycle_get", { p_family_id: familyId });
+    lemparJikaError(error);
+    const row = Array.isArray(data) ? data[0] : data;
+    const cycleDay = Number(row?.cycle_day || 1);
+    return Math.min(31, Math.max(1, cycleDay));
+  }
+
+  async function simpanSiklusBudget({ familyId, cycleDay } = {}) {
+    if (!familyId) throw new Error("familyId wajib diisi.");
+    const day = Number(cycleDay);
+    if (!Number.isInteger(day) || day < 1 || day > 31) {
+      throw new Error("Tanggal siklus budget harus antara 1 sampai 31.");
+    }
+    const { data, error } = await client.rpc("finance_budget_cycle_set", {
+      p_family_id: familyId,
+      p_cycle_day: day
+    });
+    lemparJikaError(error);
+    return Number(data || day);
+  }
+
+  async function ambilBudgetSiklus({ familyId, periodMonth, cycleDay } = {}) {
+    if (!familyId) throw new Error("familyId wajib diisi.");
+    if (!periodMonth) throw new Error("periodMonth wajib diisi.");
+    const day = Number(cycleDay);
+    if (!Number.isInteger(day) || day < 1 || day > 31) {
+      throw new Error("Tanggal siklus budget harus antara 1 sampai 31.");
+    }
+    const { data, error } = await client.rpc("finance_budget_list_cycle", {
+      p_family_id: familyId,
+      p_period_month: periodMonth,
+      p_cycle_day: day
+    });
+    lemparJikaError(error);
+    return normalizeBudgetRows(data);
+  }
+
+  async function ubahSiklusBudget({
+    familyId,
+    cycleDay,
+    fromPeriodMonth,
+    fromCycleDay,
+    toPeriodMonth,
+    copyBudget = false
+  } = {}) {
+    if (!familyId) throw new Error("familyId wajib diisi.");
+    const { data, error } = await client.rpc("finance_budget_cycle_change", {
+      p_family_id: familyId,
+      p_cycle_day: Number(cycleDay),
+      p_from_period_month: fromPeriodMonth,
+      p_from_cycle_day: Number(fromCycleDay),
+      p_to_period_month: toPeriodMonth,
+      p_copy_budget: Boolean(copyBudget)
+    });
+    lemparJikaError(error);
+    const row = Array.isArray(data) ? data[0] : data;
+    return {
+      cycleDay: Number(row?.cycle_day || cycleDay),
+      copiedCount: Number(row?.copied_count || 0)
+    };
+  }
+
+  async function ambilBudgetBulan({ familyId, periodMonth } = {}) {
+    if (!familyId) throw new Error("familyId wajib diisi.");
+    if (!periodMonth) throw new Error("periodMonth wajib diisi.");
+    const { data, error } = await client.rpc("finance_budget_list_month", {
+      p_family_id: familyId,
+      p_period_month: periodMonth
+    });
+    lemparJikaError(error);
+    return normalizeBudgetRows(data);
+  }
 
   function normalizeBillRows(data) {
     return (data || []).map(item => ({
@@ -922,33 +944,43 @@
   async function simpanTagihan({
     familyId,
     billId = null,
-    periodMonth,
+    dueDate,
     name,
     amount,
-    dueDay,
     accountId,
     note = null
   } = {}) {
     if (!familyId) throw new Error("familyId wajib diisi.");
-    if (!periodMonth) throw new Error("Periode tagihan wajib diisi.");
     if (!String(name || "").trim()) throw new Error("Nama tagihan wajib diisi.");
     if (!accountId) throw new Error("Kategori pengeluaran wajib dipilih.");
 
     const nominal = Number(amount || 0);
-    const day = Number(dueDay || 0);
     if (!Number.isFinite(nominal) || nominal <= 0) {
       throw new Error("Nominal tagihan harus lebih dari Rp 0.");
     }
-    if (!Number.isInteger(day) || day < 1 || day > 31) {
-      throw new Error("Tanggal jatuh tempo harus antara 1 sampai 31.");
+
+    const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(String(dueDate || ""));
+    if (!match) throw new Error("Tanggal jatuh tempo wajib dipilih.");
+
+    const year = Number(match[1]);
+    const month = Number(match[2]);
+    const day = Number(match[3]);
+    const parsed = new Date(year, month - 1, day);
+    if (
+      parsed.getFullYear() !== year ||
+      parsed.getMonth() !== month - 1 ||
+      parsed.getDate() !== day
+    ) {
+      throw new Error("Tanggal jatuh tempo tidak valid.");
     }
 
+    const effectiveMonth = `${match[1]}-${match[2]}-01`;
     const { data, error } = await client.rpc(
       "finance_bill_save",
       {
         p_family_id: familyId,
         p_bill_id: billId || null,
-        p_effective_month: periodMonth,
+        p_effective_month: effectiveMonth,
         p_name: String(name).trim(),
         p_amount: Math.round(nominal),
         p_due_day: day,
@@ -1013,13 +1045,16 @@
     simpanTagihan,
     arsipTagihan,
     bayarTagihan,
+    ambilPeriodeBudget,
+    simpanPeriodeBudget,
+    ambilBudgetPeriode,
+    simpanBudget,
+    hapusBudget,
     ambilSiklusBudget,
     simpanSiklusBudget,
     ambilBudgetSiklus,
     ubahSiklusBudget,
     ambilBudgetBulan,
-    simpanBudget,
-    hapusBudget,
     ambilSaldoDompet,
     ambilDompetById,
     ambilTotalKeluarga,

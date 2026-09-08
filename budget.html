@@ -24,7 +24,7 @@
   <link rel="stylesheet" href="css/theme.css">
   <link rel="stylesheet" href="css/pages/transaksi-category-picker.css?v=20260908-1">
   <link rel="stylesheet" href="css/pages/finance-nav-v117f.css?v=20260908-2">
-  <link rel="stylesheet" href="css/pages/budget.css?v=20260908-4">
+  <link rel="stylesheet" href="css/pages/budget.css?v=20260908-5">
 </head>
 <body>
 <div class="aplikasi dengan-nav">
@@ -38,7 +38,7 @@
     <div class="notifikasi budget-notice" data-budget-notice hidden></div>
 
     <section class="budget-month-card" aria-label="Periode budget">
-      <button class="budget-month-nav" type="button" data-budget-month-prev aria-label="Bulan sebelumnya">
+      <button class="budget-month-nav" type="button" data-budget-month-prev aria-label="Periode sebelumnya">
         <ion-icon name="chevron-back-outline"></ion-icon>
       </button>
       <button class="budget-month-main" type="button" data-budget-month-open>
@@ -48,17 +48,8 @@
           <strong data-budget-month-label>—</strong>
         </span>
       </button>
-      <button class="budget-month-nav" type="button" data-budget-month-next aria-label="Bulan berikutnya">
+      <button class="budget-month-nav" type="button" data-budget-month-next aria-label="Periode berikutnya">
         <ion-icon name="chevron-forward-outline"></ion-icon>
-      </button>
-      <input class="budget-month-native" type="month" data-budget-month-input tabindex="-1" aria-hidden="true">
-      <button class="budget-cycle-button" type="button" data-budget-cycle-open>
-        <span class="budget-cycle-icon"><ion-icon name="repeat-outline"></ion-icon></span>
-        <span class="budget-cycle-copy">
-          <small>Siklus Budget</small>
-          <strong data-budget-cycle-label>Kalender bulanan</strong>
-        </span>
-        <ion-icon class="budget-cycle-chevron" name="chevron-forward-outline"></ion-icon>
       </button>
     </section>
 
@@ -116,101 +107,43 @@
   </nav>
 </div>
 
-<!-- Budget Cycle -->
-<div class="budget-sheet-layer" data-budget-cycle-layer hidden>
-  <section class="budget-sheet budget-cycle-sheet" role="dialog" aria-modal="true" aria-labelledby="budget-cycle-title">
+<!-- Budget Period Range -->
+<div class="budget-sheet-layer" data-budget-period-layer hidden>
+  <section class="budget-sheet budget-period-sheet" role="dialog" aria-modal="true" aria-labelledby="budget-period-title">
     <div class="budget-sheet-handle" aria-hidden="true"></div>
     <div class="budget-sheet-header">
       <div>
-        <h2 id="budget-cycle-title">Siklus Budget</h2>
-        <p>Atur periode budget agar mengikuti kalender atau tanggal gajian keluarga.</p>
+        <h2 id="budget-period-title" data-budget-period-title>Atur Periode Budget</h2>
+        <p data-budget-period-subtitle>Pilih tanggal mulai dan tanggal selesai sesuai siklus keuanganmu.</p>
       </div>
-      <button class="budget-sheet-close" type="button" data-budget-cycle-close aria-label="Tutup pengaturan siklus">
+      <button class="budget-sheet-close" type="button" data-budget-period-close aria-label="Tutup pengaturan periode">
         <ion-icon name="close-outline"></ion-icon>
       </button>
     </div>
 
-    <form class="budget-cycle-form" data-budget-cycle-form>
-      <label class="budget-cycle-option">
-        <input type="radio" name="budgetCycleMode" value="calendar" data-budget-cycle-mode checked>
-        <span class="budget-cycle-radio-copy">
-          <strong>Kalender Bulanan</strong>
-          <small>Tanggal 1 sampai akhir bulan. Ini adalah pengaturan default.</small>
-        </span>
-      </label>
-
-      <label class="budget-cycle-option">
-        <input type="radio" name="budgetCycleMode" value="payday" data-budget-cycle-mode>
-        <span class="budget-cycle-radio-copy">
-          <strong>Berdasarkan Tanggal Gajian</strong>
-          <small>Periode dimulai pada tanggal yang sama setiap bulan.</small>
-        </span>
-      </label>
-
-      <div class="budget-cycle-day-wrap" data-budget-cycle-day-wrap hidden>
-        <label for="budgetCycleDay">Tanggal mulai siklus</label>
-        <div class="budget-cycle-day-control">
-          <span>Tanggal</span>
-          <select class="input" id="budgetCycleDay" data-budget-cycle-day aria-label="Tanggal mulai siklus budget"></select>
+    <form class="budget-period-form" data-budget-period-form>
+      <div class="budget-period-grid">
+        <div class="grup-input">
+          <label for="budgetPeriodStart">Tanggal Mulai</label>
+          <input class="input" id="budgetPeriodStart" type="date" required data-budget-period-start>
         </div>
-        <small data-budget-cycle-preview>—</small>
+        <div class="grup-input">
+          <label for="budgetPeriodEnd">Tanggal Selesai</label>
+          <input class="input" id="budgetPeriodEnd" type="date" required data-budget-period-end>
+        </div>
       </div>
 
-      <div class="budget-cycle-info">
-        <ion-icon name="information-circle-outline"></ion-icon>
-        <p>Tanggal akhir otomatis satu hari sebelum siklus berikutnya. Untuk tanggal 29–31, bulan yang lebih pendek memakai hari terakhir bulan.</p>
+      <div class="budget-period-info">
+        <ion-icon name="calendar-number-outline"></ion-icon>
+        <p>Budget dan nilai Terpakai hanya dihitung di dalam rentang tanggal ini. Rentang boleh berbeda atau bahkan bertumpang tindih; budget tiap periode tetap terpisah.</p>
       </div>
 
-      <button class="tombol-utama" type="submit" data-budget-cycle-save>Simpan Siklus</button>
+      <button class="budget-period-new" type="button" data-budget-period-new hidden>
+        <ion-icon name="add-circle-outline"></ion-icon>
+        <span>Buat Periode Baru</span>
+      </button>
+      <button class="tombol-utama" type="submit" data-budget-period-save>Simpan Periode</button>
     </form>
-  </section>
-</div>
-
-<!-- Confirm Budget Cycle Change -->
-<div class="budget-sheet-layer budget-cycle-confirm-layer" data-budget-cycle-confirm-layer hidden>
-  <section class="budget-sheet budget-cycle-confirm-sheet" role="dialog" aria-modal="true" aria-labelledby="budget-cycle-confirm-title">
-    <div class="budget-sheet-handle" aria-hidden="true"></div>
-    <div class="budget-sheet-header">
-      <div>
-        <h2 id="budget-cycle-confirm-title" data-budget-cycle-confirm-title>Ubah Siklus Budget?</h2>
-        <p data-budget-cycle-confirm-subtitle>Budget lama tetap aman dan tidak dipindahkan otomatis.</p>
-      </div>
-      <button class="budget-sheet-close" type="button" data-budget-cycle-confirm-close aria-label="Batal ubah siklus">
-        <ion-icon name="close-outline"></ion-icon>
-      </button>
-    </div>
-
-    <div class="budget-cycle-confirm-body">
-      <div class="budget-cycle-route" aria-label="Perubahan periode budget">
-        <div class="budget-cycle-route-card">
-          <small>Dari</small>
-          <strong data-budget-cycle-confirm-from>—</strong>
-        </div>
-        <ion-icon name="arrow-forward-outline" aria-hidden="true"></ion-icon>
-        <div class="budget-cycle-route-card">
-          <small>Menjadi</small>
-          <strong data-budget-cycle-confirm-to>—</strong>
-        </div>
-      </div>
-
-      <div class="budget-cycle-confirm-message" data-budget-cycle-confirm-message>
-        Periode baru belum memiliki budget. Kamu bisa mulai kosong atau menyalin nominal budget dari periode aktif sekarang.
-      </div>
-
-      <div class="budget-cycle-confirm-info">
-        <ion-icon name="shield-checkmark-outline"></ion-icon>
-        <p>Budget pada siklus lama tetap tersimpan sebagai histori. Transaksi tidak disalin; nilai Terpakai selalu dihitung ulang sesuai rentang tanggal periode yang aktif.</p>
-      </div>
-
-      <div class="budget-cycle-confirm-actions">
-        <button class="budget-cycle-confirm-cancel" type="button" data-budget-cycle-confirm-cancel>Batal</button>
-        <button class="budget-cycle-confirm-empty" type="button" data-budget-cycle-confirm-empty>Mulai Kosong</button>
-        <button class="tombol-utama budget-cycle-confirm-copy" type="button" data-budget-cycle-confirm-copy>
-          <ion-icon name="copy-outline"></ion-icon>
-          <span>Salin Budget</span>
-        </button>
-      </div>
-    </div>
   </section>
 </div>
 
@@ -287,11 +220,11 @@
 <script src="js/backend/supabase.js"></script>
 <script src="js/backend/auth-service.js"></script>
 <script src="js/backend/family-service.js"></script>
-<script src="js/backend/finance-service.js?v=20260908-8"></script>
+<script src="js/backend/finance-service.js?v=20260908-9"></script>
 <script src="js/backend/finance-cache.js"></script>
 <script src="js/backend/auth-router.js"></script>
 <script src="js/backend/auth-guard.js"></script>
-<script src="js/pages/budget-backend.js?v=20260908-4"></script>
-<script src="js/pwa.js?v=20260908-8"></script>
+<script src="js/pages/budget-backend.js?v=20260908-5"></script>
+<script src="js/pwa.js?v=20260908-9"></script>
 </body>
 </html>

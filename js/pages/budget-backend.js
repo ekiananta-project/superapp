@@ -2,8 +2,7 @@
   "use strict";
 
   const notice = document.querySelector("[data-budget-notice]");
-  const monthLabel = document.querySelector("[data-budget-month-label]");
-  const monthInput = document.querySelector("[data-budget-month-input]");
+  const periodLabel = document.querySelector("[data-budget-month-label]");
   const summary = document.querySelector("[data-budget-summary]");
   const summaryTitle = document.querySelector("[data-budget-summary-title]");
   const summaryBadge = document.querySelector("[data-budget-summary-badge]");
@@ -15,27 +14,18 @@
   const countEl = document.querySelector("[data-budget-count]");
   const listEl = document.querySelector("[data-budget-list]");
 
-  const cycleLabel = document.querySelector("[data-budget-cycle-label]");
-  const cycleOpen = document.querySelector("[data-budget-cycle-open]");
-  const cycleLayer = document.querySelector("[data-budget-cycle-layer]");
-  const cycleClose = document.querySelector("[data-budget-cycle-close]");
-  const cycleForm = document.querySelector("[data-budget-cycle-form]");
-  const cycleModeInputs = [...document.querySelectorAll("[data-budget-cycle-mode]")];
-  const cycleDayWrap = document.querySelector("[data-budget-cycle-day-wrap]");
-  const cycleDaySelect = document.querySelector("[data-budget-cycle-day]");
-  const cyclePreview = document.querySelector("[data-budget-cycle-preview]");
-  const cycleSave = document.querySelector("[data-budget-cycle-save]");
-
-  const cycleConfirmLayer = document.querySelector("[data-budget-cycle-confirm-layer]");
-  const cycleConfirmTitle = document.querySelector("[data-budget-cycle-confirm-title]");
-  const cycleConfirmSubtitle = document.querySelector("[data-budget-cycle-confirm-subtitle]");
-  const cycleConfirmFrom = document.querySelector("[data-budget-cycle-confirm-from]");
-  const cycleConfirmTo = document.querySelector("[data-budget-cycle-confirm-to]");
-  const cycleConfirmMessage = document.querySelector("[data-budget-cycle-confirm-message]");
-  const cycleConfirmClose = document.querySelector("[data-budget-cycle-confirm-close]");
-  const cycleConfirmCancel = document.querySelector("[data-budget-cycle-confirm-cancel]");
-  const cycleConfirmEmpty = document.querySelector("[data-budget-cycle-confirm-empty]");
-  const cycleConfirmCopy = document.querySelector("[data-budget-cycle-confirm-copy]");
+  const prevButton = document.querySelector("[data-budget-month-prev]");
+  const nextButton = document.querySelector("[data-budget-month-next]");
+  const periodOpen = document.querySelector("[data-budget-month-open]");
+  const periodLayer = document.querySelector("[data-budget-period-layer]");
+  const periodForm = document.querySelector("[data-budget-period-form]");
+  const periodTitle = document.querySelector("[data-budget-period-title]");
+  const periodSubtitle = document.querySelector("[data-budget-period-subtitle]");
+  const periodClose = document.querySelector("[data-budget-period-close]");
+  const periodStartInput = document.querySelector("[data-budget-period-start]");
+  const periodEndInput = document.querySelector("[data-budget-period-end]");
+  const periodNewButton = document.querySelector("[data-budget-period-new]");
+  const periodSaveButton = document.querySelector("[data-budget-period-save]");
 
   const sheetLayer = document.querySelector("[data-budget-sheet-layer]");
   const sheetClose = document.querySelector("[data-budget-sheet-close]");
@@ -57,13 +47,13 @@
   let family = null;
   let categories = [];
   let budgets = [];
-  let cycleDay = 1;
-  let month = firstDay(new Date());
+  let periods = [];
+  let currentPeriod = null;
   let editingBudget = null;
   let selectedCategoryId = "";
-  const expandedCategories = new Set();
-  let pendingCycleChange = null;
+  let creatingPeriod = false;
   let toastTimer = null;
+  const expandedCategories = new Set();
 
   function escapeHTML(value) {
     return String(value ?? "")
@@ -74,63 +64,58 @@
       .replaceAll("'", "&#039;");
   }
 
-  function firstDay(date) {
-    return new Date(date.getFullYear(), date.getMonth(), 1);
+  function pad(value) {
+    return String(value).padStart(2, "0");
   }
 
-  function monthValue(date) {
-    return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}`;
+  function localISO(date = new Date()) {
+    return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`;
   }
 
-  function monthDate(date = month) {
-    return `${monthValue(date)}-01`;
+  function parseLocalDate(iso) {
+    const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(String(iso || ""));
+    if (!match) return null;
+    const date = new Date(Number(match[1]), Number(match[2]) - 1, Number(match[3]));
+    if (
+      date.getFullYear() !== Number(match[1]) ||
+      date.getMonth() !== Number(match[2]) - 1 ||
+      date.getDate() !== Number(match[3])
+    ) return null;
+    return date;
   }
 
-  function monthText(date = month) {
-    return date.toLocaleDateString("id-ID", {
-      month: "long",
-      year: "numeric"
-    });
+  function addDays(iso, amount) {
+    const date = parseLocalDate(iso);
+    if (!date) return "";
+    date.setDate(date.getDate() + Number(amount || 0));
+    return localISO(date);
   }
 
-  function daysInMonth(year, monthIndex) {
-    return new Date(year, monthIndex + 1, 0).getDate();
+  function daysBetween(startISO, endISO) {
+    const start = parseLocalDate(startISO);
+    const end = parseLocalDate(endISO);
+    if (!start || !end) return 1;
+    return Math.max(1, Math.round((end - start) / 86400000) + 1);
   }
 
-  function cycleBoundary(anchor, day = cycleDay) {
-    const safeDay = Math.min(
-      Math.max(Number(day || 1), 1),
-      daysInMonth(anchor.getFullYear(), anchor.getMonth())
-    );
-    return new Date(anchor.getFullYear(), anchor.getMonth(), safeDay);
+  function defaultCurrentRange() {
+    const now = new Date();
+    const start = new Date(now.getFullYear(), now.getMonth(), 1);
+    const end = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+    return { startDate: localISO(start), endDate: localISO(end) };
   }
 
-  function periodBounds(anchor = month, day = cycleDay) {
-    const start = cycleBoundary(firstDay(anchor), day);
-    const nextAnchor = new Date(anchor.getFullYear(), anchor.getMonth() + 1, 1);
-    const endExclusive = cycleBoundary(nextAnchor, day);
-    const displayEnd = new Date(endExclusive.getFullYear(), endExclusive.getMonth(), endExclusive.getDate() - 1);
-    return { start, endExclusive, displayEnd };
-  }
+  function rangeText(period = currentPeriod) {
+    if (!period) return "Atur rentang tanggal";
+    const start = parseLocalDate(period.start_date);
+    const end = parseLocalDate(period.end_date);
+    if (!start || !end) return "Periode Budget";
 
-  function currentPeriodAnchor(date = new Date(), day = cycleDay) {
-    const anchor = firstDay(date);
-    const boundary = cycleBoundary(anchor, day);
-    const today = new Date(date.getFullYear(), date.getMonth(), date.getDate());
-    return today >= boundary
-      ? anchor
-      : new Date(anchor.getFullYear(), anchor.getMonth() - 1, 1);
-  }
-
-  function periodText(anchor = month, day = cycleDay) {
-    if (Number(day) === 1) return monthText(anchor);
-
-    const { start, displayEnd } = periodBounds(anchor, day);
-    const sameYear = start.getFullYear() === displayEnd.getFullYear();
-    const sameMonth = sameYear && start.getMonth() === displayEnd.getMonth();
+    const sameYear = start.getFullYear() === end.getFullYear();
+    const sameMonth = sameYear && start.getMonth() === end.getMonth();
 
     if (sameMonth) {
-      return `${start.getDate()} – ${displayEnd.toLocaleDateString("id-ID", {
+      return `${start.getDate()} – ${end.toLocaleDateString("id-ID", {
         day: "numeric",
         month: "long",
         year: "numeric"
@@ -142,7 +127,7 @@
       month: "short",
       ...(sameYear ? {} : { year: "numeric" })
     });
-    const endLabel = displayEnd.toLocaleDateString("id-ID", {
+    const endLabel = end.toLocaleDateString("id-ID", {
       day: "numeric",
       month: "short",
       year: "numeric"
@@ -176,7 +161,7 @@
     notice.hidden = false;
     toastTimer = setTimeout(() => {
       notice.hidden = true;
-    }, 3500);
+    }, 3800);
   }
 
   function categoryById(id) {
@@ -191,36 +176,43 @@
     });
   }
 
-  function setMonth(next) {
-    month = firstDay(next);
-    syncMonthUI();
-    loadBudgets();
+  function activePeriodFrom(items) {
+    if (!items.length) return null;
+    const today = localISO();
+    const active = items
+      .filter(item => item.start_date <= today && item.end_date >= today)
+      .sort((a, b) => String(b.updated_at || "").localeCompare(String(a.updated_at || "")));
+    if (active.length) return active[0];
+
+    const past = items
+      .filter(item => item.end_date < today)
+      .sort((a, b) => String(b.end_date).localeCompare(String(a.end_date)));
+    if (past.length) return past[0];
+
+    return [...items].sort((a, b) => String(a.start_date).localeCompare(String(b.start_date)))[0];
   }
 
-  function resetCurrentMonth({ reload = true } = {}) {
-    const current = currentPeriodAnchor(new Date(), cycleDay);
-    const changed = monthValue(month) !== monthValue(current);
-    month = current;
-    syncMonthUI();
-    if (reload && changed && family) loadBudgets();
+  function currentPeriodIndex() {
+    if (!currentPeriod) return -1;
+    return periods.findIndex(item => item.period_id === currentPeriod.period_id);
   }
 
-  function syncCycleButton() {
-    if (!cycleLabel) return;
-    cycleLabel.textContent = cycleDay === 1
-      ? "Kalender bulanan"
-      : `Mulai tanggal ${cycleDay}`;
-  }
-
-  function syncMonthUI() {
-    const label = periodText();
-    if (monthLabel) monthLabel.textContent = label;
-    if (monthInput) monthInput.value = monthValue(month);
+  function syncPeriodUI() {
+    const label = rangeText();
+    if (periodLabel) periodLabel.textContent = label;
+    if (summaryTitle) summaryTitle.textContent = currentPeriod ? label : "Belum ada periode";
     if (formPeriod) formPeriod.textContent = label;
-    if (summaryTitle) summaryTitle.textContent = label;
-    syncCycleButton();
-  }
 
+    const index = currentPeriodIndex();
+    if (prevButton) {
+      prevButton.disabled = index <= 0;
+      prevButton.setAttribute("aria-disabled", index <= 0 ? "true" : "false");
+    }
+    if (nextButton) {
+      nextButton.disabled = index < 0 || index >= periods.length - 1;
+      nextButton.setAttribute("aria-disabled", index < 0 || index >= periods.length - 1 ? "true" : "false");
+    }
+  }
 
   function renderSummary() {
     const total = budgets.reduce((sum, item) => sum + Number(item.budget_amount || 0), 0);
@@ -237,9 +229,12 @@
 
     summary?.classList.remove("is-warning", "is-over");
 
-    if (!budgets.length) {
+    if (!currentPeriod) {
+      if (summaryBadge) summaryBadge.textContent = "Atur periode";
+      if (summaryNote) summaryNote.textContent = "Pilih tanggal mulai dan selesai sebelum membuat budget.";
+    } else if (!budgets.length) {
       if (summaryBadge) summaryBadge.textContent = "Belum ada";
-      if (summaryNote) summaryNote.textContent = "Tambahkan budget kategori untuk mulai mengontrol pengeluaran periode ini.";
+      if (summaryNote) summaryNote.textContent = "Tambahkan budget kategori untuk rentang tanggal ini.";
     } else if (overCount) {
       summary?.classList.add("is-over");
       if (summaryBadge) summaryBadge.textContent = "Melebihi";
@@ -253,10 +248,7 @@
       if (summaryNote) summaryNote.textContent = `Penggunaan budget ${Math.round(percent)}% dan masih dalam batas aman.`;
     }
 
-    if (remainingEl) {
-      remainingEl.style.color = remaining < 0 ? "var(--color-danger)" : "";
-    }
-
+    if (remainingEl) remainingEl.style.color = remaining < 0 ? "var(--color-danger)" : "";
     if (summary) summary.setAttribute("aria-busy", "false");
   }
 
@@ -294,15 +286,26 @@
       </div>
       <div class="budget-item-progress" aria-hidden="true"><span style="width:${Math.min(100, Math.max(0, Number(item.progress_percent || 0)))}%"></span></div>
     `;
-
     return button;
   }
 
   function renderList() {
     if (!listEl) return;
     listEl.innerHTML = "";
-    if (countEl) countEl.textContent = budgets.length ? `${budgets.length} kategori dianggarkan` : "Belum ada budget";
 
+    if (!currentPeriod) {
+      if (countEl) countEl.textContent = "Belum ada periode";
+      listEl.innerHTML = `
+        <button class="budget-empty budget-empty-action" type="button" data-budget-empty-period>
+          <ion-icon name="calendar-outline"></ion-icon>
+          <strong>Atur periode budget dulu</strong>
+          <p>Pilih bebas tanggal mulai dan tanggal selesai sesuai alur keuangan keluarga.</p>
+        </button>
+      `;
+      return;
+    }
+
+    if (countEl) countEl.textContent = budgets.length ? `${budgets.length} kategori dianggarkan` : "Belum ada budget";
     if (!budgets.length) {
       listEl.innerHTML = `
         <div class="budget-empty">
@@ -319,6 +322,13 @@
 
   async function loadBudgets() {
     if (!family) return;
+    if (!currentPeriod) {
+      budgets = [];
+      renderSummary();
+      renderList();
+      return;
+    }
+
     if (listEl) {
       listEl.innerHTML = '<div class="budget-loading-card" aria-hidden="true"></div><div class="budget-loading-card" aria-hidden="true"></div>';
     }
@@ -326,9 +336,9 @@
     if (summary) summary.setAttribute("aria-busy", "true");
 
     try {
-      budgets = await FinanceService.ambilBudgetBulan({
+      budgets = await FinanceService.ambilBudgetPeriode({
         familyId: family.id,
-        periodMonth: monthDate()
+        periodId: currentPeriod.period_id
       });
       renderSummary();
       renderList();
@@ -347,6 +357,110 @@
       }
       if (countEl) countEl.textContent = "Gagal memuat";
       show(error?.message || "Budget gagal dimuat.", "error");
+    }
+  }
+
+  async function loadPeriods({ preferId = null, resetToActive = false } = {}) {
+    periods = await FinanceService.ambilPeriodeBudget(family.id);
+    periods.sort((a, b) => String(a.start_date).localeCompare(String(b.start_date)) || String(a.end_date).localeCompare(String(b.end_date)));
+
+    if (preferId) {
+      currentPeriod = periods.find(item => item.period_id === preferId) || null;
+    } else if (resetToActive || !currentPeriod) {
+      currentPeriod = activePeriodFrom(periods);
+    } else {
+      currentPeriod = periods.find(item => item.period_id === currentPeriod.period_id) || activePeriodFrom(periods);
+    }
+
+    syncPeriodUI();
+  }
+
+  async function movePeriod(delta) {
+    const index = currentPeriodIndex();
+    const next = periods[index + delta];
+    if (!next) return;
+    currentPeriod = next;
+    syncPeriodUI();
+    await loadBudgets();
+  }
+
+  function openPeriodSheet({ newPeriod = false } = {}) {
+    creatingPeriod = newPeriod || !currentPeriod;
+
+    if (creatingPeriod) {
+      let startDate;
+      let endDate;
+      if (currentPeriod && newPeriod) {
+        const length = daysBetween(currentPeriod.start_date, currentPeriod.end_date);
+        startDate = addDays(currentPeriod.end_date, 1);
+        endDate = addDays(startDate, length - 1);
+      } else {
+        const defaults = defaultCurrentRange();
+        startDate = defaults.startDate;
+        endDate = defaults.endDate;
+      }
+      if (periodStartInput) periodStartInput.value = startDate;
+      if (periodEndInput) periodEndInput.value = endDate;
+      if (periodTitle) periodTitle.textContent = "Buat Periode Budget";
+      if (periodSubtitle) periodSubtitle.textContent = "Pilih sendiri tanggal mulai dan selesai. Tidak harus tanggal 1 atau mengikuti tanggal gajian.";
+      if (periodNewButton) periodNewButton.hidden = true;
+    } else {
+      if (periodStartInput) periodStartInput.value = currentPeriod.start_date;
+      if (periodEndInput) periodEndInput.value = currentPeriod.end_date;
+      if (periodTitle) periodTitle.textContent = "Atur Periode Budget";
+      if (periodSubtitle) periodSubtitle.textContent = "Ubah rentang tanggal periode ini. Nilai Terpakai akan dihitung ulang otomatis.";
+      if (periodNewButton) periodNewButton.hidden = false;
+    }
+
+    if (periodEndInput && periodStartInput?.value) periodEndInput.min = periodStartInput.value;
+    if (periodLayer) periodLayer.hidden = false;
+    document.body.style.overflow = "hidden";
+    requestAnimationFrame(() => periodStartInput?.focus());
+  }
+
+  function closePeriodSheet() {
+    if (periodLayer) periodLayer.hidden = true;
+    document.body.style.overflow = "";
+    creatingPeriod = false;
+  }
+
+  async function savePeriod(event) {
+    event.preventDefault();
+    if (!family) return;
+
+    const startDate = String(periodStartInput?.value || "");
+    const endDate = String(periodEndInput?.value || "");
+    const start = parseLocalDate(startDate);
+    const end = parseLocalDate(endDate);
+
+    if (!start || !end) {
+      show("Tanggal mulai dan selesai wajib dipilih.", "error");
+      return;
+    }
+    if (end < start) {
+      show("Tanggal selesai tidak boleh sebelum tanggal mulai.", "error");
+      periodEndInput?.focus();
+      return;
+    }
+
+    if (periodSaveButton) periodSaveButton.disabled = true;
+    try {
+      const wasCreating = creatingPeriod;
+      const periodId = await FinanceService.simpanPeriodeBudget({
+        familyId: family.id,
+        periodId: wasCreating ? null : currentPeriod?.period_id || null,
+        startDate,
+        endDate
+      });
+      closePeriodSheet();
+      await loadPeriods({ preferId: periodId });
+      show(wasCreating ? "Periode budget dibuat." : "Periode budget diperbarui.", "success");
+      await loadBudgets();
+    } catch (error) {
+      console.error("[Budget Period Save]", error);
+      show(error?.message || "Periode budget gagal disimpan.", "error");
+    } finally {
+      if (periodSaveButton) periodSaveButton.disabled = false;
     }
   }
 
@@ -374,13 +488,10 @@
 
     const used = new Set(budgets.map(item => item.account_id));
     if (used.has(category.id)) return true;
-
     if (category.parent_id && used.has(category.parent_id)) return true;
-
     if (!category.parent_id) {
       return categories.some(child => child.parent_id === category.id && used.has(child.id));
     }
-
     return false;
   }
 
@@ -403,7 +514,6 @@
       ${selectedCategoryId === category.id ? '<ion-icon class="category-picker-check" name="checkmark-circle"></ion-icon>' : ""}
       ${unavailable && !editingBudget ? '<span class="budget-category-used">Sudah dianggarkan</span>' : ""}
     `;
-
     return button;
   }
 
@@ -420,7 +530,6 @@
     }
 
     let rendered = 0;
-
     parents.forEach(parent => {
       const children = sorted(categories.filter(item => item.parent_id === parent.id));
       const parentMatch = String(parent.name || "").toLocaleLowerCase("id").includes(query);
@@ -432,7 +541,6 @@
 
       const group = document.createElement("section");
       group.className = "category-picker-group";
-
       const row = document.createElement("div");
       row.className = "category-picker-parent-row";
       row.appendChild(categoryChoice(parent));
@@ -450,7 +558,6 @@
       }
 
       group.appendChild(row);
-
       const shouldShow = children.length && (query || expandedCategories.has(parent.id));
       if (shouldShow) {
         const wrap = document.createElement("div");
@@ -478,15 +585,19 @@
     renderCategoryPicker();
     if (categoryLayer) categoryLayer.hidden = false;
     document.body.classList.add("category-picker-open");
+    document.body.style.overflow = "hidden";
     requestAnimationFrame(() => categorySearch?.focus());
   }
 
   function closeCategoryPicker() {
     if (!categoryLayer) return;
-    const open = !categoryLayer.hidden;
+    const wasOpen = !categoryLayer.hidden;
     categoryLayer.hidden = true;
     document.body.classList.remove("category-picker-open");
-    if (open) categoryTrigger?.focus();
+    if ((!sheetLayer || sheetLayer.hidden) && (!periodLayer || periodLayer.hidden)) {
+      document.body.style.overflow = "";
+    }
+    if (wasOpen) categoryTrigger?.focus();
   }
 
   function selectCategory(id) {
@@ -497,232 +608,18 @@
     closeCategoryPicker();
   }
 
-  function selectedCycleMode() {
-    return cycleModeInputs.find(input => input.checked)?.value || "calendar";
-  }
-
-  function draftCycleDay() {
-    if (selectedCycleMode() === "calendar") return 1;
-    const day = Number(cycleDaySelect?.value || 25);
-    return Math.min(31, Math.max(2, day));
-  }
-
-  function updateCycleFormUI() {
-    const payday = selectedCycleMode() === "payday";
-    if (cycleDayWrap) cycleDayWrap.hidden = !payday;
-
-    if (cyclePreview) {
-      const day = draftCycleDay();
-      const anchor = currentPeriodAnchor(new Date(), day);
-      cyclePreview.textContent = day === 1
-        ? `Periode aktif: ${monthText(anchor)}`
-        : `Contoh periode aktif: ${periodText(anchor, day)}`;
-    }
-  }
-
-  function prepareCycleDayOptions() {
-    if (!cycleDaySelect || cycleDaySelect.options.length) return;
-    for (let day = 2; day <= 31; day += 1) {
-      const option = document.createElement("option");
-      option.value = String(day);
-      option.textContent = `Tanggal ${day}`;
-      cycleDaySelect.appendChild(option);
-    }
-  }
-
-  function openCycleSheet() {
-    prepareCycleDayOptions();
-    const mode = cycleDay === 1 ? "calendar" : "payday";
-    cycleModeInputs.forEach(input => {
-      input.checked = input.value === mode;
-    });
-    if (cycleDaySelect) cycleDaySelect.value = String(cycleDay === 1 ? 25 : cycleDay);
-    updateCycleFormUI();
-    if (cycleLayer) cycleLayer.hidden = false;
-    document.body.style.overflow = "hidden";
-  }
-
-  function closeCycleSheet() {
-    if (cycleLayer) cycleLayer.hidden = true;
-    document.body.style.overflow = "";
-  }
-
-  function setCycleConfirmBusy(busy) {
-    [cycleConfirmClose, cycleConfirmCancel, cycleConfirmEmpty, cycleConfirmCopy]
-      .filter(Boolean)
-      .forEach(button => {
-        button.disabled = Boolean(busy);
-      });
-  }
-
-  function closeCycleConfirm({ keepPending = false } = {}) {
-    if (cycleConfirmLayer) cycleConfirmLayer.hidden = true;
-    setCycleConfirmBusy(false);
-    if (!keepPending) pendingCycleChange = null;
-    if (!cycleLayer || cycleLayer.hidden) document.body.style.overflow = "";
-  }
-
-  function openCycleConfirm(context) {
-    pendingCycleChange = context;
-
-    const sourceLabel = periodText(context.sourceAnchor, context.oldDay);
-    const targetLabel = periodText(context.targetAnchor, context.nextDay);
-    const targetHasBudget = context.targetCount > 0;
-
-    if (cycleConfirmFrom) cycleConfirmFrom.textContent = sourceLabel;
-    if (cycleConfirmTo) cycleConfirmTo.textContent = targetLabel;
-
-    if (targetHasBudget) {
-      if (cycleConfirmTitle) cycleConfirmTitle.textContent = "Budget Periode Tujuan Sudah Ada";
-      if (cycleConfirmSubtitle) {
-        cycleConfirmSubtitle.textContent = `${context.targetCount} kategori budget tersimpan akan ditampilkan kembali.`;
-      }
-      if (cycleConfirmMessage) {
-        cycleConfirmMessage.textContent = `Periode ${targetLabel} sudah pernah memiliki budget. Budget itu akan dipakai kembali tanpa menimpa atau memindahkan budget ${sourceLabel}.`;
-      }
-      if (cycleConfirmEmpty) cycleConfirmEmpty.textContent = "Pindah Siklus";
-      if (cycleConfirmCopy) cycleConfirmCopy.hidden = true;
-    } else {
-      if (cycleConfirmTitle) cycleConfirmTitle.textContent = "Ubah Siklus Budget?";
-      if (cycleConfirmSubtitle) {
-        cycleConfirmSubtitle.textContent = "Budget lama tetap aman dan tidak dipindahkan otomatis.";
-      }
-      if (cycleConfirmMessage) {
-        cycleConfirmMessage.textContent = context.sourceCount
-          ? `${context.sourceCount} kategori budget dari ${sourceLabel} bisa disalin ke ${targetLabel}, atau kamu bisa memulai periode baru tanpa menyalinnya.`
-          : `Periode ${targetLabel} belum memiliki budget. Siklus bisa dipindahkan tanpa membawa nominal dari periode lama.`;
-      }
-      if (cycleConfirmEmpty) cycleConfirmEmpty.textContent = context.sourceCount ? "Mulai Kosong" : "Pindah Siklus";
-      if (cycleConfirmCopy) cycleConfirmCopy.hidden = !context.sourceCount;
-    }
-
-    setCycleConfirmBusy(false);
-    if (cycleConfirmLayer) cycleConfirmLayer.hidden = false;
-    document.body.style.overflow = "hidden";
-    requestAnimationFrame(() => {
-      const primaryChoice = targetHasBudget || !context.sourceCount
-        ? cycleConfirmEmpty
-        : cycleConfirmCopy;
-      primaryChoice?.focus();
-    });
-  }
-
-  async function commitCycleChange(copyBudget) {
-    const context = pendingCycleChange;
-    if (!context || !family) return;
-
-    setCycleConfirmBusy(true);
-    if (cycleSave) cycleSave.disabled = true;
-
-    try {
-      const result = await FinanceService.ubahSiklusBudget({
-        familyId: family.id,
-        cycleDay: context.nextDay,
-        fromPeriodMonth: monthDate(context.sourceAnchor),
-        fromCycleDay: context.oldDay,
-        toPeriodMonth: monthDate(context.targetAnchor),
-        copyBudget
-      });
-
-      cycleDay = result.cycleDay;
-      month = firstDay(context.targetAnchor);
-      closeCycleConfirm();
-      closeCycleSheet();
-      syncMonthUI();
-
-      if (copyBudget) {
-        const copied = Number(result.copiedCount || 0);
-        show(
-          copied
-            ? `${copied} budget disalin ke siklus baru.`
-            : "Siklus diubah. Budget tujuan yang sudah ada tidak ditimpa.",
-          "success"
-        );
-      } else if (context.targetCount > 0) {
-        show("Siklus diubah. Budget periode tujuan ditampilkan kembali.", "success");
-      } else {
-        show("Siklus diubah. Periode baru dimulai tanpa menyalin budget.", "success");
-      }
-
-      await loadBudgets();
-    } catch (error) {
-      console.error("[Budget Cycle Change]", error);
-      show(error?.message || "Siklus budget gagal diubah.", "error");
-      setCycleConfirmBusy(false);
-    } finally {
-      if (cycleSave) cycleSave.disabled = false;
-    }
-  }
-
-  async function saveCycle(event) {
-    event.preventDefault();
-    if (!family) return;
-
-    const nextDay = draftCycleDay();
-    const oldDay = cycleDay;
-
-    if (nextDay === oldDay) {
-      closeCycleSheet();
+  function openForm(item = null) {
+    if (!currentPeriod) {
+      show("Atur rentang tanggal budget terlebih dulu.", "info");
+      openPeriodSheet({ newPeriod: true });
       return;
     }
 
-    if (cycleSave) cycleSave.disabled = true;
-
-    try {
-      const now = new Date();
-      const sourceAnchor = firstDay(month);
-      const oldActiveAnchor = currentPeriodAnchor(now, oldDay);
-      const viewingActivePeriod = monthValue(sourceAnchor) === monthValue(oldActiveAnchor);
-      const targetAnchor = viewingActivePeriod
-        ? currentPeriodAnchor(now, nextDay)
-        : firstDay(sourceAnchor);
-
-      const [sourceBudgets, targetBudgets] = await Promise.all([
-        FinanceService.ambilBudgetSiklus({
-          familyId: family.id,
-          periodMonth: monthDate(sourceAnchor),
-          cycleDay: oldDay
-        }),
-        FinanceService.ambilBudgetSiklus({
-          familyId: family.id,
-          periodMonth: monthDate(targetAnchor),
-          cycleDay: nextDay
-        })
-      ]);
-
-      const context = {
-        oldDay,
-        nextDay,
-        sourceAnchor,
-        targetAnchor,
-        sourceCount: sourceBudgets.length,
-        targetCount: targetBudgets.length
-      };
-
-      pendingCycleChange = context;
-
-      // Kalau kedua sisi sama-sama kosong, tidak perlu menambah satu langkah dialog.
-      if (!context.sourceCount && !context.targetCount) {
-        await commitCycleChange(false);
-        return;
-      }
-
-      openCycleConfirm(context);
-    } catch (error) {
-      console.error("[Budget Cycle Preview]", error);
-      show(error?.message || "Perubahan siklus budget belum dapat diproses.", "error");
-      pendingCycleChange = null;
-    } finally {
-      if (cycleSave) cycleSave.disabled = false;
-    }
-  }
-
-  function openForm(item = null) {
     editingBudget = item;
     selectedCategoryId = item?.account_id || "";
 
     if (formTitle) formTitle.textContent = item ? "Edit Budget" : "Tambah Budget";
-    if (formPeriod) formPeriod.textContent = periodText();
+    if (formPeriod) formPeriod.textContent = rangeText();
     if (amountInput) amountInput.value = item ? formatNumberInput(item.budget_amount) : "";
     if (deleteButton) deleteButton.hidden = !item;
     if (categoryTrigger) {
@@ -741,6 +638,7 @@
         categoryParent.hidden = false;
       }
     }
+
     if (sheetLayer) sheetLayer.hidden = false;
     document.body.style.overflow = "hidden";
     requestAnimationFrame(() => item ? amountInput?.focus() : categoryTrigger?.focus());
@@ -762,13 +660,13 @@
 
   async function saveBudget(event) {
     event.preventDefault();
-    const amount = Number(digits(amountInput?.value));
+    if (!family || !currentPeriod) return;
 
+    const amount = Number(digits(amountInput?.value));
     if (!selectedCategoryId) {
       show("Pilih kategori budget dulu.", "error");
       return;
     }
-
     if (!amount || amount <= 0) {
       show("Nominal budget harus lebih dari Rp 0.", "error");
       amountInput?.focus();
@@ -776,19 +674,19 @@
     }
 
     if (saveButton) saveButton.disabled = true;
-
     const wasEditing = Boolean(editingBudget);
 
     try {
       await FinanceService.simpanBudget({
         familyId: family.id,
         accountId: selectedCategoryId,
-        periodMonth: monthDate(),
+        periodId: currentPeriod.period_id,
         amount,
         warningPercent: 80
       });
       closeForm();
       show(wasEditing ? "Budget diperbarui." : "Budget ditambahkan.", "success");
+      await loadPeriods({ preferId: currentPeriod.period_id });
       await loadBudgets();
     } catch (error) {
       console.error("[Budget Save]", error);
@@ -801,15 +699,15 @@
   async function deleteBudget() {
     if (!editingBudget) return;
     const name = editingBudget.account_name || "kategori ini";
-    if (!confirm(`Hapus budget ${name} untuk ${periodText()}?\n\nRiwayat transaksi tidak akan dihapus.`)) return;
+    if (!confirm(`Hapus budget ${name} untuk ${rangeText()}?\n\nRiwayat transaksi tidak akan dihapus.`)) return;
 
     deleteButton.disabled = true;
     if (saveButton) saveButton.disabled = true;
-
     try {
       await FinanceService.hapusBudget(editingBudget.budget_id);
       closeForm();
       show("Budget dihapus.", "success");
+      await loadPeriods({ preferId: currentPeriod.period_id });
       await loadBudgets();
     } catch (error) {
       console.error("[Budget Delete]", error);
@@ -826,18 +724,10 @@
     family = await AuthRouter.ambilFamilyAktif();
     if (!family) return;
 
-    try {
-      cycleDay = await FinanceService.ambilSiklusBudget(family.id);
-    } catch (error) {
-      console.warn("[Budget Cycle Load]", error);
-      cycleDay = 1;
-    }
-
-    resetCurrentMonth({ reload: false });
-
     categories = await FinanceService.ambilAkun(family.id, "expense");
     categories = categories.filter(item => !item.archived_at);
 
+    await loadPeriods({ resetToActive: true });
     await loadBudgets();
   }
 
@@ -845,49 +735,30 @@
     button.addEventListener("click", () => openForm());
   });
 
-  cycleOpen?.addEventListener("click", openCycleSheet);
-  cycleClose?.addEventListener("click", closeCycleSheet);
-  cycleLayer?.addEventListener("click", event => {
-    if (event.target === cycleLayer) closeCycleSheet();
+  prevButton?.addEventListener("click", () => movePeriod(-1));
+  nextButton?.addEventListener("click", () => movePeriod(1));
+  periodOpen?.addEventListener("click", () => openPeriodSheet({ newPeriod: !currentPeriod }));
+  periodClose?.addEventListener("click", closePeriodSheet);
+  periodLayer?.addEventListener("click", event => {
+    if (event.target === periodLayer) closePeriodSheet();
   });
-  cycleModeInputs.forEach(input => input.addEventListener("change", updateCycleFormUI));
-  cycleDaySelect?.addEventListener("change", updateCycleFormUI);
-  cycleForm?.addEventListener("submit", saveCycle);
-
-  cycleConfirmClose?.addEventListener("click", () => closeCycleConfirm());
-  cycleConfirmCancel?.addEventListener("click", () => closeCycleConfirm());
-  cycleConfirmEmpty?.addEventListener("click", () => commitCycleChange(false));
-  cycleConfirmCopy?.addEventListener("click", () => commitCycleChange(true));
-  cycleConfirmLayer?.addEventListener("click", event => {
-    if (event.target === cycleConfirmLayer) closeCycleConfirm();
-  });
-
-  document.querySelector("[data-budget-month-prev]")?.addEventListener("click", () => {
-    setMonth(new Date(month.getFullYear(), month.getMonth() - 1, 1));
-  });
-
-  document.querySelector("[data-budget-month-next]")?.addEventListener("click", () => {
-    setMonth(new Date(month.getFullYear(), month.getMonth() + 1, 1));
-  });
-
-  document.querySelector("[data-budget-month-open]")?.addEventListener("click", () => {
-    if (!monthInput) return;
-    try {
-      if (typeof monthInput.showPicker === "function") monthInput.showPicker();
-      else monthInput.click();
-    } catch {
-      monthInput.focus();
-      monthInput.click();
+  periodForm?.addEventListener("submit", savePeriod);
+  periodNewButton?.addEventListener("click", () => openPeriodSheet({ newPeriod: true }));
+  periodStartInput?.addEventListener("change", () => {
+    if (!periodStartInput.value) return;
+    if (!periodEndInput.value || periodEndInput.value < periodStartInput.value) {
+      periodEndInput.value = periodStartInput.value;
     }
-  });
-
-  monthInput?.addEventListener("change", () => {
-    const match = /^(\d{4})-(\d{2})$/.exec(monthInput.value || "");
-    if (!match) return;
-    setMonth(new Date(Number(match[1]), Number(match[2]) - 1, 1));
+    periodEndInput.min = periodStartInput.value;
   });
 
   listEl?.addEventListener("click", event => {
+    const emptyPeriod = event.target.closest("[data-budget-empty-period]");
+    if (emptyPeriod) {
+      openPeriodSheet({ newPeriod: true });
+      return;
+    }
+
     const itemEl = event.target.closest("[data-budget-id]");
     if (!itemEl) return;
     const item = budgets.find(row => row.budget_id === itemEl.dataset.budgetId);
@@ -898,7 +769,6 @@
   sheetLayer?.addEventListener("click", event => {
     if (event.target === sheetLayer) closeForm();
   });
-
   form?.addEventListener("submit", saveBudget);
   deleteButton?.addEventListener("click", deleteBudget);
 
@@ -925,34 +795,31 @@
     }
 
     const choice = event.target.closest("[data-budget-category-id]");
-    if (choice && !choice.disabled) selectCategory(choice.dataset.budgetCategoryId);
+    if (choice) selectCategory(choice.dataset.budgetCategoryId);
   });
 
   window.addEventListener("keydown", event => {
     if (event.key !== "Escape") return;
     if (categoryLayer && !categoryLayer.hidden) closeCategoryPicker();
     else if (sheetLayer && !sheetLayer.hidden) closeForm();
-    else if (cycleConfirmLayer && !cycleConfirmLayer.hidden) closeCycleConfirm();
-    else if (cycleLayer && !cycleLayer.hidden) closeCycleSheet();
+    else if (periodLayer && !periodLayer.hidden) closePeriodSheet();
   });
 
   window.addEventListener("pageshow", event => {
     if (!event.persisted || !family) return;
-    resetCurrentMonth({ reload: true });
+    loadPeriods({ resetToActive: true })
+      .then(loadBudgets)
+      .catch(error => console.error("[Budget PageShow]", error));
   });
 
   const run = () => start().catch(error => {
     console.error("[Budget Init]", error);
     show(error?.message || "Budget gagal dibuka.", "error");
-    if (listEl) {
-      listEl.innerHTML = `
-        <div class="budget-empty">
-          <ion-icon name="alert-circle-outline"></ion-icon>
-          <strong>Budget belum dapat dibuka</strong>
-          <p>${escapeHTML(error?.message || "Coba lagi beberapa saat.")}</p>
-        </div>
-      `;
-    }
+    budgets = [];
+    currentPeriod = null;
+    syncPeriodUI();
+    renderSummary();
+    renderList();
   });
 
   if (document.readyState === "loading") {
