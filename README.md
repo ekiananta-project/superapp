@@ -85,13 +85,13 @@ Menyelesaikan lifecycle Ruang Keluarga sebagai fondasi
 yang nantinya digunakan Keuangan, Catatan, Kalender,
 dan modul Family Superapp lainnya.
 
-[ ] Transfer kepemilikan Ruang Keluarga
+[X] Transfer kepemilikan Ruang Keluarga
 
-[ ] Anggota dapat keluar dari Ruang Keluarga
+[X] Anggota dapat keluar dari Ruang Keluarga
 
-[ ] Owner tidak dapat keluar selama masih menjadi Owner
+[X] Owner tidak dapat keluar selama masih menjadi Owner
 
-[ ] Owner yang ingin keluar harus:
+[X] Owner yang ingin keluar harus:
     - transfer kepemilikan; atau
     - membubarkan Ruang Keluarga
 
