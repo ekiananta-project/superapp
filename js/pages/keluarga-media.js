@@ -29,8 +29,16 @@
 
   const clean = value => String(value || "").trim();
 
+  function currentMembership() {
+    const fromMembers = members.find(item =>
+      item?.user_id === user?.id && item?.status === "active"
+    );
+
+    return fromMembers || family?.membership || null;
+  }
+
   function isOwner() {
-    return family?.membership?.role === "owner";
+    return currentMembership()?.role === "owner";
   }
 
   function showNotice(text, type = "info") {
@@ -66,7 +74,10 @@
       icon.setAttribute("name", "people-outline");
       icon.setAttribute("aria-hidden", "true");
       familyPhotoVisual.appendChild(icon);
-      familyPhotoButton.disabled = !isOwner();
+      // Jangan disable tombol foto. Pada beberapa browser/PWA, button yang
+      // sempat disabled sebelum state family selesai dimuat dapat terasa
+      // tidak responsif. Permission tetap diputuskan di click handler.
+      familyPhotoButton.disabled = false;
       familyPhotoButton.setAttribute(
         "aria-label",
         isOwner() ? "Tambahkan foto Ruang Keluarga" : "Ruang Keluarga belum memiliki foto"
@@ -318,7 +329,19 @@
 
   familyPhotoButton.addEventListener("click", () => {
     if (!familyPhotoUrl) {
-      if (isOwner()) familyPhotoInput?.click();
+      if (isOwner()) {
+        familyPhotoInput?.click();
+        return;
+      }
+
+      // Member tetap boleh membuka preview fallback, tetapi tidak mendapat
+      // kontrol upload/ganti/hapus.
+      openPreview({
+        mode: "family",
+        url: "",
+        title: family?.name || "Ruang Keluarga",
+        subtitle: "Ruang Keluarga belum memiliki foto"
+      });
       return;
     }
 
