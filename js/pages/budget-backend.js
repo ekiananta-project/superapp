@@ -16,22 +16,14 @@
 
   const prevButton = document.querySelector("[data-budget-month-prev]");
   const nextButton = document.querySelector("[data-budget-month-next]");
-  const periodOpen = document.querySelector("[data-budget-month-open]");
-  const periodLayer = document.querySelector("[data-budget-period-layer]");
-  const periodForm = document.querySelector("[data-budget-period-form]");
-  const periodTitle = document.querySelector("[data-budget-period-title]");
-  const periodSubtitle = document.querySelector("[data-budget-period-subtitle]");
-  const periodClose = document.querySelector("[data-budget-period-close]");
-  const periodStartInput = document.querySelector("[data-budget-period-start]");
-  const periodEndInput = document.querySelector("[data-budget-period-end]");
-  const periodNewButton = document.querySelector("[data-budget-period-new]");
-  const periodSaveButton = document.querySelector("[data-budget-period-save]");
 
   const sheetLayer = document.querySelector("[data-budget-sheet-layer]");
   const sheetClose = document.querySelector("[data-budget-sheet-close]");
   const form = document.querySelector("[data-budget-form]");
   const formTitle = document.querySelector("[data-budget-form-title]");
   const formPeriod = document.querySelector("[data-budget-form-period]");
+  const formStartInput = document.querySelector("[data-budget-form-start]");
+  const formEndInput = document.querySelector("[data-budget-form-end]");
   const amountInput = document.querySelector("[data-budget-amount]");
   const saveButton = document.querySelector("[data-budget-save]");
   const deleteButton = document.querySelector("[data-budget-delete]");
@@ -49,9 +41,11 @@
   let budgets = [];
   let periods = [];
   let currentPeriod = null;
+  let virtualRange = defaultCurrentRange();
   let editingBudget = null;
   let selectedCategoryId = "";
-  let creatingPeriod = false;
+  let pickerBudgets = [];
+  let formRangeToken = 0;
   let toastTimer = null;
   const expandedCategories = new Set();
 
@@ -84,19 +78,6 @@
     return date;
   }
 
-  function addDays(iso, amount) {
-    const date = parseLocalDate(iso);
-    if (!date) return "";
-    date.setDate(date.getDate() + Number(amount || 0));
-    return localISO(date);
-  }
-
-  function daysBetween(startISO, endISO) {
-    const start = parseLocalDate(startISO);
-    const end = parseLocalDate(endISO);
-    if (!start || !end) return 1;
-    return Math.max(1, Math.round((end - start) / 86400000) + 1);
-  }
 
   function defaultCurrentRange() {
     const now = new Date();
@@ -105,8 +86,17 @@
     return { startDate: localISO(start), endDate: localISO(end) };
   }
 
-  function rangeText(period = currentPeriod) {
-    if (!period) return "Atur rentang tanggal";
+  function displayRange() {
+    if (currentPeriod) return currentPeriod;
+    return {
+      period_id: null,
+      start_date: virtualRange.startDate,
+      end_date: virtualRange.endDate
+    };
+  }
+
+  function rangeText(period = displayRange()) {
+    if (!period) return "Periode Budget";
     const start = parseLocalDate(period.start_date);
     const end = parseLocalDate(period.end_date);
     if (!start || !end) return "Periode Budget";
@@ -182,14 +172,7 @@
     const active = items
       .filter(item => item.start_date <= today && item.end_date >= today)
       .sort((a, b) => String(b.updated_at || "").localeCompare(String(a.updated_at || "")));
-    if (active.length) return active[0];
-
-    const past = items
-      .filter(item => item.end_date < today)
-      .sort((a, b) => String(b.end_date).localeCompare(String(a.end_date)));
-    if (past.length) return past[0];
-
-    return [...items].sort((a, b) => String(a.start_date).localeCompare(String(b.start_date)))[0];
+    return active[0] || null;
   }
 
   function currentPeriodIndex() {
@@ -197,20 +180,34 @@
     return periods.findIndex(item => item.period_id === currentPeriod.period_id);
   }
 
+  function virtualNavigationTarget(delta) {
+    const view = displayRange();
+    if (delta < 0) {
+      return [...periods]
+        .filter(item => item.start_date < view.start_date)
+        .sort((a, b) => String(b.start_date).localeCompare(String(a.start_date)))[0] || null;
+    }
+    return [...periods]
+      .filter(item => item.start_date > view.start_date)
+      .sort((a, b) => String(a.start_date).localeCompare(String(b.start_date)))[0] || null;
+  }
+
   function syncPeriodUI() {
     const label = rangeText();
     if (periodLabel) periodLabel.textContent = label;
-    if (summaryTitle) summaryTitle.textContent = currentPeriod ? label : "Belum ada periode";
-    if (formPeriod) formPeriod.textContent = label;
+    if (summaryTitle) summaryTitle.textContent = label;
 
     const index = currentPeriodIndex();
+    const previous = currentPeriod ? periods[index - 1] || null : virtualNavigationTarget(-1);
+    const next = currentPeriod ? periods[index + 1] || null : virtualNavigationTarget(1);
+
     if (prevButton) {
-      prevButton.disabled = index <= 0;
-      prevButton.setAttribute("aria-disabled", index <= 0 ? "true" : "false");
+      prevButton.disabled = !previous;
+      prevButton.setAttribute("aria-disabled", previous ? "false" : "true");
     }
     if (nextButton) {
-      nextButton.disabled = index < 0 || index >= periods.length - 1;
-      nextButton.setAttribute("aria-disabled", index < 0 || index >= periods.length - 1 ? "true" : "false");
+      nextButton.disabled = !next;
+      nextButton.setAttribute("aria-disabled", next ? "false" : "true");
     }
   }
 
@@ -230,8 +227,8 @@
     summary?.classList.remove("is-warning", "is-over");
 
     if (!currentPeriod) {
-      if (summaryBadge) summaryBadge.textContent = "Atur periode";
-      if (summaryNote) summaryNote.textContent = "Pilih tanggal mulai dan selesai sebelum membuat budget.";
+      if (summaryBadge) summaryBadge.textContent = "Belum ada";
+      if (summaryNote) summaryNote.textContent = "Belum ada budget untuk rentang ini. Tekan + untuk memilih periode sekaligus menambahkan budget.";
     } else if (!budgets.length) {
       if (summaryBadge) summaryBadge.textContent = "Belum ada";
       if (summaryNote) summaryNote.textContent = "Tambahkan budget kategori untuk rentang tanggal ini.";
@@ -294,13 +291,13 @@
     listEl.innerHTML = "";
 
     if (!currentPeriod) {
-      if (countEl) countEl.textContent = "Belum ada periode";
+      if (countEl) countEl.textContent = "Belum ada budget";
       listEl.innerHTML = `
-        <button class="budget-empty budget-empty-action" type="button" data-budget-empty-period>
-          <ion-icon name="calendar-outline"></ion-icon>
-          <strong>Atur periode budget dulu</strong>
-          <p>Pilih bebas tanggal mulai dan tanggal selesai sesuai alur keuangan keluarga.</p>
-        </button>
+        <div class="budget-empty">
+          <ion-icon name="pie-chart-outline"></ion-icon>
+          <strong>Belum ada budget periode ini</strong>
+          <p>Tekan + lalu pilih tanggal mulai, tanggal selesai, kategori, dan nominal budget.</p>
+        </div>
       `;
       return;
     }
@@ -361,107 +358,93 @@
   }
 
   async function loadPeriods({ preferId = null, resetToActive = false } = {}) {
-    periods = await FinanceService.ambilPeriodeBudget(family.id);
-    periods.sort((a, b) => String(a.start_date).localeCompare(String(b.start_date)) || String(a.end_date).localeCompare(String(b.end_date)));
+    const rows = await FinanceService.ambilPeriodeBudget(family.id);
+    periods = (rows || [])
+      .filter(item => Number(item.budget_count || 0) > 0)
+      .sort((a, b) => String(a.start_date).localeCompare(String(b.start_date)) || String(a.end_date).localeCompare(String(b.end_date)));
 
     if (preferId) {
       currentPeriod = periods.find(item => item.period_id === preferId) || null;
     } else if (resetToActive || !currentPeriod) {
       currentPeriod = activePeriodFrom(periods);
     } else {
-      currentPeriod = periods.find(item => item.period_id === currentPeriod.period_id) || activePeriodFrom(periods);
+      currentPeriod = periods.find(item => item.period_id === currentPeriod.period_id) || null;
     }
 
+    if (!currentPeriod) virtualRange = defaultCurrentRange();
     syncPeriodUI();
   }
 
   async function movePeriod(delta) {
+    let next = null;
     const index = currentPeriodIndex();
-    const next = periods[index + delta];
+    if (currentPeriod && index >= 0) {
+      next = periods[index + delta] || null;
+    } else {
+      next = virtualNavigationTarget(delta);
+    }
     if (!next) return;
     currentPeriod = next;
     syncPeriodUI();
     await loadBudgets();
   }
 
-  function openPeriodSheet({ newPeriod = false } = {}) {
-    creatingPeriod = newPeriod || !currentPeriod;
+  function exactPeriodForRange(startDate, endDate) {
+    return periods.find(item => item.start_date === startDate && item.end_date === endDate) || null;
+  }
 
-    if (creatingPeriod) {
-      let startDate;
-      let endDate;
-      if (currentPeriod && newPeriod) {
-        const length = daysBetween(currentPeriod.start_date, currentPeriod.end_date);
-        startDate = addDays(currentPeriod.end_date, 1);
-        endDate = addDays(startDate, length - 1);
-      } else {
-        const defaults = defaultCurrentRange();
-        startDate = defaults.startDate;
-        endDate = defaults.endDate;
-      }
-      if (periodStartInput) periodStartInput.value = startDate;
-      if (periodEndInput) periodEndInput.value = endDate;
-      if (periodTitle) periodTitle.textContent = "Buat Periode Budget";
-      if (periodSubtitle) periodSubtitle.textContent = "Pilih sendiri tanggal mulai dan selesai. Tidak harus tanggal 1 atau mengikuti tanggal gajian.";
-      if (periodNewButton) periodNewButton.hidden = true;
+  function categoryUnavailableInRows(category, rows) {
+    const used = new Set((rows || []).map(item => item.account_id));
+    if (used.has(category.id)) return true;
+    if (category.parent_id && used.has(category.parent_id)) return true;
+    if (!category.parent_id) {
+      return categories.some(child => child.parent_id === category.id && used.has(child.id));
+    }
+    return false;
+  }
+
+  async function syncPickerBudgetsForFormRange() {
+    if (editingBudget || !family) {
+      pickerBudgets = budgets;
+      return;
+    }
+
+    const startDate = String(formStartInput?.value || "");
+    const endDate = String(formEndInput?.value || "");
+    if (!parseLocalDate(startDate) || !parseLocalDate(endDate) || endDate < startDate) {
+      pickerBudgets = [];
+      return;
+    }
+
+    const target = exactPeriodForRange(startDate, endDate);
+    if (!target) {
+      pickerBudgets = [];
+    } else if (currentPeriod?.period_id === target.period_id) {
+      pickerBudgets = budgets;
     } else {
-      if (periodStartInput) periodStartInput.value = currentPeriod.start_date;
-      if (periodEndInput) periodEndInput.value = currentPeriod.end_date;
-      if (periodTitle) periodTitle.textContent = "Atur Periode Budget";
-      if (periodSubtitle) periodSubtitle.textContent = "Ubah rentang tanggal periode ini. Nilai Terpakai akan dihitung ulang otomatis.";
-      if (periodNewButton) periodNewButton.hidden = false;
+      const token = ++formRangeToken;
+      try {
+        const rows = await FinanceService.ambilBudgetPeriode({
+          familyId: family.id,
+          periodId: target.period_id
+        });
+        if (token !== formRangeToken) return;
+        pickerBudgets = rows || [];
+      } catch (error) {
+        console.error("[Budget Form Range Context]", error);
+        if (token !== formRangeToken) return;
+        pickerBudgets = [];
+      }
     }
 
-    if (periodEndInput && periodStartInput?.value) periodEndInput.min = periodStartInput.value;
-    if (periodLayer) periodLayer.hidden = false;
-    document.body.style.overflow = "hidden";
-    requestAnimationFrame(() => periodStartInput?.focus());
-  }
-
-  function closePeriodSheet() {
-    if (periodLayer) periodLayer.hidden = true;
-    document.body.style.overflow = "";
-    creatingPeriod = false;
-  }
-
-  async function savePeriod(event) {
-    event.preventDefault();
-    if (!family) return;
-
-    const startDate = String(periodStartInput?.value || "");
-    const endDate = String(periodEndInput?.value || "");
-    const start = parseLocalDate(startDate);
-    const end = parseLocalDate(endDate);
-
-    if (!start || !end) {
-      show("Tanggal mulai dan selesai wajib dipilih.", "error");
-      return;
-    }
-    if (end < start) {
-      show("Tanggal selesai tidak boleh sebelum tanggal mulai.", "error");
-      periodEndInput?.focus();
-      return;
+    const selected = categoryById(selectedCategoryId);
+    if (selected && categoryUnavailableInRows(selected, pickerBudgets)) {
+      selectedCategoryId = "";
+      refreshCategoryTrigger();
+      show("Kategori tersebut sudah dianggarkan pada rentang yang dipilih.", "info");
     }
 
-    if (periodSaveButton) periodSaveButton.disabled = true;
-    try {
-      const wasCreating = creatingPeriod;
-      const periodId = await FinanceService.simpanPeriodeBudget({
-        familyId: family.id,
-        periodId: wasCreating ? null : currentPeriod?.period_id || null,
-        startDate,
-        endDate
-      });
-      closePeriodSheet();
-      await loadPeriods({ preferId: periodId });
-      show(wasCreating ? "Periode budget dibuat." : "Periode budget diperbarui.", "success");
-      await loadBudgets();
-    } catch (error) {
-      console.error("[Budget Period Save]", error);
-      show(error?.message || "Periode budget gagal disimpan.", "error");
-    } finally {
-      if (periodSaveButton) periodSaveButton.disabled = false;
-    }
+    if (categoryLayer && !categoryLayer.hidden) renderCategoryPicker();
   }
 
   function refreshCategoryTrigger() {
@@ -486,13 +469,7 @@
   function isCategoryUnavailable(category) {
     if (editingBudget) return category.id !== editingBudget.account_id;
 
-    const used = new Set(budgets.map(item => item.account_id));
-    if (used.has(category.id)) return true;
-    if (category.parent_id && used.has(category.parent_id)) return true;
-    if (!category.parent_id) {
-      return categories.some(child => child.parent_id === category.id && used.has(child.id));
-    }
-    return false;
+    return categoryUnavailableInRows(category, pickerBudgets);
   }
 
   function categoryChoice(category, parent = null, child = false) {
@@ -594,7 +571,7 @@
     const wasOpen = !categoryLayer.hidden;
     categoryLayer.hidden = true;
     document.body.classList.remove("category-picker-open");
-    if ((!sheetLayer || sheetLayer.hidden) && (!periodLayer || periodLayer.hidden)) {
+    if (!sheetLayer || sheetLayer.hidden) {
       document.body.style.overflow = "";
     }
     if (wasOpen) categoryTrigger?.focus();
@@ -609,17 +586,26 @@
   }
 
   function openForm(item = null) {
-    if (!currentPeriod) {
-      show("Atur rentang tanggal budget terlebih dulu.", "info");
-      openPeriodSheet({ newPeriod: true });
-      return;
-    }
-
     editingBudget = item;
     selectedCategoryId = item?.account_id || "";
+    pickerBudgets = currentPeriod ? budgets : [];
 
+    const range = displayRange();
     if (formTitle) formTitle.textContent = item ? "Edit Budget" : "Tambah Budget";
-    if (formPeriod) formPeriod.textContent = rangeText();
+    if (formPeriod) {
+      formPeriod.textContent = item
+        ? rangeText(range)
+        : "Pilih periode langsung di sini, lalu tentukan kategori dan nominal.";
+    }
+    if (formStartInput) {
+      formStartInput.value = range.start_date;
+      formStartInput.disabled = Boolean(item);
+    }
+    if (formEndInput) {
+      formEndInput.value = range.end_date;
+      formEndInput.min = range.start_date;
+      formEndInput.disabled = Boolean(item);
+    }
     if (amountInput) amountInput.value = item ? formatNumberInput(item.budget_amount) : "";
     if (deleteButton) deleteButton.hidden = !item;
     if (categoryTrigger) {
@@ -641,13 +627,18 @@
 
     if (sheetLayer) sheetLayer.hidden = false;
     document.body.style.overflow = "hidden";
-    requestAnimationFrame(() => item ? amountInput?.focus() : categoryTrigger?.focus());
+    if (!item) syncPickerBudgetsForFormRange();
+    requestAnimationFrame(() => item ? amountInput?.focus() : formStartInput?.focus());
   }
 
   function closeForm() {
     if (sheetLayer) sheetLayer.hidden = true;
     editingBudget = null;
     selectedCategoryId = "";
+    pickerBudgets = [];
+    formRangeToken += 1;
+    if (formStartInput) formStartInput.disabled = false;
+    if (formEndInput) formEndInput.disabled = false;
     if (categoryTrigger) {
       categoryTrigger.disabled = false;
       categoryTrigger.classList.remove("is-readonly");
@@ -660,11 +651,12 @@
 
   async function saveBudget(event) {
     event.preventDefault();
-    if (!family || !currentPeriod) return;
+    if (!family) return;
 
     const amount = Number(digits(amountInput?.value));
     if (!selectedCategoryId) {
       show("Pilih kategori budget dulu.", "error");
+      categoryTrigger?.focus();
       return;
     }
     if (!amount || amount <= 0) {
@@ -673,20 +665,78 @@
       return;
     }
 
-    if (saveButton) saveButton.disabled = true;
     const wasEditing = Boolean(editingBudget);
+    let startDate = currentPeriod?.start_date || "";
+    let endDate = currentPeriod?.end_date || "";
+
+    if (!wasEditing) {
+      startDate = String(formStartInput?.value || "");
+      endDate = String(formEndInput?.value || "");
+      const start = parseLocalDate(startDate);
+      const end = parseLocalDate(endDate);
+      if (!start || !end) {
+        show("Tanggal mulai dan selesai budget wajib dipilih.", "error");
+        formStartInput?.focus();
+        return;
+      }
+      if (end < start) {
+        show("Tanggal selesai tidak boleh sebelum tanggal mulai.", "error");
+        formEndInput?.focus();
+        return;
+      }
+
+      const selected = categoryById(selectedCategoryId);
+      const target = exactPeriodForRange(startDate, endDate);
+      if (selected && target) {
+        let targetRows = pickerBudgets;
+        if (currentPeriod?.period_id !== target.period_id) {
+          try {
+            targetRows = await FinanceService.ambilBudgetPeriode({
+              familyId: family.id,
+              periodId: target.period_id
+            });
+          } catch (error) {
+            console.error("[Budget Target Validation]", error);
+          }
+        }
+        if (categoryUnavailableInRows(selected, targetRows)) {
+          show("Kategori tersebut sudah memiliki budget pada rentang tanggal ini.", "error");
+          categoryTrigger?.focus();
+          return;
+        }
+      }
+    } else if (!currentPeriod) {
+      show("Periode budget tidak ditemukan. Muat ulang halaman lalu coba lagi.", "error");
+      return;
+    }
+
+    if (saveButton) saveButton.disabled = true;
 
     try {
-      await FinanceService.simpanBudget({
-        familyId: family.id,
-        accountId: selectedCategoryId,
-        periodId: currentPeriod.period_id,
-        amount,
-        warningPercent: 80
-      });
+      let savedPeriodId = currentPeriod?.period_id || null;
+      if (wasEditing) {
+        await FinanceService.simpanBudget({
+          familyId: family.id,
+          accountId: selectedCategoryId,
+          periodId: currentPeriod.period_id,
+          amount,
+          warningPercent: 80
+        });
+      } else {
+        const result = await FinanceService.simpanBudgetDenganRentang({
+          familyId: family.id,
+          accountId: selectedCategoryId,
+          startDate,
+          endDate,
+          amount,
+          warningPercent: 80
+        });
+        savedPeriodId = result.periodId;
+      }
+
       closeForm();
       show(wasEditing ? "Budget diperbarui." : "Budget ditambahkan.", "success");
-      await loadPeriods({ preferId: currentPeriod.period_id });
+      await loadPeriods({ preferId: savedPeriodId });
       await loadBudgets();
     } catch (error) {
       console.error("[Budget Save]", error);
@@ -737,28 +787,18 @@
 
   prevButton?.addEventListener("click", () => movePeriod(-1));
   nextButton?.addEventListener("click", () => movePeriod(1));
-  periodOpen?.addEventListener("click", () => openPeriodSheet({ newPeriod: !currentPeriod }));
-  periodClose?.addEventListener("click", closePeriodSheet);
-  periodLayer?.addEventListener("click", event => {
-    if (event.target === periodLayer) closePeriodSheet();
-  });
-  periodForm?.addEventListener("submit", savePeriod);
-  periodNewButton?.addEventListener("click", () => openPeriodSheet({ newPeriod: true }));
-  periodStartInput?.addEventListener("change", () => {
-    if (!periodStartInput.value) return;
-    if (!periodEndInput.value || periodEndInput.value < periodStartInput.value) {
-      periodEndInput.value = periodStartInput.value;
+
+  formStartInput?.addEventListener("change", () => {
+    if (!formStartInput.value) return;
+    if (!formEndInput.value || formEndInput.value < formStartInput.value) {
+      formEndInput.value = formStartInput.value;
     }
-    periodEndInput.min = periodStartInput.value;
+    formEndInput.min = formStartInput.value;
+    syncPickerBudgetsForFormRange();
   });
+  formEndInput?.addEventListener("change", syncPickerBudgetsForFormRange);
 
   listEl?.addEventListener("click", event => {
-    const emptyPeriod = event.target.closest("[data-budget-empty-period]");
-    if (emptyPeriod) {
-      openPeriodSheet({ newPeriod: true });
-      return;
-    }
-
     const itemEl = event.target.closest("[data-budget-id]");
     if (!itemEl) return;
     const item = budgets.find(row => row.budget_id === itemEl.dataset.budgetId);
@@ -802,7 +842,6 @@
     if (event.key !== "Escape") return;
     if (categoryLayer && !categoryLayer.hidden) closeCategoryPicker();
     else if (sheetLayer && !sheetLayer.hidden) closeForm();
-    else if (periodLayer && !periodLayer.hidden) closePeriodSheet();
   });
 
   window.addEventListener("pageshow", event => {

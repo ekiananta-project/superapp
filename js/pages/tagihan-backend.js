@@ -3,7 +3,6 @@
 
   const notice = document.querySelector("[data-bill-notice]");
   const monthLabel = document.querySelector("[data-bill-month-label]");
-  const monthInput = document.querySelector("[data-bill-month-input]");
   const summary = document.querySelector("[data-bill-summary]");
   const summaryTitle = document.querySelector("[data-bill-summary-title]");
   const summaryBadge = document.querySelector("[data-bill-summary-badge]");
@@ -139,7 +138,6 @@
     const label = monthText();
     if (monthLabel) monthLabel.textContent = label;
     if (summaryTitle) summaryTitle.textContent = label;
-    if (monthInput) monthInput.value = monthValue();
     if (formPeriod) formPeriod.textContent = `Mulai ${label}`;
   }
 
@@ -635,7 +633,6 @@
     family = await AuthRouter.ambilFamilyAktif();
     if (!family) return;
 
-    prepareDueDays();
     resetCurrentMonth({ reload: false });
 
     const [accountRows, walletRows] = await Promise.all([
@@ -657,21 +654,6 @@
   });
   document.querySelector("[data-bill-month-next]")?.addEventListener("click", () => {
     setMonth(new Date(month.getFullYear(), month.getMonth() + 1, 1));
-  });
-  document.querySelector("[data-bill-month-open]")?.addEventListener("click", () => {
-    if (!monthInput) return;
-    try {
-      if (typeof monthInput.showPicker === "function") monthInput.showPicker();
-      else monthInput.click();
-    } catch {
-      monthInput.focus();
-      monthInput.click();
-    }
-  });
-  monthInput?.addEventListener("change", () => {
-    const match = /^(\d{4})-(\d{2})$/.exec(monthInput.value || "");
-    if (!match) return;
-    setMonth(new Date(Number(match[1]), Number(match[2]) - 1, 1));
   });
 
   listEl?.addEventListener("click", event => {

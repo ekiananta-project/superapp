@@ -24,7 +24,7 @@
   <link rel="stylesheet" href="css/theme.css">
   <link rel="stylesheet" href="css/pages/transaksi-category-picker.css?v=20260908-1">
   <link rel="stylesheet" href="css/pages/finance-nav-v117f.css?v=20260908-2">
-  <link rel="stylesheet" href="css/pages/budget.css?v=20260908-5">
+  <link rel="stylesheet" href="css/pages/budget.css?v=20260908-6">
 </head>
 <body>
 <div class="aplikasi dengan-nav">
@@ -41,13 +41,13 @@
       <button class="budget-month-nav" type="button" data-budget-month-prev aria-label="Periode sebelumnya">
         <ion-icon name="chevron-back-outline"></ion-icon>
       </button>
-      <button class="budget-month-main" type="button" data-budget-month-open>
+      <div class="budget-month-main" aria-live="polite">
         <ion-icon name="calendar-outline"></ion-icon>
         <span>
           <small>Periode Budget</small>
           <strong data-budget-month-label>—</strong>
         </span>
-      </button>
+      </div>
       <button class="budget-month-nav" type="button" data-budget-month-next aria-label="Periode berikutnya">
         <ion-icon name="chevron-forward-outline"></ion-icon>
       </button>
@@ -107,46 +107,6 @@
   </nav>
 </div>
 
-<!-- Budget Period Range -->
-<div class="budget-sheet-layer" data-budget-period-layer hidden>
-  <section class="budget-sheet budget-period-sheet" role="dialog" aria-modal="true" aria-labelledby="budget-period-title">
-    <div class="budget-sheet-handle" aria-hidden="true"></div>
-    <div class="budget-sheet-header">
-      <div>
-        <h2 id="budget-period-title" data-budget-period-title>Atur Periode Budget</h2>
-        <p data-budget-period-subtitle>Pilih tanggal mulai dan tanggal selesai sesuai siklus keuanganmu.</p>
-      </div>
-      <button class="budget-sheet-close" type="button" data-budget-period-close aria-label="Tutup pengaturan periode">
-        <ion-icon name="close-outline"></ion-icon>
-      </button>
-    </div>
-
-    <form class="budget-period-form" data-budget-period-form>
-      <div class="budget-period-grid">
-        <div class="grup-input">
-          <label for="budgetPeriodStart">Tanggal Mulai</label>
-          <input class="input" id="budgetPeriodStart" type="date" required data-budget-period-start>
-        </div>
-        <div class="grup-input">
-          <label for="budgetPeriodEnd">Tanggal Selesai</label>
-          <input class="input" id="budgetPeriodEnd" type="date" required data-budget-period-end>
-        </div>
-      </div>
-
-      <div class="budget-period-info">
-        <ion-icon name="calendar-number-outline"></ion-icon>
-        <p>Budget dan nilai Terpakai hanya dihitung di dalam rentang tanggal ini. Rentang boleh berbeda atau bahkan bertumpang tindih; budget tiap periode tetap terpisah.</p>
-      </div>
-
-      <button class="budget-period-new" type="button" data-budget-period-new hidden>
-        <ion-icon name="add-circle-outline"></ion-icon>
-        <span>Buat Periode Baru</span>
-      </button>
-      <button class="tombol-utama" type="submit" data-budget-period-save>Simpan Periode</button>
-    </form>
-  </section>
-</div>
-
 <!-- Add/Edit Budget -->
 <div class="budget-sheet-layer" data-budget-sheet-layer hidden>
   <section class="budget-sheet" role="dialog" aria-modal="true" aria-labelledby="budget-sheet-title">
@@ -162,6 +122,18 @@
     </div>
 
     <form class="budget-form" data-budget-form>
+      <div class="budget-form-range">
+        <div class="grup-input">
+          <label for="budgetFormStart">Tanggal Mulai</label>
+          <input class="input" id="budgetFormStart" type="date" required data-budget-form-start>
+        </div>
+        <div class="grup-input">
+          <label for="budgetFormEnd">Tanggal Selesai</label>
+          <input class="input" id="budgetFormEnd" type="date" required data-budget-form-end>
+        </div>
+      </div>
+      <small class="budget-form-range-help">Periode dibuat bersamaan saat budget disimpan. Saat edit, periode tetap terkunci agar histori budget tidak berpindah.</small>
+
       <div class="grup-input">
         <label>Kategori Pengeluaran</label>
         <button class="category-picker-trigger" type="button" data-budget-category-trigger aria-haspopup="dialog" aria-controls="budget-category-picker-sheet">
@@ -220,11 +192,11 @@
 <script src="js/backend/supabase.js"></script>
 <script src="js/backend/auth-service.js"></script>
 <script src="js/backend/family-service.js"></script>
-<script src="js/backend/finance-service.js?v=20260908-9"></script>
+<script src="js/backend/finance-service.js?v=20260908-10"></script>
 <script src="js/backend/finance-cache.js"></script>
 <script src="js/backend/auth-router.js"></script>
 <script src="js/backend/auth-guard.js"></script>
-<script src="js/pages/budget-backend.js?v=20260908-5"></script>
-<script src="js/pwa.js?v=20260908-9"></script>
+<script src="js/pages/budget-backend.js?v=20260908-6"></script>
+<script src="js/pwa.js?v=20260908-10"></script>
 </body>
 </html>

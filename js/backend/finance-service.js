@@ -771,6 +771,40 @@
     return data;
   }
 
+  async function simpanBudgetDenganRentang({
+    familyId,
+    accountId,
+    startDate,
+    endDate,
+    amount,
+    warningPercent = 80
+  } = {}) {
+    if (!familyId) throw new Error("familyId wajib diisi.");
+    if (!accountId) throw new Error("Kategori budget wajib dipilih.");
+    if (!startDate || !endDate) throw new Error("Tanggal mulai dan selesai budget wajib dipilih.");
+
+    const { data, error } = await client.rpc(
+      "finance_budget_save_with_range",
+      {
+        p_family_id: familyId,
+        p_account_id: accountId,
+        p_start_date: startDate,
+        p_end_date: endDate,
+        p_amount: Number(amount || 0),
+        p_warning_percent: Number(warningPercent || 80)
+      }
+    );
+
+    lemparJikaError(error);
+    const row = Array.isArray(data) ? data[0] : data;
+    const periodId = row?.period_id || row?.periodId || null;
+    const budgetId = row?.budget_id || row?.budgetId || null;
+    if (!periodId || !budgetId) {
+      throw new Error("Budget tersimpan tetapi ID periode/budget tidak diterima. Muat ulang lalu coba lagi.");
+    }
+    return { periodId, budgetId };
+  }
+
   async function ambilBudgetPeriode({
     familyId,
     periodId
@@ -1047,6 +1081,7 @@
     bayarTagihan,
     ambilPeriodeBudget,
     simpanPeriodeBudget,
+    simpanBudgetDenganRentang,
     ambilBudgetPeriode,
     simpanBudget,
     hapusBudget,

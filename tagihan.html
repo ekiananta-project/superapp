@@ -24,7 +24,7 @@
   <link rel="stylesheet" href="css/theme.css">
   <link rel="stylesheet" href="css/pages/transaksi-category-picker.css?v=20260908-1">
   <link rel="stylesheet" href="css/pages/finance-nav-v117f.css?v=20260908-2">
-  <link rel="stylesheet" href="css/pages/tagihan.css?v=20260908-2">
+  <link rel="stylesheet" href="css/pages/tagihan.css?v=20260908-3">
 </head>
 <body>
 <div class="aplikasi dengan-nav">
@@ -39,12 +39,11 @@
 
     <section class="bills-month-card" aria-label="Periode tagihan">
       <button class="bills-month-nav" type="button" data-bill-month-prev aria-label="Bulan sebelumnya"><ion-icon name="chevron-back-outline"></ion-icon></button>
-      <button class="bills-month-main" type="button" data-bill-month-open>
+      <div class="bills-month-main" aria-live="polite">
         <ion-icon name="calendar-outline"></ion-icon>
         <span><small>Periode Tagihan</small><strong data-bill-month-label>—</strong></span>
-      </button>
+      </div>
       <button class="bills-month-nav" type="button" data-bill-month-next aria-label="Bulan berikutnya"><ion-icon name="chevron-forward-outline"></ion-icon></button>
-      <input class="bills-month-native" type="month" data-bill-month-input tabindex="-1" aria-hidden="true">
     </section>
 
     <section class="bills-summary-card" data-bill-summary aria-busy="true">
@@ -214,11 +213,11 @@
 <script src="js/backend/supabase.js"></script>
 <script src="js/backend/auth-service.js"></script>
 <script src="js/backend/family-service.js"></script>
-<script src="js/backend/finance-service.js?v=20260908-9"></script>
+<script src="js/backend/finance-service.js?v=20260908-10"></script>
 <script src="js/backend/finance-cache.js"></script>
 <script src="js/backend/auth-router.js"></script>
 <script src="js/backend/auth-guard.js"></script>
-<script src="js/pages/tagihan-backend.js?v=20260908-2"></script>
-<script src="js/pwa.js?v=20260908-9"></script>
+<script src="js/pages/tagihan-backend.js?v=20260908-3"></script>
+<script src="js/pwa.js?v=20260908-10"></script>
 </body>
 </html>

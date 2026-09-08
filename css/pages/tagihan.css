@@ -445,3 +445,9 @@
 html[data-theme="light"] .bill-form .input[type="date"] {
   color-scheme: light;
 }
+
+
+/* v1.2.0c1 — periode halaman hanya untuk browsing; tanggal dipilih di Tambah Tagihan */
+.bills-month-main {
+  cursor: default;
+}
