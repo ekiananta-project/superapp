@@ -1,4 +1,4 @@
-const CACHE_NAME = "family-superapp-v1.2.0d3-bill-history-protection-1";
+const CACHE_NAME = "family-superapp-v1.2.0d4-editable-bill-payment-1";
 const OFFLINE_URL = "./offline.html";
 
 const APP_FILES = [

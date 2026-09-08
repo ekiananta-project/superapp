@@ -39,6 +39,8 @@
   const payPeriod = document.querySelector("[data-bill-pay-period]");
   const payName = document.querySelector("[data-bill-pay-name]");
   const payAmount = document.querySelector("[data-bill-pay-amount]");
+  const payNominal = document.querySelector("[data-bill-pay-nominal]");
+  const payLimit = document.querySelector("[data-bill-pay-limit]");
   const payWallet = document.querySelector("[data-bill-pay-wallet]");
   const payDate = document.querySelector("[data-bill-pay-date]");
   const paySubmit = document.querySelector("[data-bill-pay-submit]");
@@ -573,6 +575,39 @@
     });
   }
 
+  function refreshPaymentAmountState() {
+    if (!paymentItem || !payNominal) return;
+
+    const remaining = remainingAmount(paymentItem);
+    const amount = Number(digits(payNominal.value));
+    const valid = amount > 0 && amount <= remaining;
+
+    if (payLimit) {
+      if (amount > remaining) {
+        payLimit.textContent = `Nominal tidak boleh melebihi sisa tagihan ${rupiah(remaining)}.`;
+        payLimit.dataset.tipe = "error";
+        payLimit.style.color = "var(--color-danger)";
+      } else if (amount <= 0) {
+        payLimit.textContent = `Masukkan nominal antara Rp 1 sampai ${rupiah(remaining)}.`;
+        payLimit.dataset.tipe = "error";
+        payLimit.style.color = "var(--color-danger)";
+      } else if (amount < remaining) {
+        payLimit.textContent = `Pembayaran sebagian. Setelah dibayar, sisa tagihan ${rupiah(remaining - amount)}.`;
+        payLimit.dataset.tipe = "info";
+        payLimit.style.color = "";
+      } else {
+        payLimit.textContent = "Nominal ini akan melunasi sisa tagihan.";
+        payLimit.dataset.tipe = "info";
+        payLimit.style.color = "";
+      }
+    }
+
+    if (paySubmit) {
+      paySubmit.disabled = !valid;
+      paySubmit.textContent = valid ? `Bayar ${rupiah(amount)}` : "Bayar & Catat Transaksi";
+    }
+  }
+
   function openPay(item) {
     if (!item || item.status === "paid") return;
     if (item.category_archived) {
@@ -587,13 +622,16 @@
 
     paymentItem = item;
     fillWalletOptions();
+    const remaining = remainingAmount(item);
     if (payName) payName.textContent = item.bill_name || "Tagihan";
-    if (payAmount) payAmount.textContent = rupiah(remainingAmount(item));
+    if (payAmount) payAmount.textContent = `Sisa ${rupiah(remaining)}`;
     if (payPeriod) payPeriod.textContent = `Jatuh tempo ${shortDate(item.due_on)}`;
+    if (payNominal) payNominal.value = formatNumberInput(remaining);
     if (payDate) payDate.value = todayISO();
+    refreshPaymentAmountState();
     if (payLayer) payLayer.hidden = false;
     document.body.style.overflow = "hidden";
-    requestAnimationFrame(() => payWallet?.focus());
+    requestAnimationFrame(() => payNominal?.focus());
   }
 
   function closePay() {
@@ -607,7 +645,19 @@
     if (!family || !paymentItem) return;
     const walletId = payWallet?.value || "";
     const paidOn = payDate?.value || todayISO();
+    const amount = Number(digits(payNominal?.value));
+    const remaining = remainingAmount(paymentItem);
 
+    if (!amount || amount <= 0) {
+      show("Nominal pembayaran harus lebih dari Rp 0.", "error");
+      payNominal?.focus();
+      return;
+    }
+    if (amount > remaining) {
+      show(`Nominal pembayaran tidak boleh melebihi sisa tagihan ${rupiah(remaining)}.`, "error");
+      payNominal?.focus();
+      return;
+    }
     if (!walletId) {
       show("Pilih dompet pembayaran.", "error");
       return;
@@ -618,18 +668,25 @@
       await FinanceService.bayarTagihan({
         periodId: paymentItem.period_id,
         walletId,
-        paidOn
+        paidOn,
+        amount
       });
       window.FinanceCache?.remove("wallets", family.id);
       closePay();
-      show("Pembayaran tagihan dicatat dan sisa tagihan sudah diperbarui.", "success");
+      const nextRemaining = Math.max(remaining - amount, 0);
+      show(
+        nextRemaining > 0
+          ? `Pembayaran ${rupiah(amount)} dicatat. Sisa tagihan ${rupiah(nextRemaining)}.`
+          : "Tagihan sudah lunas dan transaksi pembayaran dicatat.",
+        "success"
+      );
       wallets = await (FinanceService.ambilSaldoDompetFresh || FinanceService.ambilSaldoDompet)(family.id);
       await loadBills();
     } catch (error) {
       console.error("[Bill Pay]", error);
       show(error?.message || "Pembayaran tagihan gagal.", "error");
     } finally {
-      if (paySubmit) paySubmit.disabled = false;
+      if (payLayer && !payLayer.hidden) refreshPaymentAmountState();
     }
   }
 
@@ -717,6 +774,10 @@
   payClose?.addEventListener("click", closePay);
   payLayer?.addEventListener("click", event => {
     if (event.target === payLayer) closePay();
+  });
+  payNominal?.addEventListener("input", () => {
+    payNominal.value = formatNumberInput(payNominal.value);
+    refreshPaymentAmountState();
   });
   payForm?.addEventListener("submit", payBill);
 

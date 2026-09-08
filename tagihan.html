@@ -168,6 +168,14 @@
 
     <form class="bill-form" data-bill-pay-form>
       <div class="grup-input">
+        <label for="billPayNominal">Nominal Pembayaran</label>
+        <div class="input-uang">
+          <span class="input-uang-prefix">Rp</span>
+          <input class="input" id="billPayNominal" type="text" inputmode="numeric" autocomplete="off" required data-bill-pay-nominal>
+        </div>
+        <small class="bill-field-help" data-bill-pay-limit>Nominal otomatis diisi sebesar sisa tagihan.</small>
+      </div>
+      <div class="grup-input">
         <label for="billPayWallet">Bayar dari Dompet</label>
         <select class="pilih" id="billPayWallet" required data-bill-pay-wallet></select>
       </div>
@@ -209,11 +217,11 @@
 <script src="js/backend/supabase.js"></script>
 <script src="js/backend/auth-service.js"></script>
 <script src="js/backend/family-service.js"></script>
-<script src="js/backend/finance-service.js?v=20260908-11"></script>
+<script src="js/backend/finance-service.js?v=20260908-d4"></script>
 <script src="js/backend/finance-cache.js?v=20260908-d1"></script>
 <script src="js/backend/auth-router.js"></script>
 <script src="js/backend/auth-guard.js"></script>
-<script src="js/pages/tagihan-backend.js?v=20260908-d3"></script>
-<script src="js/pwa.js?v=20260908-d3"></script>
+<script src="js/pages/tagihan-backend.js?v=20260908-d4"></script>
+<script src="js/pwa.js?v=20260908-d4"></script>
 </body>
 </html>

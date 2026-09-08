@@ -1068,11 +1068,17 @@
     periodId,
     walletId,
     paidOn,
+    amount,
     operationId = null
   } = {}) {
     if (!periodId) throw new Error("Periode tagihan wajib dipilih.");
     if (!walletId) throw new Error("Dompet pembayaran wajib dipilih.");
     if (!paidOn) throw new Error("Tanggal pembayaran wajib diisi.");
+
+    const paymentAmount = Number(amount);
+    if (!Number.isSafeInteger(paymentAmount) || paymentAmount <= 0) {
+      throw new Error("Nominal pembayaran harus lebih dari Rp 0.");
+    }
 
     const opId = operationId || operationIdBaru();
     const { data, error } = await client.rpc(
@@ -1081,6 +1087,7 @@
         p_period_id: periodId,
         p_wallet_id: walletId,
         p_paid_on: paidOn,
+        p_payment_amount: paymentAmount,
         p_client_operation_id: opId
       }
     );
