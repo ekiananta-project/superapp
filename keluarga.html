@@ -28,6 +28,7 @@
   <link rel="stylesheet" href="css/pages/keluarga-member-management.css?v=20260908-2">
   <link rel="stylesheet" href="css/pages/keluarga-family-media.css?v=20260908-1">
   <link rel="stylesheet" href="css/pages/keluarga-leave.css?v=20260908-1">
+  <link rel="stylesheet" href="css/pages/keluarga-dissolve.css?v=20260908-1">
   <link rel="stylesheet" href="css/pages/family-invitation.css">
   <link rel="stylesheet" href="css/theme.css">
 </head>
@@ -187,6 +188,28 @@
         <button class="family-leave-open" type="button" data-leave-family>
           <ion-icon name="exit-outline"></ion-icon>
           Keluar dari Ruang Keluarga
+        </button>
+      </div>
+    </section>
+
+    <section class="family-danger-section" data-family-danger-zone hidden>
+      <h2 class="judul-grup">Zona Berbahaya</h2>
+
+      <div class="family-danger-card">
+        <div class="family-danger-card-header">
+          <span class="family-danger-icon" aria-hidden="true">
+            <ion-icon name="warning-outline"></ion-icon>
+          </span>
+
+          <div class="family-danger-copy">
+            <strong>Bubarkan Ruang Keluarga</strong>
+            <p>Mengakhiri Ruang Keluarga dan menghapus permanen seluruh data bersama milik keluarga.</p>
+          </div>
+        </div>
+
+        <button class="family-dissolve-open" type="button" data-dissolve-family>
+          <ion-icon name="trash-outline"></ion-icon>
+          Bubarkan Ruang Keluarga
         </button>
       </div>
     </section>
@@ -374,6 +397,98 @@
   </section>
 </div>
 
+
+<div class="lapisan" data-dissolve-family-sheet hidden>
+  <section
+    class="bottom-sheet sheet-dissolve-family"
+    role="dialog"
+    aria-modal="true"
+    aria-labelledby="judul-dissolve-family">
+
+    <div class="sheet-handle"></div>
+
+    <div class="sheet-header">
+      <div>
+        <h2 id="judul-dissolve-family">Bubarkan Ruang Keluarga?</h2>
+        <p class="sheet-subjudul-keluarga">Tindakan permanen yang tidak dapat dibatalkan.</p>
+      </div>
+
+      <button
+        class="tombol-ikon"
+        type="button"
+        aria-label="Tutup"
+        data-dissolve-family-close>
+        <ion-icon name="close-outline"></ion-icon>
+      </button>
+    </div>
+
+    <div class="peringatan-dissolve-family">
+      <ion-icon name="warning-outline" aria-hidden="true"></ion-icon>
+      <div>
+        <strong data-dissolve-family-name>Ruang Keluarga</strong>
+        <p>
+          Semua anggota akan kehilangan akses. Dompet, kategori, transaksi,
+          undangan, dan foto keluarga akan dihapus permanen.
+        </p>
+      </div>
+    </div>
+
+    <div class="dissolve-impact-list">
+      <p data-dissolve-member-count>Seluruh anggota aktif akan dikeluarkan.</p>
+      <ul>
+        <li>Data Finance milik Ruang Keluarga dihapus.</li>
+        <li>Keanggotaan dan undangan Ruang Keluarga dihapus.</li>
+        <li>Foto Ruang Keluarga ikut dibersihkan dari Storage.</li>
+      </ul>
+      <p class="tetap-aman">Akun pribadi, profil, dan data PERSONAL anggota tidak dihapus.</p>
+    </div>
+
+    <form class="formulir" data-dissolve-family-form>
+      <div class="grup-input">
+        <label for="password-dissolve-family">Password saat ini</label>
+        <input
+          class="input"
+          id="password-dissolve-family"
+          name="password"
+          type="password"
+          autocomplete="current-password"
+          placeholder="Masukkan password akunmu"
+          required>
+      </div>
+
+      <div class="grup-input">
+        <label for="phrase-dissolve-family">Konfirmasi pembubaran</label>
+        <input
+          class="input"
+          id="phrase-dissolve-family"
+          name="confirmation"
+          type="text"
+          autocomplete="off"
+          autocapitalize="characters"
+          spellcheck="false"
+          placeholder="BUBARKAN RUANG KELUARGA"
+          required>
+        <small class="dissolve-confirm-hint">
+          Ketik persis <code>BUBARKAN RUANG KELUARGA</code>
+        </small>
+      </div>
+
+      <p class="pesan-dissolve-family" data-dissolve-family-message hidden></p>
+
+      <div class="aksi-dissolve-family">
+        <button class="tombol-sekunder" type="button" data-dissolve-family-close>
+          Batal
+        </button>
+
+        <button class="tombol-bahaya" type="submit" data-dissolve-family-confirm disabled>
+          <ion-icon name="trash-outline"></ion-icon>
+          Bubarkan Permanen
+        </button>
+      </div>
+    </form>
+  </section>
+</div>
+
 <div class="media-preview-layer" data-media-preview hidden>
   <section
     class="media-preview-card"
@@ -422,14 +537,14 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="js/backend/supabase.js"></script>
 <script src="js/backend/auth-service.js"></script>
-<script src="js/backend/family-service.js?v=20260908-5"></script>
+<script src="js/backend/family-service.js?v=20260908-6"></script>
 <script src="js/backend/finance-service.js"></script>
 <script src="js/backend/auth-router.js"></script>
 <script src="js/backend/auth-guard.js"></script>
 <script>window.AUTH_BACKEND_MODE = true;</script>
 <script src="js/app.js"></script>
 <script src="js/components/avatar.js?v=20260908-2"></script>
-<script src="js/pages/keluarga.js?v=20260908-5"></script>
+<script src="js/pages/keluarga.js?v=20260908-6"></script>
 <script src="js/pages/keluarga-media.js?v=20260908-3"></script>
 <script src="js/pwa.js"></script>
 </body>

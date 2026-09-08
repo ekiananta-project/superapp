@@ -1,4 +1,4 @@
-const CACHE_NAME = "family-superapp-v1.1.2-leave-family-single-active-1";
+const CACHE_NAME = "family-superapp-v1.1.3-dissolve-family-1";
 const OFFLINE_URL = "./offline.html";
 
 const APP_FILES = [
@@ -25,6 +25,8 @@ const APP_FILES = [
   "./css/pages/keluarga-family-media.css?v=20260908-1",
   "./css/pages/keluarga-leave.css",
   "./css/pages/keluarga-leave.css?v=20260908-1",
+  "./css/pages/keluarga-dissolve.css",
+  "./css/pages/keluarga-dissolve.css?v=20260908-1",
   "./css/pages/keluarga.css",
   "./css/pages/pengaturan.css",
   "./css/pages/transaksi-category-picker.css",
@@ -49,6 +51,7 @@ const APP_FILES = [
   "./js/backend/family-service.js",
   "./js/backend/family-service.js?v=20260908-3",
   "./js/backend/family-service.js?v=20260908-5",
+  "./js/backend/family-service.js?v=20260908-6",
   "./js/backend/finance-service.js",
   "./js/backend/finance-service.js?v=20260908-1",
   "./js/backend/finance-cache.js",
@@ -69,9 +72,11 @@ const APP_FILES = [
   "./js/pages/keamanan.js",
   "./js/pages/keluarga-awal.js",
   "./js/pages/keluarga-awal.js?v=20260908-1",
+  "./js/pages/keluarga-awal.js?v=20260908-2",
   "./js/pages/keluarga.js",
   "./js/pages/keluarga.js?v=20260908-3",
   "./js/pages/keluarga.js?v=20260908-5",
+  "./js/pages/keluarga.js?v=20260908-6",
   "./js/pages/keluarga-media.js",
   "./js/pages/keluarga-media.js?v=20260908-2",
   "./js/pages/login.js",
