@@ -1,4 +1,4 @@
-const CACHE_NAME = "family-superapp-v1.1.7a-home-router-hotfix-1";
+const CACHE_NAME = "family-superapp-v1.1.7b-single-route-authority-1";
 const OFFLINE_URL = "./offline.html";
 
 const APP_FILES = [
@@ -124,6 +124,12 @@ const APP_FILES = [
   "./js/pages/pengaturan-tema.js",
   "./js/pages/transaksi-backend.js",
   "./js/pages/transaksi-backend.js?v=20260908-1",
+  "./js/backend/auth-guard.js?v=20260908-2",
+  "./js/backend/auth-router.js?v=20260908-2",
+  "./js/backend/family-service.js?v=20260908-10",
+  "./js/backend/finance-service.js?v=20260908-3",
+  "./js/pages/home-backend.js?v=20260908-7",
+  "./js/pages/keluarga-awal.js?v=20260908-5",
   "./js/pwa.js",
   "./js/theme.js",
   "./keamanan.html",

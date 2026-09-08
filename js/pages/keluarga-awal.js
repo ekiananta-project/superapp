@@ -301,11 +301,20 @@
     const paksaGabung = params.get("gabung") === "1" || Boolean(kodeQuery);
 
     try {
-      const families = await FamilyService.ambilKeluargaSaya();
-      keluargaAktifSaatIni = families[0] || null;
+      /*
+       * v1.1.7b: gunakan sumber status yang sama dengan Home.
+       * Jangan query family lalu query lagi saat redirect, karena dua keputusan
+       * route yang berjalan berdekatan dapat membuat index/onboarding memantul.
+       */
+      const status = await AuthRouter.cekStatusAplikasi();
+      keluargaAktifSaatIni = status.family || null;
 
       if (keluargaAktifSaatIni && !paksaGabung) {
-        await AuthRouter.redirectSetelahLogin({ pakaiReturnTo: false });
+        const tujuan = status.destination || "index.html";
+        const fileSekarang = location.pathname.split("/").pop() || "keluarga-awal.html";
+        if (!tujuan.startsWith(fileSekarang)) {
+          location.replace(tujuan);
+        }
         return;
       }
     } catch (error) {
