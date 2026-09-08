@@ -579,14 +579,6 @@
   min-width: 0;
 }
 
-.budget-form-range-help {
-  display: block;
-  margin-top: calc(var(--space-2) * -1);
-  color: var(--color-text-secondary);
-  font-size: var(--font-size-xs);
-  line-height: 1.5;
-}
-
 .budget-form-range .input[type="date"] {
   color-scheme: dark;
 }
@@ -607,3 +599,5 @@ html[data-theme="light"] .budget-form-range .input[type="date"] {
     gap: var(--space-2);
   }
 }
+
+/* v1.2.0c2 — helper periode dihapus agar form Tambah Budget lebih bersih. */
