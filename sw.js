@@ -1,4 +1,4 @@
-const CACHE_NAME = "family-superapp-v1.1.1c-a-family-photo-click-1";
+const CACHE_NAME = "family-superapp-v1.1.1c-b-family-media-avatar-sync-1";
 const OFFLINE_URL = "./offline.html";
 
 const APP_FILES = [
