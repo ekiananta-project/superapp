@@ -24,7 +24,7 @@
   <link rel="stylesheet" href="css/theme.css">
   <link rel="stylesheet" href="css/pages/transaksi-category-picker.css?v=20260908-1">
   <link rel="stylesheet" href="css/pages/finance-nav-v117f.css?v=20260908-1">
-  <link rel="stylesheet" href="css/pages/budget.css?v=20260908-2">
+  <link rel="stylesheet" href="css/pages/budget.css?v=20260908-3">
 </head>
 <body>
 <div class="aplikasi dengan-nav">
@@ -52,6 +52,14 @@
         <ion-icon name="chevron-forward-outline"></ion-icon>
       </button>
       <input class="budget-month-native" type="month" data-budget-month-input tabindex="-1" aria-hidden="true">
+      <button class="budget-cycle-button" type="button" data-budget-cycle-open>
+        <span class="budget-cycle-icon"><ion-icon name="repeat-outline"></ion-icon></span>
+        <span class="budget-cycle-copy">
+          <small>Siklus Budget</small>
+          <strong data-budget-cycle-label>Kalender bulanan</strong>
+        </span>
+        <ion-icon class="budget-cycle-chevron" name="chevron-forward-outline"></ion-icon>
+      </button>
     </section>
 
     <section class="budget-summary-card" data-budget-summary aria-busy="true">
@@ -106,6 +114,56 @@
     <a class="navigasi-item" href="akun.html"><ion-icon name="grid-outline"></ion-icon><span>Kategori</span></a>
     <a class="navigasi-item" href="dompet.html"><ion-icon name="wallet-outline"></ion-icon><span>Dompet</span></a>
   </nav>
+</div>
+
+<!-- Budget Cycle -->
+<div class="budget-sheet-layer" data-budget-cycle-layer hidden>
+  <section class="budget-sheet budget-cycle-sheet" role="dialog" aria-modal="true" aria-labelledby="budget-cycle-title">
+    <div class="budget-sheet-handle" aria-hidden="true"></div>
+    <div class="budget-sheet-header">
+      <div>
+        <h2 id="budget-cycle-title">Siklus Budget</h2>
+        <p>Atur periode budget agar mengikuti kalender atau tanggal gajian keluarga.</p>
+      </div>
+      <button class="budget-sheet-close" type="button" data-budget-cycle-close aria-label="Tutup pengaturan siklus">
+        <ion-icon name="close-outline"></ion-icon>
+      </button>
+    </div>
+
+    <form class="budget-cycle-form" data-budget-cycle-form>
+      <label class="budget-cycle-option">
+        <input type="radio" name="budgetCycleMode" value="calendar" data-budget-cycle-mode checked>
+        <span class="budget-cycle-radio-copy">
+          <strong>Kalender Bulanan</strong>
+          <small>Tanggal 1 sampai akhir bulan. Ini adalah pengaturan default.</small>
+        </span>
+      </label>
+
+      <label class="budget-cycle-option">
+        <input type="radio" name="budgetCycleMode" value="payday" data-budget-cycle-mode>
+        <span class="budget-cycle-radio-copy">
+          <strong>Berdasarkan Tanggal Gajian</strong>
+          <small>Periode dimulai pada tanggal yang sama setiap bulan.</small>
+        </span>
+      </label>
+
+      <div class="budget-cycle-day-wrap" data-budget-cycle-day-wrap hidden>
+        <label for="budgetCycleDay">Tanggal mulai siklus</label>
+        <div class="budget-cycle-day-control">
+          <span>Tanggal</span>
+          <select class="input" id="budgetCycleDay" data-budget-cycle-day aria-label="Tanggal mulai siklus budget"></select>
+        </div>
+        <small data-budget-cycle-preview>—</small>
+      </div>
+
+      <div class="budget-cycle-info">
+        <ion-icon name="information-circle-outline"></ion-icon>
+        <p>Tanggal akhir otomatis satu hari sebelum siklus berikutnya. Untuk tanggal 29–31, bulan yang lebih pendek memakai hari terakhir bulan.</p>
+      </div>
+
+      <button class="tombol-utama" type="submit" data-budget-cycle-save>Simpan Siklus</button>
+    </form>
+  </section>
 </div>
 
 <!-- Add/Edit Budget -->
@@ -181,11 +239,11 @@
 <script src="js/backend/supabase.js"></script>
 <script src="js/backend/auth-service.js"></script>
 <script src="js/backend/family-service.js"></script>
-<script src="js/backend/finance-service.js?v=20260908-5"></script>
+<script src="js/backend/finance-service.js?v=20260908-6"></script>
 <script src="js/backend/finance-cache.js"></script>
 <script src="js/backend/auth-router.js"></script>
 <script src="js/backend/auth-guard.js"></script>
-<script src="js/pages/budget-backend.js?v=20260908-2"></script>
-<script src="js/pwa.js?v=20260908-6"></script>
+<script src="js/pages/budget-backend.js?v=20260908-3"></script>
+<script src="js/pwa.js?v=20260908-7"></script>
 </body>
 </html>

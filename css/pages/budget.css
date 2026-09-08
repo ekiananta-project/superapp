@@ -551,3 +551,185 @@
 .budget-form .category-picker-trigger[aria-disabled="true"] > ion-icon {
   opacity: .35;
 }
+
+/* ==========================================================
+   v1.2.0a2 — Payday / custom monthly cycle
+========================================================== */
+
+.budget-cycle-button {
+  grid-column: 1 / -1;
+  min-width: 0;
+  margin-top: 2px;
+  padding: 10px 12px;
+  border: 0;
+  border-top: 1px solid var(--color-border);
+  display: grid;
+  grid-template-columns: 34px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 10px;
+  background: transparent;
+  color: var(--color-text);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.budget-cycle-icon {
+  width: 34px;
+  height: 34px;
+  border-radius: 11px;
+  display: grid;
+  place-items: center;
+  background: var(--color-surface-soft);
+  color: var(--color-primary);
+}
+
+.budget-cycle-icon ion-icon {
+  font-size: 18px;
+}
+
+.budget-cycle-copy {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.budget-cycle-copy small {
+  color: var(--color-text-secondary);
+  font-size: 11px;
+}
+
+.budget-cycle-copy strong {
+  overflow: hidden;
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-semibold);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.budget-cycle-chevron {
+  color: var(--color-text-secondary);
+  font-size: 18px;
+}
+
+.budget-cycle-form {
+  padding: 10px 16px 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.budget-cycle-option {
+  position: relative;
+  min-height: 68px;
+  padding: 12px 13px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  display: grid;
+  grid-template-columns: 22px minmax(0, 1fr);
+  align-items: flex-start;
+  gap: 10px;
+  background: var(--color-surface-soft);
+  cursor: pointer;
+}
+
+.budget-cycle-option:has(input:checked) {
+  border-color: var(--color-primary);
+  background: var(--color-surface);
+}
+
+.budget-cycle-option input {
+  width: 18px;
+  height: 18px;
+  margin: 2px 0 0;
+  accent-color: var(--color-primary);
+}
+
+.budget-cycle-radio-copy {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.budget-cycle-radio-copy strong {
+  font-size: var(--font-size-sm);
+}
+
+.budget-cycle-radio-copy small,
+.budget-cycle-day-wrap > small,
+.budget-cycle-info {
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-xs);
+  line-height: 1.5;
+}
+
+.budget-cycle-day-wrap {
+  margin-top: 2px;
+  padding: 12px 13px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+}
+
+.budget-cycle-day-wrap[hidden] {
+  display: none !important;
+}
+
+.budget-cycle-day-wrap > label {
+  display: block;
+  margin-bottom: 8px;
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-semibold);
+}
+
+.budget-cycle-day-control {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: center;
+  gap: 10px;
+}
+
+.budget-cycle-day-control > span {
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-xs);
+}
+
+.budget-cycle-day-control .input {
+  min-height: 44px;
+}
+
+.budget-cycle-day-wrap > small {
+  display: block;
+  margin-top: 8px;
+}
+
+.budget-cycle-info {
+  padding: 10px 12px;
+  border-radius: var(--radius-md);
+  display: grid;
+  grid-template-columns: 20px minmax(0, 1fr);
+  gap: 8px;
+  background: var(--color-surface-soft);
+}
+
+.budget-cycle-info ion-icon {
+  margin-top: 1px;
+  color: var(--color-primary);
+  font-size: 18px;
+}
+
+.budget-cycle-info p {
+  margin: 0;
+}
+
+[data-budget-cycle-save] {
+  margin-top: 4px;
+}
+
+[data-budget-cycle-save]:disabled {
+  opacity: .55;
+  cursor: wait;
+}
+

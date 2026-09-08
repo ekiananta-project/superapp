@@ -721,6 +721,40 @@
   }
 
 
+  async function ambilSiklusBudget(familyId) {
+    if (!familyId) throw new Error("familyId wajib diisi.");
+
+    const { data, error } = await client.rpc(
+      "finance_budget_cycle_get",
+      { p_family_id: familyId }
+    );
+
+    lemparJikaError(error);
+    const row = Array.isArray(data) ? data[0] : data;
+    const cycleDay = Number(row?.cycle_day || 1);
+    return Math.min(31, Math.max(1, cycleDay));
+  }
+
+  async function simpanSiklusBudget({ familyId, cycleDay } = {}) {
+    if (!familyId) throw new Error("familyId wajib diisi.");
+
+    const day = Number(cycleDay);
+    if (!Number.isInteger(day) || day < 1 || day > 31) {
+      throw new Error("Tanggal siklus budget harus antara 1 sampai 31.");
+    }
+
+    const { data, error } = await client.rpc(
+      "finance_budget_cycle_set",
+      {
+        p_family_id: familyId,
+        p_cycle_day: day
+      }
+    );
+
+    lemparJikaError(error);
+    return Number(data || day);
+  }
+
   async function ambilBudgetBulan({
     familyId,
     periodMonth
@@ -786,6 +820,8 @@
   }
 
   window.FinanceService = {
+    ambilSiklusBudget,
+    simpanSiklusBudget,
     ambilBudgetBulan,
     simpanBudget,
     hapusBudget,
