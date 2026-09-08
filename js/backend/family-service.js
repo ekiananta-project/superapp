@@ -292,6 +292,30 @@
   }
 
 
+  async function ubahHubunganAnggota(familyId, userIdTarget, relationship = null) {
+    if (!familyId) {
+      throw new Error("familyId wajib diisi.");
+    }
+
+    if (!userIdTarget) {
+      throw new Error("User anggota wajib diisi.");
+    }
+
+    const hubungan = String(relationship || "").trim() || null;
+
+    const { data, error } = await client.rpc(
+      "family_update_relationship",
+      {
+        p_family_id: familyId,
+        p_target_user_id: userIdTarget,
+        p_relationship: hubungan
+      }
+    );
+
+    lemparJikaError(error);
+    return barisPertama(data);
+  }
+
   async function transferKepemilikan(familyId, userIdPemilikBaru) {
     if (!familyId) {
       throw new Error("familyId wajib diisi.");
@@ -360,6 +384,7 @@
     ambilUndanganAktif,
     previewUndangan,
     terimaUndangan,
+    ubahHubunganAnggota,
     transferKepemilikan,
     keluarkanAnggota,
     cabutUndangan
