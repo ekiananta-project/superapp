@@ -22,21 +22,84 @@
   <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="css/style.css">
   <link rel="stylesheet" href="css/theme.css">
+  <link rel="stylesheet" href="css/pages/transaksi-category-picker.css?v=20260908-1">
   <link rel="stylesheet" href="css/pages/finance-nav-v117f.css?v=20260908-1">
+  <link rel="stylesheet" href="css/pages/budget.css?v=20260908-1">
 </head>
 <body>
 <div class="aplikasi dengan-nav">
   <header class="header-halaman">
     <a class="tombol-ikon" href="index.html" aria-label="Kembali"><ion-icon name="arrow-back-outline"></ion-icon></a>
     <h1>Budget</h1>
-    <span class="tombol-ikon" aria-hidden="true" style="visibility:hidden"><ion-icon name="ellipsis-horizontal"></ion-icon></span>
+    <button class="tombol-ikon" type="button" data-budget-add aria-label="Tambah budget"><ion-icon name="add-outline"></ion-icon></button>
   </header>
 
-  <main class="konten-halaman budget-placeholder">
-    <section class="budget-placeholder-card">
-      <span class="budget-placeholder-icon"><ion-icon name="pie-chart-outline"></ion-icon></span>
-      <h2>Budget</h2>
-      <p>Menu Budget sudah disiapkan di navigasi. Fitur pengaturan budget akan kita bangun pada v1.2.</p>
+  <main class="konten-halaman budget-page">
+    <div class="notifikasi budget-notice" data-budget-notice hidden></div>
+
+    <section class="budget-month-card" aria-label="Periode budget">
+      <button class="budget-month-nav" type="button" data-budget-month-prev aria-label="Bulan sebelumnya">
+        <ion-icon name="chevron-back-outline"></ion-icon>
+      </button>
+      <button class="budget-month-main" type="button" data-budget-month-open>
+        <ion-icon name="calendar-outline"></ion-icon>
+        <span>
+          <small>Periode Budget</small>
+          <strong data-budget-month-label>—</strong>
+        </span>
+      </button>
+      <button class="budget-month-nav" type="button" data-budget-month-next aria-label="Bulan berikutnya">
+        <ion-icon name="chevron-forward-outline"></ion-icon>
+      </button>
+      <input class="budget-month-native" type="month" data-budget-month-input tabindex="-1" aria-hidden="true">
+    </section>
+
+    <section class="budget-summary-card" data-budget-summary aria-busy="true">
+      <div class="budget-summary-head">
+        <div>
+          <small>Ringkasan Budget</small>
+          <strong data-budget-summary-title>—</strong>
+        </div>
+        <span class="budget-summary-badge" data-budget-summary-badge>Aman</span>
+      </div>
+
+      <div class="budget-summary-values">
+        <div>
+          <small>Total Budget</small>
+          <strong data-budget-total>Rp 0</strong>
+        </div>
+        <div>
+          <small>Terpakai</small>
+          <strong data-budget-spent>Rp 0</strong>
+        </div>
+        <div>
+          <small>Sisa</small>
+          <strong data-budget-remaining>Rp 0</strong>
+        </div>
+      </div>
+
+      <div class="budget-progress" aria-hidden="true">
+        <span data-budget-progress></span>
+      </div>
+      <p class="budget-summary-note" data-budget-summary-note>Memuat budget…</p>
+    </section>
+
+    <section class="budget-list-section">
+      <div class="budget-section-head">
+        <div>
+          <h2>Budget per Kategori</h2>
+          <p data-budget-count>Memuat…</p>
+        </div>
+        <button class="budget-add-inline" type="button" data-budget-add>
+          <ion-icon name="add-outline"></ion-icon>
+          <span>Tambah</span>
+        </button>
+      </div>
+
+      <div class="budget-list" data-budget-list>
+        <div class="budget-loading-card" aria-hidden="true"></div>
+        <div class="budget-loading-card" aria-hidden="true"></div>
+      </div>
     </section>
   </main>
 
@@ -49,16 +112,84 @@
   </nav>
 </div>
 
+<!-- Add/Edit Budget -->
+<div class="budget-sheet-layer" data-budget-sheet-layer hidden>
+  <section class="budget-sheet" role="dialog" aria-modal="true" aria-labelledby="budget-sheet-title">
+    <div class="budget-sheet-handle" aria-hidden="true"></div>
+    <div class="budget-sheet-header">
+      <div>
+        <h2 id="budget-sheet-title" data-budget-form-title>Tambah Budget</h2>
+        <p data-budget-form-period>—</p>
+      </div>
+      <button class="budget-sheet-close" type="button" data-budget-sheet-close aria-label="Tutup form budget">
+        <ion-icon name="close-outline"></ion-icon>
+      </button>
+    </div>
+
+    <form class="budget-form" data-budget-form>
+      <div class="grup-input">
+        <label>Kategori Pengeluaran</label>
+        <button class="category-picker-trigger" type="button" data-budget-category-trigger aria-haspopup="dialog" aria-controls="budget-category-picker-sheet">
+          <span class="category-picker-trigger-copy">
+            <strong data-budget-category-selected>Pilih kategori</strong>
+            <small data-budget-category-parent hidden></small>
+          </span>
+          <ion-icon name="chevron-down-outline"></ion-icon>
+        </button>
+      </div>
+
+      <div class="grup-input">
+        <label for="budgetAmount">Nominal Budget</label>
+        <div class="input-uang">
+          <span class="input-uang-prefix">Rp</span>
+          <input class="input" id="budgetAmount" name="amount" type="text" inputmode="numeric" autocomplete="off" placeholder="1.000.000" required data-budget-amount>
+        </div>
+        <small class="budget-field-help">Peringatan muncul saat penggunaan mencapai 80%.</small>
+      </div>
+
+      <div class="budget-form-actions">
+        <button class="budget-delete" type="button" data-budget-delete hidden>
+          <ion-icon name="trash-outline"></ion-icon>
+          <span>Hapus Budget</span>
+        </button>
+        <button class="tombol-utama" type="submit" data-budget-save>Simpan Budget</button>
+      </div>
+    </form>
+  </section>
+</div>
+
+<!-- Category Picker -->
+<div class="category-picker-layer" data-budget-category-layer hidden>
+  <section class="category-picker-sheet" id="budget-category-picker-sheet" role="dialog" aria-modal="true" aria-labelledby="budget-category-picker-title">
+    <div class="category-picker-handle" aria-hidden="true"></div>
+    <div class="category-picker-header">
+      <div>
+        <h2 id="budget-category-picker-title">Pilih Kategori</h2>
+        <p>Kategori induk mencakup transaksi subkategorinya.</p>
+      </div>
+      <button class="category-picker-close" type="button" data-budget-category-close aria-label="Tutup pemilih kategori">
+        <ion-icon name="close-outline"></ion-icon>
+      </button>
+    </div>
+    <label class="category-picker-search">
+      <ion-icon name="search-outline"></ion-icon>
+      <input type="search" inputmode="search" autocomplete="off" placeholder="Cari kategori..." data-budget-category-search>
+    </label>
+    <div class="category-picker-list" data-budget-category-list></div>
+  </section>
+</div>
+
 <script type="module" src="https://unpkg.com/ionicons@8.0.13/dist/ionicons/ionicons.esm.js"></script>
 <script nomodule src="https://unpkg.com/ionicons@8.0.13/dist/ionicons/ionicons.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="js/backend/supabase.js"></script>
 <script src="js/backend/auth-service.js"></script>
 <script src="js/backend/family-service.js"></script>
-<script src="js/backend/finance-service.js"></script>
+<script src="js/backend/finance-service.js?v=20260908-5"></script>
 <script src="js/backend/finance-cache.js"></script>
 <script src="js/backend/auth-router.js"></script>
 <script src="js/backend/auth-guard.js"></script>
-<script src="js/pwa.js?v=20260908-4"></script>
+<script src="js/pages/budget-backend.js?v=20260908-1"></script>
+<script src="js/pwa.js?v=20260908-5"></script>
 </body>
 </html>

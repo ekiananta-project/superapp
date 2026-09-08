@@ -1,4 +1,4 @@
-const CACHE_NAME = "family-superapp-v1.1.7h-cache-coherence-1";
+const CACHE_NAME = "family-superapp-v1.2.0a-budget-foundation-1";
 const OFFLINE_URL = "./offline.html";
 
 const APP_FILES = [
@@ -13,6 +13,7 @@ const APP_FILES = [
   "./css/pages/akun-form-backend.css",
   "./css/pages/akun-list-color-hotfix.css",
   "./css/pages/auth.css",
+  "./css/pages/budget.css",
   "./css/pages/detail-transaksi.css",
   "./css/pages/dompet-backend.css",
   "./css/pages/dompet-detail.css",
@@ -61,6 +62,7 @@ const APP_FILES = [
   "./js/pages/account-deletion.js",
   "./js/pages/akun-backend.js",
   "./js/pages/akun-form-backend.js",
+  "./js/pages/budget-backend.js",
   "./js/pages/daftar.js",
   "./js/pages/detail-transaksi-backend.js",
   "./js/pages/dompet-backend.js",

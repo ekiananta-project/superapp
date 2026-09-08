@@ -720,7 +720,75 @@
     return data;
   }
 
+
+  async function ambilBudgetBulan({
+    familyId,
+    periodMonth
+  } = {}) {
+    if (!familyId) throw new Error("familyId wajib diisi.");
+    if (!periodMonth) throw new Error("periodMonth wajib diisi.");
+
+    const { data, error } = await client.rpc(
+      "finance_budget_list_month",
+      {
+        p_family_id: familyId,
+        p_period_month: periodMonth
+      }
+    );
+
+    lemparJikaError(error);
+    return (data || []).map(item => ({
+      ...item,
+      budget_amount: Number(item.budget_amount || 0),
+      spent_amount: Number(item.spent_amount || 0),
+      remaining_amount: Number(item.remaining_amount || 0),
+      progress_percent: Number(item.progress_percent || 0),
+      warning_percent: Number(item.warning_percent || 80)
+    }));
+  }
+
+  async function simpanBudget({
+    familyId,
+    accountId,
+    periodMonth,
+    amount,
+    warningPercent = 80
+  } = {}) {
+    if (!familyId) throw new Error("familyId wajib diisi.");
+    if (!accountId) throw new Error("Kategori budget wajib dipilih.");
+    if (!periodMonth) throw new Error("Periode budget wajib diisi.");
+
+    const { data, error } = await client.rpc(
+      "finance_budget_upsert",
+      {
+        p_family_id: familyId,
+        p_account_id: accountId,
+        p_period_month: periodMonth,
+        p_amount: Number(amount || 0),
+        p_warning_percent: Number(warningPercent || 80)
+      }
+    );
+
+    lemparJikaError(error);
+    return data;
+  }
+
+  async function hapusBudget(budgetId) {
+    if (!budgetId) throw new Error("budgetId wajib diisi.");
+
+    const { data, error } = await client.rpc(
+      "finance_budget_remove",
+      { p_budget_id: budgetId }
+    );
+
+    lemparJikaError(error);
+    return data;
+  }
+
   window.FinanceService = {
+    ambilBudgetBulan,
+    simpanBudget,
+    hapusBudget,
     ambilSaldoDompet,
     ambilDompetById,
     ambilTotalKeluarga,
