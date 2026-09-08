@@ -24,6 +24,12 @@
   const pesanTransferOwnership = document.querySelector("[data-transfer-ownership-message]");
   const tombolSubmitTransferOwnership = document.querySelector("[data-transfer-ownership-submit]");
 
+  const sheetRelationship = document.querySelector("[data-relationship-sheet]");
+  const formRelationship = document.querySelector("[data-relationship-form]");
+  const targetRelationshipLabel = document.querySelector("[data-relationship-target]");
+  const pesanRelationship = document.querySelector("[data-relationship-message]");
+  const tombolSubmitRelationship = document.querySelector("[data-relationship-submit]");
+
   if (!rootAnggota || !form) return;
 
   let family = null;
@@ -31,6 +37,7 @@
   let anggota = [];
   let undanganAktif = null;
   let targetPemilikBaru = null;
+  let targetHubungan = null;
   let timeoutPesan = null;
   let timeoutToastSalin = null;
 
@@ -140,6 +147,7 @@
       orang_tua: "Orang Tua",
       anak: "Anak",
       saudara: "Saudara",
+      kerabat: "Kerabat",
       lainnya: "Lainnya"
     })[value] || "Belum ditentukan";
   }
@@ -157,6 +165,63 @@
 
   function sayaOwner() {
     return family?.membership?.role === "owner";
+  }
+
+  function urutkanAnggota(items) {
+    return [...items].sort((a, b) => {
+      const ownerA = a.role === "owner" ? 0 : 1;
+      const ownerB = b.role === "owner" ? 0 : 1;
+      if (ownerA !== ownerB) return ownerA - ownerB;
+
+      const diriA = a.user_id === user?.id ? 0 : 1;
+      const diriB = b.user_id === user?.id ? 0 : 1;
+      if (diriA !== diriB) return diriA - diriB;
+
+      const namaA = String(a.profile?.display_name || "").trim();
+      const namaB = String(b.profile?.display_name || "").trim();
+      const byName = namaA.localeCompare(namaB, "id", { sensitivity: "base" });
+      if (byName !== 0) return byName;
+
+      return new Date(a.joined_at || 0) - new Date(b.joined_at || 0);
+    });
+  }
+
+  function tampilPesanRelationship(teks = "", tipe = "info") {
+    if (!pesanRelationship) return;
+    pesanRelationship.textContent = teks;
+    pesanRelationship.dataset.type = tipe;
+    pesanRelationship.hidden = !teks;
+  }
+
+  function bolehUbahRelationship(item) {
+    if (!item || item.status !== "active") return false;
+    return sayaOwner() || item.user_id === user?.id;
+  }
+
+  function bukaRelationship(item, nama) {
+    if (!sheetRelationship || !formRelationship || !bolehUbahRelationship(item)) return;
+
+    targetHubungan = { item, nama };
+    if (targetRelationshipLabel) targetRelationshipLabel.textContent = nama;
+    formRelationship.elements.relationship.value = item.relationship || "";
+    tampilPesanRelationship();
+    sheetRelationship.hidden = false;
+    document.body.style.overflow = "hidden";
+
+    requestAnimationFrame(() => {
+      formRelationship.elements.relationship?.focus();
+    });
+  }
+
+  function tutupRelationship({ paksa = false } = {}) {
+    if (!sheetRelationship || !formRelationship) return;
+    if (!paksa && tombolSubmitRelationship?.disabled) return;
+
+    sheetRelationship.hidden = true;
+    document.body.style.overflow = "";
+    formRelationship.reset();
+    tampilPesanRelationship();
+    targetHubungan = null;
   }
 
   function tampilPesanTransfer(teks = "", tipe = "info") {
@@ -252,7 +317,7 @@
     }
   }
 
-  function buatMenuAnggota(item, nama) {
+  function buatMenuAnggota(item, nama, diriSendiri) {
     const wrap = document.createElement("span");
     wrap.className = "menu-anggota";
     wrap.setAttribute("data-menu-anggota", "");
@@ -271,21 +336,49 @@
     popover.setAttribute("role", "menu");
     popover.hidden = true;
 
-    const transfer = document.createElement("button");
-    transfer.type = "button";
-    transfer.className = "menu-anggota-transfer";
-    transfer.setAttribute("role", "menuitem");
-    transfer.innerHTML =
-      '<ion-icon name="swap-horizontal-outline"></ion-icon>' +
-      '<span>Jadikan Pemilik Ruang Keluarga</span>';
+    const hubungan = document.createElement("button");
+    hubungan.type = "button";
+    hubungan.className = "menu-anggota-hubungan";
+    hubungan.setAttribute("role", "menuitem");
+    hubungan.innerHTML =
+      '<ion-icon name="people-outline"></ion-icon>' +
+      '<span>Ubah Hubungan</span>';
 
-    const remove = document.createElement("button");
-    remove.type = "button";
-    remove.className = "menu-anggota-hapus";
-    remove.setAttribute("role", "menuitem");
-    remove.innerHTML =
-      '<ion-icon name="person-remove-outline"></ion-icon>' +
-      '<span>Keluarkan dari keluarga</span>';
+    hubungan.addEventListener("click", () => {
+      tutupMenuAnggota();
+      bukaRelationship(item, nama);
+    });
+
+    popover.appendChild(hubungan);
+
+    if (sayaOwner() && !diriSendiri) {
+      const transfer = document.createElement("button");
+      transfer.type = "button";
+      transfer.className = "menu-anggota-transfer";
+      transfer.setAttribute("role", "menuitem");
+      transfer.innerHTML =
+        '<ion-icon name="swap-horizontal-outline"></ion-icon>' +
+        '<span>Jadikan Pemilik Ruang Keluarga</span>';
+
+      const remove = document.createElement("button");
+      remove.type = "button";
+      remove.className = "menu-anggota-hapus";
+      remove.setAttribute("role", "menuitem");
+      remove.innerHTML =
+        '<ion-icon name="person-remove-outline"></ion-icon>' +
+        '<span>Keluarkan dari keluarga</span>';
+
+      transfer.addEventListener("click", () => {
+        tutupMenuAnggota();
+        bukaTransferOwnership(item, nama);
+      });
+
+      remove.addEventListener("click", () => {
+        keluarkanAnggota(item, nama, remove);
+      });
+
+      popover.append(transfer, remove);
+    }
 
     trigger.addEventListener("click", event => {
       event.stopPropagation();
@@ -298,16 +391,6 @@
 
     popover.addEventListener("click", event => event.stopPropagation());
 
-    transfer.addEventListener("click", () => {
-      tutupMenuAnggota();
-      bukaTransferOwnership(item, nama);
-    });
-
-    remove.addEventListener("click", () => {
-      keluarkanAnggota(item, nama, remove);
-    });
-
-    popover.append(transfer, remove);
     wrap.append(trigger, popover);
     return wrap;
   }
@@ -324,7 +407,7 @@
       return;
     }
 
-    anggota.forEach(item => {
+    urutkanAnggota(anggota).forEach(item => {
       const nama = item.profile?.display_name || "Anggota";
       const diriSendiri = item.user_id === user?.id;
 
@@ -353,11 +436,18 @@
       const meta = document.createElement("span");
       meta.className = "meta-anggota";
 
-      const hubungan = document.createElement("span");
-      hubungan.textContent = diriSendiri ? "Akun ini" : labelHubungan(item.relationship);
-      if (diriSendiri) hubungan.className = "penanda-akun-ini";
+      if (diriSendiri) {
+        const akunIni = document.createElement("span");
+        akunIni.className = "penanda-akun-ini";
+        akunIni.textContent = "Akun ini";
+        meta.appendChild(akunIni);
+      }
 
+      const hubungan = document.createElement("span");
+      hubungan.className = "label-hubungan-anggota";
+      hubungan.textContent = labelHubungan(item.relationship);
       meta.appendChild(hubungan);
+
       info.append(strong, meta);
 
       const sisiKanan = document.createElement("span");
@@ -368,8 +458,8 @@
       peran.textContent = labelPeran(item.role);
       sisiKanan.appendChild(peran);
 
-      if (sayaOwner() && !diriSendiri) {
-        sisiKanan.appendChild(buatMenuAnggota(item, nama));
+      if (sayaOwner() || diriSendiri) {
+        sisiKanan.appendChild(buatMenuAnggota(item, nama, diriSendiri));
       }
 
       kartu.append(avatar, info, sisiKanan);
@@ -550,6 +640,65 @@
     prompt("Salin undangan berikut:", teks);
   });
 
+  document.querySelectorAll("[data-relationship-close]").forEach(tombol => {
+    tombol.addEventListener("click", () => tutupRelationship());
+  });
+
+  sheetRelationship?.addEventListener("click", event => {
+    if (event.target === sheetRelationship) {
+      tutupRelationship();
+    }
+  });
+
+  formRelationship?.addEventListener("submit", async event => {
+    event.preventDefault();
+
+    if (!family || !targetHubungan || !bolehUbahRelationship(targetHubungan.item)) return;
+
+    const hubunganBaru = String(formRelationship.elements.relationship?.value || "").trim() || null;
+    const namaTarget = targetHubungan.nama;
+    const userIdTarget = targetHubungan.item.user_id;
+    const htmlAwal = tombolSubmitRelationship?.innerHTML || "";
+
+    if (tombolSubmitRelationship) {
+      tombolSubmitRelationship.disabled = true;
+      tombolSubmitRelationship.innerHTML =
+        '<ion-icon name="sync-outline"></ion-icon> Menyimpan...';
+    }
+    tampilPesanRelationship();
+
+    try {
+      const updated = await FamilyService.ubahHubunganAnggota(
+        family.id,
+        userIdTarget,
+        hubunganBaru
+      );
+
+      const target = anggota.find(item => item.user_id === userIdTarget);
+      if (target) {
+        target.relationship = updated?.relationship ?? hubunganBaru;
+      }
+
+      renderAnggota();
+      tutupRelationship({ paksa: true });
+      tampilPesan(
+        `Hubungan ${namaTarget} disimpan sebagai ${labelHubungan(hubunganBaru)}.`,
+        "success"
+      );
+    } catch (error) {
+      console.error("[Ubah hubungan anggota]", error);
+      tampilPesanRelationship(
+        error?.message || "Hubungan anggota belum berhasil disimpan.",
+        "error"
+      );
+    } finally {
+      if (tombolSubmitRelationship) {
+        tombolSubmitRelationship.disabled = false;
+        tombolSubmitRelationship.innerHTML = htmlAwal;
+      }
+    }
+  });
+
   document.querySelectorAll("[data-transfer-ownership-close]").forEach(tombol => {
     tombol.addEventListener("click", () => tutupTransferOwnership());
   });
@@ -561,7 +710,14 @@
   });
 
   document.addEventListener("keydown", event => {
-    if (event.key === "Escape" && sheetTransferOwnership && !sheetTransferOwnership.hidden) {
+    if (event.key !== "Escape") return;
+
+    if (sheetRelationship && !sheetRelationship.hidden) {
+      tutupRelationship();
+      return;
+    }
+
+    if (sheetTransferOwnership && !sheetTransferOwnership.hidden) {
       tutupTransferOwnership();
     }
   });
