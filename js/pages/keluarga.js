@@ -18,12 +18,19 @@
   const tombolBagikan = document.querySelector("[data-bagikan-undangan]");
   const tombolCabut = document.querySelector("[data-cabut-undangan]");
 
+  const sheetTransferOwnership = document.querySelector("[data-transfer-ownership-sheet]");
+  const formTransferOwnership = document.querySelector("[data-transfer-ownership-form]");
+  const targetTransferOwnership = document.querySelector("[data-transfer-ownership-target]");
+  const pesanTransferOwnership = document.querySelector("[data-transfer-ownership-message]");
+  const tombolSubmitTransferOwnership = document.querySelector("[data-transfer-ownership-submit]");
+
   if (!rootAnggota || !form) return;
 
   let family = null;
   let user = null;
   let anggota = [];
   let undanganAktif = null;
+  let targetPemilikBaru = null;
   let timeoutPesan = null;
   let timeoutToastSalin = null;
 
@@ -152,6 +159,58 @@
     return family?.membership?.role === "owner";
   }
 
+  function tampilPesanTransfer(teks = "", tipe = "info") {
+    if (!pesanTransferOwnership) return;
+    pesanTransferOwnership.textContent = teks;
+    pesanTransferOwnership.dataset.type = tipe;
+    pesanTransferOwnership.hidden = !teks;
+  }
+
+  function pesanErrorTransfer(error) {
+    const raw = String(error?.message || "").trim();
+    const lower = raw.toLowerCase();
+
+    if (lower.includes("invalid login credentials")) {
+      return "Password saat ini belum cocok.";
+    }
+
+    if (lower.includes("network") || lower.includes("fetch")) {
+      return "Koneksi internet bermasalah. Coba lagi.";
+    }
+
+    return raw || "Kepemilikan belum berhasil dipindahkan.";
+  }
+
+  function bukaTransferOwnership(item, nama) {
+    if (!sheetTransferOwnership || !formTransferOwnership) return;
+    if (!family || !sayaOwner() || item.user_id === user?.id) return;
+
+    targetPemilikBaru = { item, nama };
+    if (targetTransferOwnership) {
+      targetTransferOwnership.textContent = nama;
+    }
+
+    formTransferOwnership.reset();
+    tampilPesanTransfer();
+    sheetTransferOwnership.hidden = false;
+    document.body.style.overflow = "hidden";
+
+    requestAnimationFrame(() => {
+      formTransferOwnership.elements.password?.focus();
+    });
+  }
+
+  function tutupTransferOwnership({ paksa = false } = {}) {
+    if (!sheetTransferOwnership || !formTransferOwnership) return;
+    if (!paksa && tombolSubmitTransferOwnership?.disabled) return;
+
+    sheetTransferOwnership.hidden = true;
+    document.body.style.overflow = "";
+    formTransferOwnership.reset();
+    tampilPesanTransfer();
+    targetPemilikBaru = null;
+  }
+
   function tutupMenuAnggota(kecuali = null) {
     document
       .querySelectorAll("[data-menu-anggota-popover]")
@@ -212,6 +271,14 @@
     popover.setAttribute("role", "menu");
     popover.hidden = true;
 
+    const transfer = document.createElement("button");
+    transfer.type = "button";
+    transfer.className = "menu-anggota-transfer";
+    transfer.setAttribute("role", "menuitem");
+    transfer.innerHTML =
+      '<ion-icon name="swap-horizontal-outline"></ion-icon>' +
+      '<span>Jadikan Pemilik Ruang Keluarga</span>';
+
     const remove = document.createElement("button");
     remove.type = "button";
     remove.className = "menu-anggota-hapus";
@@ -231,11 +298,16 @@
 
     popover.addEventListener("click", event => event.stopPropagation());
 
+    transfer.addEventListener("click", () => {
+      tutupMenuAnggota();
+      bukaTransferOwnership(item, nama);
+    });
+
     remove.addEventListener("click", () => {
       keluarkanAnggota(item, nama, remove);
     });
 
-    popover.appendChild(remove);
+    popover.append(transfer, remove);
     wrap.append(trigger, popover);
     return wrap;
   }
@@ -476,6 +548,87 @@
     }
 
     prompt("Salin undangan berikut:", teks);
+  });
+
+  document.querySelectorAll("[data-transfer-ownership-close]").forEach(tombol => {
+    tombol.addEventListener("click", () => tutupTransferOwnership());
+  });
+
+  sheetTransferOwnership?.addEventListener("click", event => {
+    if (event.target === sheetTransferOwnership) {
+      tutupTransferOwnership();
+    }
+  });
+
+  document.addEventListener("keydown", event => {
+    if (event.key === "Escape" && sheetTransferOwnership && !sheetTransferOwnership.hidden) {
+      tutupTransferOwnership();
+    }
+  });
+
+  formTransferOwnership?.addEventListener("submit", async event => {
+    event.preventDefault();
+
+    if (!family || !sayaOwner() || !targetPemilikBaru) return;
+
+    const password = String(formTransferOwnership.elements.password?.value || "");
+    if (!password) {
+      tampilPesanTransfer("Password saat ini wajib diisi.", "error");
+      formTransferOwnership.elements.password?.focus();
+      return;
+    }
+
+    const namaTarget = targetPemilikBaru.nama;
+    const userIdTarget = targetPemilikBaru.item.user_id;
+    const htmlAwal = tombolSubmitTransferOwnership?.innerHTML || "";
+    let transferBerhasil = false;
+
+    if (tombolSubmitTransferOwnership) {
+      tombolSubmitTransferOwnership.disabled = true;
+      tombolSubmitTransferOwnership.innerHTML =
+        '<ion-icon name="sync-outline"></ion-icon> Memindahkan...';
+    }
+    tampilPesanTransfer();
+
+    try {
+      await AuthService.reautentikasi(password);
+      await FamilyService.transferKepemilikan(family.id, userIdTarget);
+      transferBerhasil = true;
+
+      family = await AuthRouter.ambilFamilyAktif();
+      if (!family) {
+        location.replace("keluarga-awal.html");
+        return;
+      }
+
+      anggota = await FamilyService.ambilAnggotaKeluarga(family.id);
+      undanganAktif = null;
+
+      renderAnggota();
+      renderHakAkses();
+      renderUndangan();
+      tutupTransferOwnership({ paksa: true });
+      tampilPesan(
+        `Kepemilikan Ruang Keluarga berhasil dipindahkan ke ${namaTarget}.`,
+        "success"
+      );
+    } catch (error) {
+      console.error("[Transfer kepemilikan]", error);
+
+      if (transferBerhasil) {
+        tampilPesanTransfer(
+          "Kepemilikan sudah dipindahkan, tetapi tampilan belum berhasil diperbarui. Muat ulang halaman.",
+          "error"
+        );
+      } else {
+        tampilPesanTransfer(pesanErrorTransfer(error), "error");
+      }
+    } finally {
+      if (tombolSubmitTransferOwnership) {
+        tombolSubmitTransferOwnership.disabled = false;
+        tombolSubmitTransferOwnership.innerHTML = htmlAwal;
+      }
+    }
   });
 
   document.addEventListener("click", () => {
