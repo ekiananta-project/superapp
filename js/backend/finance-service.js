@@ -511,7 +511,7 @@
     } = await client
       .from("finance_transactions")
       .select(
-        "id,family_id,kind,account_id,amount,transfer_fee,transfer_fee_mode,occurred_on,note,created_by,created_by_name,client_operation_id,created_at,updated_at,voided_at,voided_by,void_reason"
+        "id,family_id,kind,account_id,amount,transfer_fee,transfer_fee_mode,occurred_on,note,created_by,created_by_name,updated_by,updated_by_name,last_edited_at,client_operation_id,created_at,updated_at,voided_at,voided_by,void_reason"
       )
       .eq("id", transactionId)
       .maybeSingle();
