@@ -74,3 +74,133 @@
   opacity: .55;
   cursor: wait;
 }
+
+/* ==========================================================
+   TRANSFER OWNERSHIP v1.1.1
+========================================================== */
+.menu-anggota-popover {
+  min-width: 260px;
+}
+
+.menu-anggota-transfer,
+.menu-anggota-hapus {
+  width: 100%;
+  padding: 11px 12px;
+  border: 0;
+  border-radius: 10px;
+  background: transparent;
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  text-align: left;
+  font: inherit;
+  font-weight: 700;
+}
+
+.menu-anggota-transfer {
+  color: var(--color-text);
+}
+
+.menu-anggota-transfer ion-icon {
+  color: var(--color-secondary);
+  font-size: 18px;
+}
+
+.menu-anggota-transfer:hover,
+.menu-anggota-transfer:focus-visible,
+.menu-anggota-hapus:hover,
+.menu-anggota-hapus:focus-visible {
+  background: var(--color-surface-soft);
+  outline: none;
+}
+
+.menu-anggota-hapus {
+  margin-top: 4px;
+  border-top: 1px solid var(--color-border);
+  border-radius: 0 0 10px 10px;
+  color: var(--color-danger);
+}
+
+.menu-anggota-transfer:disabled,
+.menu-anggota-hapus:disabled {
+  opacity: .55;
+  cursor: wait;
+}
+
+.sheet-transfer-ownership {
+  max-height: min(90dvh, 720px);
+  overflow-y: auto;
+}
+
+.peringatan-transfer-ownership {
+  display: flex;
+  gap: var(--space-3);
+  margin: var(--space-3) 0 var(--space-4);
+  padding: var(--space-3);
+  border: 1px solid color-mix(in srgb, var(--color-secondary) 26%, var(--color-border));
+  border-radius: var(--radius-md);
+  background: color-mix(in srgb, var(--color-secondary) 8%, var(--color-surface));
+}
+
+.peringatan-transfer-ownership > ion-icon {
+  flex: 0 0 auto;
+  margin-top: 2px;
+  color: var(--color-secondary);
+  font-size: 22px;
+}
+
+.peringatan-transfer-ownership strong {
+  color: var(--color-text);
+  font-size: var(--font-size-sm);
+}
+
+.peringatan-transfer-ownership p {
+  margin: var(--space-1) 0 0;
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-xs);
+  line-height: 1.55;
+}
+
+.formulir-transfer-ownership {
+  padding-bottom: max(var(--space-2), env(safe-area-inset-bottom));
+}
+
+.pesan-transfer-ownership {
+  margin: var(--space-3) 0 0;
+  padding: var(--space-3);
+  border-radius: var(--radius-md);
+  background: var(--color-surface-soft);
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-xs);
+  line-height: 1.5;
+}
+
+.pesan-transfer-ownership[data-type="error"] {
+  color: var(--color-danger);
+  background: color-mix(in srgb, var(--color-danger) 9%, var(--color-surface));
+}
+
+.aksi-transfer-ownership {
+  display: grid;
+  grid-template-columns: 1fr 1.35fr;
+  gap: var(--space-2);
+  margin-top: var(--space-4);
+}
+
+.aksi-transfer-ownership .tombol-sekunder,
+.aksi-transfer-ownership .tombol-utama {
+  width: 100%;
+  min-height: 50px;
+}
+
+.aksi-transfer-ownership .tombol-utama:disabled {
+  opacity: .55;
+  cursor: wait;
+}
+
+@media (max-width: 380px) {
+  .aksi-transfer-ownership {
+    grid-template-columns: 1fr;
+  }
+}
+
