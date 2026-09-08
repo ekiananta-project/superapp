@@ -1,4 +1,4 @@
-const CACHE_NAME = "family-superapp-v1.1.7f-toolbar-nav5-hotfix-1";
+const CACHE_NAME = "family-superapp-v1.1.7g-wallet-management-ux-1";
 const OFFLINE_URL = "./offline.html";
 
 const APP_FILES = [
@@ -95,10 +95,12 @@ const APP_FILES = [
   "./js/pages/detail-transaksi-backend.js",
   "./js/pages/detail-transaksi-backend.js?v=20260908-1",
   "./js/pages/dompet-backend.js",
+  "./js/pages/dompet-backend.js?v=20260908-2",
   "./js/pages/dompet-detail-backend.js",
   "./js/pages/dompet-detail-backend.js?v=20260908-2",
   "./js/pages/laporan-dompet-backend.js",
   "./js/pages/laporan-dompet-backend.js?v=20260908-1",
+  "./js/pages/laporan-dompet-backend.js?v=20260908-2",
   "./js/pages/dompet-form-backend.js",
   "./js/pages/home-backend.js",
   "./js/pages/home-backend.js?v=20260908-6",

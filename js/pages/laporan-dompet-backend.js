@@ -135,7 +135,6 @@
     document.querySelector("[data-banding-pemasukan]").textContent = rupiah(masuk, dompetAktif.currency_code);
     document.querySelector("[data-banding-pengeluaran]").textContent = rupiah(keluar, dompetAktif.currency_code);
     document.querySelector("[data-tambah-transaksi-detail]").href = `transaksi.html?dompet=${encodeURIComponent(dompetAktif.wallet_id)}`;
-    document.querySelector("[data-edit-dompet]").href = `dompet-form.html?id=${encodeURIComponent(dompetAktif.wallet_id)}`;
     document.querySelector("[data-kembali-daftar]").href = `dompet-detail.html?id=${encodeURIComponent(dompetAktif.wallet_id)}`;
     history.replaceState(null, "", `laporan-dompet.html?id=${encodeURIComponent(dompetAktif.wallet_id)}`);
 

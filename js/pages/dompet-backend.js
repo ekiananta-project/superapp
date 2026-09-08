@@ -34,7 +34,7 @@
 
     dompet.forEach(item => {
       const link = document.createElement("a");
-      link.href = `dompet-detail.html?id=${encodeURIComponent(item.wallet_id)}`;
+      link.href = `dompet-form.html?id=${encodeURIComponent(item.wallet_id)}`;
       link.className = "kartu-list";
       link.innerHTML = `
         <span class="ikon-bulat"><ion-icon name="${escapeHTML(item.icon_value || "wallet-outline")}"></ion-icon></span>
