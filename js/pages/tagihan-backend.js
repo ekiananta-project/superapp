@@ -20,6 +20,8 @@
   const dueDateInput = document.querySelector("[data-bill-due-date]");
   const noteInput = document.querySelector("[data-bill-note]");
   const editInfo = document.querySelector("[data-bill-edit-info]");
+  const historyInfo = document.querySelector("[data-bill-history-info]");
+  const historyCopy = document.querySelector("[data-bill-history-copy]");
   const deleteButton = document.querySelector("[data-bill-delete]");
   const saveButton = document.querySelector("[data-bill-save]");
 
@@ -424,6 +426,17 @@
     if (deleteButton) deleteButton.hidden = !item;
     if (editInfo) editInfo.hidden = !item;
 
+    const paid = item ? paidAmount(item) : 0;
+    const remaining = item ? remainingAmount(item) : 0;
+    if (historyInfo) historyInfo.hidden = !(item && paid > 0);
+    if (historyCopy && item && paid > 0) {
+      historyCopy.textContent = remaining > 0
+        ? `Tagihan ini sudah memiliki pembayaran ${rupiah(paid)}. Riwayat pembayaran tidak dapat dihapus. Jika tagihan dihentikan, sisa ${rupiah(remaining)} tetap tercatat sebagai kewajiban sampai dilunasi; yang dihentikan hanya tagihan periode berikutnya.`
+        : `Tagihan ini sudah memiliki riwayat pembayaran. Riwayat tersebut tidak dapat dihapus. Hentikan Tagihan hanya menghentikan tagihan untuk periode berikutnya.`;
+    } else if (historyCopy) {
+      historyCopy.textContent = "";
+    }
+
     refreshCategoryTrigger();
     if (item && !categoryById(item.account_id)) {
       if (categorySelected) categorySelected.textContent = item.account_name || "Kategori diarsipkan";
@@ -510,7 +523,17 @@
     const label = editingItem.bill_name || "tagihan ini";
     const effectiveMonth = currentMonthDate();
     const monthLabel = monthTextFromISO(effectiveMonth);
-    if (!confirm(`Hentikan ${label} mulai ${monthLabel}?\n\nTagihan yang jatuh tempo sebelum bulan ini tetap menjadi riwayat/kewajiban lama.`)) return;
+    const paid = paidAmount(editingItem);
+    const remaining = remainingAmount(editingItem);
+
+    let confirmCopy = `Hentikan ${label} mulai ${monthLabel}?\n\nTagihan yang jatuh tempo sebelum bulan ini tetap menjadi riwayat/kewajiban lama.`;
+    if (paid > 0 && remaining > 0) {
+      confirmCopy = `Tagihan ini sudah dibayar ${rupiah(paid)} dari ${rupiah(editingItem.amount)} dan masih tersisa ${rupiah(remaining)}.\n\nRiwayat pembayaran tidak dapat dihapus. Jika dilanjutkan, sisa ${rupiah(remaining)} tetap tercatat sampai dilunasi. Yang dihentikan hanya tagihan untuk periode berikutnya.\n\nTetap hentikan ${label}?`;
+    } else if (paid > 0) {
+      confirmCopy = `Tagihan ini sudah memiliki riwayat pembayaran ${rupiah(paid)}. Riwayat tersebut tidak dapat dihapus.\n\nYang dihentikan hanya tagihan untuk periode berikutnya.\n\nTetap hentikan ${label}?`;
+    }
+
+    if (!confirm(confirmCopy)) return;
 
     if (deleteButton) deleteButton.disabled = true;
     if (saveButton) saveButton.disabled = true;
