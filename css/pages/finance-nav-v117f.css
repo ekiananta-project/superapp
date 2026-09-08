@@ -73,7 +73,7 @@
   font-size: clamp(14px, 3.7vw, 18px) !important;
 }
 
-/* Five-slot Finance navigation: Home | Budget | + | Kategori | Dompet */
+/* Five-slot Finance navigation: Home | Perencanaan | + | Kategori | Dompet */
 .navigasi-bawah.finance-nav-v5 {
   display: grid !important;
   grid-template-columns: repeat(5, minmax(0, 1fr)) !important;
@@ -102,6 +102,12 @@
   overflow: hidden !important;
   text-overflow: ellipsis !important;
   white-space: nowrap !important;
+}
+
+/* Perencanaan lebih panjang daripada label Budget lama; jaga tetap utuh di layar kecil. */
+.finance-nav-v5 .navigasi-item[href="perencanaan.html"] span {
+  font-size: clamp(8px, 2.35vw, 10px) !important;
+  letter-spacing: -0.015em;
 }
 
 .finance-nav-v5 .tombol-tambah {

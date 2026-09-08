@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="id" data-auth-guard="finance">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#0B0D0C">
+  <meta name="application-name" content="Family Superapp">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Family">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="robots" content="noindex,nofollow,noarchive">
+  <meta name="referrer" content="strict-origin-when-cross-origin">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32.png">
+  <link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png">
+  <link rel="apple-touch-icon" sizes="180x180" href="icons/apple-touch-icon.png">
+  <script src="js/theme.js"></script>
+  <title>Tagihan</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/theme.css">
+  <link rel="stylesheet" href="css/pages/transaksi-category-picker.css?v=20260908-1">
+  <link rel="stylesheet" href="css/pages/finance-nav-v117f.css?v=20260908-2">
+  <link rel="stylesheet" href="css/pages/tagihan.css?v=20260908-1">
+</head>
+<body>
+<div class="aplikasi dengan-nav">
+  <header class="header-halaman">
+    <a class="tombol-ikon" href="perencanaan.html" aria-label="Kembali ke Perencanaan"><ion-icon name="arrow-back-outline"></ion-icon></a>
+    <h1>Tagihan</h1>
+    <button class="tombol-ikon" type="button" data-bill-add aria-label="Tambah tagihan"><ion-icon name="add-outline"></ion-icon></button>
+  </header>
+
+  <main class="konten-halaman bills-page">
+    <div class="notifikasi bills-notice" data-bill-notice hidden></div>
+
+    <section class="bills-month-card" aria-label="Periode tagihan">
+      <button class="bills-month-nav" type="button" data-bill-month-prev aria-label="Bulan sebelumnya"><ion-icon name="chevron-back-outline"></ion-icon></button>
+      <button class="bills-month-main" type="button" data-bill-month-open>
+        <ion-icon name="calendar-outline"></ion-icon>
+        <span><small>Periode Tagihan</small><strong data-bill-month-label>—</strong></span>
+      </button>
+      <button class="bills-month-nav" type="button" data-bill-month-next aria-label="Bulan berikutnya"><ion-icon name="chevron-forward-outline"></ion-icon></button>
+      <input class="bills-month-native" type="month" data-bill-month-input tabindex="-1" aria-hidden="true">
+    </section>
+
+    <section class="bills-summary-card" data-bill-summary aria-busy="true">
+      <div class="bills-summary-head">
+        <div>
+          <small>Ringkasan Tagihan</small>
+          <strong data-bill-summary-title>—</strong>
+        </div>
+        <span class="bills-summary-badge" data-bill-summary-badge>—</span>
+      </div>
+      <div class="bills-summary-values">
+        <div>
+          <small>Belum Dibayar</small>
+          <strong data-bill-pending-total>Rp 0</strong>
+        </div>
+        <div>
+          <small>Sudah Lunas</small>
+          <strong data-bill-paid-total>Rp 0</strong>
+        </div>
+      </div>
+      <p class="bills-summary-note" data-bill-summary-note>Memuat tagihan…</p>
+    </section>
+
+    <section class="bills-list-section">
+      <div class="bills-section-head">
+        <div>
+          <h2>Daftar Tagihan</h2>
+          <p data-bill-count>Memuat…</p>
+        </div>
+      </div>
+      <div class="bills-list" data-bill-list>
+        <div class="bills-loading-card" aria-hidden="true"></div>
+        <div class="bills-loading-card" aria-hidden="true"></div>
+      </div>
+    </section>
+  </main>
+
+  <nav class="navigasi-bawah finance-nav-v5" aria-label="Navigasi Finance">
+    <a class="navigasi-item" href="index.html"><ion-icon name="home-outline"></ion-icon><span>Home</span></a>
+    <a class="navigasi-item is-aktif" href="perencanaan.html" aria-current="page"><ion-icon name="calendar-outline"></ion-icon><span>Perencanaan</span></a>
+    <a class="tombol-tambah" href="transaksi.html" aria-label="Tambah transaksi"><ion-icon name="add-outline"></ion-icon></a>
+    <a class="navigasi-item" href="akun.html"><ion-icon name="grid-outline"></ion-icon><span>Kategori</span></a>
+    <a class="navigasi-item" href="dompet.html"><ion-icon name="wallet-outline"></ion-icon><span>Dompet</span></a>
+  </nav>
+</div>
+
+<!-- Add/Edit Tagihan -->
+<div class="bill-sheet-layer" data-bill-form-layer hidden>
+  <section class="bill-sheet" role="dialog" aria-modal="true" aria-labelledby="bill-form-title">
+    <div class="bill-sheet-handle" aria-hidden="true"></div>
+    <div class="bill-sheet-header">
+      <div>
+        <h2 id="bill-form-title" data-bill-form-title>Tambah Tagihan</h2>
+        <p data-bill-form-period>—</p>
+      </div>
+      <button class="bill-sheet-close" type="button" data-bill-form-close aria-label="Tutup form tagihan"><ion-icon name="close-outline"></ion-icon></button>
+    </div>
+
+    <form class="bill-form" data-bill-form>
+      <div class="grup-input">
+        <label for="billName">Nama Tagihan</label>
+        <input class="input" id="billName" type="text" maxlength="120" autocomplete="off" placeholder="Contoh: Internet Rumah" required data-bill-name>
+      </div>
+
+      <div class="grup-input">
+        <label for="billAmount">Nominal Tagihan</label>
+        <div class="input-uang">
+          <span class="input-uang-prefix">Rp</span>
+          <input class="input" id="billAmount" type="text" inputmode="numeric" autocomplete="off" placeholder="350.000" required data-bill-amount>
+        </div>
+      </div>
+
+      <div class="grup-input">
+        <label for="billDueDay">Tanggal Jatuh Tempo</label>
+        <select class="pilih" id="billDueDay" required data-bill-due-day></select>
+        <small class="bill-field-help">Jika tanggal 29–31 tidak ada di suatu bulan, jatuh tempo otomatis memakai hari terakhir bulan.</small>
+      </div>
+
+      <div class="grup-input">
+        <label>Kategori Pengeluaran</label>
+        <button class="category-picker-trigger" type="button" data-bill-category-trigger aria-haspopup="dialog" aria-controls="bill-category-picker-sheet">
+          <span class="category-picker-trigger-copy">
+            <strong data-bill-category-selected>Pilih kategori</strong>
+            <small data-bill-category-parent hidden></small>
+          </span>
+          <ion-icon name="chevron-down-outline"></ion-icon>
+        </button>
+      </div>
+
+      <div class="grup-input">
+        <label for="billNote">Catatan <span aria-hidden="true">(opsional)</span></label>
+        <textarea class="input bill-textarea" id="billNote" rows="3" maxlength="240" placeholder="Contoh: Paket 100 Mbps" data-bill-note></textarea>
+      </div>
+
+      <div class="bill-form-info" data-bill-edit-info hidden>
+        <ion-icon name="information-circle-outline"></ion-icon>
+        <p>Perubahan berlaku untuk tagihan yang belum lunas mulai periode ini. Riwayat yang sudah lunas tidak diubah.</p>
+      </div>
+
+      <div class="bill-form-actions">
+        <button class="bill-delete" type="button" data-bill-delete hidden>
+          <ion-icon name="trash-outline"></ion-icon><span>Hentikan Tagihan</span>
+        </button>
+        <button class="tombol-utama" type="submit" data-bill-save>Simpan Tagihan</button>
+      </div>
+    </form>
+  </section>
+</div>
+
+<!-- Bayar Tagihan -->
+<div class="bill-sheet-layer" data-bill-pay-layer hidden>
+  <section class="bill-sheet bill-pay-sheet" role="dialog" aria-modal="true" aria-labelledby="bill-pay-title">
+    <div class="bill-sheet-handle" aria-hidden="true"></div>
+    <div class="bill-sheet-header">
+      <div>
+        <h2 id="bill-pay-title">Bayar Tagihan</h2>
+        <p data-bill-pay-period>—</p>
+      </div>
+      <button class="bill-sheet-close" type="button" data-bill-pay-close aria-label="Tutup pembayaran"><ion-icon name="close-outline"></ion-icon></button>
+    </div>
+
+    <div class="bill-pay-hero">
+      <span class="bill-pay-icon"><ion-icon name="receipt-outline"></ion-icon></span>
+      <div><small data-bill-pay-name>Tagihan</small><strong data-bill-pay-amount>Rp 0</strong></div>
+    </div>
+
+    <form class="bill-form" data-bill-pay-form>
+      <div class="grup-input">
+        <label for="billPayWallet">Bayar dari Dompet</label>
+        <select class="pilih" id="billPayWallet" required data-bill-pay-wallet></select>
+      </div>
+      <div class="grup-input">
+        <label for="billPayDate">Tanggal Pembayaran</label>
+        <input class="input" id="billPayDate" type="date" required data-bill-pay-date>
+      </div>
+      <div class="bill-pay-info">
+        <ion-icon name="link-outline"></ion-icon>
+        <p>Pembayaran otomatis dicatat sebagai transaksi Pengeluaran dan mengurangi saldo dompet yang dipilih.</p>
+      </div>
+      <button class="tombol-utama" type="submit" data-bill-pay-submit>Bayar &amp; Catat Transaksi</button>
+    </form>
+  </section>
+</div>
+
+<!-- Category Picker -->
+<div class="category-picker-layer" data-bill-category-layer hidden>
+  <section class="category-picker-sheet" id="bill-category-picker-sheet" role="dialog" aria-modal="true" aria-labelledby="bill-category-picker-title">
+    <div class="category-picker-handle" aria-hidden="true"></div>
+    <div class="category-picker-header">
+      <div>
+        <h2 id="bill-category-picker-title">Pilih Kategori</h2>
+        <p>Kategori ini dipakai saat tagihan dibayar.</p>
+      </div>
+      <button class="category-picker-close" type="button" data-bill-category-close aria-label="Tutup pemilih kategori"><ion-icon name="close-outline"></ion-icon></button>
+    </div>
+    <label class="category-picker-search">
+      <ion-icon name="search-outline"></ion-icon>
+      <input type="search" inputmode="search" autocomplete="off" placeholder="Cari kategori..." data-bill-category-search>
+    </label>
+    <div class="category-picker-list" data-bill-category-list></div>
+  </section>
+</div>
+
+<script type="module" src="https://unpkg.com/ionicons@8.0.13/dist/ionicons/ionicons.esm.js"></script>
+<script nomodule src="https://unpkg.com/ionicons@8.0.13/dist/ionicons/ionicons.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="js/backend/supabase.js"></script>
+<script src="js/backend/auth-service.js"></script>
+<script src="js/backend/family-service.js"></script>
+<script src="js/backend/finance-service.js?v=20260908-8"></script>
+<script src="js/backend/finance-cache.js"></script>
+<script src="js/backend/auth-router.js"></script>
+<script src="js/backend/auth-guard.js"></script>
+<script src="js/pages/tagihan-backend.js?v=20260908-1"></script>
+<script src="js/pwa.js?v=20260908-8"></script>
+</body>
+</html>

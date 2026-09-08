@@ -891,7 +891,128 @@
     return data;
   }
 
+
+  function normalizeBillRows(data) {
+    return (data || []).map(item => ({
+      ...item,
+      amount: Number(item.amount || 0),
+      due_day: Number(item.due_day || 1)
+    }));
+  }
+
+  async function ambilTagihanBulan({
+    familyId,
+    periodMonth
+  } = {}) {
+    if (!familyId) throw new Error("familyId wajib diisi.");
+    if (!periodMonth) throw new Error("periodMonth wajib diisi.");
+
+    const { data, error } = await client.rpc(
+      "finance_bill_list_month",
+      {
+        p_family_id: familyId,
+        p_period_month: periodMonth
+      }
+    );
+
+    lemparJikaError(error);
+    return normalizeBillRows(data);
+  }
+
+  async function simpanTagihan({
+    familyId,
+    billId = null,
+    periodMonth,
+    name,
+    amount,
+    dueDay,
+    accountId,
+    note = null
+  } = {}) {
+    if (!familyId) throw new Error("familyId wajib diisi.");
+    if (!periodMonth) throw new Error("Periode tagihan wajib diisi.");
+    if (!String(name || "").trim()) throw new Error("Nama tagihan wajib diisi.");
+    if (!accountId) throw new Error("Kategori pengeluaran wajib dipilih.");
+
+    const nominal = Number(amount || 0);
+    const day = Number(dueDay || 0);
+    if (!Number.isFinite(nominal) || nominal <= 0) {
+      throw new Error("Nominal tagihan harus lebih dari Rp 0.");
+    }
+    if (!Number.isInteger(day) || day < 1 || day > 31) {
+      throw new Error("Tanggal jatuh tempo harus antara 1 sampai 31.");
+    }
+
+    const { data, error } = await client.rpc(
+      "finance_bill_save",
+      {
+        p_family_id: familyId,
+        p_bill_id: billId || null,
+        p_effective_month: periodMonth,
+        p_name: String(name).trim(),
+        p_amount: Math.round(nominal),
+        p_due_day: day,
+        p_account_id: accountId,
+        p_note: String(note || "").trim() || null
+      }
+    );
+
+    lemparJikaError(error);
+    return data;
+  }
+
+  async function arsipTagihan({
+    billId,
+    periodMonth
+  } = {}) {
+    if (!billId) throw new Error("billId wajib diisi.");
+    if (!periodMonth) throw new Error("Periode penghentian tagihan wajib diisi.");
+
+    const { data, error } = await client.rpc(
+      "finance_bill_archive",
+      {
+        p_bill_id: billId,
+        p_effective_month: periodMonth
+      }
+    );
+
+    lemparJikaError(error);
+    return data;
+  }
+
+  async function bayarTagihan({
+    periodId,
+    walletId,
+    paidOn,
+    operationId = null
+  } = {}) {
+    if (!periodId) throw new Error("Periode tagihan wajib dipilih.");
+    if (!walletId) throw new Error("Dompet pembayaran wajib dipilih.");
+    if (!paidOn) throw new Error("Tanggal pembayaran wajib diisi.");
+
+    const opId = operationId || operationIdBaru();
+    const { data, error } = await client.rpc(
+      "finance_bill_pay",
+      {
+        p_period_id: periodId,
+        p_wallet_id: walletId,
+        p_paid_on: paidOn,
+        p_client_operation_id: opId
+      }
+    );
+
+    lemparJikaError(error);
+    return {
+      transactionId: data,
+      operationId: opId
+    };
+  }
+
   window.FinanceService = {
+    ambilTagihanBulan,
+    simpanTagihan,
+    arsipTagihan,
+    bayarTagihan,
     ambilSiklusBudget,
     simpanSiklusBudget,
     ambilBudgetSiklus,

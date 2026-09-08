@@ -1,10 +1,12 @@
-const CACHE_NAME = "family-superapp-v1.2.0a3-budget-cycle-isolation-1";
+const CACHE_NAME = "family-superapp-v1.2.0b-perencanaan-tagihan-1";
 const OFFLINE_URL = "./offline.html";
 
 const APP_FILES = [
   "./akun-form.html",
   "./akun.html",
   "./budget.html",
+  "./perencanaan.html",
+  "./tagihan.html",
   "./css/components/account-visual-picker.css",
   "./css/components/avatar.css",
   "./css/components/quote.css",
@@ -31,6 +33,8 @@ const APP_FILES = [
   "./css/pages/keluarga-history.css",
   "./css/pages/keluarga.css",
   "./css/pages/pengaturan.css",
+  "./css/pages/perencanaan.css",
+  "./css/pages/tagihan.css",
   "./css/pages/pengaturan-profile-media.css",
   "./css/pages/transaksi-category-picker.css",
   "./css/style.css",
@@ -81,6 +85,7 @@ const APP_FILES = [
   "./js/pages/pengaturan-avatar-backend-v1.js",
   "./js/pages/pengaturan-profile-backend-v2.js",
   "./js/pages/pengaturan-tema.js",
+  "./js/pages/tagihan-backend.js",
   "./js/pages/transaksi-backend.js",
   "./js/pwa.js",
   "./js/theme.js",
