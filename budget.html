@@ -24,7 +24,7 @@
   <link rel="stylesheet" href="css/theme.css">
   <link rel="stylesheet" href="css/pages/transaksi-category-picker.css?v=20260908-1">
   <link rel="stylesheet" href="css/pages/finance-nav-v117f.css?v=20260908-1">
-  <link rel="stylesheet" href="css/pages/budget.css?v=20260908-3">
+  <link rel="stylesheet" href="css/pages/budget.css?v=20260908-4">
 </head>
 <body>
 <div class="aplikasi dengan-nav">
@@ -166,6 +166,54 @@
   </section>
 </div>
 
+<!-- Confirm Budget Cycle Change -->
+<div class="budget-sheet-layer budget-cycle-confirm-layer" data-budget-cycle-confirm-layer hidden>
+  <section class="budget-sheet budget-cycle-confirm-sheet" role="dialog" aria-modal="true" aria-labelledby="budget-cycle-confirm-title">
+    <div class="budget-sheet-handle" aria-hidden="true"></div>
+    <div class="budget-sheet-header">
+      <div>
+        <h2 id="budget-cycle-confirm-title" data-budget-cycle-confirm-title>Ubah Siklus Budget?</h2>
+        <p data-budget-cycle-confirm-subtitle>Budget lama tetap aman dan tidak dipindahkan otomatis.</p>
+      </div>
+      <button class="budget-sheet-close" type="button" data-budget-cycle-confirm-close aria-label="Batal ubah siklus">
+        <ion-icon name="close-outline"></ion-icon>
+      </button>
+    </div>
+
+    <div class="budget-cycle-confirm-body">
+      <div class="budget-cycle-route" aria-label="Perubahan periode budget">
+        <div class="budget-cycle-route-card">
+          <small>Dari</small>
+          <strong data-budget-cycle-confirm-from>—</strong>
+        </div>
+        <ion-icon name="arrow-forward-outline" aria-hidden="true"></ion-icon>
+        <div class="budget-cycle-route-card">
+          <small>Menjadi</small>
+          <strong data-budget-cycle-confirm-to>—</strong>
+        </div>
+      </div>
+
+      <div class="budget-cycle-confirm-message" data-budget-cycle-confirm-message>
+        Periode baru belum memiliki budget. Kamu bisa mulai kosong atau menyalin nominal budget dari periode aktif sekarang.
+      </div>
+
+      <div class="budget-cycle-confirm-info">
+        <ion-icon name="shield-checkmark-outline"></ion-icon>
+        <p>Budget pada siklus lama tetap tersimpan sebagai histori. Transaksi tidak disalin; nilai Terpakai selalu dihitung ulang sesuai rentang tanggal periode yang aktif.</p>
+      </div>
+
+      <div class="budget-cycle-confirm-actions">
+        <button class="budget-cycle-confirm-cancel" type="button" data-budget-cycle-confirm-cancel>Batal</button>
+        <button class="budget-cycle-confirm-empty" type="button" data-budget-cycle-confirm-empty>Mulai Kosong</button>
+        <button class="tombol-utama budget-cycle-confirm-copy" type="button" data-budget-cycle-confirm-copy>
+          <ion-icon name="copy-outline"></ion-icon>
+          <span>Salin Budget</span>
+        </button>
+      </div>
+    </div>
+  </section>
+</div>
+
 <!-- Add/Edit Budget -->
 <div class="budget-sheet-layer" data-budget-sheet-layer hidden>
   <section class="budget-sheet" role="dialog" aria-modal="true" aria-labelledby="budget-sheet-title">
@@ -239,11 +287,11 @@
 <script src="js/backend/supabase.js"></script>
 <script src="js/backend/auth-service.js"></script>
 <script src="js/backend/family-service.js"></script>
-<script src="js/backend/finance-service.js?v=20260908-6"></script>
+<script src="js/backend/finance-service.js?v=20260908-7"></script>
 <script src="js/backend/finance-cache.js"></script>
 <script src="js/backend/auth-router.js"></script>
 <script src="js/backend/auth-guard.js"></script>
-<script src="js/pages/budget-backend.js?v=20260908-3"></script>
+<script src="js/pages/budget-backend.js?v=20260908-4"></script>
 <script src="js/pwa.js?v=20260908-7"></script>
 </body>
 </html>

@@ -1,4 +1,4 @@
-const CACHE_NAME = "family-superapp-v1.2.0a2-budget-payday-cycle-1";
+const CACHE_NAME = "family-superapp-v1.2.0a3-budget-cycle-isolation-1";
 const OFFLINE_URL = "./offline.html";
 
 const APP_FILES = [

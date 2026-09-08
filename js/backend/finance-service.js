@@ -755,6 +755,85 @@
     return Number(data || day);
   }
 
+  function normalizeBudgetRows(data) {
+    return (data || []).map(item => ({
+      ...item,
+      budget_amount: Number(item.budget_amount || 0),
+      spent_amount: Number(item.spent_amount || 0),
+      remaining_amount: Number(item.remaining_amount || 0),
+      progress_percent: Number(item.progress_percent || 0),
+      warning_percent: Number(item.warning_percent || 80)
+    }));
+  }
+
+  async function ambilBudgetSiklus({
+    familyId,
+    periodMonth,
+    cycleDay
+  } = {}) {
+    if (!familyId) throw new Error("familyId wajib diisi.");
+    if (!periodMonth) throw new Error("periodMonth wajib diisi.");
+
+    const day = Number(cycleDay);
+    if (!Number.isInteger(day) || day < 1 || day > 31) {
+      throw new Error("Tanggal siklus budget harus antara 1 sampai 31.");
+    }
+
+    const { data, error } = await client.rpc(
+      "finance_budget_list_cycle",
+      {
+        p_family_id: familyId,
+        p_period_month: periodMonth,
+        p_cycle_day: day
+      }
+    );
+
+    lemparJikaError(error);
+    return normalizeBudgetRows(data);
+  }
+
+  async function ubahSiklusBudget({
+    familyId,
+    cycleDay,
+    fromPeriodMonth,
+    fromCycleDay,
+    toPeriodMonth,
+    copyBudget = false
+  } = {}) {
+    if (!familyId) throw new Error("familyId wajib diisi.");
+    if (!fromPeriodMonth) throw new Error("Periode budget sumber wajib diisi.");
+    if (!toPeriodMonth) throw new Error("Periode budget tujuan wajib diisi.");
+
+    const nextDay = Number(cycleDay);
+    const previousDay = Number(fromCycleDay);
+
+    if (!Number.isInteger(nextDay) || nextDay < 1 || nextDay > 31) {
+      throw new Error("Tanggal siklus budget harus antara 1 sampai 31.");
+    }
+    if (!Number.isInteger(previousDay) || previousDay < 1 || previousDay > 31) {
+      throw new Error("Siklus budget sebelumnya tidak valid.");
+    }
+
+    const { data, error } = await client.rpc(
+      "finance_budget_cycle_change",
+      {
+        p_family_id: familyId,
+        p_cycle_day: nextDay,
+        p_from_period_month: fromPeriodMonth,
+        p_from_cycle_day: previousDay,
+        p_to_period_month: toPeriodMonth,
+        p_copy_budget: Boolean(copyBudget)
+      }
+    );
+
+    lemparJikaError(error);
+    const row = Array.isArray(data) ? data[0] : data;
+    return {
+      cycleDay: Number(row?.cycle_day || nextDay),
+      copiedCount: Number(row?.copied_count || 0)
+    };
+  }
+
   async function ambilBudgetBulan({
     familyId,
     periodMonth
@@ -771,14 +850,7 @@
     );
 
     lemparJikaError(error);
-    return (data || []).map(item => ({
-      ...item,
-      budget_amount: Number(item.budget_amount || 0),
-      spent_amount: Number(item.spent_amount || 0),
-      remaining_amount: Number(item.remaining_amount || 0),
-      progress_percent: Number(item.progress_percent || 0),
-      warning_percent: Number(item.warning_percent || 80)
-    }));
+    return normalizeBudgetRows(data);
   }
 
   async function simpanBudget({
@@ -822,6 +894,8 @@
   window.FinanceService = {
     ambilSiklusBudget,
     simpanSiklusBudget,
+    ambilBudgetSiklus,
+    ubahSiklusBudget,
     ambilBudgetBulan,
     simpanBudget,
     hapusBudget,

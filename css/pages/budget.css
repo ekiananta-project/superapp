@@ -733,3 +733,142 @@
   cursor: wait;
 }
 
+
+/* ==========================================================
+   v1.2.0a3 — Budget cycle isolation + explicit carry-forward
+========================================================== */
+
+.budget-cycle-confirm-layer {
+  z-index: 640;
+}
+
+.budget-cycle-confirm-sheet {
+  max-height: min(88vh, 720px);
+}
+
+.budget-cycle-confirm-body {
+  padding: 8px 16px 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.budget-cycle-route {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 28px minmax(0, 1fr);
+  align-items: center;
+  gap: 8px;
+}
+
+.budget-cycle-route > ion-icon {
+  justify-self: center;
+  color: var(--color-text-secondary);
+  font-size: 18px;
+}
+
+.budget-cycle-route-card {
+  min-width: 0;
+  min-height: 70px;
+  padding: 11px 12px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 3px;
+  background: var(--color-surface-soft);
+}
+
+.budget-cycle-route-card small {
+  color: var(--color-text-secondary);
+  font-size: 11px;
+}
+
+.budget-cycle-route-card strong {
+  font-size: var(--font-size-xs);
+  line-height: 1.35;
+}
+
+.budget-cycle-confirm-message {
+  padding: 12px 13px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+  color: var(--color-text);
+  font-size: var(--font-size-xs);
+  line-height: 1.55;
+}
+
+.budget-cycle-confirm-info {
+  padding: 10px 12px;
+  border-radius: var(--radius-md);
+  display: grid;
+  grid-template-columns: 20px minmax(0, 1fr);
+  gap: 8px;
+  background: var(--color-surface-soft);
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-xs);
+  line-height: 1.5;
+}
+
+.budget-cycle-confirm-info ion-icon {
+  margin-top: 1px;
+  color: var(--color-primary);
+  font-size: 18px;
+}
+
+.budget-cycle-confirm-info p {
+  margin: 0;
+}
+
+.budget-cycle-confirm-actions {
+  display: grid;
+  grid-template-columns: minmax(0, .8fr) minmax(0, 1fr);
+  gap: 8px;
+}
+
+.budget-cycle-confirm-actions .tombol-utama {
+  grid-column: 1 / -1;
+  min-height: 48px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.budget-cycle-confirm-cancel,
+.budget-cycle-confirm-empty {
+  min-height: 46px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-surface-soft);
+  color: var(--color-text);
+  font: inherit;
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-semibold);
+  cursor: pointer;
+}
+
+.budget-cycle-confirm-empty {
+  border-color: color-mix(in srgb, var(--color-primary) 45%, var(--color-border));
+  color: var(--color-primary);
+}
+
+.budget-cycle-confirm-actions button:disabled {
+  opacity: .55;
+  cursor: wait;
+}
+
+@media (max-width: 390px) {
+  .budget-cycle-route {
+    grid-template-columns: 1fr;
+  }
+
+  .budget-cycle-route > ion-icon {
+    transform: rotate(90deg);
+  }
+}
+
+.budget-cycle-confirm-copy[hidden] {
+  display: none !important;
+}

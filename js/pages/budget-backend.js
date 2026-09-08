@@ -26,6 +26,17 @@
   const cyclePreview = document.querySelector("[data-budget-cycle-preview]");
   const cycleSave = document.querySelector("[data-budget-cycle-save]");
 
+  const cycleConfirmLayer = document.querySelector("[data-budget-cycle-confirm-layer]");
+  const cycleConfirmTitle = document.querySelector("[data-budget-cycle-confirm-title]");
+  const cycleConfirmSubtitle = document.querySelector("[data-budget-cycle-confirm-subtitle]");
+  const cycleConfirmFrom = document.querySelector("[data-budget-cycle-confirm-from]");
+  const cycleConfirmTo = document.querySelector("[data-budget-cycle-confirm-to]");
+  const cycleConfirmMessage = document.querySelector("[data-budget-cycle-confirm-message]");
+  const cycleConfirmClose = document.querySelector("[data-budget-cycle-confirm-close]");
+  const cycleConfirmCancel = document.querySelector("[data-budget-cycle-confirm-cancel]");
+  const cycleConfirmEmpty = document.querySelector("[data-budget-cycle-confirm-empty]");
+  const cycleConfirmCopy = document.querySelector("[data-budget-cycle-confirm-copy]");
+
   const sheetLayer = document.querySelector("[data-budget-sheet-layer]");
   const sheetClose = document.querySelector("[data-budget-sheet-close]");
   const form = document.querySelector("[data-budget-form]");
@@ -51,6 +62,7 @@
   let editingBudget = null;
   let selectedCategoryId = "";
   const expandedCategories = new Set();
+  let pendingCycleChange = null;
   let toastTimer = null;
 
   function escapeHTML(value) {
@@ -535,31 +547,171 @@
     document.body.style.overflow = "";
   }
 
+  function setCycleConfirmBusy(busy) {
+    [cycleConfirmClose, cycleConfirmCancel, cycleConfirmEmpty, cycleConfirmCopy]
+      .filter(Boolean)
+      .forEach(button => {
+        button.disabled = Boolean(busy);
+      });
+  }
+
+  function closeCycleConfirm({ keepPending = false } = {}) {
+    if (cycleConfirmLayer) cycleConfirmLayer.hidden = true;
+    setCycleConfirmBusy(false);
+    if (!keepPending) pendingCycleChange = null;
+    if (!cycleLayer || cycleLayer.hidden) document.body.style.overflow = "";
+  }
+
+  function openCycleConfirm(context) {
+    pendingCycleChange = context;
+
+    const sourceLabel = periodText(context.sourceAnchor, context.oldDay);
+    const targetLabel = periodText(context.targetAnchor, context.nextDay);
+    const targetHasBudget = context.targetCount > 0;
+
+    if (cycleConfirmFrom) cycleConfirmFrom.textContent = sourceLabel;
+    if (cycleConfirmTo) cycleConfirmTo.textContent = targetLabel;
+
+    if (targetHasBudget) {
+      if (cycleConfirmTitle) cycleConfirmTitle.textContent = "Budget Periode Tujuan Sudah Ada";
+      if (cycleConfirmSubtitle) {
+        cycleConfirmSubtitle.textContent = `${context.targetCount} kategori budget tersimpan akan ditampilkan kembali.`;
+      }
+      if (cycleConfirmMessage) {
+        cycleConfirmMessage.textContent = `Periode ${targetLabel} sudah pernah memiliki budget. Budget itu akan dipakai kembali tanpa menimpa atau memindahkan budget ${sourceLabel}.`;
+      }
+      if (cycleConfirmEmpty) cycleConfirmEmpty.textContent = "Pindah Siklus";
+      if (cycleConfirmCopy) cycleConfirmCopy.hidden = true;
+    } else {
+      if (cycleConfirmTitle) cycleConfirmTitle.textContent = "Ubah Siklus Budget?";
+      if (cycleConfirmSubtitle) {
+        cycleConfirmSubtitle.textContent = "Budget lama tetap aman dan tidak dipindahkan otomatis.";
+      }
+      if (cycleConfirmMessage) {
+        cycleConfirmMessage.textContent = context.sourceCount
+          ? `${context.sourceCount} kategori budget dari ${sourceLabel} bisa disalin ke ${targetLabel}, atau kamu bisa memulai periode baru tanpa menyalinnya.`
+          : `Periode ${targetLabel} belum memiliki budget. Siklus bisa dipindahkan tanpa membawa nominal dari periode lama.`;
+      }
+      if (cycleConfirmEmpty) cycleConfirmEmpty.textContent = context.sourceCount ? "Mulai Kosong" : "Pindah Siklus";
+      if (cycleConfirmCopy) cycleConfirmCopy.hidden = !context.sourceCount;
+    }
+
+    setCycleConfirmBusy(false);
+    if (cycleConfirmLayer) cycleConfirmLayer.hidden = false;
+    document.body.style.overflow = "hidden";
+    requestAnimationFrame(() => {
+      const primaryChoice = targetHasBudget || !context.sourceCount
+        ? cycleConfirmEmpty
+        : cycleConfirmCopy;
+      primaryChoice?.focus();
+    });
+  }
+
+  async function commitCycleChange(copyBudget) {
+    const context = pendingCycleChange;
+    if (!context || !family) return;
+
+    setCycleConfirmBusy(true);
+    if (cycleSave) cycleSave.disabled = true;
+
+    try {
+      const result = await FinanceService.ubahSiklusBudget({
+        familyId: family.id,
+        cycleDay: context.nextDay,
+        fromPeriodMonth: monthDate(context.sourceAnchor),
+        fromCycleDay: context.oldDay,
+        toPeriodMonth: monthDate(context.targetAnchor),
+        copyBudget
+      });
+
+      cycleDay = result.cycleDay;
+      month = firstDay(context.targetAnchor);
+      closeCycleConfirm();
+      closeCycleSheet();
+      syncMonthUI();
+
+      if (copyBudget) {
+        const copied = Number(result.copiedCount || 0);
+        show(
+          copied
+            ? `${copied} budget disalin ke siklus baru.`
+            : "Siklus diubah. Budget tujuan yang sudah ada tidak ditimpa.",
+          "success"
+        );
+      } else if (context.targetCount > 0) {
+        show("Siklus diubah. Budget periode tujuan ditampilkan kembali.", "success");
+      } else {
+        show("Siklus diubah. Periode baru dimulai tanpa menyalin budget.", "success");
+      }
+
+      await loadBudgets();
+    } catch (error) {
+      console.error("[Budget Cycle Change]", error);
+      show(error?.message || "Siklus budget gagal diubah.", "error");
+      setCycleConfirmBusy(false);
+    } finally {
+      if (cycleSave) cycleSave.disabled = false;
+    }
+  }
+
   async function saveCycle(event) {
     event.preventDefault();
     if (!family) return;
 
     const nextDay = draftCycleDay();
+    const oldDay = cycleDay;
+
+    if (nextDay === oldDay) {
+      closeCycleSheet();
+      return;
+    }
+
     if (cycleSave) cycleSave.disabled = true;
 
     try {
-      cycleDay = await FinanceService.simpanSiklusBudget({
-        familyId: family.id,
-        cycleDay: nextDay
-      });
-      closeCycleSheet();
-      resetCurrentMonth({ reload: false });
-      syncMonthUI();
-      show(
-        cycleDay === 1
-          ? "Siklus budget kembali ke kalender bulanan."
-          : `Siklus budget dimulai setiap tanggal ${cycleDay}.`,
-        "success"
-      );
-      await loadBudgets();
+      const now = new Date();
+      const sourceAnchor = firstDay(month);
+      const oldActiveAnchor = currentPeriodAnchor(now, oldDay);
+      const viewingActivePeriod = monthValue(sourceAnchor) === monthValue(oldActiveAnchor);
+      const targetAnchor = viewingActivePeriod
+        ? currentPeriodAnchor(now, nextDay)
+        : firstDay(sourceAnchor);
+
+      const [sourceBudgets, targetBudgets] = await Promise.all([
+        FinanceService.ambilBudgetSiklus({
+          familyId: family.id,
+          periodMonth: monthDate(sourceAnchor),
+          cycleDay: oldDay
+        }),
+        FinanceService.ambilBudgetSiklus({
+          familyId: family.id,
+          periodMonth: monthDate(targetAnchor),
+          cycleDay: nextDay
+        })
+      ]);
+
+      const context = {
+        oldDay,
+        nextDay,
+        sourceAnchor,
+        targetAnchor,
+        sourceCount: sourceBudgets.length,
+        targetCount: targetBudgets.length
+      };
+
+      pendingCycleChange = context;
+
+      // Kalau kedua sisi sama-sama kosong, tidak perlu menambah satu langkah dialog.
+      if (!context.sourceCount && !context.targetCount) {
+        await commitCycleChange(false);
+        return;
+      }
+
+      openCycleConfirm(context);
     } catch (error) {
-      console.error("[Budget Cycle Save]", error);
-      show(error?.message || "Siklus budget gagal disimpan.", "error");
+      console.error("[Budget Cycle Preview]", error);
+      show(error?.message || "Perubahan siklus budget belum dapat diproses.", "error");
+      pendingCycleChange = null;
     } finally {
       if (cycleSave) cycleSave.disabled = false;
     }
@@ -702,6 +854,14 @@
   cycleDaySelect?.addEventListener("change", updateCycleFormUI);
   cycleForm?.addEventListener("submit", saveCycle);
 
+  cycleConfirmClose?.addEventListener("click", () => closeCycleConfirm());
+  cycleConfirmCancel?.addEventListener("click", () => closeCycleConfirm());
+  cycleConfirmEmpty?.addEventListener("click", () => commitCycleChange(false));
+  cycleConfirmCopy?.addEventListener("click", () => commitCycleChange(true));
+  cycleConfirmLayer?.addEventListener("click", event => {
+    if (event.target === cycleConfirmLayer) closeCycleConfirm();
+  });
+
   document.querySelector("[data-budget-month-prev]")?.addEventListener("click", () => {
     setMonth(new Date(month.getFullYear(), month.getMonth() - 1, 1));
   });
@@ -772,6 +932,7 @@
     if (event.key !== "Escape") return;
     if (categoryLayer && !categoryLayer.hidden) closeCategoryPicker();
     else if (sheetLayer && !sheetLayer.hidden) closeForm();
+    else if (cycleConfirmLayer && !cycleConfirmLayer.hidden) closeCycleConfirm();
     else if (cycleLayer && !cycleLayer.hidden) closeCycleSheet();
   });
 
