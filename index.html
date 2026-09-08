@@ -28,6 +28,19 @@
   <link rel="stylesheet" href="css/pages/home.css?v=20260908-1">
   <link rel="stylesheet" href="css/theme.css">
   <link rel="stylesheet" href="css/pages/finance-nav-v117f.css?v=20260908-2">
+  <style>
+    .pilihan-sheet-tambah-dompet {
+      margin-top: 8px;
+      border-top: 1px solid var(--color-border);
+      border-bottom: 0;
+      text-decoration: none;
+    }
+    .pilihan-sheet-tambah-dompet .pilihan-sheet-panah {
+      margin-left: auto;
+      color: var(--color-text-secondary);
+      font-size: 20px;
+    }
+  </style>
 </head>
 <body>
 <div class="aplikasi dengan-nav home-hydrating" data-home-root aria-busy="true">
@@ -117,6 +130,11 @@
       <button class="tombol-ikon" type="button" data-sheet-close="sheet-dompet"><ion-icon name="close-outline"></ion-icon></button>
     </div>
     <div data-sheet-dompet-list></div>
+    <a class="pilihan-sheet pilihan-sheet-tambah-dompet" href="dompet-form.html" aria-label="Tambah dompet baru">
+      <ion-icon name="add-circle-outline" aria-hidden="true"></ion-icon>
+      <span><strong>Tambah Dompet</strong><br><small>Buat dompet baru</small></span>
+      <ion-icon class="pilihan-sheet-panah" name="chevron-forward-outline" aria-hidden="true"></ion-icon>
+    </a>
   </section>
 </div>
 
