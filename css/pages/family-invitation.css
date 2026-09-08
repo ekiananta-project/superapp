@@ -327,3 +327,44 @@
   color: var(--color-text, #1c211e);
   font-size: 18px;
 }
+
+/* ------------------------------------------------------------
+   v1.1.5a — invitation validation feedback
+   ------------------------------------------------------------ */
+.status-periksa-kode {
+  margin: 10px 0 0;
+  padding: 10px 12px;
+  border-radius: 12px;
+  background: var(--color-surface-soft, #eef1ee);
+  color: var(--color-text-secondary, #777f79);
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1.45;
+  text-align: center;
+}
+
+.status-periksa-kode[data-tipe="loading"] {
+  color: var(--color-text, #1c211e);
+}
+
+.status-periksa-kode[data-tipe="success"] {
+  background: color-mix(in srgb, var(--color-secondary, #24984a) 10%, transparent);
+  color: var(--color-secondary, #24984a);
+}
+
+.status-periksa-kode[data-tipe="error"] {
+  background: color-mix(in srgb, var(--color-danger, #d65f5f) 10%, transparent);
+  color: var(--color-danger, #d65f5f);
+}
+
+.toast-undangan-feedback[data-tipe="error"] {
+  border-color: color-mix(in srgb, var(--color-danger, #d65f5f) 38%, transparent);
+}
+
+.toast-undangan-feedback[data-tipe="error"] ion-icon {
+  color: var(--color-danger, #d65f5f);
+}
+
+.toast-undangan-feedback[data-tipe="info"] ion-icon {
+  color: var(--color-text-secondary, #777f79);
+}

@@ -25,6 +25,34 @@
   let historyCursor = null;
   let historyHasMore = false;
   let loadingHistory = false;
+  let toastTimer = null;
+
+  function tampilToast(text, type = "success") {
+    const value = String(text || "").trim();
+    if (!value) return;
+
+    let toast = document.querySelector("[data-invitation-toast]");
+    if (!toast) {
+      toast = document.createElement("div");
+      toast.className = "invitation-toast";
+      toast.setAttribute("data-invitation-toast", "");
+      toast.setAttribute("role", "status");
+      toast.setAttribute("aria-live", "polite");
+      document.body.appendChild(toast);
+    }
+
+    toast.replaceChildren();
+    const icon = document.createElement("ion-icon");
+    icon.setAttribute("name", type === "error" ? "alert-circle-outline" : "checkmark-circle-outline");
+    const label = document.createElement("span");
+    label.textContent = value;
+    toast.append(icon, label);
+    toast.dataset.type = type;
+
+    if (toastTimer) clearTimeout(toastTimer);
+    requestAnimationFrame(() => toast.classList.add("is-show"));
+    toastTimer = setTimeout(() => toast.classList.remove("is-show"), 2200);
+  }
 
   function labelHubungan(value) {
     const map = {
@@ -63,13 +91,36 @@
   async function salinTeks(text) {
     const value = String(text || "").trim();
     if (!value) return false;
+
     try {
-      await navigator.clipboard.writeText(value);
-      return true;
-    } catch {
-      window.prompt("Salin teks berikut:", value);
-      return false;
+      if (navigator.clipboard?.writeText && window.isSecureContext) {
+        await navigator.clipboard.writeText(value);
+        return true;
+      }
+    } catch (error) {
+      console.warn("[Clipboard API]", error);
     }
+
+    // Fallback untuk PWA/browser yang tidak memberi Clipboard API.
+    try {
+      const helper = document.createElement("textarea");
+      helper.value = value;
+      helper.setAttribute("readonly", "");
+      helper.style.position = "fixed";
+      helper.style.opacity = "0";
+      helper.style.pointerEvents = "none";
+      document.body.appendChild(helper);
+      helper.select();
+      helper.setSelectionRange(0, helper.value.length);
+      const copied = document.execCommand("copy");
+      helper.remove();
+      if (copied) return true;
+    } catch (error) {
+      console.warn("[Clipboard fallback]", error);
+    }
+
+    window.prompt("Salin teks berikut:", value);
+    return false;
   }
 
   async function bagikanUndangan(item) {
@@ -82,8 +133,10 @@
         if (error?.name === "AbortError") return;
       }
     }
-    await salinTeks(teks);
-    tampilPesan("Teks undangan siap disalin/dibagikan.", "success");
+    const copied = await salinTeks(teks);
+    if (copied) {
+      tampilToast("Teks undangan disalin.", "success");
+    }
   }
 
   function buatActiveCard(item) {
@@ -120,8 +173,10 @@
     copy.type = "button";
     copy.innerHTML = '<ion-icon name="copy-outline"></ion-icon> Salin';
     copy.addEventListener("click", async () => {
-      await salinTeks(item.code);
-      tampilPesan("Kode undangan tersalin.", "success");
+      const copied = await salinTeks(item.code);
+      if (copied) {
+        tampilToast("Kode undangan disalin.", "success");
+      }
     });
 
     const share = document.createElement("button");

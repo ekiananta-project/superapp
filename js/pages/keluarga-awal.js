@@ -28,6 +28,84 @@
   let kodeDipreview = "";
   let namaDipreview = "";
   let keluargaAktifSaatIni = null;
+  let toastTimer = null;
+
+  function tampilToast(teks, tipe = "info") {
+    const value = String(teks || "").trim();
+    if (!value) return;
+
+    let toast = document.querySelector("[data-toast-undangan]");
+    if (!toast) {
+      toast = document.createElement("div");
+      toast.className = "toast-salin-kode toast-undangan-feedback";
+      toast.setAttribute("data-toast-undangan", "");
+      toast.setAttribute("role", "status");
+      toast.setAttribute("aria-live", "polite");
+      document.body.appendChild(toast);
+    }
+
+    toast.replaceChildren();
+    const icon = document.createElement("ion-icon");
+    icon.setAttribute(
+      "name",
+      tipe === "error" ? "alert-circle-outline" :
+        tipe === "success" ? "checkmark-circle-outline" :
+          "information-circle-outline"
+    );
+    const label = document.createElement("span");
+    label.textContent = value;
+    toast.append(icon, label);
+    toast.dataset.tipe = tipe;
+
+    if (toastTimer) clearTimeout(toastTimer);
+    requestAnimationFrame(() => toast.classList.add("is-show"));
+    toastTimer = setTimeout(() => toast.classList.remove("is-show"), 2600);
+  }
+
+  function ambilStatusPeriksaKode() {
+    const submit = formGabung?.querySelector('[type="submit"]');
+    if (!submit) return null;
+
+    let status = document.querySelector("[data-status-periksa-kode]");
+    if (!status) {
+      status = document.createElement("p");
+      status.className = "status-periksa-kode";
+      status.setAttribute("data-status-periksa-kode", "");
+      status.setAttribute("role", "status");
+      status.setAttribute("aria-live", "polite");
+      status.hidden = true;
+      submit.insertAdjacentElement("afterend", status);
+    }
+    return status;
+  }
+
+  function setStatusPeriksaKode(teks = "", tipe = "info") {
+    const status = ambilStatusPeriksaKode();
+    if (!status) return;
+    status.textContent = teks;
+    status.dataset.tipe = tipe;
+    status.hidden = !teks;
+  }
+
+  function pesanValidasiUndangan(error) {
+    const raw = String(error?.message || "").toLowerCase();
+
+    if (raw.includes("12 karakter") || raw.includes("format kode")) {
+      return "Kode undangan belum lengkap atau formatnya tidak sesuai.";
+    }
+
+    if (
+      raw.includes("tidak ditemukan") ||
+      raw.includes("sudah dipakai") ||
+      raw.includes("dicabut") ||
+      raw.includes("kedaluwarsa") ||
+      raw.includes("tidak aktif")
+    ) {
+      return "Kode undangan tidak ditemukan atau sudah tidak berlaku.";
+    }
+
+    return "Kode undangan belum dapat diperiksa. Coba lagi.";
+  }
 
   function ambilStatusGabung() {
     if (!tombolTerima) return null;
@@ -162,6 +240,7 @@
     resetFotoUndangan();
     if (preview) preview.hidden = true;
     setStatusGabung("");
+    setStatusPeriksaKode("");
 
     if (tombolTerima) {
       delete tombolTerima.dataset.mode;
@@ -323,10 +402,14 @@
     const submit = formGabung.querySelector('[type="submit"]');
 
     if (namaPengguna.length < 2) {
-      tampilPesan("Nama kamu minimal 2 karakter.");
+      const pesan = "Nama kamu minimal 2 karakter.";
+      tampilPesan(pesan);
+      setStatusPeriksaKode(pesan, "error");
+      tampilToast(pesan, "error");
       return;
     }
 
+    setStatusPeriksaKode("Memeriksa kode undangan...", "loading");
     submit.disabled = true;
     submit.innerHTML = '<ion-icon name="sync-outline"></ion-icon> Memeriksa kode...';
 
@@ -349,10 +432,13 @@
       previewHubunganWrap.hidden = !hubungan;
       previewHubungan.textContent = hubungan;
 
-      await muatFotoUndangan(data);
-
+      // Tampilkan identitas undangan segera setelah kode tervalidasi.
+      // Foto adalah enhancement dan tidak boleh memblokir preview card.
       preview.hidden = false;
+      setStatusPeriksaKode("Kode undangan valid.", "success");
+      tampilToast("Kode undangan valid.", "success");
       preview.scrollIntoView({ behavior: "smooth", block: "nearest" });
+      void muatFotoUndangan(data);
 
       if (keluargaAktifSaatIni) {
         tombolTerima.dataset.mode = "manage-current-family";
@@ -370,7 +456,10 @@
       }
     } catch (error) {
       console.error("[Preview Undangan]", error);
-      tampilPesan(error?.message || "Kode undangan tidak dapat diperiksa.");
+      const pesan = pesanValidasiUndangan(error);
+      tampilPesan(pesan);
+      setStatusPeriksaKode(pesan, "error");
+      tampilToast(pesan, "error");
     } finally {
       submit.disabled = false;
       submit.innerHTML = 'Periksa Kode <ion-icon name="arrow-forward-outline"></ion-icon>';

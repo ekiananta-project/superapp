@@ -356,3 +356,57 @@
     animation: none;
   }
 }
+
+/* ------------------------------------------------------------
+   v1.1.5a — floating action feedback
+   ------------------------------------------------------------ */
+.invitation-toast {
+  position: fixed;
+  left: 50%;
+  bottom: calc(88px + env(safe-area-inset-bottom, 0px));
+  z-index: 12000;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  max-width: calc(100vw - 32px);
+  padding: 11px 14px;
+  border: 1px solid color-mix(in srgb, var(--color-secondary) 34%, var(--color-border));
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--color-surface) 96%, transparent);
+  color: var(--color-text);
+  box-shadow: 0 14px 34px rgba(0, 0, 0, .22);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-bold);
+  line-height: 1.25;
+  pointer-events: none;
+  opacity: 0;
+  transform: translate(-50%, 12px) scale(.97);
+  transition: opacity .18s ease, transform .18s ease;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+
+.invitation-toast ion-icon {
+  flex: 0 0 auto;
+  color: var(--color-secondary);
+  font-size: 19px;
+}
+
+.invitation-toast[data-type="error"] {
+  border-color: color-mix(in srgb, var(--color-danger) 34%, var(--color-border));
+}
+
+.invitation-toast[data-type="error"] ion-icon {
+  color: var(--color-danger);
+}
+
+.invitation-toast.is-show {
+  opacity: 1;
+  transform: translate(-50%, 0) scale(1);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .invitation-toast {
+    transition: none;
+  }
+}

@@ -1,4 +1,4 @@
-const CACHE_NAME = "family-superapp-v1.1.5-invitation-management-1";
+const CACHE_NAME = "family-superapp-v1.1.5a-invitation-feedback-hotfix-1";
 const OFFLINE_URL = "./offline.html";
 
 const APP_FILES = [
@@ -17,8 +17,10 @@ const APP_FILES = [
   "./css/pages/dompet-form.css",
   "./css/pages/family-invitation.css",
   "./css/pages/family-invitation.css?v=20260908-2",
+  "./css/pages/family-invitation.css?v=20260908-3",
   "./css/pages/kelola-undangan.css",
   "./css/pages/kelola-undangan.css?v=20260908-1",
+  "./css/pages/kelola-undangan.css?v=20260908-2",
   "./css/pages/home.css",
   "./css/pages/keamanan.css",
   "./css/pages/keluarga-awal.css",
@@ -82,6 +84,7 @@ const APP_FILES = [
   "./js/pages/keluarga-awal.js?v=20260908-1",
   "./js/pages/keluarga-awal.js?v=20260908-2",
   "./js/pages/keluarga-awal.js?v=20260908-3",
+  "./js/pages/keluarga-awal.js?v=20260908-4",
   "./js/pages/keluarga.js",
   "./js/pages/keluarga.js?v=20260908-3",
   "./js/pages/keluarga.js?v=20260908-5",
@@ -93,6 +96,7 @@ const APP_FILES = [
   "./js/pages/riwayat-anggota.js?v=20260908-1",
   "./js/pages/kelola-undangan.js",
   "./js/pages/kelola-undangan.js?v=20260908-1",
+  "./js/pages/kelola-undangan.js?v=20260908-2",
   "./js/pages/login.js",
   "./js/pages/pengaturan-auth.js",
   "./js/pages/pengaturan-avatar-backend-v1.js",
