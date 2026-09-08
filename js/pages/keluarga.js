@@ -30,6 +30,15 @@
   const pesanRelationship = document.querySelector("[data-relationship-message]");
   const tombolSubmitRelationship = document.querySelector("[data-relationship-submit]");
 
+  const tombolKeluarKeluarga = document.querySelector("[data-leave-family]");
+  const bantuanKeluarKeluarga = document.querySelector("[data-leave-family-help]");
+  const sheetKeluarKeluarga = document.querySelector("[data-leave-family-sheet]");
+  const judulKeluarKeluarga = document.querySelector("[data-leave-family-title]");
+  const isiKeluarKeluarga = document.querySelector("[data-leave-family-copy]");
+  const tombolKonfirmasiKeluar = document.querySelector("[data-leave-family-confirm]");
+  const tombolTutupKeluar = document.querySelector("[data-leave-family-close-primary]");
+  const pesanKeluarKeluarga = document.querySelector("[data-leave-family-message]");
+
   if (!rootAnggota || !form) return;
 
   let family = null;
@@ -470,6 +479,116 @@
     });
   }
 
+  function tampilPesanKeluar(teks = "", tipe = "info") {
+    if (!pesanKeluarKeluarga) return;
+    pesanKeluarKeluarga.textContent = teks;
+    pesanKeluarKeluarga.dataset.type = tipe;
+    pesanKeluarKeluarga.hidden = !teks;
+  }
+
+  function bukaKeluarKeluarga() {
+    if (!sheetKeluarKeluarga || !family) return;
+
+    const owner = sayaOwner();
+    tampilPesanKeluar();
+
+    if (judulKeluarKeluarga) {
+      judulKeluarKeluarga.textContent = owner
+        ? "Pemilik belum dapat keluar"
+        : `Keluar dari ${family.name || "Ruang Keluarga"}?`;
+    }
+
+    if (isiKeluarKeluarga) {
+      isiKeluarKeluarga.textContent = owner
+        ? "Sebagai Pemilik, kamu harus mentransfer kepemilikan ke anggota aktif lain terlebih dahulu. Setelah menjadi Anggota, kamu baru dapat keluar dari Ruang Keluarga."
+        : "Aksesmu ke data bersama Ruang Keluarga akan langsung dicabut. Akun pribadi dan riwayat aktivitas yang sudah tercatat tetap disimpan.";
+    }
+
+    if (tombolKonfirmasiKeluar) {
+      tombolKonfirmasiKeluar.hidden = owner;
+      tombolKonfirmasiKeluar.disabled = false;
+    }
+
+    if (tombolTutupKeluar) {
+      tombolTutupKeluar.textContent = owner ? "Mengerti" : "Batal";
+    }
+
+    sheetKeluarKeluarga.hidden = false;
+    document.body.style.overflow = "hidden";
+  }
+
+  function tutupKeluarKeluarga({ paksa = false } = {}) {
+    if (!sheetKeluarKeluarga) return;
+    if (!paksa && tombolKonfirmasiKeluar?.disabled) return;
+
+    sheetKeluarKeluarga.hidden = true;
+    document.body.style.overflow = "";
+    tampilPesanKeluar();
+  }
+
+  function bersihkanKonteksFamilyLokal() {
+    if (!family) return;
+
+    try {
+      const key = "keuangan_pengaturan_v1";
+      const raw = JSON.parse(localStorage.getItem(key) || "{}");
+      if (raw.familyAktif === family.id) {
+        delete raw.familyAktif;
+        localStorage.setItem(key, JSON.stringify(raw));
+      }
+    } catch {}
+
+    try {
+      window.FinanceCache?.removeFamily?.(family.id);
+
+      Object.keys(sessionStorage)
+        .filter(key =>
+          key.startsWith("family_superapp_cache_v1:") &&
+          key.endsWith(`:${family.id}`)
+        )
+        .forEach(key => sessionStorage.removeItem(key));
+    } catch {}
+
+    try {
+      sessionStorage.removeItem("keuangan_auth_return_to_v1");
+      if (family.family_photo_path) {
+        sessionStorage.removeItem(
+          `family-photo-signed-url-v1:${family.family_photo_path}`
+        );
+      }
+    } catch {}
+
+    window.FAMILY_CORE_STATE = null;
+  }
+
+  async function konfirmasiKeluarKeluarga() {
+    if (!family || !user || sayaOwner() || !tombolKonfirmasiKeluar) return;
+
+    const htmlAwal = tombolKonfirmasiKeluar.innerHTML;
+    tombolKonfirmasiKeluar.disabled = true;
+    tombolKonfirmasiKeluar.innerHTML =
+      '<ion-icon name="sync-outline"></ion-icon> Keluar...';
+    tampilPesanKeluar("Memproses keanggotaan...", "info");
+
+    try {
+      await FamilyService.keluarDariKeluarga(family.id);
+      bersihkanKonteksFamilyLokal();
+      tampilPesanKeluar("Kamu sudah keluar dari Ruang Keluarga.", "success");
+
+      setTimeout(() => {
+        location.replace("keluarga-awal.html");
+      }, 300);
+    } catch (error) {
+      console.error("[Keluar Ruang Keluarga]", error);
+      tombolKonfirmasiKeluar.disabled = false;
+      tombolKonfirmasiKeluar.innerHTML = htmlAwal;
+      tampilPesanKeluar(
+        error?.message || "Belum berhasil keluar dari Ruang Keluarga.",
+        "error"
+      );
+    }
+  }
+
   function renderHakAkses() {
     const owner = sayaOwner();
     form.elements.namaKeluarga.disabled = !owner;
@@ -478,6 +597,18 @@
 
     if (tombolBukaUndangan) tombolBukaUndangan.hidden = !owner;
     if (!owner && panelUndangan) panelUndangan.hidden = true;
+
+    if (bantuanKeluarKeluarga) {
+      bantuanKeluarKeluarga.textContent = owner
+        ? "Pemilik harus mentransfer kepemilikan terlebih dahulu sebelum dapat keluar."
+        : "Keluar hanya mencabut akses ke Ruang Keluarga. Akun pribadimu tetap ada.";
+    }
+
+    if (tombolKeluarKeluarga) {
+      tombolKeluarKeluarga.innerHTML = owner
+        ? '<ion-icon name="information-circle-outline"></ion-icon> Ketentuan Keluar'
+        : '<ion-icon name="exit-outline"></ion-icon> Keluar dari Ruang Keluarga';
+    }
   }
 
   function renderUndangan() {
@@ -731,6 +862,11 @@
 
     if (sheetTransferOwnership && !sheetTransferOwnership.hidden) {
       tutupTransferOwnership();
+      return;
+    }
+
+    if (sheetKeluarKeluarga && !sheetKeluarKeluarga.hidden) {
+      tutupKeluarKeluarga();
     }
   });
 
@@ -801,6 +937,25 @@
         tombolSubmitTransferOwnership.innerHTML = htmlAwal;
       }
     }
+  });
+
+  tombolKeluarKeluarga?.addEventListener("click", () => {
+    bukaKeluarKeluarga();
+  });
+
+  document.querySelectorAll("[data-leave-family-close]").forEach(tombol => {
+    tombol.addEventListener("click", () => tutupKeluarKeluarga());
+  });
+
+  sheetKeluarKeluarga?.addEventListener("click", event => {
+    if (event.target === sheetKeluarKeluarga) {
+      tutupKeluarKeluarga();
+    }
+  });
+
+  tombolKonfirmasiKeluar?.addEventListener("click", event => {
+    event.preventDefault();
+    konfirmasiKeluarKeluarga();
   });
 
   document.addEventListener("click", () => {

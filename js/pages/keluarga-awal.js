@@ -20,6 +20,7 @@
   let undanganDipreview = null;
   let kodeDipreview = "";
   let namaDipreview = "";
+  let keluargaAktifSaatIni = null;
 
   function ambilStatusGabung() {
     if (!tombolTerima) return null;
@@ -102,6 +103,13 @@
     namaDipreview = "";
     if (preview) preview.hidden = true;
     setStatusGabung("");
+
+    if (tombolTerima) {
+      delete tombolTerima.dataset.mode;
+      tombolTerima.disabled = false;
+      tombolTerima.innerHTML =
+        '<ion-icon name="enter-outline"></ion-icon> Gabung Sekarang';
+    }
   }
 
   function tampilPanel(mode) {
@@ -145,7 +153,9 @@
 
     try {
       const families = await FamilyService.ambilKeluargaSaya();
-      if (families.length && !paksaGabung) {
+      keluargaAktifSaatIni = families[0] || null;
+
+      if (keluargaAktifSaatIni && !paksaGabung) {
         await AuthRouter.redirectSetelahLogin({ pakaiReturnTo: false });
         return;
       }
@@ -159,6 +169,15 @@
 
     if (paksaGabung) {
       tampilPanel("gabung");
+
+      if (keluargaAktifSaatIni) {
+        tampilPesan(
+          `Kamu masih tergabung di ${keluargaAktifSaatIni.name || "Ruang Keluarga saat ini"}. ` +
+          "Kamu boleh memeriksa kode, tetapi harus keluar dari Ruang Keluarga saat ini sebelum bergabung ke Ruang Keluarga lain.",
+          "info"
+        );
+      }
+
       if (kodeQuery && formGabung?.elements.kode) {
         const raw = kodeQuery.toUpperCase().replace(/[^A-Z0-9]/g, "").slice(0, 12);
         formGabung.elements.kode.value = raw.length > 8
@@ -181,6 +200,14 @@
   formBuat?.addEventListener("submit", async event => {
     event.preventDefault();
     bersihkanPesan();
+
+    if (keluargaAktifSaatIni) {
+      tampilPesan(
+        `Kamu masih tergabung di ${keluargaAktifSaatIni.name || "Ruang Keluarga saat ini"}. ` +
+        "Selesaikan keanggotaanmu terlebih dahulu sebelum membuat Ruang Keluarga baru."
+      );
+      return;
+    }
 
     const namaPengguna = formBuat.elements.namaPengguna.value.trim();
     const namaKeluarga = formBuat.elements.namaKeluarga.value.trim();
@@ -254,7 +281,21 @@
 
       preview.hidden = false;
       preview.scrollIntoView({ behavior: "smooth", block: "nearest" });
-      tampilPesan("Kode valid. Periksa keluarga tujuan sebelum bergabung.", "success");
+
+      if (keluargaAktifSaatIni) {
+        tombolTerima.dataset.mode = "manage-current-family";
+        tombolTerima.innerHTML =
+          '<ion-icon name="settings-outline"></ion-icon> Kelola Ruang Keluarga Saat Ini';
+
+        const namaAktif = keluargaAktifSaatIni.name || "Ruang Keluarga saat ini";
+        setStatusGabung(
+          `Kamu masih aktif di ${namaAktif}. Keluar dari ruang tersebut terlebih dahulu sebelum menerima undangan ini.`,
+          "error"
+        );
+        tampilPesan("Kode valid, tetapi akunmu masih memiliki Ruang Keluarga aktif.", "info");
+      } else {
+        tampilPesan("Kode valid. Periksa keluarga tujuan sebelum bergabung.", "success");
+      }
     } catch (error) {
       console.error("[Preview Undangan]", error);
       tampilPesan(error?.message || "Kode undangan tidak dapat diperiksa.");
@@ -270,6 +311,11 @@
 
     if (!undanganDipreview || !kodeDipreview) {
       setStatusGabung("Periksa kode undangan dulu.", "error");
+      return;
+    }
+
+    if (keluargaAktifSaatIni || tombolTerima.dataset.mode === "manage-current-family") {
+      location.href = "keluarga.html";
       return;
     }
 
