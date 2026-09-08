@@ -26,6 +26,7 @@
   <link rel="stylesheet" href="css/components/avatar.css">
   <link rel="stylesheet" href="css/pages/keluarga.css">
   <link rel="stylesheet" href="css/pages/keluarga-member-management.css?v=20260908-2">
+  <link rel="stylesheet" href="css/pages/keluarga-family-media.css?v=20260908-1">
   <link rel="stylesheet" href="css/pages/family-invitation.css">
   <link rel="stylesheet" href="css/theme.css">
 </head>
@@ -45,19 +46,37 @@
   <main class="konten-halaman">
     <div class="notifikasi" data-notifikasi-keluarga hidden></div>
 
-    <section class="kartu-keluarga-utama">
-      <span class="ikon-keluarga-utama">
-        <ion-icon name="people-outline" aria-hidden="true"></ion-icon>
-      </span>
+    <section class="kartu-keluarga-utama family-profile-card">
+      <div class="family-photo-wrap">
+        <button
+          class="family-photo-button"
+          type="button"
+          data-family-photo-preview
+          aria-label="Foto Ruang Keluarga">
+          <span class="family-photo-visual" data-family-photo-visual>
+            <ion-icon name="people-outline" aria-hidden="true"></ion-icon>
+          </span>
+        </button>
 
-      <div class="info-keluarga-utama">
-        <span>Ruang keuangan bersama</span>
-        <h2 data-nama-keluarga>Keluarga Kami</h2>
-        <p>
-          Dompet, kategori, dan transaksi keluarga akan digunakan bersama
-          oleh semua anggota yang sudah bergabung.
-        </p>
+        <button
+          class="family-photo-edit"
+          type="button"
+          data-family-photo-edit
+          aria-label="Ubah foto Ruang Keluarga"
+          hidden>
+          <ion-icon name="camera-outline"></ion-icon>
+        </button>
       </div>
+
+      <span class="family-profile-eyebrow">Ruang Keluarga</span>
+      <h2 data-nama-keluarga>Keluarga Kami</h2>
+      <p>Ruang bersama untuk anggota keluarga di Family Superapp.</p>
+
+      <input
+        type="file"
+        accept="image/jpeg,image/png,image/webp"
+        data-family-photo-input
+        hidden>
     </section>
 
     <form class="formulir formulir-nama-keluarga" data-form-keluarga>
@@ -246,7 +265,7 @@
         <strong data-transfer-ownership-target>Anggota</strong>
         <p>
           Anggota ini akan menjadi Pemilik Ruang Keluarga. Kamu tetap bergabung
-          sebagai Anggota. Dompet, kategori, transaksi, dan histori keluarga tidak berubah.
+          sebagai Anggota. Data dan histori Ruang Keluarga tetap tersimpan.
         </p>
       </div>
     </div>
@@ -281,20 +300,63 @@
 </div>
 
 
+<div class="media-preview-layer" data-media-preview hidden>
+  <section
+    class="media-preview-card"
+    role="dialog"
+    aria-modal="true"
+    aria-labelledby="media-preview-title">
+
+    <button
+      class="media-preview-close"
+      type="button"
+      aria-label="Tutup preview foto"
+      data-media-preview-close>
+      <ion-icon name="close-outline"></ion-icon>
+    </button>
+
+    <div class="media-preview-visual">
+      <img data-media-preview-image alt="" hidden>
+      <span class="media-preview-fallback" data-media-preview-fallback hidden>
+        <ion-icon name="people-outline"></ion-icon>
+      </span>
+    </div>
+
+    <div class="media-preview-info">
+      <h2 id="media-preview-title" data-media-preview-title>Foto</h2>
+      <p data-media-preview-subtitle></p>
+    </div>
+
+    <div class="family-photo-owner-actions" data-family-photo-owner-actions hidden>
+      <button class="tombol-sekunder" type="button" data-family-photo-change>
+        <ion-icon name="camera-outline"></ion-icon>
+        Ganti Foto
+      </button>
+
+      <button class="tombol-link-bahaya" type="button" data-family-photo-delete>
+        <ion-icon name="trash-outline"></ion-icon>
+        Hapus Foto
+      </button>
+    </div>
+  </section>
+</div>
+
+
 <script type="module" src="https://unpkg.com/ionicons@8.0.13/dist/ionicons/ionicons.esm.js"></script>
 <script nomodule src="https://unpkg.com/ionicons@8.0.13/dist/ionicons/ionicons.js"></script>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="js/backend/supabase.js"></script>
 <script src="js/backend/auth-service.js"></script>
-<script src="js/backend/family-service.js?v=20260908-2"></script>
+<script src="js/backend/family-service.js?v=20260908-3"></script>
 <script src="js/backend/finance-service.js"></script>
 <script src="js/backend/auth-router.js"></script>
 <script src="js/backend/auth-guard.js"></script>
 <script>window.AUTH_BACKEND_MODE = true;</script>
 <script src="js/app.js"></script>
 <script src="js/components/avatar.js"></script>
-<script src="js/pages/keluarga.js?v=20260908-2"></script>
+<script src="js/pages/keluarga.js?v=20260908-3"></script>
+<script src="js/pages/keluarga-media.js?v=20260908-1"></script>
 <script src="js/pwa.js"></script>
 </body>
 </html>
