@@ -801,6 +801,13 @@
     await loadBudgets();
   }
 
+  window.addEventListener("finance-cache-updated", event => {
+    const detail = event?.detail || {};
+    if (!family || detail.kind !== "categories" || detail.familyId !== family.id || !detail.changed) return;
+    categories = (detail.data || []).filter(item => item.kind === "expense" && !item.archived_at);
+    if (categoryLayer && !categoryLayer.hidden) renderCategoryPicker();
+  });
+
   document.querySelectorAll("[data-budget-add]").forEach(button => {
     button.addEventListener("click", () => openForm());
   });

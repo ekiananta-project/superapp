@@ -250,42 +250,32 @@
     }
 
     try {
-      /*
-       * v1.1.7b: Home menjadi SATU-SATUNYA pemilik keputusan route
-       * setelah login. Auth guard di index hanya memeriksa session.
-       * Status family + wallet dibaca sekali lewat AuthRouter agar Home
-       * dan onboarding tidak saling membuat keputusan dari query paralel.
-       */
-      const status = await AuthRouter.cekStatusAplikasi();
-
-      if (status.state !== "ready") {
-        const tujuan = status.destination || "keluarga-awal.html";
-        const fileSekarang = location.pathname.split("/").pop() || "index.html";
-        if (!tujuan.startsWith(fileSekarang)) {
-          location.replace(tujuan);
-        }
-        return;
-      }
-
-      const session = status.session;
-      currentUserId = session?.user?.id || null;
-      familyAktif = status.family;
-      dompetList = status.wallets || [];
+      const session = await AuthService.ambilSession();
+      if (!session) throw new Error("Belum ada session Supabase. Login melalui login.html.");
+      currentUserId = session.user?.id || null;
 
       const preferensi = bacaPreferensi();
-      if (familyAktif?.id && familyAktif.id !== preferensi.familyAktif) {
-        simpanPreferensi({ familyAktif: familyAktif.id });
-      }
-
-      const [profile, totalRows, accounts] = await Promise.all([
+      const [profile, families] = await Promise.all([
         FamilyService.ambilProfilSaya(),
-        FinanceService.ambilTotalKeluarga(familyAktif.id),
-        FinanceService.ambilAkun(familyAktif.id)
+        FamilyService.ambilKeluargaSaya()
       ]);
 
+      if (!families.length) throw new Error("Akun ini belum tergabung ke ruang keluarga.");
+      familyAktif = families.find(item => item.id === preferensi.familyAktif) || families[0];
+      if (familyAktif.id !== preferensi.familyAktif) simpanPreferensi({ familyAktif: familyAktif.id });
+
+      /* v1.2.0d: Home hanya menunggu data yang benar-benar dibutuhkan untuk
+         first render. Kategori diprefetch setelah Home siap. Saldo dompet tetap
+         dipaksa fresh karena termasuk data yang cepat berubah. */
+      const [wallets, totalRows] = await Promise.all([
+        (FinanceService.ambilSaldoDompetFresh || FinanceService.ambilSaldoDompet)(familyAktif.id),
+        FinanceService.ambilTotalKeluarga(familyAktif.id)
+      ]);
+
+      dompetList = wallets || [];
       if (window.FinanceCache) {
+        FinanceCache.pruneContext(currentUserId, familyAktif.id);
         FinanceCache.write("wallets", familyAktif.id, dompetList, currentUserId);
-        FinanceCache.write("categories", familyAktif.id, accounts || [], currentUserId);
       }
 
       renderProfileHome(profile);
@@ -295,16 +285,39 @@
       const totalEl = document.querySelector("[data-total-global]");
       if (totalEl) totalEl.textContent = rupiah(totalFamily?.total_balance || 0, currency);
 
-      dompetAktif = dompetList.find(item => item.wallet_id === preferensi.dompetAktif) || dompetList[0];
-      if (dompetAktif.wallet_id !== preferensi.dompetAktif) {
-        simpanPreferensi({ dompetAktif: dompetAktif.wallet_id });
+      if (!dompetList.length) {
+        const label = document.querySelector("[data-dompet-label]");
+        const saldo = document.querySelector("[data-dompet-saldo]");
+        if (label) label.textContent = "Belum ada dompet";
+        if (saldo) saldo.textContent = rupiah(0, currency);
+        document.querySelector("[data-daftar-transaksi]")?.setAttribute("aria-disabled", "true");
+        document.querySelector("[data-daftar-transaksi]")?.removeAttribute("href");
+        document.querySelector("[data-home-pemasukan]").textContent = rupiah(0, currency);
+        document.querySelector("[data-home-pengeluaran]").textContent = rupiah(0, currency);
+        setAllReady();
+        return;
       }
+
+      dompetAktif = dompetList.find(item => item.wallet_id === preferensi.dompetAktif) || dompetList[0];
+      if (dompetAktif.wallet_id !== preferensi.dompetAktif) simpanPreferensi({ dompetAktif: dompetAktif.wallet_id });
 
       renderWalletPrimary();
       renderSheetDompet();
       FinancePeriod?.sync();
       await refreshPeriodSummary();
       setAllReady();
+
+      /* Warm shared reference data only after Home is interactive. */
+      if (window.FinanceCache && currentUserId && familyAktif?.id) {
+        FinanceCache.idle(() => {
+          FinanceCache.revalidate(
+            "categories",
+            familyAktif.id,
+            currentUserId,
+            () => (FinanceService.ambilAkunFresh || FinanceService.ambilAkun)(familyAktif.id)
+          ).catch(error => console.warn("[Home category prefetch]", error));
+        });
+      }
     } catch (error) {
       console.error("[Home Backend]", error);
       setAllReady();

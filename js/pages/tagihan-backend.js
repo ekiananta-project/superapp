@@ -585,7 +585,7 @@
       window.FinanceCache?.remove("wallets", family.id);
       closePay();
       show("Tagihan lunas dan transaksi pengeluaran sudah dicatat.", "success");
-      wallets = await FinanceService.ambilSaldoDompet(family.id);
+      wallets = await (FinanceService.ambilSaldoDompetFresh || FinanceService.ambilSaldoDompet)(family.id);
       await loadBills();
     } catch (error) {
       console.error("[Bill Pay]", error);
@@ -601,15 +601,29 @@
     family = await AuthRouter.ambilFamilyAktif();
     if (!family) return;
 
+    /* v1.2.0d: daftar tagihan tidak perlu menunggu kategori/dompet.
+       Kategori boleh datang dari shared SWR cache, tetapi saldo dompet pembayaran
+       tetap diambil fresh. */
+    const accountPromise = FinanceService.ambilAkun(family.id, "expense");
+    const walletPromise = (FinanceService.ambilSaldoDompetFresh || FinanceService.ambilSaldoDompet)(family.id);
+    const billPromise = loadBills();
+
     const [accountRows, walletRows] = await Promise.all([
-      FinanceService.ambilAkun(family.id, "expense"),
-      FinanceService.ambilSaldoDompet(family.id)
-    ]);
+      accountPromise,
+      walletPromise,
+      billPromise
+    ]).then(values => [values[0], values[1]]);
 
     categories = (accountRows || []).filter(item => !item.archived_at);
     wallets = (walletRows || []).filter(item => !item.archived_at);
-    await loadBills();
   }
+
+  window.addEventListener("finance-cache-updated", event => {
+    const detail = event?.detail || {};
+    if (!family || detail.kind !== "categories" || detail.familyId !== family.id || !detail.changed) return;
+    categories = (detail.data || []).filter(item => item.kind === "expense" && !item.archived_at);
+    if (categoryLayer && !categoryLayer.hidden) renderCategoryPicker();
+  });
 
   document.querySelectorAll("[data-bill-add]").forEach(button => {
     button.addEventListener("click", () => openForm());
