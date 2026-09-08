@@ -1,4 +1,4 @@
-const CACHE_NAME = "family-superapp-v1.0.6-switch-center-1";
+const CACHE_NAME = "family-superapp-v1.1.0-family-core-foundation-1";
 const OFFLINE_URL = "./offline.html";
 
 const APP_FILES = [
