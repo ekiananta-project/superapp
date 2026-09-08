@@ -24,7 +24,7 @@
 
   <link rel="stylesheet" href="css/style.css">
   <link rel="stylesheet" href="css/components/finance-period.css?v=20260908-1">
-  <link rel="stylesheet" href="css/pages/dompet-detail.css?v=20260908-2">
+  <link rel="stylesheet" href="css/pages/dompet-detail.css?v=20260908-3">
   <link rel="stylesheet" href="css/pages/dompet-backend.css">
   <link rel="stylesheet" href="css/theme.css">
 </head>
@@ -45,31 +45,33 @@
       <ion-icon name="chevron-down-outline"></ion-icon>
     </button>
 
-    <section class="dompet-detail-hero">
-      <span class="dompet-detail-ikon"><ion-icon data-detail-ikon name="wallet-outline"></ion-icon></span>
+    <section class="dompet-detail-saldo-compact">
       <span class="dompet-detail-label">Saldo saat ini</span>
-      <h2 data-detail-nama>Dompet</h2>
-      <strong data-detail-saldo>Rp 0</strong>
+      <div class="dompet-detail-saldo-row">
+        <h2 data-detail-nama>Dompet</h2>
+        <strong data-detail-saldo>Rp 0</strong>
+      </div>
     </section>
 
-    <a class="tombol-laporan-dompet" href="laporan-dompet.html" data-laporan-dompet>
-      <span class="tombol-laporan-dompet-kiri">
-        <ion-icon name="stats-chart-outline"></ion-icon>
-        <span>Lihat Laporan Dompet</span>
-      </span>
-      <ion-icon name="arrow-forward-outline"></ion-icon>
-    </a>
-
-    <button class="finance-period-trigger" type="button" data-finance-period-trigger>
-      <span class="finance-period-trigger-main">
-        <ion-icon name="calendar-outline"></ion-icon>
-        <span class="finance-period-trigger-copy">
-          <small>Periode</small>
-          <strong data-finance-period-label>September 2026</strong>
+    <div class="dompet-detail-toolbar-row">
+      <a class="tombol-laporan-dompet tombol-laporan-dompet-compact" href="laporan-dompet.html" data-laporan-dompet>
+        <span class="tombol-laporan-dompet-kiri">
+          <ion-icon name="stats-chart-outline"></ion-icon>
+          <span>Laporan Dompet</span>
         </span>
-      </span>
-      <ion-icon name="chevron-down-outline"></ion-icon>
-    </button>
+        <ion-icon name="arrow-forward-outline"></ion-icon>
+      </a>
+
+      <button class="finance-period-trigger finance-period-trigger-compact" type="button" data-finance-period-trigger>
+        <span class="finance-period-trigger-main">
+          <ion-icon name="calendar-outline"></ion-icon>
+          <span class="finance-period-trigger-copy">
+            <strong data-finance-period-label>September 2026</strong>
+          </span>
+        </span>
+        <ion-icon name="chevron-down-outline"></ion-icon>
+      </button>
+    </div>
 
     <section class="kartu-analisis-detail daftar-transaksi-card">
       <div class="judul-seksi-detail judul-seksi-transaksi">

@@ -821,3 +821,125 @@
 .transaksi-detail-item.transfer .transaksi-detail-nilai {
   color: var(--color-secondary);
 }
+
+
+/* =========================================
+   v1.1.7c — COMPACT LAYER 2 / LAYER 3
+========================================= */
+.dompet-detail-saldo-compact {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  width: 100%;
+  padding: var(--space-3) var(--space-4);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  background: var(--color-surface);
+  box-shadow: var(--shadow-sm);
+}
+
+.dompet-detail-saldo-compact .dompet-detail-label {
+  margin: 0;
+  font-size: var(--font-size-xs);
+}
+
+.dompet-detail-saldo-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: baseline;
+  gap: var(--space-3);
+}
+
+.dompet-detail-saldo-row h2 {
+  overflow: hidden;
+  margin: 0;
+  min-width: 0;
+  color: var(--color-text);
+  font-size: var(--font-size-md);
+  font-weight: var(--font-weight-semibold);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.dompet-detail-saldo-row > strong {
+  color: var(--color-primary);
+  font-size: var(--font-size-lg);
+  font-weight: var(--font-weight-bold);
+  white-space: nowrap;
+}
+
+.dompet-detail-toolbar-row {
+  display: grid;
+  grid-template-columns: minmax(0, .9fr) minmax(0, 1.1fr);
+  gap: var(--space-2);
+  width: 100%;
+}
+
+.dompet-detail-toolbar-row > * {
+  min-width: 0;
+}
+
+.tombol-laporan-dompet-compact,
+.finance-period-trigger-compact {
+  min-height: 52px;
+  padding: var(--space-3);
+}
+
+.tombol-laporan-dompet-compact {
+  gap: var(--space-2);
+}
+
+.tombol-laporan-dompet-compact .tombol-laporan-dompet-kiri {
+  gap: var(--space-2);
+  overflow: hidden;
+}
+
+.tombol-laporan-dompet-compact .tombol-laporan-dompet-kiri span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.finance-period-trigger-compact {
+  gap: var(--space-2);
+}
+
+.finance-period-trigger-compact .finance-period-trigger-main {
+  gap: var(--space-2);
+  overflow: hidden;
+}
+
+.finance-period-trigger-compact .finance-period-trigger-main > ion-icon,
+.tombol-laporan-dompet-compact ion-icon {
+  font-size: 18px;
+}
+
+.finance-period-trigger-compact .finance-period-trigger-copy {
+  display: block;
+  overflow: hidden;
+}
+
+.finance-period-trigger-compact .finance-period-trigger-copy strong {
+  display: block;
+  overflow: hidden;
+  font-size: var(--font-size-sm);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+@media (max-width: 360px) {
+  .dompet-detail-toolbar-row {
+    grid-template-columns: minmax(0, .92fr) minmax(0, 1.08fr);
+    gap: 6px;
+  }
+
+  .tombol-laporan-dompet-compact,
+  .finance-period-trigger-compact {
+    padding-inline: 10px;
+  }
+
+  .tombol-laporan-dompet-compact .tombol-laporan-dompet-kiri,
+  .finance-period-trigger-compact .finance-period-trigger-main {
+    gap: 6px;
+  }
+}
