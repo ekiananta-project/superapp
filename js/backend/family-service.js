@@ -469,6 +469,20 @@
     return barisPertama(data);
   }
 
+  async function keluarDariKeluarga(familyId) {
+    if (!familyId) {
+      throw new Error("familyId wajib diisi.");
+    }
+
+    const { data, error } = await client.rpc(
+      "family_leave",
+      { p_family_id: familyId }
+    );
+
+    lemparJikaError(error);
+    return barisPertama(data);
+  }
+
   async function keluarkanAnggota(familyId, userId) {
     if (!familyId) {
       throw new Error("familyId wajib diisi.");
@@ -521,6 +535,7 @@
     hapusFotoKeluarga,
     ubahHubunganAnggota,
     transferKepemilikan,
+    keluarDariKeluarga,
     keluarkanAnggota,
     cabutUndangan
   };
