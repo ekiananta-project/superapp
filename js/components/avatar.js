@@ -11,17 +11,20 @@
       .map(kata => kata[0]?.toUpperCase() || "").join("") || "?";
   }
 
-  function publicUrl(path) {
+  function publicUrl(path, version = "") {
     if (!path || !window.supabaseClient) return "";
     const { data } = window.supabaseClient.storage.from(BUCKET).getPublicUrl(path);
-    return data?.publicUrl || "";
+    const url = data?.publicUrl || "";
+    if (!url) return "";
+    const token = String(version || "").trim();
+    return token ? `${url}?v=${encodeURIComponent(token)}` : url;
   }
 
   function render(elemen, profile = profileCache, opsi = {}) {
     if (!elemen) return;
     const fallback = opsi.fallback || elemen.dataset.avatarFallback || "icon";
     const nama = profile?.display_name || profile?.nama || "Pengguna";
-    const foto = profile?.avatar_url || publicUrl(profile?.avatar_path) || profile?.fotoProfil || "";
+    const foto = profile?.avatar_url || publicUrl(profile?.avatar_path, profile?.updated_at) || profile?.fotoProfil || "";
 
     elemen.classList.add("avatar-pengguna");
     elemen.replaceChildren();
@@ -74,7 +77,7 @@
 
         const { data, error } = await window.supabaseClient
           .from("profiles")
-          .select("display_name,avatar_path")
+          .select("display_name,avatar_path,updated_at")
           .eq("id", user.id)
           .maybeSingle();
         if (error) throw error;
