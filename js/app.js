@@ -912,9 +912,10 @@
     /* Home yang sudah memakai Supabase tidak lagi bergantung pada
        setup keluarga localStorage. Halaman lain untuk sementara
        masih memakai guard lama sampai dimigrasikan satu per satu. */
+    // Home backend memakai flag boot eksplisit. Jangan ikat guard ke elemen UI
+    // tertentu karena markup Home boleh berubah tanpa mengubah status backend.
     const homeBackendAktif =
-      window.HOME_BACKEND_MODE === true &&
-      Boolean(document.querySelector("[data-home-transaksi]"));
+      window.HOME_BACKEND_MODE === true;
 
     const authBackendAktif =
       window.AUTH_BACKEND_MODE === true;

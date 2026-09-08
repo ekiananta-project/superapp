@@ -1,4 +1,4 @@
-const CACHE_NAME = "family-superapp-v1.1.7-finance-3-layer-period-1";
+const CACHE_NAME = "family-superapp-v1.1.7a-home-router-hotfix-1";
 const OFFLINE_URL = "./offline.html";
 
 const APP_FILES = [
@@ -61,6 +61,7 @@ const APP_FILES = [
   "./icons/icon-512-v2.png",
   "./index.html",
   "./js/app.js",
+  "./js/app.js?v=20260908-3",
   "./js/backend/auth-guard.js",
   "./js/backend/auth-router.js",
   "./js/backend/auth-service.js",
