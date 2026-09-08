@@ -534,3 +534,20 @@
     transition: none;
   }
 }
+
+
+/* v1.2.0a1 — Budget UX/navigation regression polish */
+.budget-section-head {
+  align-items: flex-end;
+}
+
+.budget-form .category-picker-trigger.is-readonly,
+.budget-form .category-picker-trigger[aria-disabled="true"] {
+  opacity: 1;
+  cursor: default;
+}
+
+.budget-form .category-picker-trigger.is-readonly > ion-icon,
+.budget-form .category-picker-trigger[aria-disabled="true"] > ion-icon {
+  opacity: .35;
+}

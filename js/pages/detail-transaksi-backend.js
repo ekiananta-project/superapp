@@ -9,7 +9,9 @@
   const alasanVoid = document.querySelector("[data-alasan-void]");
   const tombolKonfirmasiVoid = document.querySelector("[data-konfirmasi-void]");
 
-  const transactionId = new URLSearchParams(location.search).get("id");
+  const params = new URLSearchParams(location.search);
+  const transactionId = params.get("id");
+  const fromWalletId = params.get("from_wallet") || "";
 
   let detailAktif = null;
   let sedangVoid = false;
@@ -96,6 +98,26 @@
     };
   }
 
+  function walletKembali(detail) {
+    if (fromWalletId) return fromWalletId;
+    const entries = detail?.entries || [];
+    return entries.find(item => item?.wallet_id)?.wallet_id || "";
+  }
+
+  function hrefDaftarTransaksi(detail) {
+    const walletId = walletKembali(detail);
+    return walletId
+      ? `dompet-detail.html?id=${encodeURIComponent(walletId)}`
+      : "dompet-detail.html";
+  }
+
+  function syncTombolKembali(detail) {
+    const href = hrefDaftarTransaksi(detail);
+    const headerBack = document.querySelector("[data-detail-back]");
+    if (headerBack) headerBack.href = href;
+    return href;
+  }
+
   async function cekBolehKelola(detail) {
     const user = await AuthService.ambilUserAktif();
     if (!user) return false;
@@ -125,6 +147,7 @@
   }
 
   async function renderDetail(detail) {
+    const hrefKembali = syncTombolKembali(detail);
     const bolehKelola = !detail.voided_at && await cekBolehKelola(detail);
     const bolehVoid = bolehKelola;
     const wallet = walletMasukKeluar(detail);
@@ -219,8 +242,10 @@
     ) {
       const editLink = document.createElement("a");
       editLink.className = "tombol-utama";
+      const walletIdKembali = walletKembali(detail);
       editLink.href =
-        `transaksi.html?id=${encodeURIComponent(detail.id)}`;
+        `transaksi.html?id=${encodeURIComponent(detail.id)}` +
+        (walletIdKembali ? `&from_wallet=${encodeURIComponent(walletIdKembali)}` : "");
       editLink.innerHTML =
         '<ion-icon name="create-outline"></ion-icon><span>Edit Transaksi</span>';
       aksi.appendChild(editLink);
@@ -246,8 +271,8 @@
 
     const kembali = document.createElement("a");
     kembali.className = "tombol-sekunder";
-    kembali.href = "index.html";
-    kembali.textContent = "Kembali ke Home";
+    kembali.href = hrefKembali;
+    kembali.textContent = "Kembali ke Daftar Transaksi";
     aksi.appendChild(kembali);
 
     root.appendChild(aksi);

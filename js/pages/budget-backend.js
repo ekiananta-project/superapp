@@ -112,11 +112,16 @@
 
   function setMonth(next) {
     month = firstDay(next);
-    if (family?.id) {
-      localStorage.setItem(`finance_budget_month_v1:${family.id}`, monthValue(month));
-    }
     syncMonthUI();
     loadBudgets();
+  }
+
+  function resetCurrentMonth({ reload = true } = {}) {
+    const current = firstDay(new Date());
+    const changed = monthValue(month) !== monthValue(current);
+    month = current;
+    syncMonthUI();
+    if (reload && changed && family) loadBudgets();
   }
 
   function syncMonthUI() {
@@ -127,17 +132,6 @@
     if (summaryTitle) summaryTitle.textContent = label;
   }
 
-  function readStoredMonth() {
-    if (!family?.id) return;
-    const value = localStorage.getItem(`finance_budget_month_v1:${family.id}`) || "";
-    const match = /^(\d{4})-(\d{2})$/.exec(value);
-    if (!match) return;
-    const y = Number(match[1]);
-    const m = Number(match[2]);
-    if (y >= 2000 && y <= 2100 && m >= 1 && m <= 12) {
-      month = new Date(y, m - 1, 1);
-    }
-  }
 
   function renderSummary() {
     const total = budgets.reduce((sum, item) => sum + Number(item.budget_amount || 0), 0);
@@ -423,7 +417,10 @@
     if (amountInput) amountInput.value = item ? formatNumberInput(item.budget_amount) : "";
     if (deleteButton) deleteButton.hidden = !item;
     if (categoryTrigger) {
-      categoryTrigger.disabled = Boolean(item);
+      categoryTrigger.disabled = false;
+      categoryTrigger.classList.toggle("is-readonly", Boolean(item));
+      categoryTrigger.setAttribute("aria-disabled", item ? "true" : "false");
+      categoryTrigger.tabIndex = item ? -1 : 0;
       categoryTrigger.title = item ? "Kategori tidak dapat diganti saat edit. Hapus budget lalu buat baru jika ingin mengganti kategori." : "";
     }
 
@@ -444,7 +441,13 @@
     if (sheetLayer) sheetLayer.hidden = true;
     editingBudget = null;
     selectedCategoryId = "";
-    if (categoryTrigger) categoryTrigger.disabled = false;
+    if (categoryTrigger) {
+      categoryTrigger.disabled = false;
+      categoryTrigger.classList.remove("is-readonly");
+      categoryTrigger.setAttribute("aria-disabled", "false");
+      categoryTrigger.tabIndex = 0;
+      categoryTrigger.title = "";
+    }
     document.body.style.overflow = "";
   }
 
@@ -514,8 +517,7 @@
     family = await AuthRouter.ambilFamilyAktif();
     if (!family) return;
 
-    readStoredMonth();
-    syncMonthUI();
+    resetCurrentMonth({ reload: false });
 
     categories = await FinanceService.ambilAkun(family.id, "expense");
     categories = categories.filter(item => !item.archived_at);
@@ -597,6 +599,11 @@
     if (event.key !== "Escape") return;
     if (categoryLayer && !categoryLayer.hidden) closeCategoryPicker();
     else if (sheetLayer && !sheetLayer.hidden) closeForm();
+  });
+
+  window.addEventListener("pageshow", event => {
+    if (!event.persisted || !family) return;
+    resetCurrentMonth({ reload: true });
   });
 
   const run = () => start().catch(error => {

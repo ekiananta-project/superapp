@@ -156,7 +156,7 @@
         <strong class="transaksi-detail-nilai">${info.tanda} ${rupiah(info.nilai, dompetAktif.currency_code)}</strong>
         <ion-icon name="chevron-forward-outline"></ion-icon>`;
       button.addEventListener("click", () => {
-        location.href = `detail-transaksi.html?id=${encodeURIComponent(item.id)}`;
+        location.href = `detail-transaksi.html?id=${encodeURIComponent(item.id)}&from_wallet=${encodeURIComponent(dompetAktif.wallet_id)}`;
       });
       container.appendChild(button);
     });

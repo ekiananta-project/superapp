@@ -56,6 +56,12 @@
 
   const params = new URLSearchParams(location.search);
   const idEdit = params.get("id");
+  const fromWalletId = params.get("from_wallet") || "";
+
+  function hrefDetail(id) {
+    return `detail-transaksi.html?id=${encodeURIComponent(id)}` +
+      (fromWalletId ? `&from_wallet=${encodeURIComponent(fromWalletId)}` : "");
+  }
   const dompetDariURL = params.get("dompet");
   const modeDariURL = params.get("mode");
 
@@ -701,7 +707,7 @@
     if (judul) judul.textContent = "Edit Transaksi";
     document.title = "Edit Transaksi";
     if (tombolKembali) {
-      tombolKembali.href = `detail-transaksi.html?id=${encodeURIComponent(idEdit)}`;
+      tombolKembali.href = hrefDetail(idEdit);
     }
     if (tombolSimpan) tombolSimpan.textContent = labelSimpan();
   }
@@ -738,7 +744,7 @@
       setFormAktif(false);
 
       if (idEdit && tombolKembali) {
-        tombolKembali.href = `detail-transaksi.html?id=${encodeURIComponent(idEdit)}`;
+        tombolKembali.href = hrefDetail(idEdit);
       }
     }
   }
@@ -976,12 +982,12 @@
 
       setTimeout(() => {
         if (isTransfer && transactionId) {
-          location.href = `detail-transaksi.html?id=${encodeURIComponent(transactionId)}`;
+          location.href = hrefDetail(transactionId);
           return;
         }
 
         location.href = idEdit
-          ? `detail-transaksi.html?id=${encodeURIComponent(idEdit)}`
+          ? hrefDetail(idEdit)
           : "index.html";
       }, 450);
     } catch (error) {
