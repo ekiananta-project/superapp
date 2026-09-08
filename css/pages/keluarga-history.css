@@ -281,3 +281,8 @@
     width: max-content;
   }
 }
+
+/* v1.1.5 — beberapa baris Pengelolaan */
+.family-management-section .family-management-row + .family-management-row {
+  margin-top: var(--space-3);
+}

@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="id" data-auth-guard="login">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#0B0D0C">
+  <meta name="application-name" content="Family Superapp">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Family">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="robots" content="noindex,nofollow,noarchive">
+  <meta name="referrer" content="strict-origin-when-cross-origin">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32.png">
+  <link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png">
+  <link rel="apple-touch-icon" sizes="180x180" href="icons/apple-touch-icon.png">
+  <script src="js/theme.js"></script>
+  <title>Kelola Undangan</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/pages/kelola-undangan.css?v=20260908-1">
+  <link rel="stylesheet" href="css/theme.css">
+</head>
+<body>
+<div class="aplikasi">
+  <header class="header-halaman">
+    <a class="tombol-ikon" href="keluarga.html" aria-label="Kembali ke Keluarga">
+      <ion-icon name="arrow-back-outline"></ion-icon>
+    </a>
+    <h1>Kelola Undangan</h1>
+    <span class="kosong"></span>
+  </header>
+
+  <main class="konten-halaman invitation-management-page">
+    <section class="invitation-management-intro">
+      <ion-icon name="mail-open-outline" aria-hidden="true"></ion-icon>
+      <div>
+        <h2>Undangan Ruang Keluarga</h2>
+        <p>
+          Buat beberapa kode one-time untuk <strong data-invitation-family-name>Ruang Keluarga</strong>.
+          Setiap kode hanya dapat dipakai satu kali.
+        </p>
+      </div>
+    </section>
+
+    <div class="invitation-page-message" data-invitation-message hidden></div>
+
+    <section class="invitation-create-card" id="buat">
+      <div class="invitation-section-heading">
+        <div>
+          <span class="invitation-eyebrow">Undangan Baru</span>
+          <h2>Buat kode undangan</h2>
+        </div>
+        <ion-icon name="person-add-outline" aria-hidden="true"></ion-icon>
+      </div>
+
+      <div class="invitation-form-grid">
+        <div class="grup-input">
+          <label for="invite-relationship">Hubungan anggota</label>
+          <select class="pilih" id="invite-relationship" data-invite-relationship>
+            <option value="">Belum ditentukan</option>
+            <option value="pasangan">Pasangan</option>
+            <option value="orang_tua">Orang Tua</option>
+            <option value="anak">Anak</option>
+            <option value="saudara">Saudara</option>
+            <option value="kerabat">Kerabat</option>
+            <option value="lainnya">Lainnya</option>
+          </select>
+        </div>
+
+        <div class="grup-input">
+          <label for="invite-expiry">Masa berlaku</label>
+          <select class="pilih" id="invite-expiry" data-invite-expiry>
+            <option value="24">24 jam</option>
+            <option value="48">48 jam</option>
+            <option value="72">3 hari</option>
+            <option value="168">7 hari</option>
+          </select>
+        </div>
+      </div>
+
+      <button class="tombol-utama invitation-create-button" type="button" data-invite-create>
+        <ion-icon name="key-outline"></ion-icon>
+        Buat Undangan Baru
+      </button>
+
+      <p class="invitation-security-note">
+        <ion-icon name="shield-checkmark-outline"></ion-icon>
+        Membuat kode baru tidak mencabut kode aktif yang lain.
+      </p>
+    </section>
+
+    <section class="invitation-active-section">
+      <div class="invitation-section-title-row">
+        <div>
+          <span class="invitation-eyebrow">Aktif</span>
+          <h2>Undangan aktif</h2>
+        </div>
+        <span class="invitation-count" data-active-count>0</span>
+      </div>
+
+      <div class="invitation-loading" data-active-loading>
+        <ion-icon name="sync-outline"></ion-icon>
+        <p>Memuat undangan aktif...</p>
+      </div>
+
+      <div class="invitation-empty" data-active-empty hidden>
+        <ion-icon name="mail-unread-outline"></ion-icon>
+        <strong>Belum ada undangan aktif</strong>
+        <p>Buat kode baru untuk mengundang anggota keluarga.</p>
+      </div>
+
+      <div class="invitation-active-list" data-active-list></div>
+    </section>
+
+    <section class="invitation-history-section">
+      <button class="invitation-history-toggle" type="button" data-history-toggle aria-expanded="false">
+        <span class="invitation-history-toggle-icon">
+          <ion-icon name="time-outline"></ion-icon>
+        </span>
+        <span>
+          <strong>Riwayat Undangan</strong>
+          <small>Kode yang dipakai, dicabut, atau kedaluwarsa.</small>
+        </span>
+        <ion-icon class="invitation-history-chevron" name="chevron-down-outline"></ion-icon>
+      </button>
+
+      <div class="invitation-history-body" data-history-body hidden>
+        <div class="invitation-loading" data-history-loading hidden>
+          <ion-icon name="sync-outline"></ion-icon>
+          <p>Memuat riwayat undangan...</p>
+        </div>
+
+        <div class="invitation-empty" data-history-empty hidden>
+          <ion-icon name="archive-outline"></ion-icon>
+          <strong>Belum ada riwayat undangan</strong>
+          <p>Undangan yang selesai akan tampil di sini.</p>
+        </div>
+
+        <div class="invitation-history-list" data-history-list></div>
+
+        <button class="tombol-sekunder invitation-history-more" type="button" data-history-more hidden>
+          <ion-icon name="chevron-down-outline"></ion-icon>
+          Muat Riwayat Lainnya
+        </button>
+      </div>
+    </section>
+  </main>
+</div>
+
+<script type="module" src="https://unpkg.com/ionicons@8.0.13/dist/ionicons/ionicons.esm.js"></script>
+<script nomodule src="https://unpkg.com/ionicons@8.0.13/dist/ionicons/ionicons.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="js/backend/supabase.js"></script>
+<script src="js/backend/auth-service.js"></script>
+<script src="js/backend/family-service.js?v=20260908-8"></script>
+<script src="js/backend/finance-service.js"></script>
+<script src="js/backend/auth-router.js"></script>
+<script src="js/backend/auth-guard.js"></script>
+<script>window.AUTH_BACKEND_MODE = true;</script>
+<script src="js/pages/kelola-undangan.js?v=20260908-1"></script>
+<script src="js/pwa.js"></script>
+</body>
+</html>

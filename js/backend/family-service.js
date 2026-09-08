@@ -280,6 +280,56 @@
     return barisPertama(data);
   }
 
+  async function ambilUndanganAktifSemua(familyId) {
+    if (!familyId) {
+      throw new Error("familyId wajib diisi.");
+    }
+
+    const { data, error } = await client.rpc(
+      "family_get_active_invitations",
+      { p_family_id: familyId }
+    );
+
+    lemparJikaError(error);
+    return Array.isArray(data) ? data : (data ? [data] : []);
+  }
+
+  async function ambilRiwayatUndangan(
+    familyId,
+    { limit = 20, beforeCreatedAt = null, beforeId = null } = {}
+  ) {
+    if (!familyId) {
+      throw new Error("familyId wajib diisi.");
+    }
+
+    const pageSize = Math.min(Math.max(Number(limit) || 20, 1), 50);
+
+    const { data, error } = await client.rpc(
+      "family_get_invitation_history",
+      {
+        p_family_id: familyId,
+        p_limit: pageSize,
+        p_before_created_at: beforeCreatedAt || null,
+        p_before_id: beforeId || null
+      }
+    );
+
+    lemparJikaError(error);
+
+    const rows = Array.isArray(data) ? data : (data ? [data] : []);
+    const hasMore = rows.length > pageSize;
+    const items = hasMore ? rows.slice(0, pageSize) : rows;
+    const last = items[items.length - 1] || null;
+
+    return {
+      items,
+      hasMore,
+      nextCursor: hasMore && last
+        ? { createdAt: last.created_at, id: last.invitation_id }
+        : null
+    };
+  }
+
   async function previewUndangan(kode) {
     const kodeBersih = normalisasiKodeUndangan(kode);
 
@@ -290,6 +340,20 @@
 
     lemparJikaError(error);
     return barisPertama(data);
+  }
+
+  async function ambilUrlFotoUndangan(path) {
+    const objectPath = String(path || "").trim();
+    if (!objectPath) return "";
+
+    // Tidak memakai cache family-photo biasa. Invitation preview sengaja
+    // menghasilkan URL singkat dan hanya setelah backend memberi grant 5 menit.
+    const { data, error } = await client.storage
+      .from(FAMILY_PHOTO_BUCKET)
+      .createSignedUrl(objectPath, 300);
+
+    lemparJikaError(error);
+    return data?.signedUrl || "";
   }
 
   async function terimaUndangan(kode) {
@@ -668,7 +732,10 @@
     normalisasiKodeUndangan,
     buatUndanganKeluarga,
     ambilUndanganAktif,
+    ambilUndanganAktifSemua,
+    ambilRiwayatUndangan,
     previewUndangan,
+    ambilUrlFotoUndangan,
     terimaUndangan,
     ambilUrlFotoKeluarga,
     simpanFotoKeluarga,

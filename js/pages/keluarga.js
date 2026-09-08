@@ -7,6 +7,7 @@
   const notifikasi = document.querySelector("[data-notifikasi-keluarga]");
 
   const tombolBukaUndangan = document.querySelector("[data-buat-undangan]");
+  const barisKelolaUndangan = document.querySelector("[data-invitation-management-row]");
   const panelUndangan = document.querySelector("[data-panel-undangan]");
   const selectHubungan = document.querySelector("[data-undangan-hubungan]");
   const tombolGenerate = document.querySelector("[data-generate-undangan]");
@@ -730,6 +731,7 @@
     if (submit) submit.hidden = !owner;
 
     if (tombolBukaUndangan) tombolBukaUndangan.hidden = !owner;
+    if (barisKelolaUndangan) barisKelolaUndangan.hidden = !owner;
     if (!owner && panelUndangan) panelUndangan.hidden = true;
 
     if (zonaBubarkanKeluarga) {
@@ -814,7 +816,8 @@
         detail: window.FAMILY_CORE_STATE
       }));
 
-      await muatUndanganAktif();
+      // v1.1.5: invitation management dipisah ke halaman khusus.
+      // Keluarga utama tidak lagi query invitation agar tetap ringan.
     } catch (error) {
       console.error("[Keluarga Backend]", error);
       tampilPesan(error?.message || "Data keluarga belum dapat dimuat.", "error");
@@ -849,8 +852,7 @@
 
   tombolBukaUndangan?.addEventListener("click", () => {
     if (!sayaOwner()) return;
-    panelUndangan.hidden = false;
-    panelUndangan.scrollIntoView({ behavior: "smooth", block: "nearest" });
+    location.href = "kelola-undangan.html#buat";
   });
 
   tombolGenerate?.addEventListener("click", async () => {

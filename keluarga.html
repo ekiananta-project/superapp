@@ -29,8 +29,7 @@
   <link rel="stylesheet" href="css/pages/keluarga-family-media.css?v=20260908-1">
   <link rel="stylesheet" href="css/pages/keluarga-leave.css?v=20260908-1">
   <link rel="stylesheet" href="css/pages/keluarga-dissolve.css?v=20260908-1">
-  <link rel="stylesheet" href="css/pages/keluarga-history.css?v=20260908-1">
-  <link rel="stylesheet" href="css/pages/family-invitation.css">
+  <link rel="stylesheet" href="css/pages/keluarga-history.css?v=20260908-2">
   <link rel="stylesheet" href="css/theme.css">
 </head>
 
@@ -103,75 +102,10 @@
 
     <div class="daftar-anggota" data-daftar-anggota></div>
 
-    <button class="tombol-utama tombol-tambah-anggota" type="button" data-buat-undangan>
+    <button class="tombol-utama tombol-tambah-anggota" type="button" data-buat-undangan hidden>
       <ion-icon name="person-add-outline"></ion-icon>
       Tambah Anggota Keluarga
     </button>
-
-    <section class="panel-undangan panel-undangan-backend" data-panel-undangan hidden>
-      <div class="panel-undangan-header">
-        <span class="panel-undangan-ikon">
-          <ion-icon name="mail-open-outline"></ion-icon>
-        </span>
-
-        <div>
-          <h2>Undangan Keluarga</h2>
-          <p>Buat kode one-time untuk anggota keluarga yang ingin bergabung.</p>
-        </div>
-      </div>
-
-      <div class="grup-input undangan-hubungan-field" data-undangan-pengaturan>
-        <label for="hubungan-undangan">Hubungan anggota yang diundang</label>
-        <select class="pilih" id="hubungan-undangan" data-undangan-hubungan>
-          <option value="">Belum ditentukan</option>
-          <option value="pasangan">Pasangan</option>
-          <option value="orang_tua">Orang Tua</option>
-          <option value="anak">Anak</option>
-          <option value="saudara">Saudara</option>
-          <option value="kerabat">Kerabat</option>
-          <option value="lainnya">Lainnya</option>
-        </select>
-        <small class="bantuan-field">Hubungan ini akan otomatis dipasang saat kode diterima.</small>
-      </div>
-
-      <button class="tombol-sekunder tombol-generate-undangan" type="button" data-generate-undangan>
-        <ion-icon name="key-outline"></ion-icon>
-        Buat Kode Undangan
-      </button>
-
-      <div class="undangan-hasil" data-undangan-hasil hidden>
-        <div class="kode-undangan" data-kode-undangan>----</div>
-
-        <p class="masa-undangan">
-          Berlaku sampai
-          <strong data-kedaluwarsa-undangan>-</strong>
-        </p>
-
-        <p class="hubungan-undangan-ringkas" data-hubungan-undangan-ringkas hidden></p>
-
-        <div class="baris-tombol">
-          <button class="tombol-sekunder" type="button" data-salin-undangan>
-            <ion-icon name="copy-outline"></ion-icon>
-            Salin Kode
-          </button>
-
-          <button class="tombol-sekunder" type="button" data-bagikan-undangan>
-            <ion-icon name="share-social-outline"></ion-icon>
-            Bagikan
-          </button>
-        </div>
-
-        <button class="tombol-link-bahaya" type="button" data-cabut-undangan>
-          <ion-icon name="close-circle-outline"></ion-icon>
-          Cabut kode ini
-        </button>
-      </div>
-
-      <p class="catatan-undangan-backend">
-        <ion-icon name="shield-checkmark-outline"></ion-icon>
-        Kode undangan hanya berlaku satu kali dan aktif selama 24 jam.
-      </p>
-    </section>
 
     <section class="family-management-section">
       <h2 class="judul-grup">Pengelolaan</h2>
@@ -184,6 +118,19 @@
         <span class="family-management-copy">
           <strong>Riwayat Anggota</strong>
           <small>Lihat anggota yang keluar atau dikeluarkan.</small>
+        </span>
+
+        <ion-icon class="family-management-chevron" name="chevron-forward-outline" aria-hidden="true"></ion-icon>
+      </a>
+
+      <a class="family-management-row" href="kelola-undangan.html" data-invitation-management-row hidden>
+        <span class="family-management-icon" aria-hidden="true">
+          <ion-icon name="mail-open-outline"></ion-icon>
+        </span>
+
+        <span class="family-management-copy">
+          <strong>Kelola Undangan</strong>
+          <small>Buat, bagikan, cabut, dan lihat riwayat undangan.</small>
         </span>
 
         <ion-icon class="family-management-chevron" name="chevron-forward-outline" aria-hidden="true"></ion-icon>
@@ -555,14 +502,14 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="js/backend/supabase.js"></script>
 <script src="js/backend/auth-service.js"></script>
-<script src="js/backend/family-service.js?v=20260908-7"></script>
+<script src="js/backend/family-service.js?v=20260908-8"></script>
 <script src="js/backend/finance-service.js"></script>
 <script src="js/backend/auth-router.js"></script>
 <script src="js/backend/auth-guard.js"></script>
 <script>window.AUTH_BACKEND_MODE = true;</script>
 <script src="js/app.js"></script>
 <script src="js/components/avatar.js?v=20260908-2"></script>
-<script src="js/pages/keluarga.js?v=20260908-6"></script>
+<script src="js/pages/keluarga.js?v=20260908-7"></script>
 <script src="js/pages/keluarga-media.js?v=20260908-3"></script>
 <script src="js/pwa.js"></script>
 </body>

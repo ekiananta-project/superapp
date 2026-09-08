@@ -24,7 +24,7 @@
 
   <link rel="stylesheet" href="css/style.css">
   <link rel="stylesheet" href="css/pages/keluarga-awal.css">
-  <link rel="stylesheet" href="css/pages/family-invitation.css">
+  <link rel="stylesheet" href="css/pages/family-invitation.css?v=20260908-2">
   <link rel="stylesheet" href="css/theme.css">
 </head>
 
@@ -198,9 +198,15 @@
       </form>
 
       <section class="preview-undangan-gabung" data-preview-undangan hidden>
-        <div class="preview-undangan-ikon">
-          <ion-icon name="people-circle-outline"></ion-icon>
-        </div>
+        <button
+          class="preview-undangan-ikon"
+          type="button"
+          aria-label="Foto Ruang Keluarga"
+          data-preview-family-photo
+          disabled>
+          <img data-preview-family-photo-image alt="" hidden>
+          <ion-icon name="people-circle-outline" data-preview-family-photo-fallback></ion-icon>
+        </button>
         <div class="preview-undangan-copy">
           <span class="preview-undangan-label">Undangan ditemukan</span>
           <h3 data-preview-nama-keluarga>Keluarga</h3>
@@ -230,17 +236,33 @@
   </main>
 </div>
 
+
+<div class="invitation-photo-preview-layer" data-invitation-photo-preview hidden>
+  <section class="invitation-photo-preview-card" role="dialog" aria-modal="true" aria-labelledby="invitation-photo-preview-title">
+    <button class="invitation-photo-preview-close" type="button" aria-label="Tutup preview foto" data-invitation-photo-preview-close>
+      <ion-icon name="close-outline"></ion-icon>
+    </button>
+    <div class="invitation-photo-preview-visual">
+      <img data-invitation-photo-preview-image alt="Foto Ruang Keluarga">
+    </div>
+    <div class="invitation-photo-preview-info">
+      <span>Ruang Keluarga</span>
+      <h2 id="invitation-photo-preview-title" data-invitation-photo-preview-name>Foto Keluarga</h2>
+    </div>
+  </section>
+</div>
+
 <script type="module" src="https://unpkg.com/ionicons@8.0.13/dist/ionicons/ionicons.esm.js"></script>
 <script nomodule src="https://unpkg.com/ionicons@8.0.13/dist/ionicons/ionicons.js"></script>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="js/backend/supabase.js"></script>
 <script src="js/backend/auth-service.js"></script>
-<script src="js/backend/family-service.js?v=20260908-7"></script>
+<script src="js/backend/family-service.js?v=20260908-8"></script>
 <script src="js/backend/finance-service.js"></script>
 <script src="js/backend/auth-router.js"></script>
 <script src="js/backend/auth-guard.js"></script>
-<script src="js/pages/keluarga-awal.js?v=20260908-2"></script>
+<script src="js/pages/keluarga-awal.js?v=20260908-3"></script>
 <script src="js/pwa.js"></script>
 </body>
 </html>

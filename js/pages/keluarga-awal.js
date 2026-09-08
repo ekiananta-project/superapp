@@ -16,6 +16,13 @@
   const previewHubungan = document.querySelector("[data-preview-hubungan]");
   const previewKedaluwarsa = document.querySelector("[data-preview-kedaluwarsa]");
   const tombolTerima = document.querySelector("[data-terima-undangan]");
+  const previewFotoButton = document.querySelector("[data-preview-family-photo]");
+  const previewFotoImage = document.querySelector("[data-preview-family-photo-image]");
+  const previewFotoFallback = document.querySelector("[data-preview-family-photo-fallback]");
+  const previewFotoLayer = document.querySelector("[data-invitation-photo-preview]");
+  const previewFotoLarge = document.querySelector("[data-invitation-photo-preview-image]");
+  const previewFotoName = document.querySelector("[data-invitation-photo-preview-name]");
+  const previewFotoClose = document.querySelector("[data-invitation-photo-preview-close]");
 
   let undanganDipreview = null;
   let kodeDipreview = "";
@@ -68,6 +75,7 @@
       orang_tua: "Orang Tua",
       anak: "Anak",
       saudara: "Saudara",
+      kerabat: "Kerabat",
       lainnya: "Lainnya"
     })[value] || "";
   }
@@ -81,6 +89,56 @@
       hour: "2-digit",
       minute: "2-digit"
     });
+  }
+
+  function tutupPreviewFoto() {
+    if (previewFotoLayer) previewFotoLayer.hidden = true;
+  }
+
+  function resetFotoUndangan() {
+    if (previewFotoImage) {
+      previewFotoImage.hidden = true;
+      previewFotoImage.removeAttribute("src");
+      previewFotoImage.alt = "";
+    }
+    if (previewFotoFallback) previewFotoFallback.hidden = false;
+    if (previewFotoButton) {
+      previewFotoButton.disabled = true;
+      previewFotoButton.removeAttribute("data-photo-url");
+      previewFotoButton.setAttribute("aria-label", "Ruang Keluarga belum memiliki foto");
+    }
+    if (previewFotoLarge) previewFotoLarge.removeAttribute("src");
+    if (previewFotoName) previewFotoName.textContent = "Foto Keluarga";
+    tutupPreviewFoto();
+  }
+
+  async function muatFotoUndangan(data) {
+    resetFotoUndangan();
+    const path = String(data?.family_photo_path || "").trim();
+    if (!path) return;
+
+    try {
+      const url = await FamilyService.ambilUrlFotoUndangan(path);
+      if (!url) return;
+
+      if (previewFotoImage) {
+        previewFotoImage.src = url;
+        previewFotoImage.alt = `Foto ${data?.family_name || "Ruang Keluarga"}`;
+        previewFotoImage.hidden = false;
+      }
+      if (previewFotoFallback) previewFotoFallback.hidden = true;
+      if (previewFotoButton) {
+        previewFotoButton.disabled = false;
+        previewFotoButton.dataset.photoUrl = url;
+        previewFotoButton.setAttribute("aria-label", `Preview foto ${data?.family_name || "Ruang Keluarga"}`);
+      }
+      if (previewFotoLarge) previewFotoLarge.src = url;
+      if (previewFotoName) previewFotoName.textContent = data?.family_name || "Ruang Keluarga";
+    } catch (error) {
+      // Foto adalah enhancement. Invitation tetap boleh dipreview bila media gagal.
+      console.warn("[Invitation family photo]", error);
+      resetFotoUndangan();
+    }
   }
 
   function simpanFamilyAktif(familyId) {
@@ -101,6 +159,7 @@
     undanganDipreview = null;
     kodeDipreview = "";
     namaDipreview = "";
+    resetFotoUndangan();
     if (preview) preview.hidden = true;
     setStatusGabung("");
 
@@ -290,6 +349,8 @@
       previewHubunganWrap.hidden = !hubungan;
       previewHubungan.textContent = hubungan;
 
+      await muatFotoUndangan(data);
+
       preview.hidden = false;
       preview.scrollIntoView({ behavior: "smooth", block: "nearest" });
 
@@ -314,6 +375,18 @@
       submit.disabled = false;
       submit.innerHTML = 'Periksa Kode <ion-icon name="arrow-forward-outline"></ion-icon>';
     }
+  });
+
+  previewFotoButton?.addEventListener("click", () => {
+    const url = previewFotoButton.dataset.photoUrl || "";
+    if (!url || !previewFotoLayer || !previewFotoLarge) return;
+    previewFotoLarge.src = url;
+    previewFotoLayer.hidden = false;
+  });
+
+  previewFotoClose?.addEventListener("click", tutupPreviewFoto);
+  previewFotoLayer?.addEventListener("click", event => {
+    if (event.target === previewFotoLayer) tutupPreviewFoto();
   });
 
   tombolTerima?.addEventListener("click", async event => {

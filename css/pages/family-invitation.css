@@ -228,3 +228,102 @@
     transition: none;
   }
 }
+
+/* ------------------------------------------------------------
+   v1.1.5 — validated family photo invitation preview
+   ------------------------------------------------------------ */
+.preview-undangan-ikon {
+  padding: 0;
+  border: 0;
+  overflow: hidden;
+  cursor: zoom-in;
+}
+
+.preview-undangan-ikon:disabled {
+  cursor: default;
+}
+
+.preview-undangan-ikon img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.preview-undangan-ikon ion-icon {
+  font-size: 24px;
+}
+
+.invitation-photo-preview-layer {
+  position: fixed;
+  inset: 0;
+  z-index: 12000;
+  display: grid;
+  place-items: center;
+  padding: 20px;
+  background: rgba(0, 0, 0, .72);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+
+.invitation-photo-preview-layer[hidden] {
+  display: none;
+}
+
+.invitation-photo-preview-card {
+  position: relative;
+  width: min(92vw, 520px);
+  overflow: hidden;
+  border: 1px solid var(--color-border, #dce1dc);
+  border-radius: 24px;
+  background: var(--color-surface, #fff);
+  box-shadow: 0 24px 60px rgba(0, 0, 0, .35);
+}
+
+.invitation-photo-preview-close {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  z-index: 2;
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  border: 0;
+  border-radius: 999px;
+  background: rgba(0, 0, 0, .55);
+  color: #fff;
+  cursor: pointer;
+}
+
+.invitation-photo-preview-close ion-icon {
+  font-size: 23px;
+}
+
+.invitation-photo-preview-visual {
+  aspect-ratio: 1 / 1;
+  background: #101211;
+}
+
+.invitation-photo-preview-visual img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.invitation-photo-preview-info {
+  padding: 16px 18px 18px;
+}
+
+.invitation-photo-preview-info span {
+  color: var(--color-secondary, #24984a);
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+}
+
+.invitation-photo-preview-info h2 {
+  margin: 4px 0 0;
+  color: var(--color-text, #1c211e);
+  font-size: 18px;
+}
