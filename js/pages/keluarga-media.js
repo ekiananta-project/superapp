@@ -347,6 +347,36 @@
     await loadFamilyPhoto();
   }
 
+  async function refreshFamilyPhotoAfterBfcache() {
+    // Normal page load sudah mengambil metadata family terbaru. Query tambahan
+    // hanya dilakukan saat browser memulihkan halaman dari back-forward cache,
+    // karena state JavaScript lama dapat membawa family_photo_path versi lama.
+    syncCoreStateFromWindow({ render: false });
+    if (!family?.id || busy) return;
+
+    try {
+      const fresh = await FamilyService.ambilKeluargaById(family.id);
+      const previousPath = clean(family.family_photo_path);
+      const freshPath = clean(fresh?.family_photo_path);
+
+      if (previousPath === freshPath) return;
+
+      family.family_photo_path = freshPath || null;
+      if (fresh?.updated_at) family.updated_at = fresh.updated_at;
+
+      if (window.FAMILY_CORE_STATE?.family?.id === family.id) {
+        window.FAMILY_CORE_STATE.family.family_photo_path = family.family_photo_path;
+        if (fresh?.updated_at) window.FAMILY_CORE_STATE.family.updated_at = fresh.updated_at;
+      }
+
+      familyPhotoUrl = "";
+      renderFamilyPhoto();
+      await loadFamilyPhoto({ force: true });
+    } catch (error) {
+      console.warn("[Family photo bfcache refresh]", error);
+    }
+  }
+
   familyPhotoButton.addEventListener("click", () => {
     syncCoreStateFromWindow();
 
@@ -449,6 +479,10 @@
     applyCoreState(event.detail).catch(error => {
       console.warn("[Family media init]", error);
     });
+  });
+
+  window.addEventListener("pageshow", event => {
+    if (event.persisted) void refreshFamilyPhotoAfterBfcache();
   });
 
   if (window.FAMILY_CORE_STATE) {

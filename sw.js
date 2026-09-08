@@ -1,4 +1,4 @@
-const CACHE_NAME = "family-superapp-v1.1.5a-invitation-feedback-hotfix-1";
+const CACHE_NAME = "family-superapp-v1.1.6a-media-profile-regression-polish-1";
 const OFFLINE_URL = "./offline.html";
 
 const APP_FILES = [
@@ -18,6 +18,7 @@ const APP_FILES = [
   "./css/pages/family-invitation.css",
   "./css/pages/family-invitation.css?v=20260908-2",
   "./css/pages/family-invitation.css?v=20260908-3",
+  "./css/pages/family-invitation.css?v=20260908-4",
   "./css/pages/kelola-undangan.css",
   "./css/pages/kelola-undangan.css?v=20260908-1",
   "./css/pages/kelola-undangan.css?v=20260908-2",
@@ -37,6 +38,8 @@ const APP_FILES = [
   "./css/pages/keluarga-history.css?v=20260908-2",
   "./css/pages/keluarga.css",
   "./css/pages/pengaturan.css",
+  "./css/pages/pengaturan-profile-media.css",
+  "./css/pages/pengaturan-profile-media.css?v=20260908-1",
   "./css/pages/transaksi-category-picker.css",
   "./css/pages/transaksi-category-picker.css?v=20260908-1",
   "./css/style.css",
@@ -62,6 +65,7 @@ const APP_FILES = [
   "./js/backend/family-service.js?v=20260908-6",
   "./js/backend/family-service.js?v=20260908-7",
   "./js/backend/family-service.js?v=20260908-8",
+  "./js/backend/family-service.js?v=20260908-9",
   "./js/backend/finance-service.js",
   "./js/backend/finance-service.js?v=20260908-1",
   "./js/backend/finance-cache.js",
@@ -92,6 +96,8 @@ const APP_FILES = [
   "./js/pages/keluarga.js?v=20260908-7",
   "./js/pages/keluarga-media.js",
   "./js/pages/keluarga-media.js?v=20260908-2",
+  "./js/pages/keluarga-media.js?v=20260908-3",
+  "./js/pages/keluarga-media.js?v=20260908-4",
   "./js/pages/riwayat-anggota.js",
   "./js/pages/riwayat-anggota.js?v=20260908-1",
   "./js/pages/kelola-undangan.js",
@@ -100,6 +106,7 @@ const APP_FILES = [
   "./js/pages/login.js",
   "./js/pages/pengaturan-auth.js",
   "./js/pages/pengaturan-avatar-backend-v1.js",
+  "./js/pages/pengaturan-avatar-backend-v1.js?v=20260908-3",
   "./js/pages/pengaturan-profile-backend-v2.js",
   "./js/pages/pengaturan-tema.js",
   "./js/pages/transaksi-backend.js",

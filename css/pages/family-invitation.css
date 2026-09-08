@@ -368,3 +368,11 @@
 .toast-undangan-feedback[data-tipe="info"] ion-icon {
   color: var(--color-text-secondary, #777f79);
 }
+
+/* ------------------------------------------------------------
+   v1.1.6a — no-photo invitation fallback must never look busy
+   ------------------------------------------------------------ */
+.preview-undangan-gabung .preview-undangan-ikon:disabled {
+  opacity: 1;
+  cursor: default;
+}

@@ -459,14 +459,19 @@
     const ext = String(extension || "webp")
       .toLowerCase()
       .replace(/[^a-z0-9]/g, "") || "webp";
-    const path = `${familyId}/family-photo.${ext}`;
+    // Gunakan object path baru pada setiap perubahan foto.
+    // Jangan overwrite path lama: signed URL/browser/CDN cache milik anggota
+    // dapat tetap menunjuk isi lama walaupun object di-upsert. Path unik membuat
+    // perubahan identitas family langsung observable setelah metadata dimuat ulang.
+    const version = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+    const path = `${familyId}/family-photo-${version}.${ext}`;
 
     const { error: uploadError } = await client.storage
       .from(FAMILY_PHOTO_BUCKET)
       .upload(path, blob, {
-        upsert: true,
+        upsert: false,
         contentType,
-        cacheControl: "3600"
+        cacheControl: "31536000"
       });
     lemparJikaError(uploadError);
 
@@ -489,12 +494,12 @@
       const url = await ambilUrlFotoKeluarga(path, { force: true });
       return { path: data || path, url };
     } catch (error) {
-      if (!currentPath || currentPath !== path) {
-        await client.storage
-          .from(FAMILY_PHOTO_BUCKET)
-          .remove([path])
-          .catch(() => {});
-      }
+      // Metadata belum menunjuk path baru, jadi object baru aman dibersihkan.
+      await client.storage
+        .from(FAMILY_PHOTO_BUCKET)
+        .remove([path])
+        .catch(() => {});
+      hapusCacheFotoKeluarga(path);
       throw error;
     }
   }

@@ -6,6 +6,11 @@
   const pilih = document.querySelector("[data-pilih-foto]");
   const hapus = document.querySelector("[data-hapus-foto]");
   const notice = document.querySelector("[data-notifikasi]");
+  const previewTrigger = document.querySelector("[data-avatar-preview-trigger]");
+  const previewLayer = document.querySelector("[data-profile-photo-preview]");
+  const previewImage = document.querySelector("[data-profile-photo-preview-image]");
+  const previewName = document.querySelector("[data-profile-photo-preview-name]");
+  const previewClose = document.querySelector("[data-profile-photo-preview-close]");
 
   if (!client || !input || !pilih || !hapus) return;
 
@@ -13,6 +18,8 @@
   const MAX_SOURCE = 12 * 1024 * 1024;
   const SIZE = 512;
   let currentPath = null;
+  let currentUrl = "";
+  let currentName = "Pengguna";
   let timer = null;
 
   function show(text, type = "info") {
@@ -100,15 +107,35 @@
     return { blob: jpeg, ext: "jpg", contentType: "image/jpeg" };
   }
 
+  function syncPreviewTrigger() {
+    if (!previewTrigger) return;
+
+    const canPreview = Boolean(currentUrl);
+    previewTrigger.classList.toggle("avatar-profil-previewable", canPreview);
+
+    if (canPreview) {
+      previewTrigger.setAttribute("role", "button");
+      previewTrigger.setAttribute("tabindex", "0");
+      previewTrigger.setAttribute("aria-label", `Lihat foto profil ${currentName}`);
+    } else {
+      previewTrigger.removeAttribute("role");
+      previewTrigger.removeAttribute("tabindex");
+      previewTrigger.removeAttribute("aria-label");
+    }
+  }
+
   function applyAvatar(url, name = "Pengguna") {
+    currentUrl = String(url || "");
+    currentName = String(name || "Pengguna").trim() || "Pengguna";
+
     document.querySelectorAll("[data-avatar-pengguna]").forEach(el => {
       el.classList.add("avatar-pengguna");
       el.replaceChildren();
-      if (url) {
+      if (currentUrl) {
         const img = document.createElement("img");
         img.className = "avatar-pengguna-gambar";
-        img.src = url;
-        img.alt = `Foto profil ${name}`;
+        img.src = currentUrl;
+        img.alt = `Foto profil ${currentName}`;
         el.appendChild(img);
       } else {
         const icon = document.createElement("ion-icon");
@@ -118,6 +145,29 @@
         el.appendChild(icon);
       }
     });
+
+    syncPreviewTrigger();
+  }
+
+  function openPreview() {
+    if (!currentUrl || !previewLayer || !previewImage) return;
+    previewImage.src = currentUrl;
+    previewImage.alt = `Foto profil ${currentName}`;
+    if (previewName) previewName.textContent = currentName;
+    previewLayer.hidden = false;
+    document.body.classList.add("profile-photo-preview-open");
+  }
+
+  function closePreview() {
+    if (!previewLayer) return;
+    previewLayer.hidden = true;
+    document.body.classList.remove("profile-photo-preview-open");
+    if (previewImage) previewImage.removeAttribute("src");
+  }
+
+  function profileResult(data) {
+    if (Array.isArray(data)) return data[0] || null;
+    return data || null;
   }
 
   async function load() {
@@ -169,22 +219,26 @@
       if (uploadError) throw uploadError;
 
       const changedAt = new Date().toISOString();
-      const { data: profile, error: profileError } = await client
-        .from("profiles")
-        .update({ avatar_path: path, updated_at: changedAt })
-        .eq("id", user.id)
-        .select("display_name,avatar_path,updated_at")
-        .single();
+      const { data: profileRaw, error: profileError } = await client.rpc(
+        "profile_set_avatar_path",
+        { p_path: path }
+      );
 
       if (profileError) {
         await client.storage.from(BUCKET).remove([path]).catch(() => {});
         throw profileError;
       }
 
+      const profile = profileResult(profileRaw);
+      if (!profile?.avatar_path) {
+        await client.storage.from(BUCKET).remove([path]).catch(() => {});
+        throw new Error("Backend belum mengembalikan avatar_path terbaru.");
+      }
+
       currentPath = profile.avatar_path;
       hapus.hidden = false;
       const url = publicUrl(currentPath, profile.updated_at || changedAt);
-      applyAvatar(url, profile.display_name || "Pengguna");
+      applyAvatar(url, profile.display_name || currentName || "Pengguna");
 
       if (previousPath && previousPath !== currentPath) {
         client.storage.from(BUCKET).remove([previousPath]).catch(error => {
@@ -219,26 +273,32 @@
 
     hapus.disabled = true;
     try {
-      const user = await userAktif();
+      await userAktif();
       const path = currentPath;
       const changedAt = new Date().toISOString();
 
-      const { error: profileError } = await client
-        .from("profiles")
-        .update({ avatar_path: null, updated_at: changedAt })
-        .eq("id", user.id);
+      const { data: profileRaw, error: profileError } = await client.rpc(
+        "profile_set_avatar_path",
+        { p_path: null }
+      );
       if (profileError) throw profileError;
 
+      const profile = profileResult(profileRaw);
       currentPath = null;
       hapus.hidden = true;
-      applyAvatar("", "Pengguna");
+      closePreview();
+      applyAvatar("", profile?.display_name || currentName || "Pengguna");
 
       client.storage.from(BUCKET).remove([path]).catch(error => {
         console.warn("[Avatar deleted object cleanup]", error);
       });
 
       window.dispatchEvent(new CustomEvent("profil-pengguna-berubah", {
-        detail: { avatar_path: null, avatar_url: "", updated_at: changedAt }
+        detail: {
+          avatar_path: null,
+          avatar_url: "",
+          updated_at: profile?.updated_at || changedAt
+        }
       }));
       show("Foto profil dihapus.", "success");
     } catch (error) {
@@ -247,6 +307,32 @@
     } finally {
       hapus.disabled = false;
     }
+  });
+
+  previewTrigger?.addEventListener("click", openPreview);
+  previewTrigger?.addEventListener("keydown", event => {
+    if ((event.key === "Enter" || event.key === " ") && currentUrl) {
+      event.preventDefault();
+      openPreview();
+    }
+  });
+  previewClose?.addEventListener("click", closePreview);
+  previewLayer?.addEventListener("click", event => {
+    if (event.target === previewLayer) closePreview();
+  });
+
+  document.addEventListener("keydown", event => {
+    if (event.key === "Escape" && previewLayer && !previewLayer.hidden) {
+      closePreview();
+    }
+  });
+
+  window.addEventListener("profil-pengguna-berubah", event => {
+    const nama = String(event.detail?.display_name || "").trim();
+    if (!nama) return;
+    currentName = nama;
+    if (previewName) previewName.textContent = currentName;
+    syncPreviewTrigger();
   });
 
   if (document.readyState === "loading") {
