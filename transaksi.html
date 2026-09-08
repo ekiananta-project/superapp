@@ -22,6 +22,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="css/style.css">
   <link rel="stylesheet" href="css/theme.css">
+  <link rel="stylesheet" href="css/pages/transaksi-category-picker.css?v=20260908-1">
 </head>
 <body>
 <div class="aplikasi">
@@ -56,7 +57,14 @@
 
       <div class="grup-input" data-grup-akun>
         <label for="akun">Kategori</label>
-        <select class="pilih" id="akun" name="akun"></select>
+        <button class="category-picker-trigger" type="button" data-category-trigger aria-haspopup="dialog" aria-controls="category-picker-sheet">
+          <span class="category-picker-trigger-copy">
+            <strong data-category-selected>Pilih kategori</strong>
+            <small data-category-selected-parent hidden></small>
+          </span>
+          <ion-icon name="chevron-down-outline"></ion-icon>
+        </button>
+        <select class="category-native-select" id="akun" name="akun" tabindex="-1" aria-hidden="true"></select>
       </div>
 
       <div class="grup-input">
@@ -88,6 +96,27 @@
     </form>
   </main>
 </div>
+<!-- Custom category picker: memakai data kategori yang sudah dimuat/cached oleh transaksi-backend.js. -->
+<div class="category-picker-layer" data-category-layer hidden>
+  <section class="category-picker-sheet" id="category-picker-sheet" role="dialog" aria-modal="true" aria-labelledby="category-picker-title">
+    <div class="category-picker-handle" aria-hidden="true"></div>
+    <div class="category-picker-header">
+      <div>
+        <h2 id="category-picker-title">Pilih Kategori</h2>
+        <p>Pilih kategori utama atau subkategori.</p>
+      </div>
+      <button class="category-picker-close" type="button" data-category-close aria-label="Tutup pemilih kategori">
+        <ion-icon name="close-outline"></ion-icon>
+      </button>
+    </div>
+    <label class="category-picker-search">
+      <ion-icon name="search-outline"></ion-icon>
+      <input type="search" inputmode="search" autocomplete="off" placeholder="Cari kategori..." data-category-search>
+    </label>
+    <div class="category-picker-list" data-category-list></div>
+  </section>
+</div>
+
 <script type="module" src="https://unpkg.com/ionicons@8.0.13/dist/ionicons/ionicons.esm.js"></script>
 <script nomodule src="https://unpkg.com/ionicons@8.0.13/dist/ionicons/ionicons.js"></script>
 
@@ -96,13 +125,13 @@
 <script src="js/backend/supabase.js"></script>
 <script src="js/backend/auth-service.js"></script>
 <script src="js/backend/family-service.js"></script>
-<script src="js/backend/finance-service.js"></script>
+<script src="js/backend/finance-service.js?v=20260908-1"></script>
 <script src="js/backend/finance-cache.js"></script>
 <script src="js/backend/auth-router.js"></script>
 <script src="js/backend/auth-guard.js"></script>
 
 <!-- Form transaksi backend: CREATE + EDIT expense/income/transfer + biaya admin transfer. Jangan load js/app.js di halaman ini. -->
-<script src="js/pages/transaksi-backend.js"></script>
+<script src="js/pages/transaksi-backend.js?v=20260908-1"></script>
 <script src="js/pwa.js"></script>
 </body>
 </html>

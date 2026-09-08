@@ -1,4 +1,4 @@
-const CACHE_NAME = "family-superapp-v1.1.1a-ownership-polish-1";
+const CACHE_NAME = "family-superapp-v1.1.1b-finance-maintenance-1";
 const OFFLINE_URL = "./offline.html";
 
 const APP_FILES = [
@@ -23,6 +23,8 @@ const APP_FILES = [
   "./css/pages/keluarga-member-management.css?v=20260908-2",
   "./css/pages/keluarga.css",
   "./css/pages/pengaturan.css",
+  "./css/pages/transaksi-category-picker.css",
+  "./css/pages/transaksi-category-picker.css?v=20260908-1",
   "./css/style.css",
   "./css/theme.css",
   "./daftar.html",
@@ -43,6 +45,7 @@ const APP_FILES = [
   "./js/backend/family-service.js",
   "./js/backend/family-service.js?v=20260908-2",
   "./js/backend/finance-service.js",
+  "./js/backend/finance-service.js?v=20260908-1",
   "./js/backend/finance-cache.js",
   "./js/backend/supabase.js",
   "./js/components/account-visual-picker.js",
@@ -53,6 +56,7 @@ const APP_FILES = [
   "./js/pages/akun-form-backend.js",
   "./js/pages/daftar.js",
   "./js/pages/detail-transaksi-backend.js",
+  "./js/pages/detail-transaksi-backend.js?v=20260908-1",
   "./js/pages/dompet-backend.js",
   "./js/pages/dompet-detail-backend.js",
   "./js/pages/dompet-form-backend.js",
@@ -67,6 +71,7 @@ const APP_FILES = [
   "./js/pages/pengaturan-profile-backend-v2.js",
   "./js/pages/pengaturan-tema.js",
   "./js/pages/transaksi-backend.js",
+  "./js/pages/transaksi-backend.js?v=20260908-1",
   "./js/pwa.js",
   "./js/theme.js",
   "./keamanan.html",
