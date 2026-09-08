@@ -956,6 +956,24 @@
     }));
   }
 
+  async function ambilTagihanRingkas({
+    familyId,
+    today = null
+  } = {}) {
+    if (!familyId) throw new Error("familyId wajib diisi.");
+
+    const { data, error } = await client.rpc(
+      "finance_bill_list_overview",
+      {
+        p_family_id: familyId,
+        p_today: today || null
+      }
+    );
+
+    lemparJikaError(error);
+    return normalizeBillRows(data);
+  }
+
   async function ambilTagihanBulan({
     familyId,
     periodMonth
@@ -1075,6 +1093,7 @@
   }
 
   window.FinanceService = {
+    ambilTagihanRingkas,
     ambilTagihanBulan,
     simpanTagihan,
     arsipTagihan,

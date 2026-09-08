@@ -460,3 +460,13 @@ html[data-theme="light"] .bill-form .input[type="date"] {
 .bill-form-actions {
   padding-bottom: 2px;
 }
+
+
+/* v1.2.0c3 — Tagihan adalah overview langsung, tanpa period selector. */
+.bills-page {
+  gap: var(--space-4);
+}
+
+.bills-summary-card {
+  margin-top: 0;
+}

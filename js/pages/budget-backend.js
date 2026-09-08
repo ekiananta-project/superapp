@@ -166,13 +166,29 @@
     });
   }
 
-  function activePeriodFrom(items) {
+  function preferredPeriodOnEntry(items) {
     if (!items.length) return null;
+
     const today = localISO();
     const active = items
       .filter(item => item.start_date <= today && item.end_date >= today)
       .sort((a, b) => String(b.updated_at || "").localeCompare(String(a.updated_at || "")));
-    return active[0] || null;
+    if (active.length) return active[0];
+
+    const upcoming = items
+      .filter(item => item.start_date > today)
+      .sort((a, b) =>
+        String(a.start_date).localeCompare(String(b.start_date)) ||
+        String(a.end_date).localeCompare(String(b.end_date))
+      );
+    if (upcoming.length) return upcoming[0];
+
+    const previous = [...items].sort((a, b) =>
+      String(b.end_date).localeCompare(String(a.end_date)) ||
+      String(b.start_date).localeCompare(String(a.start_date)) ||
+      String(b.updated_at || "").localeCompare(String(a.updated_at || ""))
+    );
+    return previous[0] || null;
   }
 
   function currentPeriodIndex() {
@@ -364,14 +380,18 @@
       .sort((a, b) => String(a.start_date).localeCompare(String(b.start_date)) || String(a.end_date).localeCompare(String(b.end_date)));
 
     if (preferId) {
-      currentPeriod = periods.find(item => item.period_id === preferId) || null;
+      currentPeriod = periods.find(item => item.period_id === preferId) || preferredPeriodOnEntry(periods);
     } else if (resetToActive || !currentPeriod) {
-      currentPeriod = activePeriodFrom(periods);
+      currentPeriod = preferredPeriodOnEntry(periods);
     } else {
-      currentPeriod = periods.find(item => item.period_id === currentPeriod.period_id) || null;
+      currentPeriod = periods.find(item => item.period_id === currentPeriod.period_id) || preferredPeriodOnEntry(periods);
     }
 
-    if (!currentPeriod) virtualRange = defaultCurrentRange();
+    // Virtual bulan berjalan hanya dipakai ketika keluarga benar-benar belum
+    // memiliki satu pun periode budget nyata. Begitu ada periode tersimpan,
+    // halaman selalu membuka salah satu periode nyata agar user tidak salah
+    // mengira budgetnya hilang.
+    if (!periods.length) virtualRange = defaultCurrentRange();
     syncPeriodUI();
   }
 

@@ -1,4 +1,4 @@
-const CACHE_NAME = "family-superapp-v1.2.0c2-modal-layout-hotfix-1";
+const CACHE_NAME = "family-superapp-v1.2.0c3-budget-reopen-bill-overview-1";
 const OFFLINE_URL = "./offline.html";
 
 const APP_FILES = [

@@ -24,7 +24,7 @@
   <link rel="stylesheet" href="css/theme.css">
   <link rel="stylesheet" href="css/pages/transaksi-category-picker.css?v=20260908-1">
   <link rel="stylesheet" href="css/pages/finance-nav-v117f.css?v=20260908-2">
-  <link rel="stylesheet" href="css/pages/tagihan.css?v=20260908-3">
+  <link rel="stylesheet" href="css/pages/tagihan.css?v=20260908-4">
 </head>
 <body>
 <div class="aplikasi dengan-nav">
@@ -37,20 +37,11 @@
   <main class="konten-halaman bills-page">
     <div class="notifikasi bills-notice" data-bill-notice hidden></div>
 
-    <section class="bills-month-card" aria-label="Periode tagihan">
-      <button class="bills-month-nav" type="button" data-bill-month-prev aria-label="Bulan sebelumnya"><ion-icon name="chevron-back-outline"></ion-icon></button>
-      <div class="bills-month-main" aria-live="polite">
-        <ion-icon name="calendar-outline"></ion-icon>
-        <span><small>Periode Tagihan</small><strong data-bill-month-label>—</strong></span>
-      </div>
-      <button class="bills-month-nav" type="button" data-bill-month-next aria-label="Bulan berikutnya"><ion-icon name="chevron-forward-outline"></ion-icon></button>
-    </section>
-
     <section class="bills-summary-card" data-bill-summary aria-busy="true">
       <div class="bills-summary-head">
         <div>
           <small>Ringkasan Tagihan</small>
-          <strong data-bill-summary-title>—</strong>
+          <strong>Tagihan aktif</strong>
         </div>
         <span class="bills-summary-badge" data-bill-summary-badge>—</span>
       </div>
@@ -213,11 +204,11 @@
 <script src="js/backend/supabase.js"></script>
 <script src="js/backend/auth-service.js"></script>
 <script src="js/backend/family-service.js"></script>
-<script src="js/backend/finance-service.js?v=20260908-10"></script>
+<script src="js/backend/finance-service.js?v=20260908-11"></script>
 <script src="js/backend/finance-cache.js"></script>
 <script src="js/backend/auth-router.js"></script>
 <script src="js/backend/auth-guard.js"></script>
-<script src="js/pages/tagihan-backend.js?v=20260908-3"></script>
-<script src="js/pwa.js?v=20260908-10"></script>
+<script src="js/pages/tagihan-backend.js?v=20260908-4"></script>
+<script src="js/pwa.js?v=20260908-11"></script>
 </body>
 </html>

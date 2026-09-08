@@ -2,9 +2,7 @@
   "use strict";
 
   const notice = document.querySelector("[data-bill-notice]");
-  const monthLabel = document.querySelector("[data-bill-month-label]");
   const summary = document.querySelector("[data-bill-summary]");
-  const summaryTitle = document.querySelector("[data-bill-summary-title]");
   const summaryBadge = document.querySelector("[data-bill-summary-badge]");
   const summaryNote = document.querySelector("[data-bill-summary-note]");
   const pendingTotalEl = document.querySelector("[data-bill-pending-total]");
@@ -47,7 +45,6 @@
   let bills = [];
   let categories = [];
   let wallets = [];
-  let month = firstDay(new Date());
   let selectedCategoryId = "";
   let editingItem = null;
   let paymentItem = null;
@@ -63,21 +60,16 @@
       .replaceAll("'", "&#039;");
   }
 
-  function firstDay(value) {
-    const date = value instanceof Date ? value : new Date(value);
-    return new Date(date.getFullYear(), date.getMonth(), 1);
+  function currentMonthDate() {
+    const now = new Date();
+    return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-01`;
   }
 
-  function monthValue(value = month) {
-    return `${value.getFullYear()}-${String(value.getMonth() + 1).padStart(2, "0")}`;
-  }
-
-  function monthDate(value = month) {
-    return `${monthValue(value)}-01`;
-  }
-
-  function monthText(value = month) {
-    return value.toLocaleDateString("id-ID", { month: "long", year: "numeric" });
+  function monthTextFromISO(iso) {
+    const date = parseLocalDate(iso);
+    return date
+      ? date.toLocaleDateString("id-ID", { month: "long", year: "numeric" })
+      : "bulan ini";
   }
 
   function todayISO() {
@@ -134,27 +126,6 @@
     }, 3800);
   }
 
-  function syncMonthUI() {
-    const label = monthText();
-    if (monthLabel) monthLabel.textContent = label;
-    if (summaryTitle) summaryTitle.textContent = label;
-    if (formPeriod) formPeriod.textContent = `Mulai ${label}`;
-  }
-
-  function setMonth(next) {
-    month = firstDay(next);
-    syncMonthUI();
-    loadBills();
-  }
-
-  function resetCurrentMonth({ reload = true } = {}) {
-    const current = firstDay(new Date());
-    const changed = monthValue(month) !== monthValue(current);
-    month = current;
-    syncMonthUI();
-    if (reload && changed && family) loadBills();
-  }
-
   function billState(item) {
     if (item.status === "paid") {
       return { key: "paid", text: "Lunas", className: "is-paid" };
@@ -186,7 +157,7 @@
     summaryBadge?.classList.remove("is-warning", "is-good");
     if (!bills.length) {
       if (summaryBadge) summaryBadge.textContent = "Belum ada";
-      if (summaryNote) summaryNote.textContent = "Tambahkan tagihan rutin supaya kewajiban keluarga lebih mudah dipantau.";
+      if (summaryNote) summaryNote.textContent = "Tambahkan tagihan supaya kewajiban keluarga lebih mudah dipantau.";
     } else if (overdue) {
       summaryBadge?.classList.add("is-warning");
       if (summaryBadge) summaryBadge.textContent = `${overdue} terlambat`;
@@ -197,7 +168,7 @@
     } else {
       summaryBadge?.classList.add("is-good");
       if (summaryBadge) summaryBadge.textContent = "Semua lunas";
-      if (summaryNote) summaryNote.textContent = "Semua tagihan pada periode ini sudah dibayar.";
+      if (summaryNote) summaryNote.textContent = "Semua tagihan aktif yang tampil sudah dibayar.";
     }
 
     if (summary) summary.setAttribute("aria-busy", "false");
@@ -275,9 +246,9 @@
     if (summary) summary.setAttribute("aria-busy", "true");
 
     try {
-      bills = await FinanceService.ambilTagihanBulan({
+      bills = await FinanceService.ambilTagihanRingkas({
         familyId: family.id,
-        periodMonth: monthDate()
+        today: todayISO()
       });
       renderSummary();
       renderList();
@@ -503,12 +474,7 @@
         note
       });
       const editedPaidHistory = wasEditing && editingItem?.status === "paid";
-      const due = parseLocalDate(dueDate);
       closeForm();
-      if (due) {
-        month = firstDay(due);
-        syncMonthUI();
-      }
       show(
         editedPaidHistory
           ? "Pengaturan tagihan berikutnya diperbarui. Periode yang sudah lunas tetap sebagai histori."
@@ -527,14 +493,16 @@
   async function archiveBill() {
     if (!editingItem || !family) return;
     const label = editingItem.bill_name || "tagihan ini";
-    if (!confirm(`Hentikan ${label} mulai ${monthText()}?\n\nRiwayat tagihan dan pembayaran periode sebelumnya tetap disimpan.`)) return;
+    const effectiveMonth = currentMonthDate();
+    const monthLabel = monthTextFromISO(effectiveMonth);
+    if (!confirm(`Hentikan ${label} mulai ${monthLabel}?\n\nTagihan yang jatuh tempo sebelum bulan ini tetap menjadi riwayat/kewajiban lama.`)) return;
 
     if (deleteButton) deleteButton.disabled = true;
     if (saveButton) saveButton.disabled = true;
     try {
       await FinanceService.arsipTagihan({
         billId: editingItem.bill_id,
-        periodMonth: monthDate()
+        periodMonth: effectiveMonth
       });
       closeForm();
       show("Tagihan dihentikan mulai periode ini.", "success");
@@ -583,7 +551,7 @@
     fillWalletOptions();
     if (payName) payName.textContent = item.bill_name || "Tagihan";
     if (payAmount) payAmount.textContent = rupiah(item.amount);
-    if (payPeriod) payPeriod.textContent = `${monthText()} · jatuh tempo ${shortDate(item.due_on)}`;
+    if (payPeriod) payPeriod.textContent = `Jatuh tempo ${shortDate(item.due_on)}`;
     if (payDate) payDate.value = todayISO();
     if (payLayer) payLayer.hidden = false;
     document.body.style.overflow = "hidden";
@@ -633,8 +601,6 @@
     family = await AuthRouter.ambilFamilyAktif();
     if (!family) return;
 
-    resetCurrentMonth({ reload: false });
-
     const [accountRows, walletRows] = await Promise.all([
       FinanceService.ambilAkun(family.id, "expense"),
       FinanceService.ambilSaldoDompet(family.id)
@@ -647,13 +613,6 @@
 
   document.querySelectorAll("[data-bill-add]").forEach(button => {
     button.addEventListener("click", () => openForm());
-  });
-
-  document.querySelector("[data-bill-month-prev]")?.addEventListener("click", () => {
-    setMonth(new Date(month.getFullYear(), month.getMonth() - 1, 1));
-  });
-  document.querySelector("[data-bill-month-next]")?.addEventListener("click", () => {
-    setMonth(new Date(month.getFullYear(), month.getMonth() + 1, 1));
   });
 
   listEl?.addEventListener("click", event => {
@@ -718,7 +677,7 @@
 
   window.addEventListener("pageshow", event => {
     if (!event.persisted || !family) return;
-    resetCurrentMonth({ reload: true });
+    loadBills().catch(error => console.error("[Bills PageShow]", error));
   });
 
   const run = () => start().catch(error => {
