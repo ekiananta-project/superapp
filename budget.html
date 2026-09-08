@@ -16,12 +16,11 @@
   <link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png">
   <link rel="apple-touch-icon" sizes="180x180" href="icons/apple-touch-icon.png">
   <script src="js/theme.js"></script>
-  <title>Daftar Dompet</title>
+  <title>Budget</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="css/style.css">
-  <link rel="stylesheet" href="css/pages/dompet-backend.css">
   <link rel="stylesheet" href="css/theme.css">
   <link rel="stylesheet" href="css/pages/finance-nav-v117f.css?v=20260908-1">
 </head>
@@ -29,25 +28,24 @@
 <div class="aplikasi dengan-nav">
   <header class="header-halaman">
     <a class="tombol-ikon" href="index.html" aria-label="Kembali"><ion-icon name="arrow-back-outline"></ion-icon></a>
-    <h1>Daftar Dompet</h1>
-    <a class="tombol-ikon" href="dompet-form.html" aria-label="Tambah dompet"><ion-icon name="add-outline"></ion-icon></a>
+    <h1>Budget</h1>
+    <span class="tombol-ikon" aria-hidden="true" style="visibility:hidden"><ion-icon name="ellipsis-horizontal"></ion-icon></span>
   </header>
 
-  <main class="konten-halaman">
-    <div class="daftar-kartu" data-daftar-dompet>
-      <div class="kosong-data">
-        <ion-icon name="cloud-download-outline"></ion-icon>
-        Mengambil dompet keluarga...
-      </div>
-    </div>
+  <main class="konten-halaman budget-placeholder">
+    <section class="budget-placeholder-card">
+      <span class="budget-placeholder-icon"><ion-icon name="pie-chart-outline"></ion-icon></span>
+      <h2>Budget</h2>
+      <p>Menu Budget sudah disiapkan di navigasi. Fitur pengaturan budget akan kita bangun pada v1.2.</p>
+    </section>
   </main>
 
   <nav class="navigasi-bawah finance-nav-v5" aria-label="Navigasi Finance">
     <a class="navigasi-item" href="index.html"><ion-icon name="home-outline"></ion-icon><span>Home</span></a>
-    <a class="navigasi-item" href="budget.html"><ion-icon name="pie-chart-outline"></ion-icon><span>Budget</span></a>
+    <a class="navigasi-item is-aktif" href="budget.html" aria-current="page"><ion-icon name="pie-chart-outline"></ion-icon><span>Budget</span></a>
     <a class="tombol-tambah" href="transaksi.html" aria-label="Tambah transaksi"><ion-icon name="add-outline"></ion-icon></a>
     <a class="navigasi-item" href="akun.html"><ion-icon name="grid-outline"></ion-icon><span>Kategori</span></a>
-    <a class="navigasi-item is-aktif" href="dompet.html" aria-current="page"><ion-icon name="wallet-outline"></ion-icon><span>Dompet</span></a>
+    <a class="navigasi-item" href="dompet.html"><ion-icon name="wallet-outline"></ion-icon><span>Dompet</span></a>
   </nav>
 </div>
 
@@ -61,7 +59,6 @@
 <script src="js/backend/finance-cache.js"></script>
 <script src="js/backend/auth-router.js"></script>
 <script src="js/backend/auth-guard.js"></script>
-<script src="js/pages/dompet-backend.js"></script>
 <script src="js/pwa.js"></script>
 </body>
 </html>

@@ -1,9 +1,10 @@
-const CACHE_NAME = "family-superapp-v1.1.7e-report-toolbar-row-hotfix-1";
+const CACHE_NAME = "family-superapp-v1.1.7f-toolbar-nav5-hotfix-1";
 const OFFLINE_URL = "./offline.html";
 
 const APP_FILES = [
   "./akun-form.html",
   "./akun.html",
+  "./budget.html",
   "./css/components/account-visual-picker.css",
   "./css/components/avatar.css",
   "./css/components/quote.css",
@@ -21,6 +22,8 @@ const APP_FILES = [
   "./css/pages/dompet-detail.css?v=20260908-4",
   "./css/pages/dompet-detail.css?v=20260908-5",
   "./css/pages/dompet-form.css",
+  "./css/pages/finance-nav-v117f.css",
+  "./css/pages/finance-nav-v117f.css?v=20260908-1",
   "./css/pages/family-invitation.css",
   "./css/pages/family-invitation.css?v=20260908-2",
   "./css/pages/family-invitation.css?v=20260908-3",

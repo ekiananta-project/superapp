@@ -1,0 +1,161 @@
+/* v1.1.7f — Finance 5-slot bottom nav + hard report toolbar row */
+
+/* Laporan Dompet: Periode + Arus Kas Bersih MUST stay in one row. */
+.laporan-toolbar-row-v117f {
+  display: grid !important;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) !important;
+  grid-auto-flow: column !important;
+  align-items: stretch !important;
+  gap: var(--space-2) !important;
+  width: 100% !important;
+}
+
+.laporan-toolbar-row-v117f > * {
+  box-sizing: border-box !important;
+  grid-column: auto !important;
+  width: 100% !important;
+  min-width: 0 !important;
+  max-width: none !important;
+  margin: 0 !important;
+}
+
+.laporan-toolbar-row-v117f .finance-period-trigger-compact,
+.laporan-toolbar-row-v117f .arus-bersih-compact {
+  min-height: 92px !important;
+  height: 100% !important;
+  padding: 14px !important;
+  border-radius: var(--radius-lg) !important;
+}
+
+.laporan-toolbar-row-v117f .finance-period-trigger-compact {
+  display: flex !important;
+  flex-direction: row !important;
+  align-items: center !important;
+}
+
+.laporan-toolbar-row-v117f .finance-period-trigger-main {
+  min-width: 0 !important;
+  gap: 8px !important;
+}
+
+.laporan-toolbar-row-v117f .finance-period-trigger-copy {
+  min-width: 0 !important;
+}
+
+.laporan-toolbar-row-v117f .finance-period-trigger-copy strong {
+  display: block !important;
+  max-width: 100% !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
+  font-size: var(--font-size-sm) !important;
+}
+
+.laporan-toolbar-row-v117f .arus-bersih-compact {
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: flex-start !important;
+  justify-content: center !important;
+  gap: 5px !important;
+}
+
+.laporan-toolbar-row-v117f .arus-bersih-compact div {
+  width: 100% !important;
+  min-width: 0 !important;
+}
+
+.laporan-toolbar-row-v117f .arus-bersih-compact > strong {
+  width: 100% !important;
+  max-width: 100% !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
+  font-size: clamp(14px, 3.7vw, 18px) !important;
+}
+
+/* Five-slot Finance navigation: Home | Budget | + | Kategori | Dompet */
+.navigasi-bawah.finance-nav-v5 {
+  display: grid !important;
+  grid-template-columns: repeat(5, minmax(0, 1fr)) !important;
+  align-items: center !important;
+  justify-content: initial !important;
+  gap: 0 !important;
+  padding-left: 8px !important;
+  padding-right: 8px !important;
+}
+
+.finance-nav-v5 .navigasi-item {
+  min-width: 0 !important;
+  width: 100% !important;
+  gap: 2px !important;
+  font-size: 10px !important;
+  line-height: 1.15 !important;
+  text-align: center !important;
+}
+
+.finance-nav-v5 .navigasi-item ion-icon {
+  font-size: 22px !important;
+}
+
+.finance-nav-v5 .navigasi-item span {
+  max-width: 100% !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
+}
+
+.finance-nav-v5 .tombol-tambah {
+  position: relative !important;
+  left: auto !important;
+  top: auto !important;
+  justify-self: center !important;
+  align-self: center !important;
+  width: 58px !important;
+  height: 58px !important;
+  transform: translateY(-17px) !important;
+}
+
+.finance-nav-v5 .tombol-tambah ion-icon {
+  font-size: 32px !important;
+}
+
+/* Placeholder Budget shell. */
+.budget-placeholder {
+  display: grid;
+  place-items: center;
+  min-height: 58vh;
+  padding: var(--space-5);
+  text-align: center;
+}
+
+.budget-placeholder-card {
+  width: 100%;
+  padding: var(--space-6) var(--space-4);
+  border-radius: var(--radius-xl);
+  background: var(--color-surface);
+  box-shadow: var(--shadow-sm);
+}
+
+.budget-placeholder-icon {
+  display: grid;
+  place-items: center;
+  width: 58px;
+  height: 58px;
+  margin: 0 auto var(--space-3);
+  border-radius: var(--radius-full);
+  background: var(--color-surface-soft);
+  color: var(--color-primary);
+}
+
+.budget-placeholder-icon ion-icon { font-size: 30px; }
+.budget-placeholder-card h2 { margin: 0 0 8px; }
+.budget-placeholder-card p { margin: 0; color: var(--color-text-secondary); line-height: 1.6; }
+
+@media (max-width: 360px) {
+  .laporan-toolbar-row-v117f { gap: 6px !important; }
+  .laporan-toolbar-row-v117f .finance-period-trigger-compact,
+  .laporan-toolbar-row-v117f .arus-bersih-compact { padding: 10px !important; min-height: 88px !important; }
+  .finance-nav-v5 .navigasi-item { font-size: 9px !important; }
+  .finance-nav-v5 .navigasi-item ion-icon { font-size: 21px !important; }
+  .finance-nav-v5 .tombol-tambah { width: 54px !important; height: 54px !important; }
+}
