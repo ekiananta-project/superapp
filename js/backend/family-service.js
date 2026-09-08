@@ -108,7 +108,7 @@
 
     const { data: profiles, error: profileError } = await client
       .from("profiles")
-      .select("id,display_name,avatar_path")
+      .select("id,display_name,avatar_path,updated_at")
       .in("id", userIds);
 
     lemparJikaError(profileError);
