@@ -148,6 +148,17 @@
     }
 
     const params = new URLSearchParams(location.search);
+
+    // Retry cleanup Storage/tombstone dari dissolve sebelumnya tanpa
+    // menghambat onboarding bila jaringan sedang bermasalah.
+    FamilyService.prosesCleanupBubarkanTertunda?.().catch(error => {
+      console.warn("[Dissolve cleanup retry]", error);
+    });
+
+    if (params.get("dibubarkan") === "1") {
+      tampilPesan("Ruang Keluarga sudah dibubarkan. Kamu dapat membuat atau bergabung ke Ruang Keluarga baru.", "success");
+    }
+
     const kodeQuery = params.get("kode") || "";
     const paksaGabung = params.get("gabung") === "1" || Boolean(kodeQuery);
 

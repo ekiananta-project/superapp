@@ -39,6 +39,15 @@
   const tombolTutupKeluar = document.querySelector("[data-leave-family-close-primary]");
   const pesanKeluarKeluarga = document.querySelector("[data-leave-family-message]");
 
+  const zonaBubarkanKeluarga = document.querySelector("[data-family-danger-zone]");
+  const tombolBubarkanKeluarga = document.querySelector("[data-dissolve-family]");
+  const sheetBubarkanKeluarga = document.querySelector("[data-dissolve-family-sheet]");
+  const formBubarkanKeluarga = document.querySelector("[data-dissolve-family-form]");
+  const namaBubarkanKeluarga = document.querySelector("[data-dissolve-family-name]");
+  const jumlahAnggotaBubarkan = document.querySelector("[data-dissolve-member-count]");
+  const pesanBubarkanKeluarga = document.querySelector("[data-dissolve-family-message]");
+  const tombolKonfirmasiBubarkan = document.querySelector("[data-dissolve-family-confirm]");
+
   if (!rootAnggota || !form) return;
 
   let family = null;
@@ -589,6 +598,131 @@
     }
   }
 
+
+  function tampilPesanBubarkan(teks = "", tipe = "info") {
+    if (!pesanBubarkanKeluarga) return;
+    pesanBubarkanKeluarga.textContent = teks;
+    pesanBubarkanKeluarga.dataset.type = tipe;
+    pesanBubarkanKeluarga.hidden = !teks;
+  }
+
+  function phraseBubarkanValid() {
+    if (!formBubarkanKeluarga) return false;
+    return String(formBubarkanKeluarga.elements.confirmation?.value || "")
+      .trim()
+      .toUpperCase() === "BUBARKAN RUANG KELUARGA";
+  }
+
+  function refreshTombolBubarkan() {
+    if (!tombolKonfirmasiBubarkan || !formBubarkanKeluarga) return;
+    const passwordAda = Boolean(
+      String(formBubarkanKeluarga.elements.password?.value || "").trim()
+    );
+    tombolKonfirmasiBubarkan.disabled = !(passwordAda && phraseBubarkanValid());
+  }
+
+  function bukaBubarkanKeluarga() {
+    if (!sheetBubarkanKeluarga || !formBubarkanKeluarga || !family || !sayaOwner()) return;
+
+    formBubarkanKeluarga.reset();
+    tampilPesanBubarkan();
+    refreshTombolBubarkan();
+
+    if (namaBubarkanKeluarga) {
+      namaBubarkanKeluarga.textContent = family.name || "Ruang Keluarga";
+    }
+
+    if (jumlahAnggotaBubarkan) {
+      const jumlah = anggota.filter(item => item.status === "active").length;
+      jumlahAnggotaBubarkan.textContent =
+        `${jumlah || 1} anggota aktif termasuk Pemilik akan kehilangan akses ke Ruang Keluarga ini.`;
+    }
+
+    sheetBubarkanKeluarga.hidden = false;
+    document.body.style.overflow = "hidden";
+
+    requestAnimationFrame(() => {
+      formBubarkanKeluarga.elements.password?.focus();
+    });
+  }
+
+  function tutupBubarkanKeluarga({ paksa = false } = {}) {
+    if (!sheetBubarkanKeluarga || !formBubarkanKeluarga) return;
+    if (!paksa && tombolKonfirmasiBubarkan?.dataset.busy === "1") return;
+
+    sheetBubarkanKeluarga.hidden = true;
+    document.body.style.overflow = "";
+    formBubarkanKeluarga.reset();
+    tampilPesanBubarkan();
+    delete tombolKonfirmasiBubarkan?.dataset.busy;
+    refreshTombolBubarkan();
+  }
+
+  function pesanErrorBubarkan(error) {
+    const raw = String(error?.message || "").trim();
+    const lower = raw.toLowerCase();
+
+    if (lower.includes("invalid login credentials")) {
+      return "Password saat ini belum cocok.";
+    }
+    if (lower.includes("konfirmasi password kembali") || lower.includes("login ulang")) {
+      return "Sesi keamanan perlu diperbarui. Masukkan password lalu coba lagi.";
+    }
+    if (lower.includes("network") || lower.includes("fetch")) {
+      return "Koneksi internet bermasalah. Coba lagi.";
+    }
+    return raw || "Ruang Keluarga belum berhasil dibubarkan.";
+  }
+
+  async function submitBubarkanKeluarga(event) {
+    event.preventDefault();
+    if (!family || !user || !sayaOwner() || !formBubarkanKeluarga || !tombolKonfirmasiBubarkan) return;
+
+    const password = String(formBubarkanKeluarga.elements.password?.value || "");
+    const confirmation = String(formBubarkanKeluarga.elements.confirmation?.value || "").trim();
+
+    if (!password) {
+      tampilPesanBubarkan("Password saat ini wajib diisi.", "error");
+      return;
+    }
+    if (!phraseBubarkanValid()) {
+      tampilPesanBubarkan("Ketik persis BUBARKAN RUANG KELUARGA untuk melanjutkan.", "error");
+      return;
+    }
+
+    const htmlAwal = tombolKonfirmasiBubarkan.innerHTML;
+    tombolKonfirmasiBubarkan.dataset.busy = "1";
+    tombolKonfirmasiBubarkan.disabled = true;
+    tombolKonfirmasiBubarkan.innerHTML =
+      '<ion-icon name="sync-outline"></ion-icon> Membubarkan...';
+    tampilPesanBubarkan("Memverifikasi keamanan...", "info");
+
+    try {
+      await AuthService.reautentikasi(password);
+      tampilPesanBubarkan("Menghapus data bersama Ruang Keluarga...", "info");
+
+      const hasil = await FamilyService.bubarkanKeluarga(family.id, confirmation);
+      bersihkanKonteksFamilyLokal();
+
+      const pesan = hasil?.cleanup_pending
+        ? "Ruang Keluarga sudah dibubarkan. Pembersihan media akan dicoba lagi otomatis."
+        : "Ruang Keluarga berhasil dibubarkan permanen.";
+
+      tampilPesanBubarkan(pesan, "success");
+
+      setTimeout(() => {
+        location.replace("keluarga-awal.html?dibubarkan=1");
+      }, 450);
+    } catch (error) {
+      console.error("[Bubarkan Ruang Keluarga]", error);
+      delete tombolKonfirmasiBubarkan.dataset.busy;
+      tombolKonfirmasiBubarkan.disabled = false;
+      tombolKonfirmasiBubarkan.innerHTML = htmlAwal;
+      tampilPesanBubarkan(pesanErrorBubarkan(error), "error");
+      refreshTombolBubarkan();
+    }
+  }
+
   function renderHakAkses() {
     const owner = sayaOwner();
     form.elements.namaKeluarga.disabled = !owner;
@@ -597,6 +731,10 @@
 
     if (tombolBukaUndangan) tombolBukaUndangan.hidden = !owner;
     if (!owner && panelUndangan) panelUndangan.hidden = true;
+
+    if (zonaBubarkanKeluarga) {
+      zonaBubarkanKeluarga.hidden = !owner;
+    }
 
     if (bantuanKeluarKeluarga) {
       bantuanKeluarKeluarga.textContent = owner
@@ -957,6 +1095,23 @@
     event.preventDefault();
     konfirmasiKeluarKeluarga();
   });
+
+  tombolBubarkanKeluarga?.addEventListener("click", () => {
+    bukaBubarkanKeluarga();
+  });
+
+  document.querySelectorAll("[data-dissolve-family-close]").forEach(tombol => {
+    tombol.addEventListener("click", () => tutupBubarkanKeluarga());
+  });
+
+  sheetBubarkanKeluarga?.addEventListener("click", event => {
+    if (event.target === sheetBubarkanKeluarga) {
+      tutupBubarkanKeluarga();
+    }
+  });
+
+  formBubarkanKeluarga?.addEventListener("input", refreshTombolBubarkan);
+  formBubarkanKeluarga?.addEventListener("submit", submitBubarkanKeluarga);
 
   document.addEventListener("click", () => {
     tutupMenuAnggota();
