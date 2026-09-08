@@ -1,4 +1,4 @@
-const CACHE_NAME = "family-superapp-v1.1.1c-family-identity-media-1";
+const CACHE_NAME = "family-superapp-v1.1.1c-a-family-photo-click-1";
 const OFFLINE_URL = "./offline.html";
 
 const APP_FILES = [
@@ -68,7 +68,7 @@ const APP_FILES = [
   "./js/pages/keluarga.js",
   "./js/pages/keluarga.js?v=20260908-3",
   "./js/pages/keluarga-media.js",
-  "./js/pages/keluarga-media.js?v=20260908-1",
+  "./js/pages/keluarga-media.js?v=20260908-2",
   "./js/pages/login.js",
   "./js/pages/pengaturan-auth.js",
   "./js/pages/pengaturan-avatar-backend-v1.js",
