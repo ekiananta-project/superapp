@@ -27,6 +27,7 @@
   <link rel="stylesheet" href="css/pages/keluarga.css">
   <link rel="stylesheet" href="css/pages/keluarga-member-management.css?v=20260908-2">
   <link rel="stylesheet" href="css/pages/keluarga-family-media.css?v=20260908-1">
+  <link rel="stylesheet" href="css/pages/keluarga-leave.css?v=20260908-1">
   <link rel="stylesheet" href="css/pages/family-invitation.css">
   <link rel="stylesheet" href="css/theme.css">
 </head>
@@ -170,6 +171,26 @@
       </p>
     </section>
 
+    <section class="family-membership-section">
+      <h2 class="judul-grup">Keanggotaan</h2>
+
+      <div class="family-membership-card">
+        <span class="family-membership-icon" aria-hidden="true">
+          <ion-icon name="exit-outline"></ion-icon>
+        </span>
+
+        <div class="family-membership-copy">
+          <strong>Keluar dari Ruang Keluarga</strong>
+          <p data-leave-family-help>Keluar hanya mencabut akses ke Ruang Keluarga. Akun pribadimu tetap ada.</p>
+        </div>
+
+        <button class="family-leave-open" type="button" data-leave-family>
+          <ion-icon name="exit-outline"></ion-icon>
+          Keluar dari Ruang Keluarga
+        </button>
+      </div>
+    </section>
+
   </main>
 </div>
 
@@ -300,6 +321,59 @@
 </div>
 
 
+<div class="lapisan" data-leave-family-sheet hidden>
+  <section
+    class="bottom-sheet sheet-leave-family"
+    role="dialog"
+    aria-modal="true"
+    aria-labelledby="judul-leave-family">
+
+    <div class="sheet-handle"></div>
+
+    <div class="sheet-header">
+      <div>
+        <h2 id="judul-leave-family" data-leave-family-title>Keluar dari Ruang Keluarga?</h2>
+        <p class="sheet-subjudul-keluarga">Kelola status keanggotaan akunmu.</p>
+      </div>
+
+      <button
+        class="tombol-ikon"
+        type="button"
+        aria-label="Tutup"
+        data-leave-family-close>
+        <ion-icon name="close-outline"></ion-icon>
+      </button>
+    </div>
+
+    <div class="peringatan-leave-family">
+      <ion-icon name="exit-outline" aria-hidden="true"></ion-icon>
+      <div>
+        <strong>Ruang Keluarga</strong>
+        <p data-leave-family-copy>
+          Aksesmu ke data bersama akan dicabut. Akun pribadi dan histori yang sudah tercatat tetap disimpan.
+        </p>
+      </div>
+    </div>
+
+    <p class="pesan-leave-family" data-leave-family-message hidden></p>
+
+    <div class="aksi-leave-family">
+      <button
+        class="tombol-sekunder"
+        type="button"
+        data-leave-family-close
+        data-leave-family-close-primary>
+        Batal
+      </button>
+
+      <button class="tombol-bahaya" type="button" data-leave-family-confirm>
+        <ion-icon name="exit-outline"></ion-icon>
+        Keluar dari Ruang Keluarga
+      </button>
+    </div>
+  </section>
+</div>
+
 <div class="media-preview-layer" data-media-preview hidden>
   <section
     class="media-preview-card"
@@ -348,14 +422,14 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="js/backend/supabase.js"></script>
 <script src="js/backend/auth-service.js"></script>
-<script src="js/backend/family-service.js?v=20260908-4"></script>
+<script src="js/backend/family-service.js?v=20260908-5"></script>
 <script src="js/backend/finance-service.js"></script>
 <script src="js/backend/auth-router.js"></script>
 <script src="js/backend/auth-guard.js"></script>
 <script>window.AUTH_BACKEND_MODE = true;</script>
 <script src="js/app.js"></script>
 <script src="js/components/avatar.js?v=20260908-2"></script>
-<script src="js/pages/keluarga.js?v=20260908-4"></script>
+<script src="js/pages/keluarga.js?v=20260908-5"></script>
 <script src="js/pages/keluarga-media.js?v=20260908-3"></script>
 <script src="js/pwa.js"></script>
 </body>
