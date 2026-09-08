@@ -2,6 +2,8 @@
   "use strict";
 
   const client = window.supabaseClient;
+  const FAMILY_PHOTO_BUCKET = "family-photos";
+  const FAMILY_PHOTO_CACHE_PREFIX = "family-photo-signed-url-v1:";
 
   if (!client) {
     throw new Error("supabaseClient belum tersedia.");
@@ -53,7 +55,7 @@
 
     const { data: families, error: familyError } = await client
       .from("families")
-      .select("id,name,timezone,default_currency,created_by,created_at,updated_at,archived_at")
+      .select("id,name,timezone,default_currency,created_by,family_photo_path,created_at,updated_at,archived_at")
       .in("id", familyIds)
       .is("archived_at", null);
 
@@ -76,7 +78,7 @@
 
     const { data, error } = await client
       .from("families")
-      .select("id,name,timezone,default_currency,created_by,created_at,updated_at,archived_at")
+      .select("id,name,timezone,default_currency,created_by,family_photo_path,created_at,updated_at,archived_at")
       .eq("id", familyId)
       .single();
 
@@ -292,6 +294,136 @@
   }
 
 
+  function bacaCacheFotoKeluarga(path) {
+    if (!path) return null;
+    try {
+      const raw = sessionStorage.getItem(FAMILY_PHOTO_CACHE_PREFIX + path);
+      if (!raw) return null;
+      const item = JSON.parse(raw);
+      if (!item?.url || Number(item.expires_at || 0) <= Date.now()) {
+        sessionStorage.removeItem(FAMILY_PHOTO_CACHE_PREFIX + path);
+        return null;
+      }
+      return item.url;
+    } catch {
+      return null;
+    }
+  }
+
+  function simpanCacheFotoKeluarga(path, url, ttlMs = 45 * 60 * 1000) {
+    if (!path || !url) return;
+    try {
+      sessionStorage.setItem(
+        FAMILY_PHOTO_CACHE_PREFIX + path,
+        JSON.stringify({ url, expires_at: Date.now() + ttlMs })
+      );
+    } catch {}
+  }
+
+  function hapusCacheFotoKeluarga(path) {
+    if (!path) return;
+    try {
+      sessionStorage.removeItem(FAMILY_PHOTO_CACHE_PREFIX + path);
+    } catch {}
+  }
+
+  async function ambilUrlFotoKeluarga(path, { force = false } = {}) {
+    const objectPath = String(path || "").trim();
+    if (!objectPath) return "";
+
+    if (!force) {
+      const cached = bacaCacheFotoKeluarga(objectPath);
+      if (cached) return cached;
+    }
+
+    const { data, error } = await client.storage
+      .from(FAMILY_PHOTO_BUCKET)
+      .createSignedUrl(objectPath, 3600);
+
+    lemparJikaError(error);
+    const url = data?.signedUrl || "";
+    if (url) simpanCacheFotoKeluarga(objectPath, url);
+    return url;
+  }
+
+  async function simpanFotoKeluarga({
+    familyId,
+    blob,
+    extension = "webp",
+    contentType = "image/webp",
+    currentPath = null
+  }) {
+    if (!familyId) throw new Error("familyId wajib diisi.");
+    if (!blob) throw new Error("File foto keluarga wajib diisi.");
+
+    const ext = String(extension || "webp")
+      .toLowerCase()
+      .replace(/[^a-z0-9]/g, "") || "webp";
+    const path = `${familyId}/family-photo.${ext}`;
+
+    const { error: uploadError } = await client.storage
+      .from(FAMILY_PHOTO_BUCKET)
+      .upload(path, blob, {
+        upsert: true,
+        contentType,
+        cacheControl: "3600"
+      });
+    lemparJikaError(uploadError);
+
+    try {
+      const { data, error } = await client.rpc("family_set_photo_path", {
+        p_family_id: familyId,
+        p_path: path
+      });
+      lemparJikaError(error);
+
+      if (currentPath && currentPath !== path) {
+        await client.storage
+          .from(FAMILY_PHOTO_BUCKET)
+          .remove([currentPath])
+          .catch(() => {});
+        hapusCacheFotoKeluarga(currentPath);
+      }
+
+      hapusCacheFotoKeluarga(path);
+      const url = await ambilUrlFotoKeluarga(path, { force: true });
+      return { path: data || path, url };
+    } catch (error) {
+      if (!currentPath || currentPath !== path) {
+        await client.storage
+          .from(FAMILY_PHOTO_BUCKET)
+          .remove([path])
+          .catch(() => {});
+      }
+      throw error;
+    }
+  }
+
+  async function hapusFotoKeluarga(familyId, path) {
+    if (!familyId) throw new Error("familyId wajib diisi.");
+
+    const objectPath = String(path || "").trim();
+
+    const { error } = await client.rpc("family_set_photo_path", {
+      p_family_id: familyId,
+      p_path: null
+    });
+    lemparJikaError(error);
+
+    if (objectPath) {
+      const { error: removeError } = await client.storage
+        .from(FAMILY_PHOTO_BUCKET)
+        .remove([objectPath]);
+
+      if (removeError) {
+        console.warn("[Family photo orphan cleanup]", removeError);
+      }
+      hapusCacheFotoKeluarga(objectPath);
+    }
+
+    return true;
+  }
+
   async function ubahHubunganAnggota(familyId, userIdTarget, relationship = null) {
     if (!familyId) {
       throw new Error("familyId wajib diisi.");
@@ -384,6 +516,9 @@
     ambilUndanganAktif,
     previewUndangan,
     terimaUndangan,
+    ambilUrlFotoKeluarga,
+    simpanFotoKeluarga,
+    hapusFotoKeluarga,
     ubahHubunganAnggota,
     transferKepemilikan,
     keluarkanAnggota,
