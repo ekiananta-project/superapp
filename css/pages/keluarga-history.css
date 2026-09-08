@@ -1,0 +1,283 @@
+/* ==========================================================
+   MEMBER STATUS & HISTORY v1.1.4
+   - link Pengelolaan di keluarga.html
+   - halaman history lazy + keyset pagination
+========================================================== */
+
+.family-management-section {
+  margin-top: var(--space-6);
+}
+
+.family-management-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  width: 100%;
+  min-height: 72px;
+  padding: var(--space-3) var(--space-4);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  background: var(--color-surface);
+  color: var(--color-text);
+  box-shadow: var(--shadow-sm);
+  text-decoration: none;
+}
+
+.family-management-row:active {
+  background: var(--color-surface-soft);
+}
+
+.family-management-icon {
+  display: grid;
+  place-items: center;
+  flex: 0 0 auto;
+  width: 40px;
+  height: 40px;
+  border-radius: var(--radius-full);
+  background: var(--color-surface-soft);
+  color: var(--color-secondary);
+}
+
+.family-management-icon ion-icon {
+  font-size: 22px;
+}
+
+.family-management-copy {
+  display: grid;
+  gap: 3px;
+  min-width: 0;
+  flex: 1;
+}
+
+.family-management-copy strong {
+  color: var(--color-text);
+  font-size: var(--font-size-sm);
+}
+
+.family-management-copy small {
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-xs);
+  line-height: 1.45;
+}
+
+.family-management-chevron {
+  flex: 0 0 auto;
+  color: var(--color-text-secondary);
+  font-size: 20px;
+}
+
+/* History page */
+.member-history-intro {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-3);
+  margin-bottom: var(--space-5);
+  padding: var(--space-4);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  background: var(--color-surface);
+  box-shadow: var(--shadow-sm);
+}
+
+.member-history-intro > ion-icon {
+  flex: 0 0 auto;
+  margin-top: 2px;
+  color: var(--color-secondary);
+  font-size: 24px;
+}
+
+.member-history-intro h2 {
+  margin: 0;
+  color: var(--color-text);
+  font-size: var(--font-size-base);
+}
+
+.member-history-intro p {
+  margin: var(--space-1) 0 0;
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-xs);
+  line-height: 1.55;
+}
+
+.member-history-family-name {
+  color: var(--color-primary);
+  font-weight: var(--font-weight-semibold);
+}
+
+.member-history-list {
+  display: grid;
+  gap: var(--space-3);
+}
+
+.member-history-card {
+  display: grid;
+  grid-template-columns: 46px minmax(0, 1fr);
+  gap: var(--space-3);
+  padding: var(--space-4);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  background: var(--color-surface);
+  box-shadow: var(--shadow-sm);
+}
+
+.member-history-avatar {
+  display: grid;
+  place-items: center;
+  width: 46px;
+  height: 46px;
+  overflow: hidden;
+  border-radius: var(--radius-full);
+  background: var(--color-surface-soft);
+  color: var(--color-primary);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-bold);
+}
+
+.member-history-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.member-history-main {
+  min-width: 0;
+}
+
+.member-history-heading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-2);
+}
+
+.member-history-heading strong {
+  min-width: 0;
+  overflow: hidden;
+  color: var(--color-text);
+  font-size: var(--font-size-sm);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.member-history-status {
+  flex: 0 0 auto;
+  padding: 3px 8px;
+  border-radius: var(--radius-full);
+  font-size: 11px;
+  font-weight: var(--font-weight-semibold);
+  white-space: nowrap;
+}
+
+.member-history-status[data-status="left"] {
+  background: var(--color-surface-soft);
+  color: var(--color-text-secondary);
+}
+
+.member-history-status[data-status="removed"] {
+  background: color-mix(in srgb, var(--color-danger) 10%, var(--color-surface));
+  color: var(--color-danger);
+}
+
+.member-history-meta,
+.member-history-event,
+.member-history-actor,
+.member-history-period {
+  margin: 0;
+  font-size: var(--font-size-xs);
+  line-height: 1.55;
+}
+
+.member-history-meta {
+  margin-top: 4px;
+  color: var(--color-text-secondary);
+}
+
+.member-history-event {
+  margin-top: var(--space-2);
+  color: var(--color-text);
+  font-weight: var(--font-weight-medium);
+}
+
+.member-history-actor,
+.member-history-period {
+  margin-top: 2px;
+  color: var(--color-text-secondary);
+}
+
+.member-history-loading,
+.member-history-empty,
+.member-history-error {
+  padding: var(--space-7) var(--space-4);
+  border: 1px dashed var(--color-border);
+  border-radius: var(--radius-lg);
+  color: var(--color-text-secondary);
+  text-align: center;
+}
+
+.member-history-loading ion-icon,
+.member-history-empty ion-icon,
+.member-history-error ion-icon {
+  display: block;
+  margin: 0 auto var(--space-3);
+  color: var(--color-secondary);
+  font-size: 34px;
+}
+
+.member-history-loading ion-icon {
+  animation: member-history-spin .9s linear infinite;
+}
+
+.member-history-empty strong,
+.member-history-error strong {
+  display: block;
+  margin-bottom: var(--space-1);
+  color: var(--color-text);
+  font-size: var(--font-size-sm);
+}
+
+.member-history-empty p,
+.member-history-error p,
+.member-history-loading p {
+  margin: 0;
+  font-size: var(--font-size-xs);
+  line-height: 1.55;
+}
+
+.member-history-error .tombol-sekunder {
+  max-width: 220px;
+  margin: var(--space-4) auto 0;
+}
+
+.member-history-more {
+  margin-top: var(--space-4);
+  margin-bottom: max(var(--space-4), env(safe-area-inset-bottom));
+}
+
+.member-history-more:disabled {
+  opacity: .55;
+  cursor: wait;
+}
+
+@keyframes member-history-spin {
+  to { transform: rotate(360deg); }
+}
+
+@media (max-width: 380px) {
+  .member-history-card {
+    grid-template-columns: 40px minmax(0, 1fr);
+  }
+
+  .member-history-avatar {
+    width: 40px;
+    height: 40px;
+  }
+
+  .member-history-heading {
+    display: grid;
+    justify-content: stretch;
+  }
+
+  .member-history-status {
+    width: max-content;
+  }
+}

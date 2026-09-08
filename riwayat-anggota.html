@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="id" data-auth-guard="login">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#0B0D0C">
+  <meta name="application-name" content="Family Superapp">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Family">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="robots" content="noindex,nofollow,noarchive">
+  <meta name="referrer" content="strict-origin-when-cross-origin">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32.png">
+  <link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png">
+  <link rel="apple-touch-icon" sizes="180x180" href="icons/apple-touch-icon.png">
+  <script src="js/theme.js"></script>
+  <title>Riwayat Anggota</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/pages/keluarga-history.css?v=20260908-1">
+  <link rel="stylesheet" href="css/theme.css">
+</head>
+
+<body>
+<div class="aplikasi">
+  <header class="header-halaman">
+    <a class="tombol-ikon" href="keluarga.html" aria-label="Kembali ke Keluarga">
+      <ion-icon name="arrow-back-outline"></ion-icon>
+    </a>
+
+    <h1>Riwayat Anggota</h1>
+    <span class="kosong"></span>
+  </header>
+
+  <main class="konten-halaman">
+    <section class="member-history-intro">
+      <ion-icon name="time-outline" aria-hidden="true"></ion-icon>
+      <div>
+        <h2>Riwayat keanggotaan</h2>
+        <p>
+          Menampilkan anggota yang keluar sendiri atau dikeluarkan dari
+          <span class="member-history-family-name" data-history-family-name>Ruang Keluarga</span>.
+          Jika seseorang bergabung lagi, lifecycle sebelumnya tetap tersimpan.
+        </p>
+      </div>
+    </section>
+
+    <div class="member-history-list" data-history-list></div>
+
+    <div class="member-history-loading" data-history-loading>
+      <ion-icon name="sync-outline" aria-hidden="true"></ion-icon>
+      <p>Memuat riwayat anggota...</p>
+    </div>
+
+    <div class="member-history-empty" data-history-empty hidden>
+      <ion-icon name="archive-outline" aria-hidden="true"></ion-icon>
+      <strong>Belum ada riwayat anggota</strong>
+      <p>Anggota yang keluar atau dikeluarkan akan tampil di sini.</p>
+    </div>
+
+    <div class="member-history-error" data-history-error hidden>
+      <ion-icon name="alert-circle-outline" aria-hidden="true"></ion-icon>
+      <strong>Riwayat belum dapat dimuat</strong>
+      <p data-history-error-message>Silakan coba lagi.</p>
+      <button class="tombol-sekunder" type="button" data-history-retry>
+        <ion-icon name="refresh-outline"></ion-icon>
+        Coba Lagi
+      </button>
+    </div>
+
+    <button class="tombol-sekunder member-history-more" type="button" data-history-more hidden>
+      <ion-icon name="chevron-down-outline"></ion-icon>
+      Muat Riwayat Lainnya
+    </button>
+  </main>
+</div>
+
+<script type="module" src="https://unpkg.com/ionicons@8.0.13/dist/ionicons/ionicons.esm.js"></script>
+<script nomodule src="https://unpkg.com/ionicons@8.0.13/dist/ionicons/ionicons.js"></script>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="js/backend/supabase.js"></script>
+<script src="js/backend/auth-service.js"></script>
+<script src="js/backend/family-service.js?v=20260908-7"></script>
+<script src="js/backend/auth-router.js"></script>
+<script src="js/backend/auth-guard.js"></script>
+<script>window.AUTH_BACKEND_MODE = true;</script>
+<script src="js/pages/riwayat-anggota.js?v=20260908-1"></script>
+<script src="js/pwa.js"></script>
+</body>
+</html>

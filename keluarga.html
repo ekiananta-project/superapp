@@ -29,6 +29,7 @@
   <link rel="stylesheet" href="css/pages/keluarga-family-media.css?v=20260908-1">
   <link rel="stylesheet" href="css/pages/keluarga-leave.css?v=20260908-1">
   <link rel="stylesheet" href="css/pages/keluarga-dissolve.css?v=20260908-1">
+  <link rel="stylesheet" href="css/pages/keluarga-history.css?v=20260908-1">
   <link rel="stylesheet" href="css/pages/family-invitation.css">
   <link rel="stylesheet" href="css/theme.css">
 </head>
@@ -170,6 +171,23 @@
         <ion-icon name="shield-checkmark-outline"></ion-icon>
         Kode undangan hanya berlaku satu kali dan aktif selama 24 jam.
       </p>
+    </section>
+
+    <section class="family-management-section">
+      <h2 class="judul-grup">Pengelolaan</h2>
+
+      <a class="family-management-row" href="riwayat-anggota.html">
+        <span class="family-management-icon" aria-hidden="true">
+          <ion-icon name="time-outline"></ion-icon>
+        </span>
+
+        <span class="family-management-copy">
+          <strong>Riwayat Anggota</strong>
+          <small>Lihat anggota yang keluar atau dikeluarkan.</small>
+        </span>
+
+        <ion-icon class="family-management-chevron" name="chevron-forward-outline" aria-hidden="true"></ion-icon>
+      </a>
     </section>
 
     <section class="family-membership-section">
@@ -537,7 +555,7 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="js/backend/supabase.js"></script>
 <script src="js/backend/auth-service.js"></script>
-<script src="js/backend/family-service.js?v=20260908-6"></script>
+<script src="js/backend/family-service.js?v=20260908-7"></script>
 <script src="js/backend/finance-service.js"></script>
 <script src="js/backend/auth-router.js"></script>
 <script src="js/backend/auth-guard.js"></script>

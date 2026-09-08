@@ -124,6 +124,41 @@
     }));
   }
 
+  async function ambilRiwayatAnggota(
+    familyId,
+    { limit = 20, beforeEventAt = null, beforeId = null } = {}
+  ) {
+    if (!familyId) {
+      throw new Error("familyId wajib diisi.");
+    }
+
+    const pageSize = Math.min(Math.max(Number(limit) || 20, 1), 50);
+
+    const { data, error } = await client.rpc(
+      "family_get_member_history",
+      {
+        p_family_id: familyId,
+        p_limit: pageSize,
+        p_before_event_at: beforeEventAt || null,
+        p_before_id: beforeId || null
+      }
+    );
+
+    lemparJikaError(error);
+
+    const rows = Array.isArray(data) ? data : [];
+    const items = rows.slice(0, pageSize);
+    const last = items[items.length - 1] || null;
+
+    return {
+      items,
+      hasMore: rows.length > pageSize,
+      nextCursor: last
+        ? { eventAt: last.event_at || null, id: last.membership_id || null }
+        : null
+    };
+  }
+
   async function buatKeluarga({
     name,
     timezone = "Asia/Jakarta",
@@ -627,6 +662,7 @@
     ambilKeluargaSaya,
     ambilKeluargaById,
     ambilAnggotaKeluarga,
+    ambilRiwayatAnggota,
     buatKeluarga,
     ubahKeluarga,
     normalisasiKodeUndangan,
