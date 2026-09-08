@@ -294,7 +294,7 @@
 
     const setuju = confirm(
       `Keluarkan ${nama} dari ${family.name}?\n\n` +
-      "Akses keluarga akan dicabut, tetapi akun dan riwayat transaksi tetap disimpan."
+      "Akses Ruang Keluarga akan dicabut, tetapi akun pribadi dan riwayat aktivitas tetap disimpan."
     );
 
     if (!setuju) return;
@@ -534,6 +534,11 @@
       renderAnggota();
       renderHakAkses();
       await muatUndanganAktif();
+
+      window.FAMILY_CORE_STATE = { family, user, anggota };
+      window.dispatchEvent(new CustomEvent("family-core-ready", {
+        detail: window.FAMILY_CORE_STATE
+      }));
     } catch (error) {
       console.error("[Keluarga Backend]", error);
       tampilPesan(error?.message || "Data keluarga belum dapat dimuat.", "error");
@@ -763,6 +768,10 @@
       renderAnggota();
       renderHakAkses();
       renderUndangan();
+      window.FAMILY_CORE_STATE = { family, user, anggota };
+      window.dispatchEvent(new CustomEvent("family-core-ready", {
+        detail: window.FAMILY_CORE_STATE
+      }));
       tutupTransferOwnership({ paksa: true });
       tampilPesan(
         `Kepemilikan Ruang Keluarga berhasil dipindahkan ke ${namaTarget}.`,
