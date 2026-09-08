@@ -943,3 +943,80 @@
     gap: 6px;
   }
 }
+
+
+/* =========================================
+   v1.1.7d — COMPACT REPORT TOOLBAR + BOTTOM NAV
+========================================= */
+.laporan-toolbar-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1.08fr) minmax(0, .92fr);
+  gap: var(--space-2);
+  width: 100%;
+}
+
+.laporan-toolbar-row > * {
+  min-width: 0;
+}
+
+.laporan-toolbar-row .finance-period-trigger-compact {
+  min-height: 72px;
+  padding: var(--space-3);
+}
+
+.laporan-toolbar-row .finance-period-trigger-copy small {
+  display: block;
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-xs);
+}
+
+.laporan-toolbar-row .finance-period-trigger-copy strong {
+  margin-top: 2px;
+}
+
+.arus-bersih-compact {
+  grid-column: auto;
+  min-height: 72px;
+  padding: var(--space-3);
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+  gap: 3px;
+}
+
+.arus-bersih-compact div {
+  width: 100%;
+}
+
+.arus-bersih-compact > strong {
+  max-width: 100%;
+  overflow: hidden;
+  font-size: var(--font-size-md);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ringkasan-arus-detail-duo .kartu-ringkasan-detail {
+  min-width: 0;
+}
+
+/* Layer 2/3 sekarang memakai bottom nav global, bukan FAB terpisah. */
+.fab-detail-dompet {
+  display: none !important;
+}
+
+@media (max-width: 360px) {
+  .laporan-toolbar-row {
+    grid-template-columns: minmax(0, 1.05fr) minmax(0, .95fr);
+    gap: 6px;
+  }
+
+  .laporan-toolbar-row .finance-period-trigger-compact,
+  .arus-bersih-compact {
+    padding-inline: 10px;
+  }
+
+  .arus-bersih-compact > strong {
+    font-size: var(--font-size-sm);
+  }
+}

@@ -22,7 +22,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="css/style.css">
   <link rel="stylesheet" href="css/components/finance-period.css?v=20260908-1">
-  <link rel="stylesheet" href="css/pages/dompet-detail.css?v=20260908-3">
+  <link rel="stylesheet" href="css/pages/dompet-detail.css?v=20260908-4">
   <link rel="stylesheet" href="css/pages/dompet-backend.css">
   <link rel="stylesheet" href="css/theme.css">
 </head>
@@ -51,15 +51,22 @@
       </div>
     </section>
 
-    <button class="finance-period-trigger" type="button" data-finance-period-trigger>
-      <span class="finance-period-trigger-main">
-        <ion-icon name="calendar-outline"></ion-icon>
-        <span class="finance-period-trigger-copy"><small>Periode</small><strong data-finance-period-label>September 2026</strong></span>
-      </span>
-      <ion-icon name="chevron-down-outline"></ion-icon>
-    </button>
+    <div class="laporan-toolbar-row">
+      <button class="finance-period-trigger finance-period-trigger-compact" type="button" data-finance-period-trigger>
+        <span class="finance-period-trigger-main">
+          <ion-icon name="calendar-outline"></ion-icon>
+          <span class="finance-period-trigger-copy"><small>Periode</small><strong data-finance-period-label>September 2026</strong></span>
+        </span>
+        <ion-icon name="chevron-down-outline"></ion-icon>
+      </button>
 
-    <section class="ringkasan-arus-detail">
+      <article class="kartu-ringkasan-detail arus-bersih arus-bersih-compact">
+        <div><span>Arus Kas Bersih</span><small data-status-arus>Seimbang</small></div>
+        <strong data-arus-bersih>Rp 0</strong>
+      </article>
+    </div>
+
+    <section class="ringkasan-arus-detail ringkasan-arus-detail-duo">
       <article class="kartu-ringkasan-detail">
         <span class="ringkasan-detail-ikon pemasukan"><ion-icon name="arrow-down-outline"></ion-icon></span>
         <span>Pemasukan</span>
@@ -69,10 +76,6 @@
         <span class="ringkasan-detail-ikon pengeluaran"><ion-icon name="arrow-up-outline"></ion-icon></span>
         <span>Pengeluaran</span>
         <strong class="nilai-pengeluaran" data-total-pengeluaran>Rp 0</strong>
-      </article>
-      <article class="kartu-ringkasan-detail arus-bersih">
-        <div><span>Arus Kas Bersih</span><small data-status-arus>Seimbang</small></div>
-        <strong data-arus-bersih>Rp 0</strong>
       </article>
     </section>
 
@@ -99,7 +102,11 @@
     </section>
   </main>
 
-  <a class="fab-detail-dompet" href="transaksi.html" data-tambah-transaksi-detail aria-label="Tambah transaksi"><ion-icon name="add-outline"></ion-icon></a>
+  <nav class="navigasi-bawah" aria-label="Navigasi utama">
+    <a class="navigasi-item" href="akun.html"><ion-icon name="grid-outline"></ion-icon><span>Kategori</span></a>
+    <a class="tombol-tambah" href="transaksi.html" data-tambah-transaksi-detail aria-label="Tambah transaksi"><ion-icon name="add-outline"></ion-icon></a>
+    <a class="navigasi-item is-aktif" href="dompet.html" aria-current="page"><ion-icon name="wallet-outline"></ion-icon><span>Dompet</span></a>
+  </nav>
 </div>
 
 <div class="lapisan" id="sheet-dompet-detail" hidden>

@@ -1,4 +1,4 @@
-const CACHE_NAME = "family-superapp-v1.1.7c-compact-finance-layers-1";
+const CACHE_NAME = "family-superapp-v1.1.7d-report-toolbar-bottomnav-1";
 const OFFLINE_URL = "./offline.html";
 
 const APP_FILES = [
@@ -18,6 +18,7 @@ const APP_FILES = [
   "./css/pages/dompet-detail.css",
   "./css/pages/dompet-detail.css?v=20260908-2",
   "./css/pages/dompet-detail.css?v=20260908-3",
+  "./css/pages/dompet-detail.css?v=20260908-4",
   "./css/pages/dompet-form.css",
   "./css/pages/family-invitation.css",
   "./css/pages/family-invitation.css?v=20260908-2",
