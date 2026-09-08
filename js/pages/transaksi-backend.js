@@ -45,6 +45,15 @@
   const modeBiaya = form.elements.modeBiaya;
   const tombolSimpan = form.querySelector('[type="submit"]');
 
+  const categoryTrigger = document.querySelector("[data-category-trigger]");
+  const categorySelected = document.querySelector("[data-category-selected]");
+  const categorySelectedParent = document.querySelector("[data-category-selected-parent]");
+  const categoryLayer = document.querySelector("[data-category-layer]");
+  const categoryClose = document.querySelector("[data-category-close]");
+  const categorySearch = document.querySelector("[data-category-search]");
+  const categoryList = document.querySelector("[data-category-list]");
+  const expandedCategories = new Set();
+
   const params = new URLSearchParams(location.search);
   const idEdit = params.get("id");
   const dompetDariURL = params.get("dompet");
@@ -247,33 +256,196 @@
     }
   }
 
-  function isiAkun(nilaiPilihan = "") {
-    akunEl.innerHTML = "";
-    if (jenisAktif === "transfer") return;
+  function escapeHTML(teks) {
+    return String(teks ?? "")
+      .replaceAll("&", "&amp;")
+      .replaceAll("<", "&lt;")
+      .replaceAll(">", "&gt;")
+      .replaceAll('"', "&quot;")
+      .replaceAll("'", "&#039;");
+  }
 
+  function kategoriAktif() {
+    if (jenisAktif === "transfer") return [];
     const kind = KIND_DB[jenisAktif];
-    const list = akun.filter(item => item.kind === kind && !item.archived_at);
-    const parents = list
-      .filter(item => !item.parent_id)
-      .sort((a, b) => Number(a.sort_order || 0) - Number(b.sort_order || 0));
+    return akun.filter(item => item.kind === kind && !item.archived_at);
+  }
+
+  function urutKategori(list) {
+    return [...list].sort((a, b) => {
+      const order = Number(a.sort_order || 0) - Number(b.sort_order || 0);
+      if (order !== 0) return order;
+      return String(a.name || "").localeCompare(String(b.name || ""), "id");
+    });
+  }
+
+  function kategoriById(id) {
+    return akun.find(item => item.id === id) || null;
+  }
+
+  function refreshCategoryTrigger() {
+    if (!categoryTrigger || !categorySelected) return;
+
+    const selected = kategoriById(akunEl.value);
+    if (!selected) {
+      categorySelected.textContent = "Pilih kategori";
+      if (categorySelectedParent) {
+        categorySelectedParent.textContent = "";
+        categorySelectedParent.hidden = true;
+      }
+      return;
+    }
+
+    categorySelected.textContent = selected.name || "Kategori";
+
+    if (categorySelectedParent) {
+      const parent = selected.parent_id ? kategoriById(selected.parent_id) : null;
+      categorySelectedParent.textContent = parent?.name || "";
+      categorySelectedParent.hidden = !parent;
+    }
+  }
+
+  function renderCategoryPicker() {
+    if (!categoryList) return;
+
+    const list = kategoriAktif();
+    const query = String(categorySearch?.value || "").trim().toLocaleLowerCase("id");
+    const parents = urutKategori(list.filter(item => !item.parent_id));
+    const selectedId = akunEl.value;
+
+    categoryList.innerHTML = "";
+
+    if (!list.length) {
+      categoryList.innerHTML = '<div class="category-picker-empty">Belum ada kategori untuk jenis transaksi ini.</div>';
+      return;
+    }
+
+    let rendered = 0;
 
     parents.forEach(parent => {
-      const option = document.createElement("option");
-      option.value = parent.id;
-      option.textContent = parent.name;
-      option.selected = parent.id === nilaiPilihan;
-      akunEl.appendChild(option);
+      const children = urutKategori(list.filter(item => item.parent_id === parent.id));
+      const parentMatch = String(parent.name || "").toLocaleLowerCase("id").includes(query);
+      const matchingChildren = query
+        ? children.filter(child => String(child.name || "").toLocaleLowerCase("id").includes(query))
+        : children;
 
-      list
-        .filter(item => item.parent_id === parent.id)
-        .sort((a, b) => Number(a.sort_order || 0) - Number(b.sort_order || 0))
-        .forEach(child => {
-          const childOption = document.createElement("option");
-          childOption.value = child.id;
-          childOption.textContent = `↳ ${child.name}`;
-          childOption.selected = child.id === nilaiPilihan;
-          akunEl.appendChild(childOption);
+      if (query && !parentMatch && !matchingChildren.length) return;
+
+      const group = document.createElement("section");
+      group.className = "category-picker-group";
+
+      const row = document.createElement("div");
+      row.className = "category-picker-parent-row";
+
+      const choice = document.createElement("button");
+      choice.type = "button";
+      choice.className = "category-picker-choice category-picker-parent-choice";
+      choice.dataset.categoryId = parent.id;
+      choice.innerHTML = `
+        <span class="category-picker-icon"><ion-icon name="${escapeHTML(parent.icon_value || "folder-outline")}"></ion-icon></span>
+        <span class="category-picker-name">${escapeHTML(parent.name || "Kategori")}</span>
+        ${selectedId === parent.id ? '<ion-icon class="category-picker-check" name="checkmark-circle"></ion-icon>' : ""}
+      `;
+      row.appendChild(choice);
+
+      if (children.length) {
+        const expand = document.createElement("button");
+        expand.type = "button";
+        expand.className = "category-picker-expand";
+        expand.dataset.categoryExpand = parent.id;
+
+        const shouldExpand = query
+          ? true
+          : expandedCategories.has(parent.id);
+
+        expand.setAttribute("aria-expanded", shouldExpand ? "true" : "false");
+        expand.setAttribute("aria-label", `${shouldExpand ? "Tutup" : "Buka"} subkategori ${parent.name}`);
+        expand.innerHTML = `<span>${children.length}</span><ion-icon name="${shouldExpand ? "chevron-up-outline" : "chevron-down-outline"}"></ion-icon>`;
+        row.appendChild(expand);
+      }
+
+      group.appendChild(row);
+
+      const shouldShowChildren = children.length && (query || expandedCategories.has(parent.id));
+      if (shouldShowChildren) {
+        const childWrap = document.createElement("div");
+        childWrap.className = "category-picker-children";
+
+        const visibleChildren = query && !parentMatch ? matchingChildren : children;
+        visibleChildren.forEach(child => {
+          const childButton = document.createElement("button");
+          childButton.type = "button";
+          childButton.className = "category-picker-choice category-picker-child-choice";
+          childButton.dataset.categoryId = child.id;
+          childButton.innerHTML = `
+            <span class="category-picker-guide" aria-hidden="true">↳</span>
+            <span class="category-picker-icon"><ion-icon name="${escapeHTML(child.icon_value || parent.icon_value || "ellipse-outline")}"></ion-icon></span>
+            <span class="category-picker-name">${escapeHTML(child.name || "Subkategori")}</span>
+            ${selectedId === child.id ? '<ion-icon class="category-picker-check" name="checkmark-circle"></ion-icon>' : ""}
+          `;
+          childWrap.appendChild(childButton);
         });
+
+        group.appendChild(childWrap);
+      }
+
+      categoryList.appendChild(group);
+      rendered += 1;
+    });
+
+    if (!rendered) {
+      categoryList.innerHTML = '<div class="category-picker-empty">Kategori tidak ditemukan.</div>';
+    }
+  }
+
+  function bukaCategoryPicker() {
+    if (!categoryLayer || jenisAktif === "transfer") return;
+
+    expandedCategories.clear();
+    const selected = kategoriById(akunEl.value);
+    if (selected?.parent_id) expandedCategories.add(selected.parent_id);
+
+    if (categorySearch) categorySearch.value = "";
+    renderCategoryPicker();
+    categoryLayer.hidden = false;
+    document.body.classList.add("category-picker-open");
+
+    requestAnimationFrame(() => categorySearch?.focus());
+  }
+
+  function tutupCategoryPicker() {
+    if (!categoryLayer) return;
+    const wasOpen = !categoryLayer.hidden;
+    categoryLayer.hidden = true;
+    document.body.classList.remove("category-picker-open");
+    if (wasOpen) categoryTrigger?.focus();
+  }
+
+  function pilihKategori(id) {
+    const selected = kategoriById(id);
+    if (!selected || selected.kind !== KIND_DB[jenisAktif] || selected.archived_at) return;
+
+    akunEl.value = selected.id;
+    refreshCategoryTrigger();
+    tutupCategoryPicker();
+    sembunyikanPesan();
+  }
+
+  function isiAkun(nilaiPilihan = "") {
+    akunEl.innerHTML = "";
+    if (jenisAktif === "transfer") {
+      refreshCategoryTrigger();
+      return;
+    }
+
+    const list = kategoriAktif();
+
+    urutKategori(list).forEach(item => {
+      const option = document.createElement("option");
+      option.value = item.id;
+      option.textContent = item.name;
+      option.selected = item.id === nilaiPilihan;
+      akunEl.appendChild(option);
     });
 
     if (!list.length) {
@@ -283,7 +455,13 @@
         ? "Belum ada kategori pengeluaran"
         : "Belum ada kategori pemasukan";
       akunEl.appendChild(option);
+    } else if (nilaiPilihan && list.some(item => item.id === nilaiPilihan)) {
+      akunEl.value = nilaiPilihan;
+    } else {
+      akunEl.value = "";
     }
+
+    refreshCategoryTrigger();
   }
 
   function renderJenis() {
@@ -308,8 +486,10 @@
     if (ringkasanTransfer) ringkasanTransfer.hidden = !transfer;
     if (labelDompet) labelDompet.textContent = transfer ? "Dompet Sumber" : "Dompet";
 
-    akunEl.required = !transfer;
+    // Kategori divalidasi oleh JS karena native select disembunyikan oleh custom picker.
+    akunEl.required = false;
     if (tujuanEl) tujuanEl.required = transfer;
+    if (transfer) tutupCategoryPicker();
 
     if (transfer) {
       isiTujuan(nilaiTujuan);
@@ -593,6 +773,34 @@
   if (modeBiaya) {
     modeBiaya.addEventListener("change", refreshRingkasanTransfer);
   }
+
+  categoryTrigger?.addEventListener("click", bukaCategoryPicker);
+  categoryClose?.addEventListener("click", tutupCategoryPicker);
+  categorySearch?.addEventListener("input", renderCategoryPicker);
+
+  categoryLayer?.addEventListener("click", event => {
+    if (event.target === categoryLayer) tutupCategoryPicker();
+  });
+
+  categoryList?.addEventListener("click", event => {
+    const expand = event.target.closest("[data-category-expand]");
+    if (expand) {
+      const id = expand.dataset.categoryExpand;
+      if (expandedCategories.has(id)) expandedCategories.delete(id);
+      else expandedCategories.add(id);
+      renderCategoryPicker();
+      return;
+    }
+
+    const choice = event.target.closest("[data-category-id]");
+    if (choice) pilihKategori(choice.dataset.categoryId);
+  });
+
+  document.addEventListener("keydown", event => {
+    if (event.key === "Escape" && categoryLayer && !categoryLayer.hidden) {
+      tutupCategoryPicker();
+    }
+  });
 
   form.addEventListener("submit", async event => {
     event.preventDefault();

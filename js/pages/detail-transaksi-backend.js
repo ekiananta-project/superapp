@@ -194,6 +194,11 @@
     tambahBaris(list, "Dicatat oleh", detail.created_by_name || "Pengguna");
     tambahBaris(list, "Dibuat", waktuID(detail.created_at));
 
+    if (detail.updated_by_name || detail.updated_by || detail.last_edited_at) {
+      tambahBaris(list, "Diubah oleh", detail.updated_by_name || "Pengguna");
+      tambahBaris(list, "Diubah", waktuID(detail.last_edited_at));
+    }
+
     if (detail.voided_at) {
       tambahBaris(list, "Dibatalkan", waktuID(detail.voided_at));
       tambahBaris(list, "Alasan", detail.void_reason || "Tidak ada alasan");
