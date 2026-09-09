@@ -1,4 +1,4 @@
-const CACHE_NAME = "family-superapp-v1.2.0e2-report-visual-wallet-full-1";
+const CACHE_NAME = "family-superapp-v1.2.0e3-finance-report-excel-export-1";
 const OFFLINE_URL = "./offline.html";
 
 const APP_FILES = [
@@ -76,6 +76,7 @@ const APP_FILES = [
   "./js/pages/dompet-detail-backend.js",
   "./js/pages/laporan-dompet-backend.js",
   "./js/pages/laporan-finance-backend.js",
+  "./js/vendor/family-xlsx.js",
   "./js/pages/dompet-form-backend.js",
   "./js/pages/home-backend.js",
   "./js/pages/keamanan.js",

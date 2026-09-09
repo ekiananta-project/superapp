@@ -24,14 +24,14 @@
   <link rel="stylesheet" href="css/style.css">
   <link rel="stylesheet" href="css/theme.css">
   <link rel="stylesheet" href="css/pages/finance-nav-v117f.css?v=20260908-2">
-  <link rel="stylesheet" href="css/pages/laporan-finance.css?v=20260909-e2">
+  <link rel="stylesheet" href="css/pages/laporan-finance.css?v=20260909-e3">
 </head>
 <body>
 <div class="aplikasi dengan-nav report-app" data-report-root aria-busy="true">
   <header class="header-halaman report-header">
     <a class="tombol-ikon" href="index.html" aria-label="Kembali"><ion-icon name="arrow-back-outline"></ion-icon></a>
     <h1>Laporan &amp; Insight</h1>
-    <button class="tombol-ikon" type="button" data-report-refresh aria-label="Muat ulang laporan"><ion-icon name="refresh-outline"></ion-icon></button>
+    <button class="tombol-ikon" type="button" data-report-export aria-label="Export laporan"><ion-icon name="download-outline"></ion-icon></button>
   </header>
 
   <main class="konten-halaman report-page">
@@ -136,6 +136,30 @@
   </nav>
 </div>
 
+<div class="lapisan" data-report-export-layer hidden>
+  <section class="bottom-sheet report-export-sheet" role="dialog" aria-modal="true" aria-labelledby="report-export-title">
+    <div class="sheet-handle"></div>
+    <div class="sheet-header">
+      <div>
+        <h2 id="report-export-title">Export Laporan</h2>
+        <p class="sheet-subjudul">Periode <strong data-report-export-range>periode aktif</strong></p>
+      </div>
+      <button class="tombol-ikon" type="button" data-report-export-close aria-label="Tutup"><ion-icon name="close-outline"></ion-icon></button>
+    </div>
+
+    <button class="report-export-option" type="button" data-report-export-excel>
+      <span class="report-export-option-icon"><ion-icon name="grid-outline"></ion-icon></span>
+      <span class="report-export-option-copy">
+        <strong>Excel (.xlsx)</strong>
+        <small>Ringkasan, transaksi, kategori, budget, tagihan, dan posisi dompet.</small>
+      </span>
+      <ion-icon class="report-export-option-arrow" name="download-outline" aria-hidden="true"></ion-icon>
+    </button>
+
+    <p class="report-export-note">Nominal keuangan disimpan sebagai angka Excel, bukan teks. Posisi Dompet tetap memakai saldo terkini saat file dibuat.</p>
+  </section>
+</div>
+
 <div class="lapisan" data-report-custom-layer hidden>
   <section class="bottom-sheet report-custom-sheet" role="dialog" aria-modal="true" aria-labelledby="report-custom-title">
     <div class="sheet-handle"></div>
@@ -165,7 +189,8 @@
 <script src="js/backend/finance-cache.js?v=20260908-d1"></script>
 <script src="js/backend/auth-router.js?v=20260908-2"></script>
 <script src="js/backend/auth-guard.js?v=20260908-2"></script>
-<script src="js/pages/laporan-finance-backend.js?v=20260909-e2"></script>
-<script src="js/pwa.js?v=20260909-e2"></script>
+<script src="js/vendor/family-xlsx.js?v=20260909-e3"></script>
+<script src="js/pages/laporan-finance-backend.js?v=20260909-e3"></script>
+<script src="js/pwa.js?v=20260909-e3"></script>
 </body>
 </html>

@@ -13,6 +13,7 @@
     accounts: [],
     transactions: [],
     wallets: [],
+    walletTotal: 0,
     budgetPeriods: [],
     budgetRows: [],
     bills: []
@@ -104,7 +105,7 @@
   function setLoading(loading) {
     q("[data-report-root]")?.setAttribute("aria-busy", loading ? "true" : "false");
     q(".report-page")?.classList.toggle("report-loading", loading);
-    q("[data-report-refresh]")?.toggleAttribute("disabled", loading);
+    q("[data-report-export]")?.toggleAttribute("disabled", loading);
   }
 
   function formatDateRange(startDate, endDate) {
@@ -421,6 +422,7 @@
       state.transactions = transactions || [];
       state.accounts = accounts || [];
       state.wallets = wallets || [];
+      state.walletTotal = Number(totalRows?.[0]?.total_balance ?? state.wallets.reduce((sum, item) => sum + Number(item.current_balance || 0), 0));
       state.budgetPeriods = periods || [];
       state.bills = bills || [];
 
@@ -486,11 +488,229 @@
     await loadReport();
   }
 
+  function fileDateLabel(startDate, endDate) {
+    const start = parseLocalDate(startDate);
+    const end = parseLocalDate(endDate);
+    if (!start || !end) return "Periode";
+    const two = n => String(n).padStart(2, "0");
+    const monthLong = date => date.toLocaleDateString("id-ID", { month: "long" });
+    const monthShort = date => date.toLocaleDateString("id-ID", { month: "short" }).replace(/\./g, "");
+    if (start.getFullYear() === end.getFullYear() && start.getMonth() === end.getMonth()) {
+      return `${two(start.getDate())}-${two(end.getDate())} ${monthLong(end)} ${end.getFullYear()}`;
+    }
+    if (start.getFullYear() === end.getFullYear()) {
+      return `${two(start.getDate())} ${monthShort(start)}-${two(end.getDate())} ${monthShort(end)} ${end.getFullYear()}`;
+    }
+    return `${two(start.getDate())} ${monthShort(start)} ${start.getFullYear()}-${two(end.getDate())} ${monthShort(end)} ${end.getFullYear()}`;
+  }
+
+  function exportStatusCell(status) {
+    const XLS = window.FamilyXLSX;
+    const value = String(status || "");
+    if (["Lunas", "Aman", "Surplus"].includes(value)) return XLS.text(value, XLS.styles.GOOD);
+    if (["Terlambat", "Melebihi", "Defisit"].includes(value)) return XLS.text(value, XLS.styles.BAD);
+    if (["Perhatian", "Dibayar Sebagian", "Belum Lunas"].includes(value)) return XLS.text(value, XLS.styles.WARNING);
+    return XLS.text(value);
+  }
+
+  function buildExcelWorkbook() {
+    const XLS = window.FamilyXLSX;
+    if (!XLS) throw new Error("Komponen export Excel belum termuat. Muat ulang halaman lalu coba lagi.");
+
+    const S = XLS.styles;
+    const money = value => XLS.number(Number(value || 0), S.CURRENCY);
+    const moneyBold = value => XLS.number(Number(value || 0), S.CURRENCY_BOLD);
+    const percent = value => XLS.number(Number(value || 0), S.PERCENT);
+    const header = values => values.map(value => XLS.text(value, S.HEADER));
+    const accounts = accountMap();
+    const { income, expense, net } = calculateCashflow();
+    const expenseGroups = categoryGroups("expense");
+    const budgetTotal = state.budgetRows.reduce((sum, item) => sum + Number(item.budget_amount || 0), 0);
+    const budgetSpent = state.budgetRows.reduce((sum, item) => sum + Number(item.spent_amount || 0), 0);
+    const billTotal = state.bills.reduce((sum, item) => sum + Number(item.amount || 0), 0);
+    const billPaid = state.bills.reduce((sum, item) => sum + Number(item.paid_amount || 0), 0);
+    const billRemaining = state.bills.reduce((sum, item) => sum + Number(item.remaining_amount || 0), 0);
+    const cashStatus = net > 0 ? "Surplus" : net < 0 ? "Defisit" : "Seimbang";
+    const generated = new Date().toLocaleString("id-ID", { dateStyle: "long", timeStyle: "short" });
+    const familyName = state.family?.name || state.family?.family_name || "Keluarga";
+
+    const summaryRows = [
+      [XLS.text("LAPORAN KEUANGAN KELUARGA", S.TITLE)],
+      [XLS.text(familyName, S.SECTION)],
+      [XLS.text(`Periode: ${formatDateRange(state.startDate, state.endDate)}`)],
+      [XLS.text(`Dibuat: ${generated}`, S.NOTE)],
+      [],
+      [XLS.text("ARUS KAS", S.SECTION)],
+      header(["Keterangan", "Nominal / Status"]),
+      [XLS.text("Pemasukan"), moneyBold(income)],
+      [XLS.text("Pengeluaran"), moneyBold(expense)],
+      [XLS.text("Arus Kas Bersih"), moneyBold(net)],
+      [XLS.text("Status"), exportStatusCell(cashStatus)],
+      [],
+      [XLS.text("BUDGET", S.SECTION)],
+      header(["Keterangan", "Nominal"]),
+      [XLS.text("Total Budget"), money(budgetTotal)],
+      [XLS.text("Terpakai"), money(budgetSpent)],
+      [XLS.text("Sisa"), money(budgetTotal - budgetSpent)],
+      [],
+      [XLS.text("TAGIHAN", S.SECTION)],
+      header(["Keterangan", "Nominal"]),
+      [XLS.text("Kewajiban"), money(billTotal)],
+      [XLS.text("Sudah Dibayar"), money(billPaid)],
+      [XLS.text("Sisa"), money(billRemaining)],
+      [],
+      [XLS.text("POSISI DOMPET", S.SECTION)],
+      [XLS.text("Saldo semua dompet saat export"), moneyBold(state.walletTotal)],
+      [XLS.text("Catatan: posisi dompet adalah saldo terkini saat laporan dibuat dan tidak mengikuti filter periode.", S.NOTE)]
+    ];
+
+    const transactionRows = [
+      header(["Tanggal", "Jenis", "Kategori", "Nominal", "Biaya Transfer", "Dampak Arus Kas", "Catatan", "Dibuat Oleh", "ID Transaksi"]),
+      ...state.transactions.map(item => {
+        const amount = Number(item.amount || 0);
+        const fee = Math.max(0, Number(item.transfer_fee || 0));
+        const impact = item.kind === "income" ? amount : item.kind === "expense" ? -amount : item.kind === "transfer" ? -fee : 0;
+        const kind = item.kind === "income" ? "Pemasukan" : item.kind === "expense" ? "Pengeluaran" : item.kind === "transfer" ? "Transfer Antar Dompet" : String(item.kind || "-");
+        const account = accounts.get(item.account_id);
+        return [
+          XLS.text(item.occurred_on || ""),
+          XLS.text(kind),
+          XLS.text(account?.name || (item.kind === "transfer" ? "Transfer Antar Dompet" : "Tanpa Kategori")),
+          money(amount),
+          money(fee),
+          money(impact),
+          XLS.text(item.note || "", S.BORDER),
+          XLS.text(item.created_by_name || "-"),
+          XLS.text(item.id || "")
+        ];
+      })
+    ];
+
+    const categoryTotal = expenseGroups.reduce((sum, item) => sum + Number(item.amount || 0), 0);
+    const categoryRows = [
+      header(["Peringkat", "Kategori", "Nominal", "Persentase Pengeluaran"]),
+      ...expenseGroups.map((item, index) => [
+        XLS.number(index + 1),
+        XLS.text(item.name),
+        money(item.amount),
+        percent(categoryTotal > 0 ? Number(item.amount || 0) / categoryTotal : 0)
+      ])
+    ];
+
+    const budgetRows = [
+      header(["Tanggal Mulai", "Tanggal Selesai", "Kategori", "Budget", "Aktual", "Sisa", "Progress", "Status"]),
+      ...state.budgetRows.map(item => {
+        const budget = Number(item.budget_amount || 0);
+        const spent = Number(item.spent_amount || 0);
+        const status = item.budget_status === "over" ? "Melebihi" : item.budget_status === "warning" ? "Perhatian" : "Aman";
+        return [
+          XLS.text(item.period_start || ""),
+          XLS.text(item.period_end || ""),
+          XLS.text(item.account_name || "Kategori"),
+          money(budget),
+          money(spent),
+          money(budget - spent),
+          percent(budget > 0 ? spent / budget : 0),
+          exportStatusCell(status)
+        ];
+      })
+    ];
+
+    const today = localISO();
+    const billRows = [
+      header(["Jatuh Tempo", "Tagihan", "Kategori", "Kewajiban", "Sudah Dibayar", "Sisa", "Jumlah Pembayaran", "Status", "Catatan", "Kategori Diarsipkan"]),
+      ...state.bills.map(item => {
+        const paid = Number(item.paid_amount || 0);
+        const remaining = Number(item.remaining_amount || 0);
+        const status = remaining <= 0 ? "Lunas" : String(item.due_on || "") < today ? "Terlambat" : paid > 0 ? "Dibayar Sebagian" : "Belum Lunas";
+        return [
+          XLS.text(item.due_on || ""),
+          XLS.text(item.bill_name || "Tagihan"),
+          XLS.text(item.account_name || "Tanpa Kategori"),
+          money(item.amount),
+          money(paid),
+          money(remaining),
+          XLS.number(item.payment_count || 0),
+          exportStatusCell(status),
+          XLS.text(item.bill_note || "", S.BORDER),
+          XLS.text(item.category_archived ? "Ya" : "Tidak")
+        ];
+      })
+    ];
+
+    const walletRows = [
+      [XLS.text("POSISI DOMPET TERKINI", S.TITLE)],
+      [XLS.text(`Dibuat: ${generated}`, S.NOTE)],
+      [XLS.text("Saldo dompet tidak mengikuti periode laporan; nilai di bawah adalah posisi terkini saat export.", S.NOTE)],
+      [],
+      header(["Dompet", "Tipe", "Mata Uang", "Saldo Terkini"]),
+      ...state.wallets.map(item => [
+        XLS.text(item.name || "Dompet"),
+        XLS.text(item.wallet_type || "-"),
+        XLS.text(item.currency_code || "IDR"),
+        money(item.current_balance)
+      ]),
+      [],
+      [XLS.text("TOTAL SEMUA DOMPET", S.SECTION), "", "", moneyBold(state.walletTotal)]
+    ];
+
+    return {
+      meta: { title: `Laporan Keuangan ${familyName}`, creator: "Family Superapp" },
+      sheets: [
+        { name: "Ringkasan", rows: summaryRows, widths: [34, 24], merges: ["A1:B1", "A2:B2", "A3:B3", "A4:B4", "A6:B6", "A13:B13", "A19:B19", "A25:B25", "A27:B27"], rowHeights: { 0: 28, 5: 22, 12: 22, 18: 22, 24: 22 } },
+        { name: "Transaksi", rows: transactionRows, widths: [14, 21, 24, 17, 17, 18, 36, 24, 38], freezeRows: 1, autoFilter: `A1:I${Math.max(1, transactionRows.length)}` },
+        { name: "Pengeluaran Kategori", rows: categoryRows, widths: [11, 30, 20, 22], freezeRows: 1, autoFilter: `A1:D${Math.max(1, categoryRows.length)}` },
+        { name: "Budget vs Aktual", rows: budgetRows, widths: [15, 15, 27, 18, 18, 18, 14, 17], freezeRows: 1, autoFilter: `A1:H${Math.max(1, budgetRows.length)}` },
+        { name: "Tagihan", rows: billRows, widths: [15, 30, 26, 18, 18, 18, 18, 20, 36, 20], freezeRows: 1, autoFilter: `A1:J${Math.max(1, billRows.length)}` },
+        { name: "Posisi Dompet", rows: walletRows, widths: [30, 22, 14, 22], freezeRows: 5, autoFilter: state.wallets.length ? `A5:D${4 + state.wallets.length}` : null }
+      ]
+    };
+  }
+
+  function openExportSheet() {
+    const layer = q("[data-report-export-layer]");
+    if (!layer) return;
+    q("[data-report-export-range]").textContent = formatDateRange(state.startDate, state.endDate);
+    layer.hidden = false;
+  }
+
+  function closeExportSheet() {
+    q("[data-report-export-layer]")?.setAttribute("hidden", "");
+  }
+
+  function exportExcel() {
+    const button = q("[data-report-export-excel]");
+    if (!button) return;
+    const oldText = button.innerHTML;
+    button.disabled = true;
+    button.innerHTML = '<ion-icon name="hourglass-outline"></ion-icon><span>Menyiapkan Excel…</span>';
+
+    setTimeout(() => {
+      try {
+        const filename = `Laporan Keuangan - ${fileDateLabel(state.startDate, state.endDate)}.xlsx`.replace(/[\\/:*?"<>|]/g, "-");
+        window.FamilyXLSX.save(filename, buildExcelWorkbook());
+        closeExportSheet();
+        showNotice("Laporan Excel berhasil dibuat.", "success");
+      } catch (error) {
+        console.error("[Laporan Excel]", error);
+        showNotice(error?.message || "Export Excel gagal dibuat.", "error");
+      } finally {
+        button.disabled = false;
+        button.innerHTML = oldText;
+      }
+    }, 30);
+  }
+
   function setupEvents() {
     document.querySelectorAll("[data-report-preset]").forEach(button => {
       button.addEventListener("click", () => setPreset(button.dataset.reportPreset));
     });
-    q("[data-report-refresh]")?.addEventListener("click", loadReport);
+    q("[data-report-export]")?.addEventListener("click", openExportSheet);
+    q("[data-report-export-close]")?.addEventListener("click", closeExportSheet);
+    q("[data-report-export-excel]")?.addEventListener("click", exportExcel);
+    q("[data-report-export-layer]")?.addEventListener("click", event => {
+      if (event.target === event.currentTarget) closeExportSheet();
+    });
     q("[data-report-custom-close]")?.addEventListener("click", closeCustom);
     q("[data-report-custom-apply]")?.addEventListener("click", applyCustom);
     q("[data-report-custom-layer]")?.addEventListener("click", event => {

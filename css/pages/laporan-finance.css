@@ -254,3 +254,64 @@
   .report-three-values { grid-template-columns: 1fr; }
   .report-custom-fields { grid-template-columns: 1fr; }
 }
+
+/* v1.2.0e3 — Finance Report Excel Export */
+.report-export-sheet {
+  padding-bottom: calc(var(--space-5) + env(safe-area-inset-bottom));
+}
+.report-export-sheet .sheet-subjudul strong {
+  color: var(--color-text);
+  font-weight: var(--font-weight-semibold);
+}
+.report-export-option {
+  display: grid;
+  grid-template-columns: 46px minmax(0, 1fr) 24px;
+  gap: var(--space-3);
+  align-items: center;
+  width: 100%;
+  margin-top: var(--space-2);
+  padding: var(--space-3);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  background: var(--color-surface);
+  color: var(--color-text);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+.report-export-option:disabled {
+  opacity: .58;
+  cursor: wait;
+}
+.report-export-option-icon {
+  display: grid;
+  place-items: center;
+  width: 46px;
+  height: 46px;
+  border-radius: var(--radius-full);
+  background: rgba(48, 168, 118, .12);
+  color: var(--color-primary);
+}
+.report-export-option-icon ion-icon { font-size: 23px; }
+.report-export-option-copy {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 4px;
+}
+.report-export-option-copy strong { font-size: var(--font-size-sm); }
+.report-export-option-copy small {
+  color: var(--color-text-secondary);
+  font-size: 10px;
+  line-height: 1.45;
+}
+.report-export-option-arrow {
+  color: var(--color-primary);
+  font-size: 21px;
+}
+.report-export-note {
+  margin: var(--space-3) 2px 0;
+  color: var(--color-text-secondary);
+  font-size: 10px;
+  line-height: 1.5;
+}
