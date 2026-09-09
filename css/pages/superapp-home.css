@@ -501,8 +501,11 @@ html[data-theme="dark"] .today-card {
   background: linear-gradient(135deg, rgba(25,74,50,.42), var(--color-surface) 68%);
   box-shadow: 0 9px 30px rgba(0,0,0,.2);
 }
-html[data-theme="dark"] .today-lottie-wrap {
-  background: rgba(255,255,255,.015);
+/* v2.0.0a9 — Lottie canvas must remain truly transparent in every theme. */
+.today-lottie-wrap,
+.today-lottie,
+.today-lottie svg {
+  background: transparent !important;
 }
 html[data-theme="dark"] .today-lottie-fallback {
   background: rgba(63,190,123,.14);

@@ -1,4 +1,4 @@
-const CACHE_NAME = "ruangkitha-v2.0.0a8-core-qa-permissions-home-ux-1";
+const CACHE_NAME = "ruangkitha-v2.0.0a9-lottie-transparency-1";
 const OFFLINE_URL = "./offline.html";
 
 const APP_FILES = [
