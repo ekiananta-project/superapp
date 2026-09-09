@@ -1149,7 +1149,50 @@
 
       lemparJikaError(error);
       const batch = data || [];
-      rows.push(...batch);
+
+      if (batch.length) {
+        const transactionIds = batch.map(item => item.id).filter(Boolean);
+        const { data: entryRows, error: entryError } = await client
+          .from("finance_transaction_entries")
+          .select("id,transaction_id,family_id,wallet_id,amount_delta,created_at")
+          .eq("family_id", familyId)
+          .in("transaction_id", transactionIds);
+
+        lemparJikaError(entryError);
+
+        const walletIds = [
+          ...new Set((entryRows || []).map(item => item.wallet_id).filter(Boolean))
+        ];
+
+        let walletRows = [];
+        if (walletIds.length) {
+          const { data: walletData, error: walletError } = await client
+            .from("finance_wallets")
+            .select("id,family_id,name,wallet_type,currency_code,icon_type,icon_value,color,archived_at")
+            .in("id", walletIds);
+
+          lemparJikaError(walletError);
+          walletRows = walletData || [];
+        }
+
+        const walletMap = new Map(walletRows.map(item => [item.id, item]));
+        const entriesByTransaction = new Map();
+
+        (entryRows || []).forEach(entry => {
+          if (!entriesByTransaction.has(entry.transaction_id)) {
+            entriesByTransaction.set(entry.transaction_id, []);
+          }
+          entriesByTransaction.get(entry.transaction_id).push({
+            ...entry,
+            wallet: walletMap.get(entry.wallet_id) || null
+          });
+        });
+
+        rows.push(...batch.map(transaction => ({
+          ...transaction,
+          entries: entriesByTransaction.get(transaction.id) || []
+        })));
+      }
 
       if (batch.length < take) return rows;
       offset += batch.length;

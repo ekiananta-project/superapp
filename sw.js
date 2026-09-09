@@ -1,4 +1,4 @@
-const CACHE_NAME = "family-superapp-v1.2.0e3-finance-report-excel-export-1";
+const CACHE_NAME = "family-superapp-v1.2.0e3a-transaction-wallet-export-1";
 const OFFLINE_URL = "./offline.html";
 
 const APP_FILES = [

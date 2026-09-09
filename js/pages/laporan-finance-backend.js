@@ -504,6 +504,36 @@
     return `${two(start.getDate())} ${monthShort(start)} ${start.getFullYear()}-${two(end.getDate())} ${monthShort(end)} ${end.getFullYear()}`;
   }
 
+
+  function transactionWalletLabel(item) {
+    const entries = Array.isArray(item?.entries) ? item.entries : [];
+    if (!entries.length) return "-";
+
+    const walletName = entry => entry?.wallet?.name || "Dompet tidak ditemukan";
+
+    if (item.kind === "transfer") {
+      const source = entries
+        .filter(entry => Number(entry.amount_delta || 0) < 0)
+        .sort((a, b) => Number(a.amount_delta || 0) - Number(b.amount_delta || 0))[0] || null;
+      const destination = entries
+        .filter(entry => Number(entry.amount_delta || 0) > 0)
+        .sort((a, b) => Number(b.amount_delta || 0) - Number(a.amount_delta || 0))[0] || null;
+
+      if (source && destination) return `${walletName(source)} → ${walletName(destination)}`;
+    }
+
+    const preferred = item.kind === "income"
+      ? entries.find(entry => Number(entry.amount_delta || 0) > 0)
+      : item.kind === "expense"
+        ? entries.find(entry => Number(entry.amount_delta || 0) < 0)
+        : null;
+
+    if (preferred) return walletName(preferred);
+
+    const names = [...new Set(entries.map(walletName).filter(Boolean))];
+    return names.length ? names.join(" → ") : "-";
+  }
+
   function exportStatusCell(status) {
     const XLS = window.FamilyXLSX;
     const value = String(status || "");
@@ -565,7 +595,7 @@
     ];
 
     const transactionRows = [
-      header(["Tanggal", "Jenis", "Kategori", "Nominal", "Biaya Transfer", "Dampak Arus Kas", "Catatan", "Dibuat Oleh", "ID Transaksi"]),
+      header(["Tanggal", "Jenis", "Kategori", "Dompet", "Nominal", "Biaya Transfer", "Dampak Arus Kas", "Catatan", "Dibuat Oleh", "ID Transaksi"]),
       ...state.transactions.map(item => {
         const amount = Number(item.amount || 0);
         const fee = Math.max(0, Number(item.transfer_fee || 0));
@@ -576,6 +606,7 @@
           XLS.text(item.occurred_on || ""),
           XLS.text(kind),
           XLS.text(account?.name || (item.kind === "transfer" ? "Transfer Antar Dompet" : "Tanpa Kategori")),
+          XLS.text(transactionWalletLabel(item)),
           money(amount),
           money(fee),
           money(impact),
@@ -658,7 +689,7 @@
       meta: { title: `Laporan Keuangan ${familyName}`, creator: "Family Superapp" },
       sheets: [
         { name: "Ringkasan", rows: summaryRows, widths: [34, 24], merges: ["A1:B1", "A2:B2", "A3:B3", "A4:B4", "A6:B6", "A13:B13", "A19:B19", "A25:B25", "A27:B27"], rowHeights: { 0: 28, 5: 22, 12: 22, 18: 22, 24: 22 } },
-        { name: "Transaksi", rows: transactionRows, widths: [14, 21, 24, 17, 17, 18, 36, 24, 38], freezeRows: 1, autoFilter: `A1:I${Math.max(1, transactionRows.length)}` },
+        { name: "Transaksi", rows: transactionRows, widths: [14, 21, 24, 26, 17, 17, 18, 36, 24, 38], freezeRows: 1, autoFilter: `A1:J${Math.max(1, transactionRows.length)}` },
         { name: "Pengeluaran Kategori", rows: categoryRows, widths: [11, 30, 20, 22], freezeRows: 1, autoFilter: `A1:D${Math.max(1, categoryRows.length)}` },
         { name: "Budget vs Aktual", rows: budgetRows, widths: [15, 15, 27, 18, 18, 18, 14, 17], freezeRows: 1, autoFilter: `A1:H${Math.max(1, budgetRows.length)}` },
         { name: "Tagihan", rows: billRows, widths: [15, 30, 26, 18, 18, 18, 18, 20, 36, 20], freezeRows: 1, autoFilter: `A1:J${Math.max(1, billRows.length)}` },
