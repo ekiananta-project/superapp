@@ -1,0 +1,185 @@
+/* RuangKitha v2.0.0a24 — Checklist editor UI foundation */
+
+.catatan-checklist-main {
+  padding-bottom: max(38px, env(safe-area-inset-bottom));
+}
+
+.catatan-checklist-board {
+  min-height: calc(100dvh - 235px);
+  padding-bottom: 34px;
+}
+
+.catatan-checklist-progress {
+  margin: 2px 0 18px;
+  padding: 12px 13px;
+  border: 1px solid var(--color-border, #e0e4e1);
+  border-radius: 16px;
+  background: color-mix(in srgb, var(--color-surface, #fff) 82%, transparent);
+}
+
+.catatan-checklist-progress-copy {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  color: var(--color-text-soft, #6f7b73);
+  font-size: 10px;
+  font-weight: 700;
+}
+
+.catatan-checklist-progress-copy strong {
+  color: var(--color-primary, #159447);
+  font-size: 10px;
+}
+
+.catatan-checklist-progress-track {
+  height: 5px;
+  margin-top: 9px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: var(--color-surface-soft, #eef1ef);
+}
+
+.catatan-checklist-progress-track i {
+  display: block;
+  width: 0;
+  height: 100%;
+  border-radius: inherit;
+  background: var(--color-primary, #159447);
+  transition: width .2s ease;
+}
+
+.catatan-checklist-list {
+  display: grid;
+  gap: 8px;
+}
+
+.catatan-checklist-item {
+  display: grid;
+  grid-template-columns: 34px minmax(0,1fr) 34px;
+  align-items: start;
+  gap: 8px;
+  min-width: 0;
+  padding: 8px 8px 8px 6px;
+  border: 1px solid transparent;
+  border-radius: 15px;
+  background: transparent;
+  transition: border-color .15s ease, background .15s ease, opacity .15s ease;
+}
+
+.catatan-checklist-item:focus-within {
+  border-color: var(--color-border, #e0e4e1);
+  background: color-mix(in srgb, var(--color-surface, #fff) 72%, transparent);
+}
+
+.catatan-check-toggle,
+.catatan-check-remove {
+  appearance: none;
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  padding: 0;
+  border: 0;
+  border-radius: 11px;
+  background: transparent;
+  color: var(--color-text-muted, #879089);
+  cursor: pointer;
+}
+
+.catatan-check-toggle ion-icon { font-size: 24px; }
+.catatan-check-remove ion-icon { font-size: 18px; }
+.catatan-check-toggle:hover,
+.catatan-check-toggle:active { color: var(--color-primary, #159447); }
+.catatan-check-remove:hover,
+.catatan-check-remove:active { background: var(--color-surface-soft, #eef1ef); color: var(--color-text, #18201b); }
+
+.catatan-check-text {
+  display: block;
+  width: 100%;
+  min-height: 34px;
+  max-height: 132px;
+  padding: 6px 0 3px;
+  border: 0;
+  outline: 0;
+  resize: none;
+  overflow: hidden;
+  background: transparent;
+  color: var(--color-text, #18201b);
+  caret-color: var(--color-primary, #159447);
+  font: inherit;
+  font-size: 14px;
+  line-height: 1.55;
+}
+
+.catatan-check-text::placeholder {
+  color: color-mix(in srgb, var(--color-text, #18201b) 30%, transparent);
+}
+
+.catatan-checklist-item.is-complete .catatan-check-toggle {
+  color: var(--color-primary, #159447);
+}
+
+.catatan-checklist-item.is-complete .catatan-check-text {
+  color: var(--color-text-muted, #879089);
+  text-decoration: line-through;
+  text-decoration-thickness: 1px;
+}
+
+.catatan-checklist-add {
+  appearance: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 42px;
+  margin-top: 10px;
+  padding: 0 10px;
+  border: 0;
+  border-radius: 12px;
+  background: transparent;
+  color: var(--color-primary, #159447);
+  font: inherit;
+  font-size: 11px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.catatan-checklist-add ion-icon { font-size: 21px; }
+.catatan-checklist-add:active { background: color-mix(in srgb, var(--color-primary, #159447) 7%, transparent); }
+
+.catatan-checklist.is-view-mode .catatan-checklist-item {
+  grid-template-columns: 34px minmax(0,1fr);
+  padding-right: 6px;
+}
+
+.catatan-checklist.is-view-mode .catatan-checklist-item:focus-within {
+  border-color: transparent;
+  background: transparent;
+}
+
+.catatan-checklist.is-view-mode .catatan-check-remove,
+.catatan-checklist.is-view-mode .catatan-checklist-add {
+  display: none !important;
+}
+
+.catatan-checklist.is-view-mode .catatan-check-text {
+  cursor: default;
+}
+
+.catatan-checklist.is-view-mode .catatan-check-toggle {
+  cursor: pointer;
+}
+
+html[data-theme="dark"] .catatan-checklist-progress,
+html[data-theme="dark"] .catatan-checklist-item:focus-within {
+  background: color-mix(in srgb, var(--color-surface, #212422) 92%, transparent);
+}
+
+html[data-theme="dark"] .catatan-check-text::placeholder {
+  color: rgba(235,240,236,.34);
+}
+
+@media (max-width: 390px) {
+  .catatan-checklist-item { gap: 6px; }
+  .catatan-check-text { font-size: 13.5px; }
+}

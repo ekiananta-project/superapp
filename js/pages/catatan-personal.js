@@ -78,6 +78,10 @@
           location.href = "catatan-editor.html?scope=personal";
           return;
         }
+        if (type === "Checklist") {
+          location.href = "catatan-checklist.html?scope=personal";
+          return;
+        }
         showToast(`${type} Pribadi akan aktif pada tahap berikutnya.`);
       });
     });

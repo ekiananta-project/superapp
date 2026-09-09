@@ -1,4 +1,4 @@
-const CACHE_NAME = "ruangkitha-v2.0.0a23-catatan-view-edit-tags-1";
+const CACHE_NAME = "ruangkitha-v2.0.0a24-catatan-checklist-editor-1";
 const OFFLINE_URL = "./offline.html";
 
 const APP_FILES = [
@@ -62,15 +62,18 @@ const APP_FILES = [
   "./catatan-anggota.html",
   "./catatan-folder.html",
   "./catatan-editor.html",
+  "./catatan-checklist.html",
   "./css/pages/catatan-home.css",
   "./css/pages/catatan-area.css",
   "./css/pages/catatan-editor.css",
+  "./css/pages/catatan-checklist.css",
   "./js/pages/catatan-home.js",
   "./js/pages/catatan-family.js",
   "./js/pages/catatan-personal.js",
   "./js/pages/catatan-member.js",
   "./js/pages/catatan-folder.js",
   "./js/pages/catatan-editor.js",
+  "./js/pages/catatan-checklist.js",
   "./finance.html",
   "./kalender.html",
   "./profil.html",
