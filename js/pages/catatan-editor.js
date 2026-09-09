@@ -8,6 +8,7 @@
   let visibility = "private";
   let pinned = false;
   let savedRange = null;
+  let linkSelectedText = "";
   let userId = "guest";
   let toastTimer = null;
 
@@ -344,10 +345,22 @@
     q('[data-tool="highlight"]')?.addEventListener("click", toggleHighlight);
     q('[data-tool="link"]')?.addEventListener("click", () => {
       saveSelection();
-      const input = q("[data-link-url]");
-      if (input) input.value = "";
+      linkSelectedText = clean(savedRange?.toString?.() || "");
+
+      const textInput = q("[data-link-text]");
+      const urlInput = q("[data-link-url]");
+      const helper = q("[data-link-text-help]");
+
+      if (textInput) textInput.value = linkSelectedText;
+      if (urlInput) urlInput.value = "";
+      if (helper) {
+        helper.textContent = linkSelectedText
+          ? "Teks yang dipilih sudah digunakan sebagai teks tautan. Kamu tetap bisa mengubahnya."
+          : "Opsional. Jika kosong, alamat tautan akan ditampilkan.";
+      }
+
       openSheet("[data-link-layer]", false);
-      setTimeout(() => input?.focus(), 80);
+      setTimeout(() => (linkSelectedText ? urlInput : textInput)?.focus(), 80);
     });
 
     qa("[data-format-block]").forEach(button => {
@@ -379,24 +392,50 @@
 
     q("[data-link-apply]")?.addEventListener("click", () => {
       const rawUrl = clean(q("[data-link-url]")?.value);
+      const alias = clean(q("[data-link-text]")?.value);
       if (!rawUrl) {
         showToast("Masukkan alamat tautan dulu.");
         return;
       }
+
       let url = rawUrl;
       if (!/^[a-z][a-z0-9+.-]*:/i.test(url)) url = `https://${url}`;
       if (!/^https?:\/\//i.test(url)) {
         showToast("Gunakan tautan http atau https.");
         return;
       }
+
       setLayer("[data-link-layer]", false);
       restoreSelection();
+
+      const editor = q("[data-note-content]");
       const selection = window.getSelection?.();
-      const hasText = selection && !selection.isCollapsed;
-      if (hasText) {
-        execute("createLink", url);
-      } else {
-        execute("insertHTML", `<a href="${url.replace(/\"/g, "&quot;")}" target="_blank" rel="noopener noreferrer">${url.replace(/</g, "&lt;").replace(/>/g, "&gt;")}</a>`);
+      const range = selection && selection.rangeCount ? selection.getRangeAt(0) : null;
+      if (!editor || !selection || !range || !editor.contains(range.commonAncestorContainer)) {
+        showToast("Pilih posisi tautan di catatan lalu coba lagi.");
+        return;
+      }
+
+      const selectedText = clean(range.toString()) || linkSelectedText;
+      const visibleText = alias || selectedText || url;
+      const anchor = document.createElement("a");
+      anchor.href = url;
+      anchor.target = "_blank";
+      anchor.rel = "noopener noreferrer";
+      anchor.textContent = visibleText;
+
+      try {
+        range.deleteContents();
+        range.insertNode(anchor);
+        range.setStartAfter(anchor);
+        range.collapse(true);
+        selection.removeAllRanges();
+        selection.addRange(range);
+        savedRange = range.cloneRange();
+        linkSelectedText = "";
+        refreshFormatState();
+      } catch {
+        showToast("Tautan belum dapat ditambahkan di posisi ini.");
       }
     });
   }

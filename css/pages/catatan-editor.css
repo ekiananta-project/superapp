@@ -367,8 +367,10 @@
 .catatan-visibility-options { display: grid; gap: 9px; }
 .catatan-visibility-options > button > ion-icon { color: var(--color-primary, #159447); }
 
+.catatan-link-fields { display: grid; gap: 12px; }
 .catatan-link-field { display: grid; gap: 7px; }
 .catatan-link-field span { color: var(--color-text-soft, #6f7b73); font-size: 9.5px; font-weight: 700; }
+.catatan-link-field small { color: var(--color-text-soft, #6f7b73); font-size: 8.75px; line-height: 1.45; }
 .catatan-link-field input {
   width: 100%;
   min-height: 48px;
