@@ -1,65 +1,23 @@
-/* v2.0.0a5 — Finance context bar follows the established Finance page rhythm. */
-.finance-context-bar {
-  position: relative;
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
-  align-items: center;
-  gap: var(--space-3);
-  margin: 0 var(--space-5, 24px) var(--space-3);
-}
+/* v2.0.0a6 — Finance Home uses the same header system as the other Finance pages. */
 
-.finance-superapp-back {
-  grid-column: 1;
-  justify-self: start;
-  display: inline-flex;
-  align-items: center;
-  gap: 7px;
-  min-height: 38px;
-  padding: 8px 12px;
-  border: 1px solid var(--color-border);
-  border-radius: 999px;
-  background: var(--color-surface);
-  color: var(--color-primary);
-  text-decoration: none;
-  box-shadow: var(--shadow-sm);
-  font-size: var(--font-size-xs);
-  font-weight: 700;
-}
-.finance-superapp-back ion-icon { font-size: 18px; }
-.finance-superapp-back:active { transform: scale(.98); }
-
-.finance-context-label {
-  grid-column: 2;
-  justify-self: center;
-  color: var(--color-text, #171a18);
-  font-size: 13px;
-  font-weight: 800;
-  letter-spacing: .08em;
-  text-align: center;
-  text-transform: uppercase;
-  white-space: nowrap;
-}
-
-/* Keep horizontal spacing owned by Finance sections, but inherit the same top
-   breathing room as the established Finance page shell (Daftar Transaksi, etc.). */
+/* Finance content sections already own their horizontal spacing. Keep that behavior. */
 .finance-home-container {
   padding-left: 0;
   padding-right: 0;
 }
-.finance-home-container .tombol-profil[data-avatar-preview-trigger] {
-  padding: 0;
-  border: 0;
-  background: transparent;
-  cursor: pointer;
+
+/* Because Finance Home keeps section-owned gutters, give the standard header the
+   same horizontal inset as the cards below. Top/bottom rhythm remains inherited
+   from the shared .header-halaman component used by Daftar Transaksi,
+   Perencanaan, and other Finance pages. */
+.finance-home-container > .finance-standard-header {
+  margin-left: var(--space-5, 24px);
+  margin-right: var(--space-5, 24px);
 }
 
 @media (max-width: 380px) {
-  .finance-context-bar { margin-left: 20px; margin-right: 20px; }
-  .finance-superapp-back span { display: none; }
-  .finance-superapp-back { width: 40px; min-height: 40px; justify-content: center; padding: 0; }
-}
-
-/* v2.0.0a4 — Finance header is context-only: no greeting/profile block. */
-.finance-context-bar {
-  margin-bottom: var(--space-5, 24px);
+  .finance-home-container > .finance-standard-header {
+    margin-left: 20px;
+    margin-right: 20px;
+  }
 }
