@@ -9,6 +9,9 @@
   let visibility = "private";
   let pinned = false;
   let userId = "guest";
+  let activeFamilyId = "";
+  let tagBackendReady = false;
+  let tagBackendWarningShown = false;
   let toastTimer = null;
   let editorMode = "edit";
   let availableTags = [];
@@ -219,7 +222,7 @@
     return `ruangkitha_catatan_tag_catalog_preview_v1:${userId}:${scope}`;
   }
 
-  function loadTagCatalog() {
+  function loadLegacyTagCatalog() {
     try {
       const parsed = JSON.parse(localStorage.getItem(tagCatalogStorageKey()) || "[]");
       availableTags = Array.isArray(parsed)
@@ -230,8 +233,37 @@
     }
   }
 
-  function saveTagCatalog() {
+  function saveLegacyTagCatalog() {
     try { localStorage.setItem(tagCatalogStorageKey(), JSON.stringify(availableTags)); } catch {}
+  }
+
+  function showTagBackendWarning(error) {
+    if (tagBackendWarningShown) return;
+    tagBackendWarningShown = true;
+    if (window.NotesService?.tagSchemaBelumTerpasang?.(error)) {
+      showToast("Backend Tag belum aktif — jalankan SQL 004B di Supabase dulu.");
+    } else {
+      showToast(error?.message || "Katalog tag belum dapat disinkronkan.");
+    }
+  }
+
+  async function loadTagCatalog({ silent = true } = {}) {
+    if (!tagBackendReady || !window.NotesService?.ambilTagCatalog) {
+      loadLegacyTagCatalog();
+      return availableTags;
+    }
+
+    try {
+      const tags = await window.NotesService.ambilTagCatalog(scope, activeFamilyId || null);
+      availableTags = Array.from(new Set((tags || []).map(normalizeTag).filter(Boolean))).sort();
+      return availableTags;
+    } catch (error) {
+      console.error("[Checklist Tag Catalog]", error);
+      if (window.NotesService?.tagSchemaBelumTerpasang?.(error)) tagBackendReady = false;
+      loadLegacyTagCatalog();
+      if (!silent) showTagBackendWarning(error);
+      return availableTags;
+    }
   }
 
   function maybeShowSensitiveNotice() {
@@ -274,7 +306,9 @@
     if (!list) return;
 
     list.textContent = "";
-    const source = availableTags.filter(tag => !searchValue || tag.includes(searchValue));
+    const source = Array.from(new Set([...availableTags, ...draftTags]))
+      .sort()
+      .filter(tag => !searchValue || tag.includes(searchValue));
 
     source.forEach(tag => {
       const selected = draftTags.has(tag);
@@ -296,13 +330,14 @@
     if (createLabel && searchValue && !exactExists) createLabel.textContent = `Tambah tag baru “#${searchValue}”`;
   }
 
-  function openTagSheet() {
+  async function openTagSheet() {
     if (editorMode !== "edit") return;
     draftTags = new Set(selectedTags);
     const search = q("[data-tag-search]");
     if (search) search.value = "";
-    renderTagPicker();
     openSheet("[data-tag-layer]");
+    await loadTagCatalog({ silent: false });
+    renderTagPicker();
     setTimeout(() => search?.focus(), 80);
   }
 
@@ -314,15 +349,35 @@
     setLayer("[data-tag-layer]", false);
   }
 
-  function createTagFromSearch() {
+  async function createTagFromSearch() {
     const value = normalizeTag(q("[data-tag-search]")?.value || "");
     if (!value) return;
-    if (!availableTags.includes(value)) {
-      availableTags.push(value);
-      availableTags.sort();
-      saveTagCatalog();
+
+    let finalValue = value;
+    let mayUseTag = true;
+    if (tagBackendReady && window.NotesService?.buatTag) {
+      const createButton = q("[data-tag-create]");
+      if (createButton) createButton.disabled = true;
+      try {
+        finalValue = normalizeTag(await window.NotesService.buatTag(scope, activeFamilyId || null, value)) || value;
+      } catch (error) {
+        console.error("[Checklist Tag Create]", error);
+        const missing = window.NotesService?.tagSchemaBelumTerpasang?.(error);
+        if (missing) tagBackendReady = false;
+        else mayUseTag = false;
+        showTagBackendWarning(error);
+      } finally {
+        if (createButton) createButton.disabled = false;
+      }
     }
-    draftTags.add(value);
+
+    if (!mayUseTag) return;
+    if (!availableTags.includes(finalValue)) {
+      availableTags.push(finalValue);
+      availableTags.sort();
+      if (!tagBackendReady) saveLegacyTagCatalog();
+    }
+    draftTags.add(finalValue);
     const search = q("[data-tag-search]");
     if (search) search.value = "";
     renderTagPicker();
@@ -622,12 +677,14 @@
       ]);
       if (!user || !family) return;
       userId = clean(user.id, "guest");
-      loadTagCatalog();
+      activeFamilyId = clean(family.id);
+      tagBackendReady = Boolean(window.NotesService?.ambilTagCatalog && window.NotesService?.buatTag);
+      await loadTagCatalog();
       renderMetadataTags();
       maybeShowSensitiveNotice();
     } catch (error) {
       console.error("[Catatan Checklist]", error);
-      loadTagCatalog();
+      loadLegacyTagCatalog();
       renderMetadataTags();
       maybeShowSensitiveNotice();
     } finally {

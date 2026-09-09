@@ -33,6 +33,22 @@
     return String(value || "").toLowerCase() === "family" ? "family" : "personal";
   }
 
+  function normalizeTagScope(value) {
+    return String(value || "").toLowerCase() === "family" ? "family" : "personal";
+  }
+
+  function normalizeTagName(value) {
+    return String(value ?? "")
+      .trim()
+      .replace(/^#+/, "")
+      .replace(/[\s#]+/g, "-")
+      .replace(/[^\p{L}\p{N}_-]/gu, "")
+      .replace(/-+/g, "-")
+      .replace(/^-|-$/g, "")
+      .toLowerCase()
+      .slice(0, 36);
+  }
+
   function normalizeVisibility(value, scope) {
     if (scope === "family") return "family-read";
     return String(value || "").toLowerCase() === "family-read" ? "family-read" : "private";
@@ -178,6 +194,79 @@
     return data;
   }
 
+
+  async function ambilTagCatalog(scope, familyId = null) {
+    const tagScope = normalizeTagScope(scope);
+    const fid = clean(familyId);
+
+    const { data, error } = await client().rpc("notes_list_tags_v1", {
+      p_scope: tagScope,
+      p_family_id: tagScope === "family" ? (fid || null) : null
+    });
+
+    if (error) throw error;
+    return Array.from(new Set((data || []).map(item => normalizeTagName(item?.name)).filter(Boolean))).sort();
+  }
+
+  async function buatTag(scope, familyId, name) {
+    const tagScope = normalizeTagScope(scope);
+    const tagName = normalizeTagName(name);
+    const fid = clean(familyId);
+    if (!tagName) throw new Error("Nama tag tidak valid.");
+
+    const { data, error } = await client().rpc("notes_create_tag_v1", {
+      p_scope: tagScope,
+      p_family_id: tagScope === "family" ? (fid || null) : null,
+      p_name: tagName
+    });
+
+    if (error) throw error;
+    return normalizeTagName(data) || tagName;
+  }
+
+  async function ambilTagCatatan(noteId) {
+    const id = clean(noteId);
+    if (!id) return [];
+
+    const { data, error } = await client().rpc("notes_get_note_tags_v1", {
+      p_note_id: id
+    });
+
+    if (error) throw error;
+    return Array.from(new Set((data || []).map(item => normalizeTagName(item?.name)).filter(Boolean))).sort();
+  }
+
+  async function syncTagCatatan(noteId, names = []) {
+    const id = clean(noteId);
+    if (!id) throw new Error("Catatan belum tersimpan.");
+
+    const cleanNames = Array.from(new Set(
+      (Array.isArray(names) ? names : [])
+        .map(normalizeTagName)
+        .filter(Boolean)
+    )).sort();
+
+    const { data, error } = await client().rpc("notes_sync_note_tags_v1", {
+      p_note_id: id,
+      p_names: cleanNames
+    });
+
+    if (error) throw error;
+    return Array.from(new Set((data || []).map(item => normalizeTagName(item?.name)).filter(Boolean))).sort();
+  }
+
+  function tagSchemaBelumTerpasang(error) {
+    const code = String(error?.code || "").toUpperCase();
+    const message = String(error?.message || error?.details || error?.hint || "").toLowerCase();
+    return code === "PGRST202" ||
+      message.includes("notes_list_tags_v1") ||
+      message.includes("notes_create_tag_v1") ||
+      message.includes("notes_get_note_tags_v1") ||
+      message.includes("notes_sync_note_tags_v1") ||
+      message.includes("catatan_tags") ||
+      message.includes("catatan_note_tags");
+  }
+
   function schemaBelumTerpasang(error) {
     const code = String(error?.code || "").toUpperCase();
     const message = String(error?.message || error?.details || "").toLowerCase();
@@ -194,6 +283,11 @@
     ambilBasicAnggota,
     ambilBasicKeluarga,
     arsipkan,
+    ambilTagCatalog,
+    buatTag,
+    ambilTagCatatan,
+    syncTagCatatan,
+    tagSchemaBelumTerpasang,
     schemaBelumTerpasang
   };
 })();
