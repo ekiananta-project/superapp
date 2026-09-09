@@ -30,3 +30,11 @@
 .home-report-copy strong { font-size: var(--font-size-sm); }
 .home-report-copy span { color: var(--color-text-secondary); font-size: var(--font-size-xs); line-height: 1.4; }
 .home-report-link > ion-icon { color: var(--color-text-secondary); font-size: 20px; }
+
+/* v1.2.0e1 — Home scroll limit hotfix
+   .aplikasi.dengan-nav di style.css sudah menyediakan ruang untuk fixed bottom nav.
+   Hapus padding nav kedua dari .home-finance-summary supaya halaman berhenti
+   dengan card terakhir tetap dekat di atas bottom nav, tanpa area kosong panjang. */
+.home-finance-summary {
+  padding-bottom: 0;
+}
