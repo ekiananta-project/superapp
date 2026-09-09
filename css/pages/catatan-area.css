@@ -1,4 +1,4 @@
-/* RuangKitha v2.0.0a12 — Catatan area UI foundation (Family design locked) */
+/* RuangKitha v2.0.0a15 — Catatan area UI foundation (Family design locked) */
 
 .catatan-area {
   padding-bottom: calc(104px + env(safe-area-inset-bottom));
@@ -256,21 +256,49 @@
 }
 
 
-/* a14: header anggota dipisah menjadi dua kontainer/baris.
-   Baris pertama hanya tombol kembali + label tetap, nama anggota punya ruang sendiri. */
+/* a15: header anggota benar-benar memakai flow normal.
+   Tombol kembali + label "Catatan anggota" berada di kontainer pertama
+   tanpa absolute positioning, jadi keduanya tidak pernah saling menimpa. */
+.catatan-member-area > .catatan-member-top-header {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: flex-start !important;
+  gap: 14px !important;
+  min-height: 58px;
+}
+
+.catatan-member-area > .catatan-member-top-header .catatan-back-ruangkitha {
+  position: static !important;
+  inset: auto !important;
+  transform: none !important;
+  flex: 0 0 auto;
+}
+
 .catatan-member-area > .catatan-member-top-header h1 {
-  width: min(54%, 250px);
-  max-width: 54%;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  text-align: center;
+  position: static !important;
+  inset: auto !important;
+  transform: none !important;
+  flex: 1 1 auto;
+  width: auto !important;
+  max-width: none !important;
+  min-width: 0;
+  margin: 0;
+  overflow: visible;
+  text-overflow: clip;
+  white-space: normal;
+  text-align: left;
+  font-size: clamp(17px, 4.9vw, 22px);
+  line-height: 1.2;
+}
+
+.catatan-member-area > .catatan-member-top-header > .kosong {
+  display: none !important;
 }
 
 .catatan-member-name-container {
   display: block;
   min-width: 0;
-  margin: 0 var(--space-5, 24px) 14px;
+  margin: 2px var(--space-5, 24px) 14px;
   color: var(--color-text, #18201b);
 }
 
@@ -286,6 +314,10 @@
 }
 
 @media (max-width: 390px) {
+  .catatan-member-area > .catatan-member-top-header {
+    gap: 10px !important;
+  }
+
   .catatan-member-name-container {
     margin-left: 20px;
     margin-right: 20px;
