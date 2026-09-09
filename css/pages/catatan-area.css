@@ -1,0 +1,256 @@
+/* RuangKitha v2.0.0a11 — Catatan area UI foundation */
+
+.catatan-area {
+  padding-bottom: calc(104px + env(safe-area-inset-bottom));
+}
+
+.catatan-area > .catatan-standard-header h1 {
+  font-size: clamp(17px, 4.9vw, 22px);
+  white-space: nowrap;
+}
+
+.catatan-area-main {
+  display: grid;
+  gap: 22px;
+  padding: 0 var(--space-5, 24px) 28px;
+}
+
+.catatan-area-section {
+  display: grid;
+  gap: 12px;
+  min-width: 0;
+}
+
+.catatan-area-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  min-height: 34px;
+}
+
+.catatan-area-heading h2 {
+  margin: 0;
+  color: var(--color-text, #18201b);
+  font-size: 18px;
+  line-height: 1.25;
+  font-weight: 700;
+}
+
+.catatan-inline-add {
+  appearance: none;
+  border: 0;
+  background: transparent;
+  color: var(--color-primary, #159447);
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  padding: 7px 2px 7px 10px;
+  font: inherit;
+  font-size: 13px;
+  line-height: 1;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.catatan-inline-add ion-icon { font-size: 18px; }
+
+.catatan-folder-grid,
+.catatan-note-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  min-width: 0;
+}
+
+.catatan-folder-card,
+.catatan-note-card {
+  width: 100%;
+  min-width: 0;
+  appearance: none;
+  text-align: left;
+  font: inherit;
+  color: inherit;
+  border: 1px solid var(--color-border, #e0e4e1);
+  background: var(--color-surface, #fff);
+  box-shadow: var(--shadow-sm, 0 5px 16px rgba(20,40,28,.05));
+  cursor: pointer;
+}
+
+.catatan-folder-card {
+  min-height: 96px;
+  border-radius: 22px;
+  padding: 16px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.catatan-folder-icon {
+  width: 42px;
+  height: 42px;
+  border-radius: 15px;
+  display: grid;
+  place-items: center;
+  flex: 0 0 auto;
+  color: var(--color-primary, #159447);
+  background: color-mix(in srgb, var(--color-primary, #159447) 11%, transparent);
+}
+
+.catatan-folder-icon ion-icon { font-size: 23px; }
+
+.catatan-folder-copy {
+  min-width: 0;
+  display: grid;
+  gap: 5px;
+}
+
+.catatan-folder-copy strong {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 15px;
+  line-height: 1.25;
+  font-weight: 700;
+}
+
+.catatan-folder-copy small {
+  color: var(--color-text-soft, #6f7b73);
+  font-size: 11.5px;
+  line-height: 1.3;
+}
+
+.catatan-note-card {
+  position: relative;
+  min-height: 184px;
+  border-radius: 23px;
+  padding: 16px 14px 14px;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 7px;
+  overflow: hidden;
+}
+
+.catatan-note-type {
+  width: 31px;
+  height: 31px;
+  border-radius: 11px;
+  display: grid;
+  place-items: center;
+  color: var(--color-primary, #159447);
+  background: color-mix(in srgb, var(--color-primary, #159447) 10%, transparent);
+}
+
+.catatan-note-type ion-icon { font-size: 18px; }
+
+.catatan-note-card > strong {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  overflow: hidden;
+  font-size: 14.5px;
+  line-height: 1.34;
+  font-weight: 700;
+}
+
+.catatan-note-preview {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  overflow: hidden;
+  color: var(--color-text-soft, #6f7b73);
+  font-size: 11.5px;
+  line-height: 1.45;
+}
+
+.catatan-note-special {
+  align-self: flex-start;
+  color: var(--color-primary, #159447);
+  font-size: 11.5px;
+  line-height: 1.3;
+  font-weight: 700;
+}
+
+.catatan-note-tags {
+  display: flex;
+  gap: 5px;
+  min-width: 0;
+  overflow: hidden;
+  margin-top: auto;
+}
+
+.catatan-note-tags em {
+  max-width: 100%;
+  padding: 3px 7px;
+  border-radius: 999px;
+  background: var(--color-surface-soft, #eef1ef);
+  color: var(--color-primary, #159447);
+  font-size: 9.5px;
+  line-height: 1.2;
+  font-style: normal;
+  font-weight: 700;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.catatan-note-card > small {
+  color: var(--color-text-muted, #879089);
+  font-size: 9.5px;
+  line-height: 1.35;
+}
+
+.catatan-area-empty {
+  min-height: 180px;
+  border: 1px dashed var(--color-border, #e0e4e1);
+  border-radius: 24px;
+  display: grid;
+  place-items: center;
+  align-content: center;
+  gap: 7px;
+  text-align: center;
+  color: var(--color-text-soft, #6f7b73);
+  padding: 24px;
+}
+
+.catatan-area-empty ion-icon { font-size: 28px; }
+.catatan-area-empty strong { color: var(--color-text, #18201b); font-size: 14px; }
+.catatan-area-empty span { font-size: 11.5px; }
+
+.catatan-folder-card[hidden],
+.catatan-note-card[hidden] { display: none !important; }
+
+@media (max-width: 390px) {
+  .catatan-area-main {
+    padding-left: 20px;
+    padding-right: 20px;
+  }
+
+  .catatan-folder-grid,
+  .catatan-note-grid { gap: 10px; }
+
+  .catatan-folder-card {
+    min-height: 90px;
+    padding: 14px 12px;
+    gap: 9px;
+  }
+
+  .catatan-folder-icon {
+    width: 37px;
+    height: 37px;
+    border-radius: 13px;
+  }
+
+  .catatan-folder-copy strong { font-size: 14px; }
+  .catatan-note-card { min-height: 178px; padding: 14px 12px 12px; }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .catatan-folder-card,
+  .catatan-note-card,
+  .catatan-inline-add { transition: transform .15s ease, border-color .15s ease, background .15s ease; }
+  .catatan-folder-card:active,
+  .catatan-note-card:active { transform: scale(.985); }
+}

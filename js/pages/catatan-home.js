@@ -73,8 +73,11 @@
 
     qa("[data-open-scope]").forEach(button => {
       button.addEventListener("click", () => {
-        const label = button.dataset.openScope === "family" ? "Catatan Keluarga" : "Catatan Pribadi";
-        showToast(`Halaman ${label} akan dibangun pada tahap berikutnya.`);
+        if (button.dataset.openScope === "family") {
+          location.href = "catatan-keluarga.html";
+          return;
+        }
+        showToast("Halaman Catatan Pribadi akan dibangun pada tahap berikutnya.");
       });
     });
 
@@ -120,7 +123,7 @@
       const title = document.createElement("strong");
       title.textContent = `Catatan ${name}`;
       const meta = document.createElement("small");
-      meta.textContent = "Catatan pribadi yang dibagikan untuk keluarga";
+      meta.textContent = `Ruang pribadi ${name}`;
       copy.append(title, meta);
 
       const chevron = document.createElement("ion-icon");
