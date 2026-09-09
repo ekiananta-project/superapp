@@ -77,7 +77,10 @@
           location.href = "catatan-keluarga.html";
           return;
         }
-        showToast("Halaman Catatan Pribadi akan dibangun pada tahap berikutnya.");
+        if (button.dataset.openScope === "personal") {
+          location.href = "catatan-pribadi.html";
+          return;
+        }
       });
     });
 
@@ -131,7 +134,9 @@
       chevron.setAttribute("aria-hidden", "true");
 
       card.append(avatar, copy, chevron);
-      card.addEventListener("click", () => showToast(`Catatan ${name} akan dibuka setelah halaman kelompok Catatan dibangun.`));
+      card.addEventListener("click", () => {
+        location.href = `catatan-anggota.html?member=${encodeURIComponent(item.user_id)}`;
+      });
       root.appendChild(card);
     });
 

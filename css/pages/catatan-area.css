@@ -1,4 +1,4 @@
-/* RuangKitha v2.0.0a11 — Catatan area UI foundation */
+/* RuangKitha v2.0.0a12 — Catatan area UI foundation (Family design locked) */
 
 .catatan-area {
   padding-bottom: calc(104px + env(safe-area-inset-bottom));
@@ -253,4 +253,19 @@
   .catatan-inline-add { transition: transform .15s ease, border-color .15s ease, background .15s ease; }
   .catatan-folder-card:active,
   .catatan-note-card:active { transform: scale(.985); }
+}
+
+
+/* a12: turunan Personal/Anggota dari desain Family yang sudah dikunci. */
+.catatan-member-area > .catatan-standard-header h1 {
+  max-width: 48%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.catatan-note-card .catatan-note-access {
+  color: var(--color-text-muted, #879089);
+  font-size: 9.5px;
+  line-height: 1.35;
+  font-weight: 600;
 }

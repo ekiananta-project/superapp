@@ -16,7 +16,7 @@
   <link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png">
   <link rel="apple-touch-icon" sizes="180x180" href="icons/apple-touch-icon.png">
   <script src="js/theme.js"></script>
-  <title>Catatan Keluarga · RuangKitha</title>
+  <title>Catatan Pribadi · RuangKitha</title>
 
   <link rel="preconnect" href="https://eipviruaffujxsfpupki.supabase.co" crossorigin>
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -30,154 +30,132 @@
   <style id="ruangkitha-auth-cloak">html[data-auth-guard] body{visibility:hidden!important}</style>
 </head>
 <body>
-<div class="aplikasi dengan-nav catatan-home catatan-area catatan-family-area" data-catatan-family aria-busy="true">
+<div class="aplikasi dengan-nav catatan-home catatan-area catatan-personal-area" data-catatan-personal aria-busy="true">
   <header class="header-halaman catatan-standard-header">
     <a class="catatan-back-ruangkitha" href="catatan.html" aria-label="Kembali ke Catatan">
       <ion-icon name="arrow-back-outline" aria-hidden="true"></ion-icon>
       <span>Catatan</span>
     </a>
     <span class="kosong" aria-hidden="true"></span>
-    <h1>Catatan Keluarga</h1>
+    <h1>Catatan Pribadi</h1>
     <span class="kosong" aria-hidden="true"></span>
   </header>
 
   <main class="catatan-area-main">
-    <section class="catatan-search-section" aria-label="Pencarian Catatan Keluarga">
-      <label class="catatan-search-box" for="catatan-family-search">
+    <section class="catatan-search-section" aria-label="Pencarian Catatan Pribadi">
+      <label class="catatan-search-box" for="catatan-personal-search">
         <ion-icon name="search-outline" aria-hidden="true"></ion-icon>
-        <input
-          id="catatan-family-search"
-          type="search"
-          inputmode="search"
-          autocomplete="off"
-          placeholder="Cari di Catatan Keluarga..."
-          aria-label="Cari di Catatan Keluarga">
+        <input id="catatan-personal-search" type="search" inputmode="search" autocomplete="off"
+          placeholder="Cari di Catatan Pribadi..." aria-label="Cari di Catatan Pribadi">
       </label>
     </section>
 
-    <section class="catatan-area-section" aria-labelledby="catatan-family-folder-title">
+    <section class="catatan-area-section" aria-labelledby="catatan-personal-folder-title">
       <div class="catatan-area-heading">
-        <h2 id="catatan-family-folder-title">Folder</h2>
+        <h2 id="catatan-personal-folder-title">Folder</h2>
         <button class="catatan-inline-add" type="button" data-add-folder>
           <ion-icon name="add-outline" aria-hidden="true"></ion-icon>
           <span>Tambah</span>
         </button>
       </div>
 
-      <div class="catatan-folder-grid" data-family-folder-grid>
-        <button class="catatan-folder-card" type="button" data-preview-item data-search-text="rumah keluarga kebutuhan rumah">
+      <div class="catatan-folder-grid" data-personal-folder-grid>
+        <button class="catatan-folder-card" type="button" data-preview-item data-search-text="ide gagasan rencana personal pribadi">
           <span class="catatan-folder-icon"><ion-icon name="folder-outline" aria-hidden="true"></ion-icon></span>
-          <span class="catatan-folder-copy">
-            <strong>Rumah</strong>
-            <small>4 catatan</small>
-          </span>
+          <span class="catatan-folder-copy"><strong>Ide</strong><small>6 catatan</small></span>
         </button>
-        <button class="catatan-folder-card" type="button" data-preview-item data-search-text="rencana keluarga agenda ide">
+        <button class="catatan-folder-card" type="button" data-preview-item data-search-text="rumah catatan pribadi kebutuhan rumah">
           <span class="catatan-folder-icon"><ion-icon name="folder-outline" aria-hidden="true"></ion-icon></span>
-          <span class="catatan-folder-copy">
-            <strong>Rencana</strong>
-            <small>3 catatan</small>
-          </span>
+          <span class="catatan-folder-copy"><strong>Rumah</strong><small>4 catatan</small></span>
         </button>
       </div>
     </section>
 
-    <section class="catatan-area-section catatan-notes-section" aria-labelledby="catatan-family-notes-title">
-      <div class="catatan-area-heading">
-        <h2 id="catatan-family-notes-title">Catatan</h2>
-      </div>
+    <section class="catatan-area-section catatan-notes-section" aria-labelledby="catatan-personal-notes-title">
+      <div class="catatan-area-heading"><h2 id="catatan-personal-notes-title">Catatan</h2></div>
 
-      <div class="catatan-note-grid" data-family-note-grid>
-        <button class="catatan-note-card" type="button" data-preview-item data-search-text="rencana liburan keluarga bali hotel liburan keluarga">
-          <span class="catatan-note-type"><ion-icon name="document-text-outline" aria-hidden="true"></ion-icon></span>
-          <strong>Rencana liburan keluarga</strong>
-          <span class="catatan-note-preview">Tempat yang ingin dikunjungi, pilihan penginapan, dan hal yang perlu disiapkan.</span>
-          <span class="catatan-note-tags"><em>#liburan</em><em>#keluarga</em></span>
-          <small>Diedit terakhir · 14.30</small>
-        </button>
-
-        <button class="catatan-note-card" type="button" data-preview-item data-search-text="belanja akhir pekan checklist rumah belanja">
-          <span class="catatan-note-type"><ion-icon name="checkbox-outline" aria-hidden="true"></ion-icon></span>
-          <strong>Belanja akhir pekan</strong>
-          <span class="catatan-note-special">3 / 7 selesai</span>
-          <span class="catatan-note-preview">Beras, telur, buah, kebutuhan dapur dan beberapa barang rumah.</span>
-          <span class="catatan-note-tags"><em>#rumah</em></span>
-          <small>Diedit terakhir · Kemarin</small>
-        </button>
-
-        <button class="catatan-note-card" type="button" data-preview-item data-search-text="ngobrol sabtu reminder keluarga agenda ngobrol">
-          <span class="catatan-note-type"><ion-icon name="notifications-outline" aria-hidden="true"></ion-icon></span>
-          <strong>Ngobrol bareng Sabtu</strong>
-          <span class="catatan-note-special">Sabtu · 19.00</span>
-          <span class="catatan-note-preview">Bahas beberapa rencana keluarga yang belum sempat dibicarakan.</span>
-          <span class="catatan-note-tags"><em>#keluarga</em></span>
-          <small>Reminder keluarga</small>
-        </button>
-
-        <button class="catatan-note-card" type="button" data-preview-item data-search-text="ide aktivitas bersama keluarga ide aktivitas">
+      <div class="catatan-note-grid" data-personal-note-grid>
+        <button class="catatan-note-card" type="button" data-preview-item data-search-text="ide aplikasi rumah catatan pribadi ide app">
           <span class="catatan-note-type"><ion-icon name="bulb-outline" aria-hidden="true"></ion-icon></span>
-          <strong>Ide aktivitas bersama</strong>
-          <span class="catatan-note-preview">Kumpulan aktivitas sederhana yang bisa dilakukan saat ada waktu luang.</span>
-          <span class="catatan-note-tags"><em>#ide</em><em>#keluarga</em></span>
-          <small>Diedit terakhir · Senin</small>
+          <strong>Ide yang ingin dicoba</strong>
+          <span class="catatan-note-preview">Beberapa gagasan kecil yang ingin disimpan dulu sebelum dikembangkan.</span>
+          <span class="catatan-note-tags"><em>#ide</em><em>#personal</em></span>
+          <small class="catatan-note-access">Hanya Saya</small>
+        </button>
+
+        <button class="catatan-note-card" type="button" data-preview-item data-search-text="belanja kebutuhan checklist rumah keluarga dapat melihat">
+          <span class="catatan-note-type"><ion-icon name="checkbox-outline" aria-hidden="true"></ion-icon></span>
+          <strong>Yang perlu dibeli</strong>
+          <span class="catatan-note-special">2 / 5 selesai</span>
+          <span class="catatan-note-preview">Daftar singkat beberapa barang yang perlu dicari minggu ini.</span>
+          <span class="catatan-note-tags"><em>#rumah</em></span>
+          <small class="catatan-note-access">Keluarga dapat melihat</small>
+        </button>
+
+        <button class="catatan-note-card" type="button" data-preview-item data-search-text="telepon reminder pribadi besok pengingat">
+          <span class="catatan-note-type"><ion-icon name="notifications-outline" aria-hidden="true"></ion-icon></span>
+          <strong>Telepon besok malam</strong>
+          <span class="catatan-note-special">Besok · 19.00</span>
+          <span class="catatan-note-preview">Simpan beberapa hal yang ingin dibicarakan supaya tidak terlupa.</span>
+          <span class="catatan-note-tags"><em>#ingat</em></span>
+          <small class="catatan-note-access">Hanya Saya</small>
+        </button>
+
+        <button class="catatan-note-card" type="button" data-preview-item data-search-text="referensi rumah ukuran meja catatan keluarga dapat melihat">
+          <span class="catatan-note-type"><ion-icon name="document-text-outline" aria-hidden="true"></ion-icon></span>
+          <strong>Ukuran dan referensi</strong>
+          <span class="catatan-note-preview">Catatan ukuran, referensi, dan detail yang ingin tetap mudah ditemukan.</span>
+          <span class="catatan-note-tags"><em>#rumah</em><em>#referensi</em></span>
+          <small class="catatan-note-access">Keluarga dapat melihat</small>
         </button>
       </div>
 
       <div class="catatan-area-empty" data-search-empty hidden>
         <ion-icon name="search-outline" aria-hidden="true"></ion-icon>
         <strong>Tidak ada yang cocok</strong>
-        <span>Coba kata kunci lain di Catatan Keluarga.</span>
+        <span>Coba kata kunci lain di Catatan Pribadi.</span>
       </div>
     </section>
   </main>
 
   <nav class="catatan-bottom-nav" aria-label="Navigasi Catatan">
     <a class="catatan-nav-item is-active" href="catatan.html">
-      <ion-icon name="home-outline" aria-hidden="true"></ion-icon>
-      <span>Home</span>
+      <ion-icon name="home-outline" aria-hidden="true"></ion-icon><span>Home</span>
     </a>
     <button class="catatan-nav-item" type="button" data-nav-placeholder="Dipin">
-      <ion-icon name="pin-outline" aria-hidden="true"></ion-icon>
-      <span>Dipin</span>
+      <ion-icon name="pin-outline" aria-hidden="true"></ion-icon><span>Dipin</span>
     </button>
-    <button class="catatan-add-button" type="button" data-create-note aria-label="Buat Catatan Keluarga baru">
+    <button class="catatan-add-button" type="button" data-create-note aria-label="Buat Catatan Pribadi baru">
       <ion-icon name="add-outline" aria-hidden="true"></ion-icon>
     </button>
     <button class="catatan-nav-item" type="button" data-nav-placeholder="Arsip">
-      <ion-icon name="archive-outline" aria-hidden="true"></ion-icon>
-      <span>Arsip</span>
+      <ion-icon name="archive-outline" aria-hidden="true"></ion-icon><span>Arsip</span>
     </button>
   </nav>
 
   <div class="catatan-toast" data-catatan-toast role="status" hidden></div>
 
   <div class="catatan-sheet-layer" data-create-layer hidden>
-    <section class="catatan-sheet" role="dialog" aria-modal="true" aria-labelledby="catatan-family-create-title">
+    <section class="catatan-sheet" role="dialog" aria-modal="true" aria-labelledby="catatan-personal-create-title">
       <div class="catatan-sheet-handle" aria-hidden="true"></div>
       <div class="catatan-sheet-header">
-        <div>
-          <small>Catatan Keluarga</small>
-          <h2 id="catatan-family-create-title">Apa yang ingin dibuat?</h2>
-        </div>
-        <button class="catatan-sheet-close" type="button" data-create-close aria-label="Tutup">
-          <ion-icon name="close-outline" aria-hidden="true"></ion-icon>
-        </button>
+        <div><small>Catatan Pribadi</small><h2 id="catatan-personal-create-title">Apa yang ingin dibuat?</h2></div>
+        <button class="catatan-sheet-close" type="button" data-create-close aria-label="Tutup"><ion-icon name="close-outline" aria-hidden="true"></ion-icon></button>
       </div>
-
       <div class="catatan-create-step">
         <button class="catatan-create-option" type="button" data-create-type="Catatan Biasa">
           <span class="catatan-create-icon"><ion-icon name="document-text-outline"></ion-icon></span>
-          <span><strong>Catatan Biasa</strong><small>Tulis informasi, ide, atau hal yang ingin disimpan bersama.</small></span>
+          <span><strong>Catatan Biasa</strong><small>Tulis informasi, ide, atau hal yang ingin kamu simpan.</small></span>
           <ion-icon name="chevron-forward-outline" aria-hidden="true"></ion-icon>
         </button>
         <button class="catatan-create-option" type="button" data-create-type="Checklist">
           <span class="catatan-create-icon"><ion-icon name="checkbox-outline"></ion-icon></span>
-          <span><strong>Checklist</strong><small>Buat daftar yang bisa ditandai semua anggota.</small></span>
+          <span><strong>Checklist</strong><small>Buat daftar pribadi yang dapat ditandai satu per satu.</small></span>
           <ion-icon name="chevron-forward-outline" aria-hidden="true"></ion-icon>
         </button>
         <button class="catatan-create-option" type="button" data-create-type="Reminder">
           <span class="catatan-create-icon"><ion-icon name="notifications-outline"></ion-icon></span>
-          <span><strong>Reminder</strong><small>Buat catatan bersama dengan tanggal dan pengingat.</small></span>
+          <span><strong>Reminder</strong><small>Buat catatan pribadi dengan tanggal dan pengingat.</small></span>
           <ion-icon name="chevron-forward-outline" aria-hidden="true"></ion-icon>
         </button>
       </div>
@@ -193,7 +171,7 @@
 <script src="js/backend/family-service.js?v=20260908-10"></script>
 <script src="js/backend/auth-router.js?v=20260909-v200a8"></script>
 <script src="js/backend/auth-guard.js?v=20260909-v200a8"></script>
-<script src="js/pages/catatan-family.js?v=20260909-v200a12"></script>
+<script src="js/pages/catatan-personal.js?v=20260909-v200a12"></script>
 <script src="js/pwa.js?v=20260909-v200a12"></script>
 </body>
 </html>
