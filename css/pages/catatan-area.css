@@ -256,11 +256,37 @@
 }
 
 
-/* a12: turunan Personal/Anggota dari desain Family yang sudah dikunci. */
-.catatan-member-area > .catatan-standard-header h1 {
-  max-width: 48%;
+/* a13: judul area anggota dipisah agar nama panjang tidak tergerus tombol kembali. */
+.catatan-member-area > .catatan-standard-header .catatan-member-page-title {
+  display: grid;
+  justify-items: center;
+  gap: 1px;
+  width: min(54%, 250px);
+  max-width: 54%;
+  white-space: normal;
+  text-align: center;
+  line-height: 1.15;
+}
+
+.catatan-member-title-label {
+  display: block;
+  color: var(--color-text-secondary, #767c78);
+  font-size: 10.5px;
+  line-height: 1.2;
+  font-weight: 600;
+}
+
+.catatan-member-title-name {
+  display: -webkit-box;
+  width: 100%;
   overflow: hidden;
-  text-overflow: ellipsis;
+  overflow-wrap: anywhere;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  color: var(--color-text, #18201b);
+  font-size: clamp(15px, 4.4vw, 20px);
+  line-height: 1.18;
+  font-weight: 700;
 }
 
 .catatan-note-card .catatan-note-access {

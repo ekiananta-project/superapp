@@ -61,9 +61,11 @@
   function applyMemberName(name) {
     memberName = clean(name, "Anggota");
     const title = q("[data-member-page-title]");
+    const titleName = q("[data-member-page-name]");
     const search = q("#catatan-member-search");
     const empty = q("[data-member-empty-copy]");
-    if (title) title.textContent = `Catatan ${memberName}`;
+    if (titleName) titleName.textContent = memberName;
+    if (title) title.setAttribute("aria-label", `Catatan anggota ${memberName}`);
     if (search) {
       search.placeholder = `Cari di Catatan ${memberName}...`;
       search.setAttribute("aria-label", `Cari di Catatan ${memberName}`);
