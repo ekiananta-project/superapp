@@ -52,9 +52,14 @@
 
     qa("[data-preview-item]").forEach(item => {
       item.addEventListener("click", () => {
-        showToast(item.classList.contains("catatan-folder-card")
-          ? "Isi Folder akan aktif saat data Catatan tersedia."
-          : "Editor Catatan akan aktif pada tahap berikutnya.");
+        if (item.classList.contains("catatan-folder-card")) {
+          const folder = clean(item.dataset.folderName || item.querySelector("strong")?.textContent);
+          if (folder) {
+            location.href = `catatan-folder.html?scope=family&folder=${encodeURIComponent(folder)}`;
+            return;
+          }
+        }
+        showToast("Editor Catatan akan aktif pada tahap berikutnya.");
       });
     });
 

@@ -6,6 +6,7 @@
   let toastTimer = null;
   let createScope = null;
   let memberName = "Anggota";
+  let activeMemberId = "";
 
   function clean(value, fallback = "") {
     const text = String(value ?? "").trim().replace(/\s+/g, " ");
@@ -77,9 +78,14 @@
   function setupInteractions() {
     qa("[data-preview-item]").forEach(item => {
       item.addEventListener("click", () => {
-        showToast(item.classList.contains("catatan-folder-card")
-          ? `Folder ${memberName} dibuka dalam mode hanya baca.`
-          : `Catatan ${memberName} dibuka dalam mode hanya baca.`);
+        if (item.classList.contains("catatan-folder-card")) {
+          const folder = clean(item.dataset.folderName || item.querySelector("strong")?.textContent);
+          if (folder && activeMemberId) {
+            location.href = `catatan-folder.html?scope=member&member=${encodeURIComponent(activeMemberId)}&folder=${encodeURIComponent(folder)}`;
+            return;
+          }
+        }
+        showToast(`Catatan ${memberName} dibuka dalam mode hanya baca.`);
       });
     });
 
@@ -112,6 +118,7 @@
   }
 
   async function init() {
+    activeMemberId = clean(new URLSearchParams(location.search).get("member"));
     setupInteractions();
 
     if (window.AUTH_READY) {
@@ -120,7 +127,7 @@
     }
 
     try {
-      const memberId = clean(new URLSearchParams(location.search).get("member"));
+      const memberId = activeMemberId;
       const [user, family] = await Promise.all([
         AuthService.ambilUserAktif(),
         AuthRouter.ambilFamilyAktif()

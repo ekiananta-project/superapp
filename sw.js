@@ -1,4 +1,4 @@
-const CACHE_NAME = "ruangkitha-v2.0.0a17-catatan-member-standard-header-1";
+const CACHE_NAME = "ruangkitha-v2.0.0a19-catatan-folder-ui-1";
 const OFFLINE_URL = "./offline.html";
 
 const APP_FILES = [
@@ -60,12 +60,14 @@ const APP_FILES = [
   "./catatan-keluarga.html",
   "./catatan-pribadi.html",
   "./catatan-anggota.html",
+  "./catatan-folder.html",
   "./css/pages/catatan-home.css",
   "./css/pages/catatan-area.css",
   "./js/pages/catatan-home.js",
   "./js/pages/catatan-family.js",
   "./js/pages/catatan-personal.js",
   "./js/pages/catatan-member.js",
+  "./js/pages/catatan-folder.js",
   "./finance.html",
   "./kalender.html",
   "./profil.html",
