@@ -124,25 +124,7 @@
     return data || [];
   }
 
-  async function ambilBasicKeluarga(familyId) {
-    const fid = clean(familyId);
-    if (!fid) return [];
-
-    const { data, error } = await client()
-      .from("notes")
-      .select(NOTE_FIELDS)
-      .eq("family_id", fid)
-      .eq("scope", "family")
-      .eq("note_type", "basic")
-      .is("archived_at", null)
-      .order("pinned", { ascending: false })
-      .order("updated_at", { ascending: false });
-
-    if (error) throw error;
-    return data || [];
-  }
-
-  async function ambilBasicAnggotaDibagikan(familyId, memberId) {
+  async function ambilBasicAnggota(familyId, memberId) {
     const fid = clean(familyId);
     const uid = clean(memberId);
     if (!fid || !uid) return [];
@@ -154,6 +136,24 @@
       .eq("created_by", uid)
       .eq("scope", "personal")
       .eq("visibility", "family-read")
+      .eq("note_type", "basic")
+      .is("archived_at", null)
+      .order("pinned", { ascending: false })
+      .order("updated_at", { ascending: false });
+
+    if (error) throw error;
+    return data || [];
+  }
+
+  async function ambilBasicKeluarga(familyId) {
+    const fid = clean(familyId);
+    if (!fid) return [];
+
+    const { data, error } = await client()
+      .from("notes")
+      .select(NOTE_FIELDS)
+      .eq("family_id", fid)
+      .eq("scope", "family")
       .eq("note_type", "basic")
       .is("archived_at", null)
       .order("pinned", { ascending: false })
@@ -191,8 +191,8 @@
     simpanBasic,
     ambilCatatan,
     ambilBasicPersonal,
+    ambilBasicAnggota,
     ambilBasicKeluarga,
-    ambilBasicAnggotaDibagikan,
     arsipkan,
     schemaBelumTerpasang
   };

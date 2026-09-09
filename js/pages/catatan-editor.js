@@ -26,6 +26,9 @@
   let activeFamilyId = "";
   let noteOwnerId = "";
   let noteReadOnly = false;
+  let sourceContext = "";
+  let memberSourceId = "";
+  let memberViewName = "";
   let noteBackendReady = false;
   let hydratingNote = false;
   let noteDirty = false;
@@ -270,8 +273,9 @@
 
       resizeTitle();
       renderPinState();
+      await resolveMemberViewContext();
       applyContext();
-      renderVisibility();
+      if (!(sourceContext === "member" && noteReadOnly)) renderVisibility();
       setMode(noteReadOnly ? "view" : "edit", false);
       lastSavedFingerprint = noteFingerprint();
       noteDirty = false;
@@ -464,7 +468,30 @@
     input.style.height = `${Math.min(input.scrollHeight, 116)}px`;
   }
 
+  async function resolveMemberViewContext() {
+    if (sourceContext !== "member" || !noteReadOnly || !noteOwnerId) return;
+
+    // Jangan percaya member id dari URL jika tidak sama dengan pemilik record.
+    if (!memberSourceId || memberSourceId !== noteOwnerId) {
+      memberSourceId = noteOwnerId;
+    }
+
+    memberViewName = "Anggota";
+    if (!activeFamilyId || !window.FamilyService?.ambilAnggotaKeluarga) return;
+
+    try {
+      const members = await FamilyService.ambilAnggotaKeluarga(activeFamilyId);
+      const owner = (members || []).find(item => item?.user_id === noteOwnerId);
+      memberViewName = clean(owner?.profile?.display_name, "Anggota");
+    } catch (error) {
+      console.warn("[Catatan Member View Context]", error);
+    }
+  }
+
   function editorBackUrl() {
+    if (sourceContext === "member" && noteReadOnly && memberSourceId) {
+      return `catatan-anggota.html?member=${encodeURIComponent(memberSourceId)}`;
+    }
     if (folderName) {
       return `catatan-folder.html?scope=${encodeURIComponent(scope)}&folder=${encodeURIComponent(folderName)}`;
     }
@@ -485,7 +512,19 @@
 
     if (back) back.href = editorBackUrl();
 
-    if (scope === "family") {
+    if (sourceContext === "member" && noteReadOnly) {
+      if (areaLabel) areaLabel.textContent = memberViewName ? `Milik ${memberViewName}` : "Milik anggota";
+      if (areaIcon) areaIcon.setAttribute("name", "person-circle-outline");
+      if (visibilityChip) {
+        visibilityChip.hidden = false;
+        visibilityChip.disabled = true;
+      }
+      const visibilityLabel = q("[data-visibility-label]");
+      if (visibilityLabel) visibilityLabel.textContent = "Hanya baca";
+      visibilityChip?.querySelector("ion-icon")?.setAttribute("name", "eye-outline");
+      if (visibilityRow) visibilityRow.hidden = false;
+      if (promoteRow) promoteRow.hidden = true;
+    } else if (scope === "family") {
       if (areaLabel) areaLabel.textContent = "Catatan Keluarga";
       if (areaIcon) areaIcon.setAttribute("name", "people-outline");
       if (visibilityChip) visibilityChip.hidden = true;
@@ -1155,6 +1194,12 @@
     scope = clean(params.get("scope"), "personal").toLowerCase();
     folderName = clean(params.get("folder"));
     noteId = clean(params.get("id"));
+    sourceContext = clean(params.get("from")).toLowerCase();
+    memberSourceId = clean(params.get("member"));
+    if (sourceContext !== "member") {
+      sourceContext = "";
+      memberSourceId = "";
+    }
     reminderPreset = clean(params.get("type")).toLowerCase() === "reminder";
     if (!["family", "personal"].includes(scope)) scope = "personal";
     if (scope === "family") visibility = "family-read";

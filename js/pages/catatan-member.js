@@ -72,7 +72,7 @@
     empty = document.createElement("div");
     empty.className = "catatan-area-empty";
     empty.dataset.backendNotesEmpty = "";
-    empty.innerHTML = '<ion-icon name="eye-off-outline" aria-hidden="true"></ion-icon><strong>Belum ada catatan yang dibagikan</strong><span>Catatan pribadi anggota akan tampil di sini saat visibilitasnya diatur menjadi Keluarga dapat melihat.</span>';
+    empty.innerHTML = '<ion-icon name="eye-outline" aria-hidden="true"></ion-icon><strong>Belum ada catatan yang dibagikan</strong><span>Catatan pribadi anggota akan tampil di sini saat visibilitasnya diubah menjadi Keluarga dapat melihat.</span>';
     empty.hidden = true;
     section.appendChild(empty);
     return empty;
@@ -88,8 +88,7 @@
     const title = clean(note?.title) || "Tanpa judul";
     const body = clean(note?.body_text) || "Catatan belum memiliki isi.";
     const preview = body.length > 180 ? `${body.slice(0, 177)}...` : body;
-    const access = "Keluarga dapat melihat · Hanya baca";
-    button.dataset.searchText = clean(`${title} ${body} ${note?.folder_name || ""} ${access}`);
+    button.dataset.searchText = clean(`${title} ${body} ${note?.folder_name || ""} keluarga dapat melihat hanya baca`);
 
     const type = document.createElement("span");
     type.className = "catatan-note-type";
@@ -104,7 +103,7 @@
 
     const accessEl = document.createElement("small");
     accessEl.className = "catatan-note-access";
-    accessEl.textContent = access;
+    accessEl.textContent = "Keluarga dapat melihat · Hanya baca";
 
     button.append(type, titleEl);
     if (note?.pinned) {
@@ -115,7 +114,8 @@
     }
     button.append(previewEl, accessEl);
     button.addEventListener("click", () => {
-      location.href = `catatan-editor.html?scope=personal&id=${encodeURIComponent(note.id)}`;
+      const member = encodeURIComponent(activeMemberId);
+      location.href = `catatan-editor.html?scope=personal&id=${encodeURIComponent(note.id)}&from=member&member=${member}`;
     });
     return button;
   }
@@ -132,16 +132,16 @@
   }
 
   async function loadBackendNotes(familyId, memberId) {
-    if (!window.NotesService) return;
+    if (!window.NotesService?.ambilBasicAnggota) return;
     try {
-      const notes = await window.NotesService.ambilBasicAnggotaDibagikan(familyId, memberId);
+      const notes = await window.NotesService.ambilBasicAnggota(familyId, memberId);
       renderBackendNotes(notes);
     } catch (error) {
       console.error("[Catatan Member Backend]", error);
       if (window.NotesService.schemaBelumTerpasang?.(error)) {
         showToast("Backend Catatan belum aktif — jalankan SQL 004A di Supabase dulu.");
       } else {
-        showToast(error?.message || `Catatan ${memberName} belum dapat dimuat.`);
+        showToast(error?.message || "Catatan anggota belum dapat dimuat.");
       }
     }
   }
@@ -169,8 +169,10 @@
           const folder = clean(item.dataset.folderName || item.querySelector("strong")?.textContent);
           if (folder && activeMemberId) {
             location.href = `catatan-folder.html?scope=member&member=${encodeURIComponent(activeMemberId)}&folder=${encodeURIComponent(folder)}`;
+            return;
           }
         }
+        showToast(`Catatan ${memberName} dibuka dalam mode hanya baca.`);
       });
     });
 
