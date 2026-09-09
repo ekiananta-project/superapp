@@ -1,0 +1,395 @@
+/* RuangKitha v2.0.0a20 — Catatan Biasa editor UI foundation */
+
+.catatan-editor {
+  position: relative;
+  min-height: 100dvh;
+  padding: 0;
+  background: var(--color-background, #f7f8f7);
+  overflow-x: hidden;
+}
+
+.catatan-editor-header {
+  position: sticky;
+  z-index: 25;
+  top: 0;
+  display: grid;
+  grid-template-columns: 44px minmax(0,1fr) 44px;
+  align-items: center;
+  gap: 12px;
+  min-height: 74px;
+  padding: max(10px, env(safe-area-inset-top)) var(--space-5, 24px) 10px;
+  background: color-mix(in srgb, var(--color-background, #f7f8f7) 94%, transparent);
+  backdrop-filter: blur(16px);
+}
+
+.catatan-editor-header h1 {
+  min-width: 0;
+  margin: 0;
+  color: var(--color-text, #18201b);
+  text-align: center;
+  font-size: 17px;
+  line-height: 1.2;
+  font-weight: 700;
+}
+
+.catatan-editor-back,
+.catatan-editor-menu {
+  appearance: none;
+  display: grid;
+  place-items: center;
+  width: 42px;
+  height: 42px;
+  padding: 0;
+  border: 1px solid var(--color-border, #e0e4e1);
+  border-radius: 50%;
+  background: var(--color-surface-soft, #eef1ef);
+  color: var(--color-primary, #159447);
+  text-decoration: none;
+  box-shadow: var(--shadow-sm, 0 5px 16px rgba(20,40,28,.05));
+  cursor: pointer;
+}
+.catatan-editor-menu { color: var(--color-text, #18201b); }
+.catatan-editor-back ion-icon,
+.catatan-editor-menu ion-icon { font-size: 21px; }
+
+.catatan-editor-main {
+  width: 100%;
+  min-height: calc(100dvh - 74px);
+  padding: 8px var(--space-5, 24px) calc(104px + env(safe-area-inset-bottom));
+  box-sizing: border-box;
+}
+
+.catatan-title-input {
+  display: block;
+  width: 100%;
+  min-height: 48px;
+  max-height: 116px;
+  resize: none;
+  overflow: hidden;
+  padding: 0;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  color: var(--color-text, #18201b);
+  font: inherit;
+  font-size: clamp(24px, 7.2vw, 32px);
+  line-height: 1.2;
+  font-weight: 700;
+}
+.catatan-title-input::placeholder { color: color-mix(in srgb, var(--color-text, #18201b) 30%, transparent); }
+
+.catatan-editor-context {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  min-width: 0;
+  margin: 13px 0 18px;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.catatan-editor-context::-webkit-scrollbar { display: none; }
+
+.catatan-context-chip {
+  appearance: none;
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  min-height: 31px;
+  padding: 0 10px;
+  border: 1px solid var(--color-border, #e0e4e1);
+  border-radius: 999px;
+  background: var(--color-surface, #fff);
+  color: var(--color-text-soft, #6f7b73);
+  font: inherit;
+  font-size: 10px;
+  line-height: 1;
+  font-weight: 700;
+  white-space: nowrap;
+}
+.catatan-context-chip ion-icon { font-size: 14px; }
+.catatan-context-chip.is-area {
+  color: var(--color-primary, #159447);
+  background: color-mix(in srgb, var(--color-primary, #159447) 8%, var(--color-surface, #fff));
+}
+.catatan-context-chip.is-folder { color: #a66f13; }
+.catatan-context-chip:disabled { opacity: 1; }
+
+.catatan-writing-canvas {
+  min-height: calc(100dvh - 230px);
+  padding: 0 0 28px;
+}
+
+.catatan-content-editor {
+  min-height: calc(100dvh - 260px);
+  outline: 0;
+  color: var(--color-text, #18201b);
+  caret-color: var(--color-primary, #159447);
+  font-size: 15px;
+  line-height: 1.72;
+  font-weight: 400;
+  overflow-wrap: anywhere;
+}
+.catatan-content-editor:empty::before {
+  content: attr(data-placeholder);
+  color: color-mix(in srgb, var(--color-text, #18201b) 32%, transparent);
+  pointer-events: none;
+}
+.catatan-content-editor h2 { margin: .4em 0 .25em; font-size: 24px; line-height: 1.25; }
+.catatan-content-editor h3 { margin: .4em 0 .25em; font-size: 19px; line-height: 1.3; }
+.catatan-content-editor blockquote {
+  margin: 10px 0;
+  padding: 8px 12px;
+  border-left: 3px solid var(--color-primary, #159447);
+  border-radius: 0 10px 10px 0;
+  background: color-mix(in srgb, var(--color-primary, #159447) 7%, transparent);
+}
+.catatan-content-editor hr { border: 0; border-top: 1px solid var(--color-border, #e0e4e1); margin: 20px 0; }
+.catatan-content-editor a { color: var(--color-primary, #159447); text-decoration: underline; }
+
+.catatan-editor-toolbar {
+  position: fixed;
+  z-index: 45;
+  left: 50%;
+  bottom: var(--catatan-keyboard-offset, 0px);
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  align-items: center;
+  width: min(100vw, 430px);
+  min-height: 60px;
+  padding: 7px 12px max(7px, env(safe-area-inset-bottom));
+  border-top: 1px solid var(--color-border, #e0e4e1);
+  background: color-mix(in srgb, var(--color-surface, #fff) 96%, transparent);
+  box-shadow: 0 -8px 24px rgba(20,40,28,.06);
+  transform: translateX(-50%);
+  backdrop-filter: blur(18px);
+  box-sizing: border-box;
+}
+.catatan-editor-toolbar button {
+  appearance: none;
+  display: grid;
+  place-items: center;
+  min-width: 0;
+  min-height: 42px;
+  padding: 0;
+  border: 0;
+  border-radius: 13px;
+  background: transparent;
+  color: var(--color-text-soft, #6f7b73);
+  font: inherit;
+  cursor: pointer;
+}
+.catatan-editor-toolbar button:active,
+.catatan-editor-toolbar button.is-active { background: var(--color-surface-soft, #eef1ef); color: var(--color-primary, #159447); }
+.catatan-editor-toolbar ion-icon { font-size: 21px; }
+.catatan-aa { font-size: 16px; font-weight: 700; letter-spacing: -.5px; }
+
+.catatan-editor-toast { bottom: calc(76px + env(safe-area-inset-bottom)); }
+
+.catatan-sensitive-layer {
+  position: fixed;
+  z-index: 120;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  background: rgba(9,12,10,.48);
+  backdrop-filter: blur(5px);
+}
+.catatan-sensitive-layer[hidden] { display: none; }
+.catatan-sensitive-dialog {
+  width: min(100%, 360px);
+  padding: 24px;
+  border: 1px solid var(--color-border, #e0e4e1);
+  border-radius: 26px;
+  background: var(--color-surface, #fff);
+  color: var(--color-text, #18201b);
+  box-shadow: 0 24px 70px rgba(0,0,0,.22);
+  text-align: left;
+}
+.catatan-sensitive-icon {
+  display: grid;
+  place-items: center;
+  width: 48px;
+  height: 48px;
+  margin-bottom: 14px;
+  border-radius: 17px;
+  background: color-mix(in srgb, var(--color-primary, #159447) 11%, transparent);
+  color: var(--color-primary, #159447);
+}
+.catatan-sensitive-icon ion-icon { font-size: 25px; }
+.catatan-sensitive-dialog h2 { margin: 0 0 9px; font-size: 18px; line-height: 1.35; }
+.catatan-sensitive-dialog p { margin: 0; color: var(--color-text-soft, #6f7b73); font-size: 11.5px; line-height: 1.65; }
+.catatan-sensitive-dialog p strong { color: var(--color-text, #18201b); }
+.catatan-sensitive-actions { display: grid; grid-template-columns: minmax(0,1fr) auto; align-items: center; gap: 12px; margin-top: 20px; }
+.catatan-sensitive-check { display: flex; align-items: center; gap: 8px; color: var(--color-text-soft, #6f7b73); font-size: 10.5px; font-weight: 600; }
+.catatan-sensitive-check input { accent-color: var(--color-primary, #159447); }
+.catatan-sensitive-actions > button {
+  appearance: none;
+  min-height: 40px;
+  padding: 0 17px;
+  border: 0;
+  border-radius: 13px;
+  background: var(--color-primary, #159447);
+  color: #fff;
+  font: inherit;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.catatan-editor-sheet { max-height: min(82dvh, 680px); }
+.catatan-info-list { display: grid; gap: 7px; }
+.catatan-info-list > button,
+.catatan-visibility-options > button {
+  appearance: none;
+  display: grid;
+  grid-template-columns: 40px minmax(0,1fr) 22px;
+  align-items: center;
+  gap: 11px;
+  width: 100%;
+  min-height: 59px;
+  padding: 9px 10px;
+  border: 1px solid var(--color-border, #e0e4e1);
+  border-radius: 16px;
+  background: var(--color-surface, #fff);
+  color: var(--color-text, #18201b);
+  text-align: left;
+  font: inherit;
+}
+.catatan-info-icon {
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 13px;
+  background: var(--color-surface-soft, #eef1ef);
+  color: var(--color-primary, #159447);
+}
+.catatan-info-icon ion-icon { font-size: 20px; }
+.catatan-info-list strong,
+.catatan-visibility-options strong { display: block; font-size: 11.5px; line-height: 1.3; }
+.catatan-info-list small,
+.catatan-visibility-options small { display: block; margin-top: 3px; color: var(--color-text-soft, #6f7b73); font-size: 9px; line-height: 1.4; }
+.catatan-info-list > button > ion-icon,
+.catatan-visibility-options > button > ion-icon { color: var(--color-text-muted, #879089); font-size: 18px; }
+.catatan-info-list .catatan-info-promote { margin-top: 4px; }
+
+.catatan-switch {
+  justify-self: end;
+  position: relative;
+  width: 36px;
+  height: 21px;
+  border-radius: 999px;
+  background: var(--color-border, #dfe3e0);
+  transition: .18s ease;
+}
+.catatan-switch i {
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 15px;
+  height: 15px;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 1px 4px rgba(0,0,0,.2);
+  transition: .18s ease;
+}
+.catatan-switch.is-on { background: var(--color-primary, #159447); }
+.catatan-switch.is-on i { transform: translateX(15px); }
+
+.catatan-format-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0,1fr));
+  gap: 8px;
+}
+.catatan-format-grid button {
+  appearance: none;
+  min-height: 70px;
+  padding: 9px 4px;
+  border: 1px solid var(--color-border, #e0e4e1);
+  border-radius: 15px;
+  background: var(--color-surface, #fff);
+  color: var(--color-text, #18201b);
+  font: inherit;
+  display: grid;
+  place-items: center;
+  align-content: center;
+  gap: 4px;
+}
+.catatan-format-grid button strong { font-size: 16px; }
+.catatan-format-grid button ion-icon { font-size: 20px; color: var(--color-primary, #159447); }
+.catatan-format-grid button span { color: var(--color-text-soft, #6f7b73); font-size: 8.5px; font-weight: 600; }
+.catatan-format-extra { display: grid; gap: 8px; margin-top: 12px; }
+.catatan-format-extra button {
+  appearance: none;
+  display: grid;
+  grid-template-columns: 26px minmax(0,1fr) auto;
+  align-items: center;
+  gap: 8px;
+  min-height: 45px;
+  padding: 0 11px;
+  border: 1px solid var(--color-border, #e0e4e1);
+  border-radius: 14px;
+  background: var(--color-surface, #fff);
+  color: var(--color-text, #18201b);
+  font: inherit;
+  text-align: left;
+}
+.catatan-format-extra ion-icon { font-size: 19px; color: var(--color-primary, #159447); }
+.catatan-format-extra span { font-size: 10.5px; font-weight: 700; }
+.catatan-format-extra small { color: var(--color-text-soft, #6f7b73); font-size: 9px; }
+
+.catatan-visibility-options { display: grid; gap: 9px; }
+.catatan-visibility-options > button > ion-icon { color: var(--color-primary, #159447); }
+
+.catatan-link-field { display: grid; gap: 7px; }
+.catatan-link-field span { color: var(--color-text-soft, #6f7b73); font-size: 9.5px; font-weight: 700; }
+.catatan-link-field input {
+  width: 100%;
+  min-height: 48px;
+  padding: 0 13px;
+  box-sizing: border-box;
+  border: 1px solid var(--color-border, #e0e4e1);
+  border-radius: 14px;
+  outline: 0;
+  background: var(--color-surface, #fff);
+  color: var(--color-text, #18201b);
+  font: inherit;
+  font-size: 12px;
+}
+.catatan-link-field input:focus { border-color: var(--color-primary, #159447); }
+.catatan-link-apply {
+  appearance: none;
+  width: 100%;
+  min-height: 46px;
+  margin-top: 12px;
+  border: 0;
+  border-radius: 14px;
+  background: var(--color-primary, #159447);
+  color: #fff;
+  font: inherit;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+html[data-theme="dark"] .catatan-editor-header,
+html[data-theme="dark"] .catatan-editor-toolbar { background: rgba(27,29,28,.96); }
+html[data-theme="dark"] .catatan-title-input::placeholder,
+html[data-theme="dark"] .catatan-content-editor:empty::before { color: rgba(235,240,236,.34); }
+html[data-theme="dark"] .catatan-context-chip { background: var(--color-surface, #212422); }
+
+@media (max-width: 390px) {
+  .catatan-editor-header { padding-left: 20px; padding-right: 20px; }
+  .catatan-editor-main { padding-left: 20px; padding-right: 20px; }
+  .catatan-format-grid { gap: 7px; }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .catatan-editor-back,
+  .catatan-editor-menu,
+  .catatan-editor-toolbar button,
+  .catatan-context-chip { transition: transform .15s ease, background .15s ease, color .15s ease; }
+  .catatan-editor-back:active,
+  .catatan-editor-menu:active,
+  .catatan-context-chip:active { transform: scale(.96); }
+}

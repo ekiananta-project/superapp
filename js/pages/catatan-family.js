@@ -76,7 +76,11 @@
       button.addEventListener("click", () => {
         const type = button.dataset.createType || "Catatan";
         closeCreateSheet();
-        showToast(`${type} Keluarga akan aktif saat editor Catatan dibangun.`);
+        if (type === "Catatan Biasa") {
+          location.href = "catatan-editor.html?scope=family";
+          return;
+        }
+        showToast(`${type} Keluarga akan aktif pada tahap berikutnya.`);
       });
     });
 

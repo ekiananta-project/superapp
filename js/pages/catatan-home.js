@@ -67,7 +67,11 @@
         const scopeLabel = createScope === "family" ? "Catatan Keluarga" : "Catatan Pribadi";
         const type = button.dataset.createType || "Catatan";
         closeCreateSheet();
-        showToast(`${type} di ${scopeLabel} akan aktif saat editor Catatan dibangun.`);
+        if (type === "Catatan Biasa") {
+          location.href = `catatan-editor.html?scope=${encodeURIComponent(createScope || "personal")}`;
+          return;
+        }
+        showToast(`${type} di ${scopeLabel} akan aktif pada tahap berikutnya.`);
       });
     });
 

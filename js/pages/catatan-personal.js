@@ -74,7 +74,11 @@
       button.addEventListener("click", () => {
         const type = button.dataset.createType || "Catatan";
         closeCreateSheet();
-        showToast(`${type} Pribadi akan aktif saat editor Catatan dibangun.`);
+        if (type === "Catatan Biasa") {
+          location.href = "catatan-editor.html?scope=personal";
+          return;
+        }
+        showToast(`${type} Pribadi akan aktif pada tahap berikutnya.`);
       });
     });
 

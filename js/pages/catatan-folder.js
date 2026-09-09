@@ -145,11 +145,19 @@
         if (scope === "member") {
           const destination = createScope === "family" ? "Catatan Keluarga" : "Catatan Pribadi";
           closeCreateSheet();
-          showToast(`${type} di ${destination} akan aktif saat editor Catatan dibangun.`);
+          if (type === "Catatan Biasa") {
+            location.href = `catatan-editor.html?scope=${encodeURIComponent(createScope || "personal")}`;
+            return;
+          }
+          showToast(`${type} di ${destination} akan aktif pada tahap berikutnya.`);
           return;
         }
         closeCreateSheet();
-        showToast(`${type} akan dibuat langsung di folder ${folderName} saat editor Catatan dibangun.`);
+        if (type === "Catatan Biasa") {
+          location.href = `catatan-editor.html?scope=${encodeURIComponent(scope)}&folder=${encodeURIComponent(folderName)}`;
+          return;
+        }
+        showToast(`${type} akan dibuat langsung di folder ${folderName} pada tahap berikutnya.`);
       });
     });
 
