@@ -210,3 +210,172 @@
   .superapp-home { padding-left: 16px; padding-right: 16px; }
   .global-quick-nav { width: 100vw; }
 }
+
+/* ================================================================
+   v2.0.0a2 — Global Home containment + calm section hierarchy
+   ================================================================ */
+
+/* The global app itself is the 430px container. Fixed navigation must
+   follow that width rather than the desktop viewport. */
+.global-quick-nav {
+  width: min(100vw, 430px);
+  max-width: 430px;
+  padding-left: 34px;
+  padding-right: 34px;
+}
+
+/* A section name, not an implementation term such as “Modul”. */
+.module-section-head {
+  display: block;
+  margin: 0 2px 12px;
+}
+.module-section-head h2 {
+  margin: 0;
+  font-size: clamp(21px, 4.8vw, 27px);
+}
+.module-section-head p {
+  margin: 4px 0 0;
+  max-width: none;
+  color: var(--color-text-secondary,#7b817d);
+  font-size: 11px;
+  line-height: 1.45;
+  text-align: left;
+}
+
+/* Keep the decorative “Hari Ini” art fully inside the card even when the
+   browser viewport is wide but the app container itself remains narrow. */
+.today-card-body {
+  grid-template-columns: minmax(0,1fr) 126px;
+  align-items: center;
+  gap: 10px;
+}
+.today-card.is-empty .today-card-body {
+  min-height: 132px;
+  align-items: center;
+}
+.today-card.is-empty .today-empty {
+  max-width: 220px;
+  padding: 0;
+}
+.today-art {
+  position: relative;
+  display: block;
+  width: 126px;
+  min-width: 0;
+  min-height: 122px;
+  justify-self: end;
+  overflow: hidden;
+}
+.today-art small {
+  top: 2px;
+  right: 2px;
+  width: 110px;
+  font-size: 9px;
+  line-height: 1.35;
+  transform: none;
+}
+.today-art-leaf {
+  bottom: 5px;
+  width: 24px;
+  height: 58px;
+  border-radius: 85% 15% 80% 20%;
+}
+.today-art .leaf-a { left: 7px; transform: rotate(-24deg); }
+.today-art .leaf-b { left: 34px; height: 70px; transform: rotate(6deg); }
+.today-art .leaf-c { left: 57px; height: 50px; transform: rotate(31deg); }
+.today-art-house {
+  right: 4px;
+  bottom: 3px;
+  width: 54px;
+  height: 39px;
+  border-radius: 3px 3px 9px 9px;
+}
+.today-art-house::before {
+  content: "";
+  position: absolute;
+  left: -7px;
+  top: -27px;
+  width: 68px;
+  height: 34px;
+  border: 0;
+  border-radius: 4px;
+  background: rgba(55,155,98,.34);
+  clip-path: polygon(50% 0,100% 82%,88% 100%,50% 37%,12% 100%,0 82%);
+  transform: none;
+}
+.today-art-house i {
+  left: 21px;
+  width: 13px;
+  height: 22px;
+  border-radius: 4px 4px 0 0;
+}
+
+/* Cards are intentionally narrow in the two-column Home layout. Never let
+   titles or the Finance insight consume space outside their own card. */
+.module-title strong {
+  overflow: visible;
+  text-overflow: clip;
+  white-space: normal;
+  overflow-wrap: normal;
+}
+.finance-preview-top {
+  display: grid;
+  grid-template-columns: minmax(0,1fr) auto;
+  align-items: center;
+  gap: 4px;
+}
+.finance-preview-label {
+  min-width: 0;
+  overflow: visible;
+  white-space: normal;
+  text-overflow: clip;
+  font-size: 9px;
+  line-height: 1.2;
+}
+.finance-preview-label ion-icon { flex: 0 0 auto; font-size: 13px; }
+.finance-status { padding: 3px 6px; font-size: 8px; }
+.finance-preview > strong {
+  margin-top: 10px;
+  font-size: 20px;
+  line-height: 1.08;
+  letter-spacing: -.045em;
+}
+.finance-preview > small {
+  font-size: 8.5px;
+  line-height: 1.35;
+}
+
+@media (max-width: 430px) {
+  .superapp-home { padding-left: 16px; padding-right: 16px; }
+  .global-quick-nav {
+    width: min(100vw, 430px);
+    max-width: 430px;
+    padding-left: 28px;
+    padding-right: 28px;
+  }
+  .today-card-body {
+    grid-template-columns: minmax(0,1fr) 104px;
+    gap: 6px;
+  }
+  .today-art {
+    display: block;
+    width: 104px;
+    min-height: 112px;
+  }
+  .today-art small { width: 92px; font-size: 8px; }
+  .today-art .leaf-a { left: 4px; }
+  .today-art .leaf-b { left: 27px; }
+  .today-art .leaf-c { left: 47px; }
+  .today-art-house { right: 2px; }
+  .finance-preview > strong { font-size: 18px; }
+}
+
+@media (max-width: 350px) {
+  .today-card-body { grid-template-columns: minmax(0,1fr) 82px; }
+  .today-art { width: 82px; min-height: 104px; }
+  .today-art small { display: none; }
+  .today-art .leaf-a { left: 1px; }
+  .today-art .leaf-b { left: 19px; }
+  .today-art .leaf-c { left: 36px; }
+  .today-art-house { right: -3px; transform: scale(.88); transform-origin: bottom right; }
+}

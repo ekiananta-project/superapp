@@ -49,3 +49,20 @@
 
 /* Profile shell */
 .profile-shell-summary{display:grid;grid-template-columns:66px minmax(0,1fr);align-items:center;gap:14px;margin-bottom:14px}.profile-shell-avatar{display:grid;place-items:center;width:66px;height:66px;overflow:hidden;border-radius:50%;background:var(--color-surface-soft,#eef1ef);color:var(--color-primary,#159447)}.profile-shell-avatar img{width:100%;height:100%;object-fit:cover}.profile-shell-avatar ion-icon{font-size:30px}.profile-shell-summary strong{display:block;font-size:18px}.profile-shell-summary small{display:block;margin-top:4px;color:var(--color-text-secondary,#767c78);font-size:11px}.profile-shell-menu{display:grid;gap:10px}.profile-shell-link{display:grid;grid-template-columns:42px minmax(0,1fr) auto;align-items:center;gap:10px;padding:13px;border:1px solid var(--color-border,#e0e4e1);border-radius:17px;background:var(--color-surface,#fff);color:var(--color-text,#171a18);text-decoration:none}.profile-shell-link>span:first-child{display:grid;place-items:center;width:42px;height:42px;border-radius:50%;background:rgba(48,168,118,.11);color:var(--color-primary,#159447)}.profile-shell-link ion-icon{font-size:21px}.profile-shell-copy strong{display:block;font-size:13px}.profile-shell-copy small{display:block;margin-top:3px;color:var(--color-text-secondary,#767c78);font-size:10px;line-height:1.35}.profile-shell-link>ion-icon{color:var(--color-text-secondary,#767c78);font-size:18px}.profile-foundation-note{margin-top:12px;padding:12px;border-radius:14px;background:rgba(48,168,118,.07);color:var(--color-text-secondary,#767c78);font-size:10px;line-height:1.5}
+
+/* v2.0.0a2 — Global quick nav belongs to the 430px app shell, not desktop viewport. */
+.global-quick-nav {
+  width: min(100vw, 430px);
+  max-width: 430px;
+  box-sizing: border-box;
+  padding-left: 34px;
+  padding-right: 34px;
+}
+@media (max-width: 430px) {
+  .global-quick-nav {
+    width: min(100vw, 430px);
+    max-width: 430px;
+    padding-left: 28px;
+    padding-right: 28px;
+  }
+}

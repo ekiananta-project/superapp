@@ -1,4 +1,4 @@
-const CACHE_NAME = "family-superapp-v2.0.0a1-container-ui-routing-1";
+const CACHE_NAME = "family-superapp-v2.0.0a2-layout-containment-1";
 const OFFLINE_URL = "./offline.html";
 
 const APP_FILES = [
