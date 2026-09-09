@@ -1,4 +1,4 @@
-const CACHE_NAME = "ruangkitha-v2.0.0a28-catatan-reminder-spacing-polish-1";
+const CACHE_NAME = "ruangkitha-v2.0.0a29-catatan-supabase-data-foundation-1";
 const OFFLINE_URL = "./offline.html";
 
 const APP_FILES = [
@@ -90,6 +90,7 @@ const APP_FILES = [
   "./js/backend/auth-router.js",
   "./js/backend/auth-service.js",
   "./js/backend/family-service.js",
+  "./js/backend/notes-service.js",
   "./js/backend/finance-service.js",
   "./js/backend/finance-cache.js",
   "./js/backend/finance-member-access.js",

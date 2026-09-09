@@ -21,10 +21,269 @@
   let reminderPreset = false;
   let familyReminderEnabled = false;
 
+  // v2.0.0a29 — Supabase Catatan Biasa foundation.
+  let noteId = "";
+  let activeFamilyId = "";
+  let noteOwnerId = "";
+  let noteReadOnly = false;
+  let noteBackendReady = false;
+  let hydratingNote = false;
+  let noteDirty = false;
+  let autosaveTimer = null;
+  let saveRunning = false;
+  let saveAgain = false;
+  let currentSavePromise = null;
+  let backendWarningShown = false;
+  let lastSavedFingerprint = "";
+
   function clean(value, fallback = "") {
     const text = String(value ?? "").trim().replace(/\s+/g, " ");
     if (!text || ["undefined", "null", "[object object]"].includes(text.toLowerCase())) return fallback;
     return text;
+  }
+
+  function sanitizeNoteHtml(value) {
+    const raw = String(value ?? "");
+    if (!raw) return "";
+
+    const parser = new DOMParser();
+    const doc = parser.parseFromString(`<body>${raw}</body>`, "text/html");
+    const allowed = new Set([
+      "P", "DIV", "H2", "H3", "BLOCKQUOTE", "UL", "OL", "LI", "BR",
+      "B", "STRONG", "I", "EM", "U", "S", "STRIKE", "SPAN", "A"
+    ]);
+    const dropEntirely = new Set([
+      "SCRIPT", "STYLE", "IFRAME", "OBJECT", "EMBED", "SVG", "MATH",
+      "FORM", "INPUT", "TEXTAREA", "BUTTON", "SELECT", "OPTION", "LINK", "META"
+    ]);
+
+    function safeHref(rawHref) {
+      const href = String(rawHref || "").trim();
+      if (!href) return "";
+      try {
+        const url = new URL(href, location.origin);
+        return ["http:", "https:"].includes(url.protocol) ? url.href : "";
+      } catch {
+        return "";
+      }
+    }
+
+    function cleanNode(node) {
+      Array.from(node.children || []).forEach(cleanNode);
+      if (node === doc.body) return;
+      const tag = String(node.tagName || "").toUpperCase();
+
+      if (dropEntirely.has(tag)) {
+        node.remove();
+        return;
+      }
+
+      if (!allowed.has(tag)) {
+        node.replaceWith(...Array.from(node.childNodes));
+        return;
+      }
+
+      const href = tag === "A" ? safeHref(node.getAttribute("href")) : "";
+      const background = tag === "SPAN" ? String(node.style?.backgroundColor || "").trim() : "";
+      Array.from(node.attributes || []).forEach(attr => node.removeAttribute(attr.name));
+
+      if (tag === "A" && href) {
+        node.setAttribute("href", href);
+        node.setAttribute("target", "_blank");
+        node.setAttribute("rel", "noopener noreferrer");
+      } else if (tag === "A") {
+        node.replaceWith(...Array.from(node.childNodes));
+        return;
+      }
+
+      if (tag === "SPAN" && background && !/url\s*\(/i.test(background)) {
+        node.style.backgroundColor = background;
+      }
+    }
+
+    cleanNode(doc.body);
+    return doc.body.innerHTML;
+  }
+
+  function basicBackendMode() {
+    return !reminderPreset && Boolean(window.NotesService) && noteBackendReady;
+  }
+
+  function noteSnapshot() {
+    const title = String(q("[data-note-title]")?.value || "").trim();
+    const editor = q("[data-note-content]");
+    const bodyHtml = sanitizeNoteHtml(editor?.innerHTML || "");
+    const bodyText = String(editor?.innerText || "").trim();
+    return {
+      id: noteId || null,
+      familyId: activeFamilyId || null,
+      scope,
+      visibility,
+      title,
+      bodyHtml,
+      bodyText,
+      folderName,
+      pinned
+    };
+  }
+
+  function noteFingerprint(snapshot = noteSnapshot()) {
+    return JSON.stringify({
+      familyId: snapshot.familyId || "",
+      scope: snapshot.scope,
+      visibility: snapshot.visibility,
+      title: snapshot.title,
+      bodyHtml: snapshot.bodyHtml,
+      bodyText: snapshot.bodyText,
+      folderName: snapshot.folderName || "",
+      pinned: Boolean(snapshot.pinned)
+    });
+  }
+
+  function hasMeaningfulBasicNote(snapshot = noteSnapshot()) {
+    return Boolean(snapshot.title || snapshot.bodyText);
+  }
+
+  function updateNoteUrl() {
+    if (!noteId || reminderPreset) return;
+    const url = new URL(location.href);
+    url.searchParams.set("id", noteId);
+    url.searchParams.set("scope", scope);
+    history.replaceState(history.state, "", `${url.pathname}${url.search}${url.hash}`);
+  }
+
+  function showBackendWarning(error) {
+    if (backendWarningShown) return;
+    backendWarningShown = true;
+    if (window.NotesService?.schemaBelumTerpasang?.(error)) {
+      showToast("Backend Catatan belum aktif — jalankan SQL 004A di Supabase dulu.");
+    } else {
+      showToast(error?.message || "Catatan belum dapat disimpan ke Supabase.");
+    }
+  }
+
+  async function saveBasicNoteNow({ announce = false } = {}) {
+    clearTimeout(autosaveTimer);
+    autosaveTimer = null;
+
+    if (!basicBackendMode() || noteReadOnly || hydratingNote) return null;
+    if (saveRunning) {
+      saveAgain = true;
+      if (currentSavePromise) await currentSavePromise;
+      if (noteDirty) return saveBasicNoteNow({ announce });
+      return null;
+    }
+
+    const snapshot = noteSnapshot();
+    const fingerprint = noteFingerprint(snapshot);
+    if (!noteDirty && fingerprint === lastSavedFingerprint) return null;
+
+    if (!noteId && !hasMeaningfulBasicNote(snapshot)) {
+      noteDirty = false;
+      return null;
+    }
+
+    saveRunning = true;
+    noteDirty = false;
+    q("[data-catatan-editor]")?.setAttribute("data-save-state", "saving");
+
+    currentSavePromise = (async () => {
+      try {
+        const saved = await window.NotesService.simpanBasic(snapshot);
+        noteId = clean(saved?.id, noteId);
+        noteOwnerId = clean(saved?.created_by, userId);
+        updateNoteUrl();
+        lastSavedFingerprint = fingerprint;
+        q("[data-catatan-editor]")?.setAttribute("data-save-state", "saved");
+        if (announce) showToast("Catatan tersimpan.");
+        return saved;
+      } catch (error) {
+        noteDirty = true;
+        q("[data-catatan-editor]")?.setAttribute("data-save-state", "error");
+        console.error("[Catatan Basic Save]", error);
+        if (window.NotesService?.schemaBelumTerpasang?.(error)) noteBackendReady = false;
+        showBackendWarning(error);
+        return null;
+      }
+    })();
+
+    try {
+      return await currentSavePromise;
+    } finally {
+      currentSavePromise = null;
+      saveRunning = false;
+      if (saveAgain) {
+        saveAgain = false;
+        if (noteDirty) setTimeout(() => saveBasicNoteNow(), 0);
+      }
+    }
+  }
+
+  function scheduleBasicAutosave(delay = 700) {
+    if (!basicBackendMode() || noteReadOnly || hydratingNote) return;
+    noteDirty = true;
+    clearTimeout(autosaveTimer);
+    autosaveTimer = setTimeout(() => saveBasicNoteNow(), delay);
+  }
+
+  function renderPinState() {
+    q("[data-pin-switch]")?.classList.toggle("is-on", pinned);
+    const state = q("[data-pin-state]");
+    if (state) state.textContent = pinned ? "Dipin" : "Tidak dipin";
+  }
+
+  async function loadBasicNote() {
+    if (!noteId || reminderPreset || !window.NotesService) return true;
+
+    hydratingNote = true;
+    try {
+      const note = await window.NotesService.ambilCatatan(noteId);
+      if (!note) {
+        noteReadOnly = true;
+        setMode("view", false);
+        showToast("Catatan tidak ditemukan atau kamu tidak punya akses.");
+        return false;
+      }
+      if (note.note_type !== "basic") {
+        noteReadOnly = true;
+        setMode("view", false);
+        showToast("Tipe catatan ini dibuka dari editor lain.");
+        return false;
+      }
+
+      scope = note.scope === "family" ? "family" : "personal";
+      visibility = note.visibility === "family-read" ? "family-read" : "private";
+      if (note.family_id) activeFamilyId = clean(note.family_id, activeFamilyId);
+      folderName = clean(note.folder_name);
+      pinned = Boolean(note.pinned);
+      noteOwnerId = clean(note.created_by);
+      noteReadOnly = Boolean(noteOwnerId && noteOwnerId !== userId);
+
+      const title = q("[data-note-title]");
+      const editor = q("[data-note-content]");
+      if (title) title.value = String(note.title || "");
+      if (editor) {
+        const safeHtml = sanitizeNoteHtml(note.body_html || "");
+        if (safeHtml) editor.innerHTML = safeHtml;
+        else editor.textContent = String(note.body_text || "");
+      }
+
+      resizeTitle();
+      renderPinState();
+      applyContext();
+      renderVisibility();
+      setMode(noteReadOnly ? "view" : "edit", false);
+      lastSavedFingerprint = noteFingerprint();
+      noteDirty = false;
+      return true;
+    } catch (error) {
+      console.error("[Catatan Basic Load]", error);
+      if (window.NotesService?.schemaBelumTerpasang?.(error)) noteBackendReady = false;
+      showBackendWarning(error);
+      return false;
+    } finally {
+      hydratingNote = false;
+    }
   }
 
   function normalizeTag(value) {
@@ -85,6 +344,7 @@
       document.execCommand(command, false, value);
       saveSelection();
       refreshFormatState();
+      scheduleBasicAutosave();
     } catch {
       showToast("Format ini belum didukung di perangkat ini.");
     }
@@ -156,6 +416,7 @@
       document.execCommand("formatBlock", false, target);
       saveSelection();
       refreshFormatState();
+      scheduleBasicAutosave();
     } catch {
       showToast("Format blok ini belum didukung di perangkat ini.");
     }
@@ -169,6 +430,7 @@
       document.execCommand("hiliteColor", false, active ? "transparent" : "#fff1a8");
       saveSelection();
       refreshFormatState();
+      scheduleBasicAutosave();
     } catch {
       try {
         document.execCommand("backColor", false, active ? "transparent" : "#fff1a8");
@@ -189,6 +451,7 @@
       document.execCommand("hiliteColor", false, "transparent");
       saveSelection();
       refreshFormatState();
+      scheduleBasicAutosave();
     } catch {
       showToast("Format belum dapat dibersihkan di perangkat ini.");
     }
@@ -423,10 +686,13 @@
   }
 
   function togglePin() {
+    if (noteReadOnly) {
+      showToast("Hanya pembuat catatan yang dapat mengubah pin.");
+      return;
+    }
     pinned = !pinned;
-    q("[data-pin-switch]")?.classList.toggle("is-on", pinned);
-    const state = q("[data-pin-state]");
-    if (state) state.textContent = pinned ? "Dipin" : "Tidak dipin";
+    renderPinState();
+    scheduleBasicAutosave(120);
   }
 
   function warningStorageKey() {
@@ -556,7 +822,7 @@
   }
 
   function setMode(mode, announce = true) {
-    editorMode = reminderPreset ? "edit" : (mode === "view" ? "view" : "edit");
+    editorMode = reminderPreset ? "edit" : (noteReadOnly ? "view" : (mode === "view" ? "view" : "edit"));
     const root = q("[data-catatan-editor]");
     const title = q("[data-note-title]");
     const editor = q("[data-note-content]");
@@ -572,7 +838,7 @@
     root?.classList.toggle("is-reminder-editor", reminderPreset);
     q("[data-reminder-dedicated]")?.toggleAttribute("hidden", !reminderPreset);
     q("[data-reminder-note-label]")?.toggleAttribute("hidden", !reminderPreset);
-    if (toggle) toggle.hidden = reminderPreset;
+    if (toggle) toggle.hidden = reminderPreset || noteReadOnly;
     if (title) title.readOnly = view;
     if (editor) editor.contentEditable = view ? "false" : "true";
     if (toolbar) toolbar.hidden = view || reminderPreset;
@@ -585,6 +851,7 @@
     renderMetadataTags();
 
     if (view) {
+      if (!reminderPreset) saveBasicNoteNow();
       title?.blur();
       editor?.blur();
       window.getSelection?.()?.removeAllRanges?.();
@@ -665,6 +932,7 @@
         visibility = button.dataset.setVisibility || "private";
         renderVisibility();
         setLayer("[data-visibility-layer]", false);
+        scheduleBasicAutosave(120);
       });
     });
 
@@ -831,6 +1099,7 @@
         savedRange = range.cloneRange();
         linkSelectedText = "";
         refreshFormatState();
+        scheduleBasicAutosave(120);
       } catch {
         showToast("Tautan belum dapat ditambahkan di posisi ini.");
       }
@@ -854,7 +1123,24 @@
   }
 
   function setupEditor() {
-    q("[data-note-title]")?.addEventListener("input", resizeTitle);
+    q("[data-note-title]")?.addEventListener("input", () => {
+      resizeTitle();
+      scheduleBasicAutosave();
+    });
+    q("[data-note-content]")?.addEventListener("input", () => scheduleBasicAutosave());
+    q("[data-note-title]")?.addEventListener("blur", () => saveBasicNoteNow());
+    q("[data-note-content]")?.addEventListener("blur", () => saveBasicNoteNow());
+    document.addEventListener("visibilitychange", () => {
+      if (document.visibilityState === "hidden") saveBasicNoteNow();
+    });
+    window.addEventListener("pagehide", () => { saveBasicNoteNow(); });
+    q("[data-editor-back]")?.addEventListener("click", async event => {
+      if (!basicBackendMode() || noteReadOnly || (!noteDirty && !autosaveTimer)) return;
+      event.preventDefault();
+      const href = event.currentTarget.href;
+      await saveBasicNoteNow();
+      location.href = href;
+    });
     resizeTitle();
     setupSheets();
     setupToolbar();
@@ -868,8 +1154,10 @@
     const params = new URLSearchParams(location.search);
     scope = clean(params.get("scope"), "personal").toLowerCase();
     folderName = clean(params.get("folder"));
+    noteId = clean(params.get("id"));
     reminderPreset = clean(params.get("type")).toLowerCase() === "reminder";
     if (!["family", "personal"].includes(scope)) scope = "personal";
+    if (scope === "family") visibility = "family-read";
 
     if (reminderPreset) {
       document.title = "Reminder · RuangKitha";
@@ -895,12 +1183,26 @@
     }
 
     try {
-      const [user, family] = await Promise.all([
-        AuthService.ambilUserAktif(),
-        AuthRouter.ambilFamilyAktif()
-      ]);
-      if (!user || !family) return;
+      const user = await AuthService.ambilUserAktif();
+      if (!user) return;
       userId = clean(user.id, "guest");
+
+      // Area Pribadi private tetap dapat bekerja walau user belum punya family.
+      // Family baru wajib ketika scope/visibility memang membutuhkan family_id.
+      try {
+        const family = await AuthRouter.ambilFamilyAktif();
+        activeFamilyId = clean(family?.id);
+      } catch (familyError) {
+        console.warn("[Catatan Editor Family Context]", familyError);
+        activeFamilyId = "";
+      }
+
+      noteBackendReady = Boolean(window.NotesService);
+
+      if (!reminderPreset && noteId && noteBackendReady) {
+        await loadBasicNote();
+      }
+
       loadTagCatalog();
       renderMetadataTags();
       maybeShowSensitiveNotice();

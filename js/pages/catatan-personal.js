@@ -4,6 +4,7 @@
   const q = selector => document.querySelector(selector);
   const qa = selector => Array.from(document.querySelectorAll(selector));
   let toastTimer = null;
+  let backendNoteCount = null;
 
   function clean(value) {
     return String(value ?? "").trim().replace(/\s+/g, " ");
@@ -15,7 +16,7 @@
     clearTimeout(toastTimer);
     el.textContent = message;
     el.hidden = false;
-    toastTimer = setTimeout(() => { el.hidden = true; }, 2600);
+    toastTimer = setTimeout(() => { el.hidden = true; }, 3000);
   }
 
   function openCreateSheet() {
@@ -43,11 +44,97 @@
 
     const empty = q("[data-search-empty]");
     if (empty) empty.hidden = !needle || visibleNotes > 0;
+    const backendEmpty = q("[data-backend-notes-empty]");
+    if (backendEmpty && backendNoteCount !== null) {
+      backendEmpty.hidden = backendNoteCount !== 0 || Boolean(needle);
+    }
+  }
+
+  function ensureBackendEmpty() {
+    let empty = q("[data-backend-notes-empty]");
+    if (empty) return empty;
+    const section = q(".catatan-notes-section");
+    if (!section) return null;
+    empty = document.createElement("div");
+    empty.className = "catatan-area-empty";
+    empty.dataset.backendNotesEmpty = "";
+    empty.innerHTML = '<ion-icon name="document-text-outline" aria-hidden="true"></ion-icon><strong>Belum ada catatan</strong><span>Buat Catatan Biasa pertamamu dari tombol +.</span>';
+    empty.hidden = true;
+    section.appendChild(empty);
+    return empty;
+  }
+
+  function noteCard(note) {
+    const button = document.createElement("button");
+    button.type = "button";
+    button.className = "catatan-note-card";
+    button.dataset.previewItem = "";
+    button.dataset.noteId = clean(note?.id);
+
+    const title = clean(note?.title) || "Tanpa judul";
+    const body = clean(note?.body_text) || "Catatan belum memiliki isi.";
+    const preview = body.length > 180 ? `${body.slice(0, 177)}...` : body;
+    const access = note?.visibility === "family-read" ? "Keluarga dapat melihat" : "Hanya Saya";
+    button.dataset.searchText = clean(`${title} ${body} ${note?.folder_name || ""} ${access}`);
+
+    const type = document.createElement("span");
+    type.className = "catatan-note-type";
+    type.innerHTML = '<ion-icon name="document-text-outline" aria-hidden="true"></ion-icon>';
+
+    const titleEl = document.createElement("strong");
+    titleEl.textContent = title;
+
+    const previewEl = document.createElement("span");
+    previewEl.className = "catatan-note-preview";
+    previewEl.textContent = preview;
+
+    const accessEl = document.createElement("small");
+    accessEl.className = "catatan-note-access";
+    accessEl.textContent = access;
+
+    button.append(type, titleEl);
+    if (note?.pinned) {
+      const pin = document.createElement("span");
+      pin.className = "catatan-note-special";
+      pin.textContent = "Dipin";
+      button.appendChild(pin);
+    }
+    button.append(previewEl, accessEl);
+    button.addEventListener("click", () => {
+      location.href = `catatan-editor.html?scope=personal&id=${encodeURIComponent(note.id)}`;
+    });
+    return button;
+  }
+
+  function renderBackendNotes(notes) {
+    const grid = q("[data-personal-note-grid]");
+    if (!grid) return;
+    grid.textContent = "";
+    backendNoteCount = Array.isArray(notes) ? notes.length : 0;
+    (notes || []).forEach(note => grid.appendChild(noteCard(note)));
+    const empty = ensureBackendEmpty();
+    if (empty) empty.hidden = Boolean(notes?.length);
+    filterPreview();
+  }
+
+  async function loadBackendNotes(userId) {
+    if (!window.NotesService) return;
+    try {
+      const notes = await window.NotesService.ambilBasicPersonal(userId);
+      renderBackendNotes(notes);
+    } catch (error) {
+      console.error("[Catatan Personal Backend]", error);
+      if (window.NotesService.schemaBelumTerpasang?.(error)) {
+        showToast("Backend Catatan belum aktif — jalankan SQL 004A di Supabase dulu.");
+      } else {
+        showToast(error?.message || "Catatan Pribadi belum dapat dimuat.");
+      }
+    }
   }
 
   function setupInteractions() {
     q("[data-add-folder]")?.addEventListener("click", () => {
-      showToast("Tambah Folder Pribadi akan aktif saat backend Catatan dibangun.");
+      showToast("Tambah Folder Pribadi masuk tahap backend Folder berikutnya.");
     });
 
     qa("[data-preview-item]").forEach(item => {
@@ -59,7 +146,8 @@
             return;
           }
         }
-        showToast("Editor Catatan Pribadi akan aktif pada tahap berikutnya.");
+        if (!item.classList.contains("catatan-note-card")) return;
+        showToast("Preview contoh akan digantikan data Supabase setelah SQL 004A aktif.");
       });
     });
 
@@ -106,11 +194,9 @@
     }
 
     try {
-      const [user, family] = await Promise.all([
-        AuthService.ambilUserAktif(),
-        AuthRouter.ambilFamilyAktif()
-      ]);
-      if (!user || !family) return;
+      const user = await AuthService.ambilUserAktif();
+      if (!user) return;
+      await loadBackendNotes(user.id);
     } catch (error) {
       console.error("[Catatan Personal]", error);
     } finally {
