@@ -25,8 +25,8 @@
 
   <link rel="stylesheet" href="css/style.css">
   <link rel="stylesheet" href="css/theme.css">
-  <link rel="stylesheet" href="css/pages/catatan-home.css?v=20260909-v200a29d">
-  <link rel="stylesheet" href="css/pages/catatan-editor.css?v=20260909-v200a29d">
+  <link rel="stylesheet" href="css/pages/catatan-home.css?v=20260910-v200a29e">
+  <link rel="stylesheet" href="css/pages/catatan-editor.css?v=20260910-v200a29e">
   <style id="ruangkitha-auth-cloak">html[data-auth-guard] body{visibility:hidden!important}</style>
 </head>
 <body>
@@ -45,6 +45,13 @@
   </header>
 
   <main class="catatan-editor-main">
+    <div class="catatan-member-readonly-nav" data-member-readonly-nav hidden>
+      <a class="catatan-member-readonly-back" href="catatan.html" data-member-readonly-back aria-label="Kembali ke Catatan Anggota">
+        <ion-icon name="arrow-back-outline" aria-hidden="true"></ion-icon>
+        <span>Kembali</span>
+      </a>
+    </div>
+
     <textarea class="catatan-title-input" data-note-title rows="1" maxlength="160" placeholder="Judul catatan..." aria-label="Judul catatan"></textarea>
 
     <section class="catatan-reminder-dedicated" data-reminder-dedicated hidden aria-label="Pengaturan reminder">
@@ -345,8 +352,8 @@
 <script src="js/backend/family-service.js?v=20260908-10"></script>
 <script src="js/backend/auth-router.js?v=20260909-v200a8"></script>
 <script src="js/backend/auth-guard.js?v=20260909-v200a8"></script>
-<script src="js/backend/notes-service.js?v=20260909-v200a29d"></script>
-<script src="js/pages/catatan-editor.js?v=20260909-v200a29d"></script>
-<script src="js/pwa.js?v=20260909-v200a29d"></script>
+<script src="js/backend/notes-service.js?v=20260910-v200a29e"></script>
+<script src="js/pages/catatan-editor.js?v=20260910-v200a29e"></script>
+<script src="js/pwa.js?v=20260910-v200a29e"></script>
 </body>
 </html>

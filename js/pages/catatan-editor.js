@@ -500,24 +500,23 @@
 
   function applyMemberReadOnlyHeaderFlow(memberReadOnly) {
     const header = q(".catatan-editor-header");
-    if (!header) return;
+    const readNav = q("[data-member-readonly-nav]");
+    const readBack = q("[data-member-readonly-back]");
 
-    if (memberReadOnly) {
-      header.setAttribute("data-member-readonly-header", "");
-      // Hard guard: member read-only harus selalu ikut document flow.
-      // Inline !important sengaja dipakai agar rule sticky global / cache CSS lama
-      // tidak dapat membuat header kembali menempel.
-      header.style.setProperty("position", "static", "important");
-      header.style.setProperty("top", "auto", "important");
-      header.style.setProperty("inset", "auto", "important");
-      header.style.setProperty("transform", "none", "important");
-    } else {
-      header.removeAttribute("data-member-readonly-header");
-      header.style.removeProperty("position");
-      header.style.removeProperty("top");
-      header.style.removeProperty("inset");
-      header.style.removeProperty("transform");
+    if (header) {
+      if (memberReadOnly) {
+        header.setAttribute("data-member-readonly-header", "");
+        header.hidden = true;
+        header.style.setProperty("display", "none", "important");
+      } else {
+        header.removeAttribute("data-member-readonly-header");
+        header.hidden = false;
+        header.style.removeProperty("display");
+      }
     }
+
+    if (readNav) readNav.hidden = !memberReadOnly;
+    if (readBack && memberReadOnly) readBack.href = editorBackUrl();
   }
 
   function applyContext() {
@@ -538,6 +537,8 @@
     const back = q("[data-editor-back]");
 
     if (back) back.href = editorBackUrl();
+    const memberReadBack = q("[data-member-readonly-back]");
+    if (memberReadBack) memberReadBack.href = editorBackUrl();
 
     if (sourceContext === "member" && noteReadOnly) {
       if (areaLabel) areaLabel.textContent = memberViewName ? `Milik ${memberViewName}` : "Milik anggota";
