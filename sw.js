@@ -1,4 +1,4 @@
-const CACHE_NAME = "family-superapp-v1.2.0e4-finance-navigation-kelola-1";
+const CACHE_NAME = "family-superapp-v1.2.0e4a-profile-preview-fit-1";
 const OFFLINE_URL = "./offline.html";
 
 const APP_FILES = [
