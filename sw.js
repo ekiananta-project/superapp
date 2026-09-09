@@ -1,4 +1,4 @@
-const CACHE_NAME = "family-superapp-v2.0.0a-container-foundation-1";
+const CACHE_NAME = "family-superapp-v2.0.0a1-container-ui-routing-1";
 const OFFLINE_URL = "./offline.html";
 
 const APP_FILES = [
@@ -10,6 +10,7 @@ const APP_FILES = [
   "./tagihan.html",
   "./css/components/account-visual-picker.css",
   "./css/components/avatar.css",
+  "./css/components/avatar-preview-dialog.css",
   "./css/components/quote.css",
   "./css/components/finance-period.css",
   "./css/pages/akun-backend.css",
@@ -74,6 +75,7 @@ const APP_FILES = [
   "./js/backend/supabase.js",
   "./js/components/account-visual-picker.js",
   "./js/components/avatar.js",
+  "./js/components/avatar-preview-dialog.js",
   "./js/components/finance-period.js",
   "./js/components/quote.js",
   "./js/pages/account-deletion.js",

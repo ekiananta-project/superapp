@@ -1,8 +1,9 @@
-/* v2.0.0a — Global Family Superapp home container. */
+/* v2.0.0a1 — Global Family Superapp home container + spacing/overflow hotfix. */
 .superapp-home {
   position: relative;
   min-height: 100dvh;
-  padding-bottom: calc(96px + env(safe-area-inset-bottom));
+  box-sizing: border-box;
+  padding: max(22px, env(safe-area-inset-top)) clamp(18px, 4vw, 28px) calc(96px + env(safe-area-inset-bottom));
 }
 
 .superapp-header {
@@ -14,10 +15,10 @@
 }
 
 .superapp-greeting { min-width: 0; }
-.superapp-greeting h1 { margin: 0; font-size: clamp(28px, 6vw, 38px); line-height: 1.12; }
+.superapp-greeting h1 { margin: 0; max-width: 100%; font-size: clamp(28px, 5.2vw, 36px); line-height: 1.12; overflow-wrap: anywhere; }
 .superapp-greeting p { margin: 7px 0 0; color: var(--color-text-secondary, #777d79); font-size: var(--font-size-sm, 14px); }
 
-.superapp-avatar-link { flex: 0 0 auto; text-decoration: none; }
+.superapp-avatar-link { flex: 0 0 auto; padding: 0; border: 0; background: transparent; text-decoration: none; cursor: pointer; }
 .superapp-avatar {
   display: grid;
   place-items: center;
@@ -76,13 +77,13 @@
 .today-loading { display: grid; gap: 9px; }
 .today-loading span { display: block; height: 38px; border-radius: 12px; background: var(--color-surface-soft,#eef1ef); animation: superapp-pulse 1.2s ease-in-out infinite alternate; }
 
-.today-art { position: relative; min-height: 136px; overflow: hidden; }
-.today-art small { position: absolute; z-index: 3; top: 8px; right: 2px; color: rgba(27,128,74,.65); font-size: 12px; line-height: 1.45; font-style: italic; text-align: right; transform: rotate(-3deg); }
+.today-art { position: relative; min-height: 150px; overflow: hidden; }
+.today-art small { position: absolute; z-index: 4; top: 2px; right: 4px; width: 128px; color: rgba(27,128,74,.65); font-size: 11px; line-height: 1.45; font-style: italic; text-align: right; transform: rotate(-2deg); }
 .today-art-leaf { position: absolute; z-index: 2; bottom: 8px; width: 34px; height: 76px; border-radius: 85% 15% 80% 20%; background: rgba(55,155,98,.34); transform-origin: bottom center; }
 .today-art .leaf-a { left: 23%; transform: rotate(-28deg); }
 .today-art .leaf-b { left: 38%; height: 92px; transform: rotate(5deg); }
 .today-art .leaf-c { left: 52%; height: 65px; transform: rotate(34deg); }
-.today-art-house { position: absolute; right: 6px; bottom: 4px; width: 72px; height: 55px; border-radius: 4px 4px 12px 12px; background: rgba(91,173,124,.2); }
+.today-art-house { position: absolute; right: 8px; bottom: 0; width: 72px; height: 55px; border-radius: 4px 4px 12px 12px; background: rgba(91,173,124,.2); }
 .today-art-house::before { content:""; position:absolute; left:-6px; top:-27px; width:60px; height:60px; border-left:8px solid rgba(55,155,98,.36); border-top:8px solid rgba(55,155,98,.36); transform:rotate(45deg); border-radius:4px; }
 .today-art-house i { position:absolute; left:27px; bottom:0; width:17px; height:29px; border-radius:5px 5px 0 0; background:rgba(55,155,98,.34); }
 
@@ -116,7 +117,7 @@
 .module-title small { color:var(--color-text-secondary,#7b817d); font-size:10px; line-height:1.35; }
 .module-chevron { color:var(--color-text-secondary,#7b817d); font-size:18px; }
 .module-preview { min-height:110px; margin-top:12px; border-radius:16px; }
-.finance-preview { display:flex; flex-direction:column; justify-content:center; padding:13px; background:rgba(48,168,118,.075); }
+.finance-preview { display:flex; min-width:0; flex-direction:column; justify-content:center; padding:13px; background:rgba(48,168,118,.075); }
 .finance-preview-top { display:flex; align-items:center; justify-content:space-between; gap:7px; }
 .finance-preview-label { display:inline-flex; align-items:center; gap:5px; color:var(--color-text-secondary,#7b817d); font-size:10px; }
 .finance-preview-label ion-icon { font-size:15px; color:#159447; }
@@ -124,7 +125,7 @@
 .finance-status.is-surplus { background:rgba(48,168,118,.13); color:#128840; }
 .finance-status.is-deficit { background:rgba(233,82,82,.12); color:#df4f4f; }
 .finance-status.is-neutral { background:rgba(128,136,131,.12); color:#707773; }
-.finance-preview > strong { display:block; margin-top:12px; font-size:clamp(18px,4.7vw,27px); line-height:1.1; letter-spacing:-.035em; white-space:nowrap; }
+.finance-preview > strong { display:block; width:100%; max-width:100%; margin-top:12px; overflow:hidden; font-size:clamp(17px,3.2vw,24px); line-height:1.1; letter-spacing:-.035em; white-space:nowrap; }
 .finance-preview > small { margin-top:7px; color:var(--color-text-secondary,#7b817d); font-size:9px; line-height:1.4; }
 .notes-preview { display:grid; grid-template-columns:74px minmax(0,1fr); align-items:center; gap:10px; padding:12px; background:rgba(241,179,62,.08); }
 .notes-paper { position:relative; width:58px; height:72px; border-radius:10px; background:#fff7d9; box-shadow:8px -7px 0 rgba(114,177,126,.20); transform:rotate(3deg); }
@@ -158,9 +159,10 @@
   bottom: 0;
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  width: min(100%, 640px);
+  box-sizing: border-box;
+  width: min(100vw, 640px);
   min-height: 76px;
-  padding: 9px 48px max(9px, env(safe-area-inset-bottom));
+  padding: 9px clamp(28px, 8vw, 54px) max(9px, env(safe-area-inset-bottom));
   border-top: 1px solid var(--color-border,#e0e4e1);
   background: rgba(255,255,255,.96);
   box-shadow: 0 -10px 30px rgba(20,40,28,.05);
@@ -194,4 +196,17 @@
   .fun-preview { grid-template-columns:minmax(0,1fr) 80px; padding:12px; }
   .fun-deck { transform:scale(.78); transform-origin:center; }
   .global-quick-nav { padding-left:28px; padding-right:28px; }
+}
+
+
+/* v2.0.0a1 guards: keep empty reminder/art and module content inside their cards. */
+.today-card.is-empty .today-card-body { min-height: 158px; align-items: center; }
+.today-card.is-empty .today-empty { max-width: 250px; margin: 0; }
+.module-heading, .finance-preview-top, .finance-preview-label { min-width: 0; }
+.finance-preview-label { overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+.finance-preview > small { overflow-wrap: anywhere; }
+
+@media (max-width: 430px) {
+  .superapp-home { padding-left: 16px; padding-right: 16px; }
+  .global-quick-nav { width: 100vw; }
 }

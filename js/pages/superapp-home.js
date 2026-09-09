@@ -129,13 +129,31 @@
     return { income, expense, net: income - expense };
   }
 
+  function fitSingleLineAmount(element, minSize = 13) {
+    if (!element) return;
+    element.style.removeProperty("font-size");
+    element.style.removeProperty("letter-spacing");
+    requestAnimationFrame(() => {
+      if (!element.clientWidth) return;
+      let size = parseFloat(getComputedStyle(element).fontSize) || 24;
+      element.style.fontSize = `${size}px`;
+      while (element.scrollWidth > element.clientWidth && size > minSize) {
+        size -= 1;
+        element.style.fontSize = `${size}px`;
+      }
+      if (element.scrollWidth > element.clientWidth) {
+        element.style.letterSpacing = "-0.06em";
+      }
+    });
+  }
+
   function renderCashflow(summary) {
     const net = Number(summary?.net || 0);
     const amount = q("[data-finance-net]");
     const status = q("[data-finance-status]");
     const helper = q("[data-finance-helper]");
     const icon = q("[data-finance-trend-icon]");
-    if (amount) amount.textContent = rupiah(net, true);
+    if (amount) { amount.textContent = rupiah(net, true); fitSingleLineAmount(amount); }
     status?.classList.remove("is-surplus", "is-deficit", "is-neutral");
 
     if (net > 0) {
@@ -181,6 +199,7 @@
 
   function renderReminders(items) {
     reminderSummary = items || [];
+    q(".today-card")?.classList.toggle("is-empty", reminderSummary.length === 0);
     const root = q("[data-reminder-list]");
     if (!root) return;
     root.replaceChildren();

@@ -28,8 +28,9 @@
   <link rel="stylesheet" href="css/pages/home.css?v=20260908-1">
   <link rel="stylesheet" href="css/pages/home-report-entry.css?v=20260909-e1">
   <link rel="stylesheet" href="css/theme.css">
+  <link rel="stylesheet" href="css/components/avatar-preview-dialog.css?v=20260909-v200a1">
   <link rel="stylesheet" href="css/pages/finance-nav-v117f.css?v=20260909-e4">
-  <link rel="stylesheet" href="css/pages/finance-container.css?v=20260909-v200a">
+  <link rel="stylesheet" href="css/pages/finance-container.css?v=20260909-v200a1">
   <style>
     .pilihan-sheet-tambah-dompet {
       margin-top: 8px;
@@ -45,7 +46,7 @@
   </style>
 </head>
 <body>
-<div class="aplikasi dengan-nav home-hydrating" data-home-root aria-busy="true">
+<div class="aplikasi dengan-nav home-hydrating finance-home-container" data-home-root aria-busy="true">
   <div class="finance-context-bar">
     <a class="finance-superapp-back" href="index.html" aria-label="Kembali ke Family Superapp">
       <ion-icon name="arrow-back-outline" aria-hidden="true"></ion-icon>
@@ -61,9 +62,9 @@
         <span class="sapaan-quote-emoji" data-quote-emoji aria-hidden="true">👀</span>
       </p>
     </div>
-    <a class="tombol-profil" href="profil.html" aria-label="Buka profil Family Superapp">
+    <button class="tombol-profil" type="button" data-avatar-preview-trigger data-avatar-preview-name-target="[data-nama-pengguna]" aria-label="Preview foto profil">
       <span data-avatar-pengguna data-avatar-fallback="icon" class="home-hydrate-avatar is-avatar-loading" aria-hidden="true"></span>
-    </a>
+    </button>
   </header>
 
   <section class="ringkasan-saldo">
@@ -148,6 +149,22 @@
   </section>
 </div>
 
+  <div class="avatar-preview-layer" data-avatar-preview-layer hidden>
+    <section class="avatar-preview-card" role="dialog" aria-modal="true" aria-labelledby="avatar-preview-title">
+      <button class="avatar-preview-close" type="button" data-avatar-preview-close aria-label="Tutup preview foto profil">
+        <ion-icon name="close-outline" aria-hidden="true"></ion-icon>
+      </button>
+      <div class="avatar-preview-visual">
+        <img data-avatar-preview-image alt="Foto profil" hidden>
+        <span class="avatar-preview-fallback" data-avatar-preview-fallback aria-hidden="true"><ion-icon name="person-outline"></ion-icon></span>
+      </div>
+      <div class="avatar-preview-info">
+        <small>Foto Profil</small>
+        <strong id="avatar-preview-title" data-avatar-preview-name>Pengguna</strong>
+      </div>
+    </section>
+  </div>
+
 <script type="module" src="https://unpkg.com/ionicons@8.0.13/dist/ionicons/ionicons.esm.js"></script>
 <script nomodule src="https://unpkg.com/ionicons@8.0.13/dist/ionicons/ionicons.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -162,6 +179,7 @@
 <script>window.HOME_BACKEND_MODE = true;</script>
 <script src="js/pages/home-backend.js?v=20260908-d1"></script>
 <script src="js/components/quote.js"></script>
-<script src="js/pwa.js?v=20260909-v200a"></script>
+<script src="js/components/avatar-preview-dialog.js?v=20260909-v200a1"></script>
+<script src="js/pwa.js?v=20260909-v200a1"></script>
 </body>
 </html>

@@ -1,0 +1,80 @@
+/* v2.0.0a1 — read-only avatar preview shared by Superapp and Finance home. */
+.avatar-preview-layer[hidden] { display: none !important; }
+.avatar-preview-layer:not([hidden]) {
+  position: fixed;
+  inset: 0;
+  z-index: 220;
+  display: grid;
+  place-items: center;
+  box-sizing: border-box;
+  min-height: 100vh;
+  min-height: 100dvh;
+  padding: max(18px, env(safe-area-inset-top)) 18px max(18px, env(safe-area-inset-bottom));
+  background: rgba(16, 20, 18, .72);
+  backdrop-filter: blur(8px);
+}
+.avatar-preview-card {
+  position: relative;
+  display: grid;
+  grid-template-rows: minmax(0, 1fr) auto;
+  width: min(100%, 560px);
+  max-height: calc(100vh - 36px);
+  max-height: calc(100dvh - 36px);
+  overflow: hidden;
+  border-radius: 26px;
+  background: var(--color-surface, #fff);
+  box-shadow: 0 24px 70px rgba(0,0,0,.30);
+}
+.avatar-preview-close {
+  position: absolute;
+  z-index: 3;
+  top: 12px;
+  right: 12px;
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: rgba(15,18,16,.72);
+  color: #fff;
+  cursor: pointer;
+}
+.avatar-preview-close ion-icon { font-size: 24px; }
+.avatar-preview-visual {
+  display: grid;
+  place-items: center;
+  min-height: 220px;
+  max-height: calc(100vh - 128px);
+  max-height: calc(100dvh - 128px);
+  overflow: hidden;
+  background: #101310;
+}
+.avatar-preview-visual img {
+  display: block;
+  width: 100%;
+  height: auto;
+  max-width: 100%;
+  max-height: calc(100vh - 128px);
+  max-height: calc(100dvh - 128px);
+  object-fit: contain;
+}
+.avatar-preview-fallback {
+  display: grid;
+  place-items: center;
+  width: 112px;
+  height: 112px;
+  border-radius: 50%;
+  background: rgba(255,255,255,.12);
+  color: rgba(255,255,255,.82);
+}
+.avatar-preview-fallback ion-icon { font-size: 58px; }
+.avatar-preview-info { padding: 18px 22px 20px; }
+.avatar-preview-info small { display: block; margin-bottom: 4px; color: var(--color-primary, #159447); font-size: 11px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; }
+.avatar-preview-info strong { display: block; overflow: hidden; font-size: 20px; line-height: 1.3; text-overflow: ellipsis; white-space: nowrap; }
+body.is-avatar-preview-open { overflow: hidden; }
+@media (max-width: 430px) {
+  .avatar-preview-layer:not([hidden]) { padding-left: 12px; padding-right: 12px; }
+  .avatar-preview-card { border-radius: 22px; }
+}
