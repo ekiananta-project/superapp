@@ -19,6 +19,7 @@
   let reminderDate = "";
   let reminderTime = "";
   let reminderPreset = false;
+  let familyReminderEnabled = false;
 
   function clean(value, fallback = "") {
     const text = String(value ?? "").trim().replace(/\s+/g, " ");
@@ -246,6 +247,7 @@
     }
 
     renderMetadataTags();
+    renderReminderDedicated();
   }
 
   function localDateString(date = new Date()) {
@@ -280,6 +282,89 @@
     if (chipLabel) chipLabel.textContent = hasReminder ? label : "Atur reminder";
     if (info) info.textContent = hasReminder ? label : "Belum diatur";
     if (remove) remove.hidden = !hasReminder;
+    renderReminderDedicated();
+  }
+
+  function renderReminderDedicated() {
+    if (!reminderPreset) return;
+
+    const familyScope = scope === "family";
+    const visibilityValue = q("[data-reminder-visibility-value]");
+    const visibilityArea = q("[data-reminder-visibility-area]");
+    const visibilityCard = q("[data-reminder-visibility-card]");
+    const visibilityIcon = visibilityCard?.querySelector(".catatan-reminder-editor-icon ion-icon");
+    const scheduleValue = q("[data-reminder-schedule-value]");
+    const familyCard = q("[data-reminder-family-card]");
+    const familyState = q("[data-reminder-family-state]");
+    const familyIcon = q("[data-reminder-family-icon]");
+
+    if (visibilityValue) {
+      visibilityValue.textContent = familyScope
+        ? "Keluarga"
+        : (visibility === "family-read" ? "Keluarga dapat melihat" : "Hanya Saya");
+    }
+    if (visibilityArea) visibilityArea.textContent = familyScope ? "Area Keluarga" : "Area Pribadi";
+    if (visibilityIcon) {
+      visibilityIcon.setAttribute("name", familyScope
+        ? "people-outline"
+        : (visibility === "family-read" ? "eye-outline" : "lock-closed-outline"));
+    }
+
+    if (scheduleValue) scheduleValue.textContent = reminderDate && reminderTime ? reminderLabel() : "Atur tanggal & waktu";
+
+    if (familyCard) {
+      familyCard.classList.toggle("is-locked", !familyScope);
+      familyCard.classList.toggle("is-on", familyScope && familyReminderEnabled);
+      familyCard.setAttribute("aria-label", familyScope
+        ? `Ingatkan keluarga: ${familyReminderEnabled ? "aktif" : "belum aktif"}`
+        : "Ingatkan keluarga tersedia setelah reminder dipindahkan ke Area Keluarga");
+    }
+    if (familyState) {
+      familyState.textContent = !familyScope
+        ? "Hanya di Area Keluarga"
+        : (familyReminderEnabled ? "Aktif untuk keluarga" : "Belum aktif");
+    }
+    if (familyIcon) {
+      familyIcon.setAttribute("name", !familyScope
+        ? "lock-closed-outline"
+        : (familyReminderEnabled ? "checkmark-circle" : "notifications-outline"));
+    }
+  }
+
+  function showFamilyPushPrompt() {
+    const prompt = q("[data-reminder-family-prompt]");
+    if (!prompt) return;
+    prompt.hidden = false;
+    requestAnimationFrame(() => prompt.classList.add("is-visible"));
+  }
+
+  function hideFamilyPushPrompt() {
+    const prompt = q("[data-reminder-family-prompt]");
+    if (!prompt) return;
+    prompt.classList.remove("is-visible");
+    setTimeout(() => { prompt.hidden = true; }, 150);
+  }
+
+  function updateReminderUrlScope() {
+    const url = new URL(location.href);
+    url.searchParams.set("scope", scope);
+    url.searchParams.set("type", "reminder");
+    if (!folderName) url.searchParams.delete("folder");
+    history.replaceState(history.state, "", `${url.pathname}${url.search}${url.hash}`);
+  }
+
+  function pushReminderToFamily() {
+    if (scope === "family") return;
+    scope = "family";
+    visibility = "family-read";
+    familyReminderEnabled = true;
+    folderName = "";
+    hideFamilyPushPrompt();
+    updateReminderUrlScope();
+    applyContext();
+    renderVisibility();
+    renderReminderDedicated();
+    showToast("Reminder dipindahkan ke Area Keluarga — pengingat keluarga aktif.");
   }
 
   function openReminderSheet() {
@@ -334,6 +419,7 @@
       const active = el.dataset.visibilityCheck === visibility;
       el.setAttribute("name", active ? "checkmark-circle" : "ellipse-outline");
     });
+    renderReminderDedicated();
   }
 
   function togglePin() {
@@ -393,9 +479,14 @@
     if (add) add.hidden = editorMode !== "edit";
 
     const info = q("[data-info-tags]");
-    if (info) {
-      const tags = Array.from(selectedTags).sort();
-      info.textContent = tags.length ? tags.map(tag => `#${tag}`).join(" · ") : "Belum ada tag";
+    const tags = Array.from(selectedTags).sort();
+    if (info) info.textContent = tags.length ? tags.map(tag => `#${tag}`).join(" · ") : "Belum ada tag";
+
+    const reminderTagSummary = q("[data-reminder-tag-summary]");
+    if (reminderTagSummary) {
+      reminderTagSummary.textContent = tags.length
+        ? (tags.length === 1 ? `#${tags[0]}` : `${tags.length} tag dipilih`)
+        : "Belum ada tag";
     }
   }
 
@@ -465,7 +556,7 @@
   }
 
   function setMode(mode, announce = true) {
-    editorMode = mode === "view" ? "view" : "edit";
+    editorMode = reminderPreset ? "edit" : (mode === "view" ? "view" : "edit");
     const root = q("[data-catatan-editor]");
     const title = q("[data-note-title]");
     const editor = q("[data-note-content]");
@@ -478,9 +569,13 @@
 
     const view = editorMode === "view";
     root?.classList.toggle("is-view-mode", view);
+    root?.classList.toggle("is-reminder-editor", reminderPreset);
+    q("[data-reminder-dedicated]")?.toggleAttribute("hidden", !reminderPreset);
+    q("[data-reminder-note-label]")?.toggleAttribute("hidden", !reminderPreset);
+    if (toggle) toggle.hidden = reminderPreset;
     if (title) title.readOnly = view;
     if (editor) editor.contentEditable = view ? "false" : "true";
-    if (toolbar) toolbar.hidden = view;
+    if (toolbar) toolbar.hidden = view || reminderPreset;
     if (visibilityChip) visibilityChip.disabled = view || scope !== "personal";
     if (reminderChip) reminderChip.disabled = view;
     if (toggle) toggle.setAttribute("aria-label", view ? "Edit catatan" : "Lihat hasil catatan");
@@ -521,6 +616,25 @@
     q("[data-reminder-chip]")?.addEventListener("click", openReminderSheet);
     q("[data-reminder-save]")?.addEventListener("click", saveReminder);
     q("[data-reminder-remove]")?.addEventListener("click", removeReminder);
+    q("[data-reminder-schedule-card]")?.addEventListener("click", openReminderSheet);
+    q("[data-reminder-tag-card]")?.addEventListener("click", openTagSheet);
+    q("[data-reminder-visibility-card]")?.addEventListener("click", () => {
+      if (!reminderPreset) return;
+      if (scope === "personal") openSheet("[data-visibility-layer]", true);
+      else showToast("Reminder ini berada di Area Keluarga.");
+    });
+    q("[data-reminder-family-card]")?.addEventListener("click", () => {
+      if (!reminderPreset) return;
+      if (scope !== "family") {
+        showFamilyPushPrompt();
+        return;
+      }
+      familyReminderEnabled = !familyReminderEnabled;
+      renderReminderDedicated();
+      showToast(familyReminderEnabled ? "Pengingat keluarga diaktifkan." : "Pengingat keluarga dimatikan.");
+    });
+    q("[data-reminder-family-cancel]")?.addEventListener("click", hideFamilyPushPrompt);
+    q("[data-reminder-family-push]")?.addEventListener("click", pushReminderToFamily);
     q("[data-tag-close]")?.addEventListener("click", () => closeTagSheet(false));
     q("[data-tag-cancel]")?.addEventListener("click", () => closeTagSheet(false));
     q("[data-tag-apply]")?.addEventListener("click", () => closeTagSheet(true));
@@ -579,7 +693,9 @@
           return;
         }
         if (action === "promote") {
-          showToast("Pemindahan permanen ke Catatan Keluarga akan aktif bersama backend Catatan.");
+          setLayer("[data-info-layer]", false);
+          if (reminderPreset && scope === "personal") showFamilyPushPrompt();
+          else showToast("Pemindahan permanen ke Catatan Keluarga akan aktif bersama backend Catatan.");
           return;
         }
         const names = {
@@ -757,11 +873,16 @@
 
     if (reminderPreset) {
       document.title = "Reminder · RuangKitha";
+      if (scope === "family") visibility = "family-read";
       const title = q("[data-note-title]");
+      const content = q("[data-note-content]");
       if (title) {
         title.placeholder = "Judul reminder...";
         title.setAttribute("aria-label", "Judul reminder");
       }
+      if (content) content.dataset.placeholder = "Tulis catatan reminder...";
+      const infoTitle = document.getElementById("catatan-info-title");
+      if (infoTitle) infoTitle.textContent = "Info Reminder";
     }
 
     setupEditor();

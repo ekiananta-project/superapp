@@ -709,3 +709,178 @@ html[data-theme="dark"] .catatan-reminder-fields input {
   .catatan-reminder-actions .is-primary,
   .catatan-reminder-actions .is-danger { width: 100%; }
 }
+
+
+/* =========================================================
+   v2.0.0a27 — Dedicated Reminder editor
+   ========================================================= */
+.catatan-reminder-dedicated { display: grid; gap: 12px; margin: 14px 0 12px; }
+.catatan-reminder-dedicated[hidden] { display: none !important; }
+
+.catatan-reminder-editor-card {
+  appearance: none;
+  width: 100%;
+  min-width: 0;
+  min-height: 88px;
+  display: grid;
+  grid-template-columns: 38px minmax(0,1fr) 22px;
+  align-items: center;
+  gap: 12px;
+  padding: 15px 16px;
+  border: 1px solid var(--color-border, #e0e4e1);
+  border-radius: 19px;
+  background: var(--color-surface, #fff);
+  color: var(--color-text, #18201b);
+  box-shadow: var(--shadow-sm, 0 5px 16px rgba(20,40,28,.04));
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  box-sizing: border-box;
+}
+.catatan-reminder-editor-icon {
+  display: grid;
+  place-items: center;
+  width: 38px;
+  height: 38px;
+  border-radius: 13px;
+  background: color-mix(in srgb, var(--color-primary, #159447) 9%, var(--color-surface-soft, #eef1ef));
+  color: var(--color-primary, #159447);
+}
+.catatan-reminder-editor-icon ion-icon { font-size: 20px; }
+.catatan-reminder-editor-copy { min-width: 0; display: grid; gap: 3px; }
+.catatan-reminder-editor-copy small {
+  color: var(--color-text-soft, #6f7b73);
+  font-size: 9.5px;
+  line-height: 1.2;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .045em;
+}
+.catatan-reminder-editor-copy strong {
+  min-width: 0;
+  overflow: hidden;
+  color: var(--color-text, #18201b);
+  font-size: 12.5px;
+  line-height: 1.35;
+  font-weight: 700;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.catatan-reminder-editor-copy em {
+  color: var(--color-text-soft, #6f7b73);
+  font-size: 9px;
+  line-height: 1.35;
+  font-style: normal;
+  font-weight: 500;
+}
+.catatan-reminder-editor-chevron,
+.catatan-reminder-editor-state-icon { justify-self: end; color: var(--color-text-soft, #6f7b73); font-size: 18px; }
+.catatan-reminder-editor-split { display: grid; grid-template-columns: 1.08fr .92fr; gap: 10px; }
+.catatan-reminder-editor-split .catatan-reminder-editor-card {
+  min-height: 104px;
+  grid-template-columns: 34px minmax(0,1fr);
+  grid-template-areas: "icon state" "copy copy";
+  align-content: center;
+  gap: 9px 10px;
+  padding: 14px;
+}
+.catatan-reminder-editor-split .catatan-reminder-editor-icon { grid-area: icon; width: 34px; height: 34px; border-radius: 12px; }
+.catatan-reminder-editor-split .catatan-reminder-editor-copy { grid-area: copy; }
+.catatan-reminder-editor-split .catatan-reminder-editor-state-icon { grid-area: state; align-self: center; }
+.catatan-reminder-editor-split .catatan-reminder-editor-copy strong { white-space: normal; font-size: 10.5px; }
+
+.catatan-reminder-editor-card.is-family.is-locked {
+  border-color: color-mix(in srgb, var(--color-border, #e0e4e1) 80%, transparent);
+  background: color-mix(in srgb, var(--color-surface-soft, #eef1ef) 78%, var(--color-surface, #fff));
+  color: color-mix(in srgb, var(--color-text-soft, #6f7b73) 70%, transparent);
+  box-shadow: none;
+}
+.catatan-reminder-editor-card.is-family.is-locked .catatan-reminder-editor-icon {
+  background: color-mix(in srgb, var(--color-text-soft, #6f7b73) 8%, var(--color-surface-soft, #eef1ef));
+  color: color-mix(in srgb, var(--color-text-soft, #6f7b73) 78%, transparent);
+}
+.catatan-reminder-editor-card.is-family.is-locked strong,
+.catatan-reminder-editor-card.is-family.is-locked small,
+.catatan-reminder-editor-card.is-family.is-locked .catatan-reminder-editor-state-icon { color: color-mix(in srgb, var(--color-text-soft, #6f7b73) 72%, transparent); }
+.catatan-reminder-editor-card.is-family.is-on {
+  border-color: color-mix(in srgb, var(--color-primary, #159447) 38%, var(--color-border, #e0e4e1));
+  background: color-mix(in srgb, var(--color-primary, #159447) 7%, var(--color-surface, #fff));
+}
+.catatan-reminder-editor-card.is-family.is-on .catatan-reminder-editor-state-icon { color: var(--color-primary, #159447); }
+
+.catatan-reminder-family-prompt {
+  display: grid;
+  grid-template-columns: 34px minmax(0,1fr);
+  gap: 11px;
+  margin-top: -2px;
+  padding: 13px 14px;
+  border: 1px solid color-mix(in srgb, #d39b36 26%, var(--color-border, #e0e4e1));
+  border-radius: 16px;
+  background: color-mix(in srgb, #f0aa39 8%, var(--color-surface, #fff));
+  color: var(--color-text, #18201b);
+  opacity: 0;
+  transform: translateY(-5px);
+  transition: opacity .15s ease, transform .15s ease;
+}
+.catatan-reminder-family-prompt[hidden] { display: none !important; }
+.catatan-reminder-family-prompt.is-visible { opacity: 1; transform: translateY(0); }
+.catatan-reminder-family-prompt-icon {
+  display: grid; place-items: center; width: 34px; height: 34px; border-radius: 11px;
+  background: color-mix(in srgb, #e99a2e 13%, var(--color-surface, #fff)); color: #a96116;
+}
+.catatan-reminder-family-prompt-icon ion-icon { font-size: 19px; }
+.catatan-reminder-family-prompt strong { display: block; margin: 1px 0 4px; font-size: 10.5px; line-height: 1.3; }
+.catatan-reminder-family-prompt p { margin: 0; color: var(--color-text-soft, #6f7b73); font-size: 9px; line-height: 1.5; }
+.catatan-reminder-family-prompt-actions { display: flex; justify-content: flex-end; gap: 7px; margin-top: 10px; }
+.catatan-reminder-family-prompt-actions button {
+  appearance: none; min-height: 34px; padding: 0 11px; border: 1px solid var(--color-border, #e0e4e1); border-radius: 10px;
+  background: var(--color-surface, #fff); color: var(--color-text, #18201b); font: inherit; font-size: 8.75px; font-weight: 700; cursor: pointer;
+}
+.catatan-reminder-family-prompt-actions button.is-primary { border-color: transparent; background: var(--color-primary, #159447); color: #fff; }
+
+.catatan-reminder-note-label {
+  margin-bottom: 9px; color: var(--color-text-soft, #6f7b73); font-size: 9.5px; line-height: 1.2; font-weight: 700;
+  text-transform: uppercase; letter-spacing: .045em;
+}
+.catatan-reminder-note-label[hidden] { display: none !important; }
+
+.catatan-editor.is-reminder-editor .catatan-editor-context,
+.catatan-editor.is-reminder-editor .catatan-editor-toolbar,
+.catatan-editor.is-reminder-editor .catatan-editor-mode { display: none !important; }
+.catatan-editor.is-reminder-editor .catatan-editor-main { padding-top: 6px; padding-bottom: calc(34px + env(safe-area-inset-bottom)); }
+.catatan-editor.is-reminder-editor .catatan-title-input {
+  min-height: 88px;
+  max-height: 126px;
+  padding: 18px 17px;
+  border: 1px solid var(--color-border, #e0e4e1);
+  border-radius: 19px;
+  background: var(--color-surface, #fff);
+  box-shadow: var(--shadow-sm, 0 5px 16px rgba(20,40,28,.04));
+  font-size: clamp(18px, 5.5vw, 23px);
+  line-height: 1.3;
+  box-sizing: border-box;
+}
+.catatan-editor.is-reminder-editor .catatan-writing-canvas {
+  min-height: 278px;
+  margin-top: 12px;
+  padding: 16px 17px 20px;
+  border: 1px solid var(--color-border, #e0e4e1);
+  border-radius: 19px;
+  background: var(--color-surface, #fff);
+  box-shadow: var(--shadow-sm, 0 5px 16px rgba(20,40,28,.04));
+  box-sizing: border-box;
+}
+.catatan-editor.is-reminder-editor .catatan-content-editor { min-height: 220px; font-size: 14px; line-height: 1.65; }
+.catatan-editor.is-reminder-editor .catatan-editor-toast { bottom: max(22px, env(safe-area-inset-bottom)); }
+
+html[data-theme="dark"] .catatan-reminder-editor-card,
+html[data-theme="dark"] .catatan-editor.is-reminder-editor .catatan-title-input,
+html[data-theme="dark"] .catatan-editor.is-reminder-editor .catatan-writing-canvas,
+html[data-theme="dark"] .catatan-reminder-family-prompt-actions button { background: var(--color-surface, #212422); }
+html[data-theme="dark"] .catatan-reminder-editor-card.is-family.is-locked { background: color-mix(in srgb, var(--color-surface-soft, #2c302d) 86%, #1f2220); }
+
+@media (max-width: 350px) {
+  .catatan-reminder-editor-split { grid-template-columns: 1fr; }
+  .catatan-reminder-editor-split .catatan-reminder-editor-card { min-height: 86px; }
+}
+.catatan-editor.is-reminder-editor .catatan-editor-menu { grid-column: 3; }
