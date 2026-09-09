@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="id" data-auth-guard="login">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#0B0D0C">
+  <meta name="application-name" content="Family Superapp">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Family">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="robots" content="noindex,nofollow,noarchive">
+  <meta name="referrer" content="strict-origin-when-cross-origin">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32.png">
+  <link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png">
+  <link rel="apple-touch-icon" sizes="180x180" href="icons/apple-touch-icon.png">
+  <script src="js/theme.js"></script>
+  <title>Laporan &amp; Insight</title>
+  <link rel="preconnect" href="https://eipviruaffujxsfpupki.supabase.co" crossorigin>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/theme.css">
+  <link rel="stylesheet" href="css/pages/finance-nav-v117f.css?v=20260908-2">
+  <link rel="stylesheet" href="css/pages/laporan-finance.css?v=20260908-e1">
+</head>
+<body>
+<div class="aplikasi dengan-nav report-app" data-report-root aria-busy="true">
+  <header class="header-halaman report-header">
+    <a class="tombol-ikon" href="index.html" aria-label="Kembali"><ion-icon name="arrow-back-outline"></ion-icon></a>
+    <h1>Laporan &amp; Insight</h1>
+    <button class="tombol-ikon" type="button" data-report-refresh aria-label="Muat ulang laporan"><ion-icon name="refresh-outline"></ion-icon></button>
+  </header>
+
+  <main class="konten-halaman report-page">
+    <div class="notifikasi report-notice" data-report-notice hidden></div>
+
+    <section class="report-filter-card" aria-label="Filter laporan">
+      <div class="report-filter-head">
+        <div>
+          <small>Periode Laporan</small>
+          <strong data-report-range-label>Memuat…</strong>
+        </div>
+        <ion-icon name="calendar-outline" aria-hidden="true"></ion-icon>
+      </div>
+      <div class="report-presets" role="group" aria-label="Pilihan periode">
+        <button class="report-preset is-active" type="button" data-report-preset="this">Bulan Ini</button>
+        <button class="report-preset" type="button" data-report-preset="last">Bulan Lalu</button>
+        <button class="report-preset" type="button" data-report-preset="custom">Custom</button>
+      </div>
+    </section>
+
+    <section class="report-hero" data-report-hero>
+      <div class="report-hero-top">
+        <span class="report-hero-icon"><ion-icon name="analytics-outline"></ion-icon></span>
+        <span class="report-status" data-report-cash-status>Memuat</span>
+      </div>
+      <span class="report-hero-label">Arus Kas Bersih</span>
+      <strong data-report-net>Rp 0</strong>
+      <p data-report-net-note>Selisih pemasukan dan pengeluaran keluarga pada periode ini.</p>
+    </section>
+
+    <section class="report-money-grid" aria-label="Ringkasan arus kas">
+      <article class="report-money-card income">
+        <span><ion-icon name="arrow-down-outline"></ion-icon>Pemasukan</span>
+        <strong data-report-income>Rp 0</strong>
+      </article>
+      <article class="report-money-card expense">
+        <span><ion-icon name="arrow-up-outline"></ion-icon>Pengeluaran</span>
+        <strong data-report-expense>Rp 0</strong>
+      </article>
+    </section>
+
+    <section class="report-section">
+      <div class="report-section-head">
+        <div><h2>Insight Utama</h2><p>Ringkasan yang paling perlu diperhatikan.</p></div>
+      </div>
+      <div class="report-insight-list" data-report-insights></div>
+    </section>
+
+    <section class="report-section report-card-section">
+      <div class="report-section-head">
+        <div><h2>Pengeluaran per Kategori</h2><p>Komposisi pengeluaran pada periode laporan.</p></div>
+        <small data-report-expense-count>0 kategori</small>
+      </div>
+      <div class="report-category-list" data-report-expense-categories></div>
+    </section>
+
+    <section class="report-section report-card-section">
+      <div class="report-section-head">
+        <div><h2>Budget vs Aktual</h2><p>Budget yang rentangnya bersinggungan dengan periode laporan.</p></div>
+      </div>
+      <div class="report-three-values">
+        <div><span>Total Budget</span><strong data-report-budget-total>Rp 0</strong></div>
+        <div><span>Terpakai</span><strong data-report-budget-spent>Rp 0</strong></div>
+        <div><span>Sisa</span><strong data-report-budget-remaining>Rp 0</strong></div>
+      </div>
+      <p class="report-context-note" data-report-budget-note>Memuat budget…</p>
+      <div class="report-budget-list" data-report-budgets></div>
+    </section>
+
+    <section class="report-section report-card-section">
+      <div class="report-section-head">
+        <div><h2>Tagihan</h2><p>Tagihan dengan jatuh tempo di periode laporan.</p></div>
+        <a href="tagihan.html">Buka Tagihan</a>
+      </div>
+      <div class="report-three-values bills">
+        <div><span>Kewajiban</span><strong data-report-bill-total>Rp 0</strong></div>
+        <div><span>Sudah Dibayar</span><strong data-report-bill-paid>Rp 0</strong></div>
+        <div><span>Sisa</span><strong data-report-bill-remaining>Rp 0</strong></div>
+      </div>
+      <div class="report-inline-status" data-report-bill-status>Belum ada tagihan pada periode ini.</div>
+    </section>
+
+    <section class="report-section report-card-section">
+      <div class="report-section-head">
+        <div><h2>Posisi Dompet</h2><p>Saldo terkini; tidak mengikuti filter periode.</p></div>
+        <a href="dompet.html">Kelola</a>
+      </div>
+      <div class="report-wallet-total">
+        <span>Total Semua Dompet</span>
+        <strong data-report-wallet-total>Rp 0</strong>
+      </div>
+      <div class="report-wallet-list" data-report-wallets></div>
+    </section>
+  </main>
+
+  <nav class="navigasi-bawah finance-nav-v5" aria-label="Navigasi Finance">
+    <a class="navigasi-item is-aktif" href="index.html"><ion-icon name="home-outline"></ion-icon><span>Home</span></a>
+    <a class="navigasi-item" href="perencanaan.html"><ion-icon name="calendar-outline"></ion-icon><span>Perencanaan</span></a>
+    <a class="tombol-tambah" href="transaksi.html" aria-label="Tambah transaksi"><ion-icon name="add-outline"></ion-icon></a>
+    <a class="navigasi-item" href="akun.html"><ion-icon name="grid-outline"></ion-icon><span>Kategori</span></a>
+    <a class="navigasi-item" href="dompet.html"><ion-icon name="wallet-outline"></ion-icon><span>Dompet</span></a>
+  </nav>
+</div>
+
+<div class="lapisan" data-report-custom-layer hidden>
+  <section class="bottom-sheet report-custom-sheet" role="dialog" aria-modal="true" aria-labelledby="report-custom-title">
+    <div class="sheet-handle"></div>
+    <div class="sheet-header">
+      <div>
+        <h2 id="report-custom-title">Periode Custom</h2>
+        <p class="sheet-subjudul">Maksimal 367 hari agar laporan tetap ringan.</p>
+      </div>
+      <button class="tombol-ikon" type="button" data-report-custom-close aria-label="Tutup"><ion-icon name="close-outline"></ion-icon></button>
+    </div>
+    <div class="report-custom-fields">
+      <label><span>Tanggal Mulai</span><input class="input" type="date" data-report-custom-start></label>
+      <label><span>Tanggal Selesai</span><input class="input" type="date" data-report-custom-end></label>
+    </div>
+    <div class="report-custom-error" data-report-custom-error hidden></div>
+    <button class="tombol-utama" type="button" data-report-custom-apply>Terapkan Periode</button>
+  </section>
+</div>
+
+<script type="module" src="https://unpkg.com/ionicons@8.0.13/dist/ionicons/ionicons.esm.js"></script>
+<script nomodule src="https://unpkg.com/ionicons@8.0.13/dist/ionicons/ionicons.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="js/backend/supabase.js"></script>
+<script src="js/backend/auth-service.js"></script>
+<script src="js/backend/family-service.js?v=20260908-10"></script>
+<script src="js/backend/finance-service.js?v=20260908-e1"></script>
+<script src="js/backend/finance-cache.js?v=20260908-d1"></script>
+<script src="js/backend/auth-router.js?v=20260908-2"></script>
+<script src="js/backend/auth-guard.js?v=20260908-2"></script>
+<script src="js/pages/laporan-finance-backend.js?v=20260908-e1"></script>
+<script src="js/pwa.js?v=20260908-e1"></script>
+</body>
+</html>

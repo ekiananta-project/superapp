@@ -26,6 +26,7 @@
   <link rel="stylesheet" href="css/components/avatar.css">
   <link rel="stylesheet" href="css/components/finance-period.css?v=20260908-1">
   <link rel="stylesheet" href="css/pages/home.css?v=20260908-1">
+  <link rel="stylesheet" href="css/pages/home-report-entry.css?v=20260908-e1">
   <link rel="stylesheet" href="css/theme.css">
   <link rel="stylesheet" href="css/pages/finance-nav-v117f.css?v=20260908-2">
   <style>
@@ -111,6 +112,17 @@
         <strong data-home-pengeluaran class="home-hydrate-summary">Rp 0</strong>
       </article>
     </section>
+
+    <section class="home-report-entry" aria-label="Laporan keuangan">
+      <a class="home-report-link" href="laporan.html">
+        <span class="home-report-icon"><ion-icon name="analytics-outline" aria-hidden="true"></ion-icon></span>
+        <span class="home-report-copy">
+          <strong>Laporan &amp; Insight</strong>
+          <span>Lihat arus kas, kategori, budget, tagihan, dan posisi dompet.</span>
+        </span>
+        <ion-icon name="chevron-forward-outline" aria-hidden="true"></ion-icon>
+      </a>
+    </section>
   </main>
 
   <nav class="navigasi-bawah finance-nav-v5" aria-label="Navigasi Finance">
@@ -144,7 +156,7 @@
 <script src="js/backend/supabase.js"></script>
 <script src="js/backend/auth-service.js"></script>
 <script src="js/backend/family-service.js?v=20260908-10"></script>
-<script src="js/backend/finance-service.js?v=20260908-8"></script>
+<script src="js/backend/finance-service.js?v=20260908-e1"></script>
 <script src="js/backend/finance-cache.js?v=20260908-d1"></script>
 <script src="js/backend/auth-router.js?v=20260908-2"></script>
 <script src="js/backend/auth-guard.js?v=20260908-2"></script>
@@ -152,6 +164,6 @@
 <script>window.HOME_BACKEND_MODE = true;</script>
 <script src="js/pages/home-backend.js?v=20260908-d1"></script>
 <script src="js/components/quote.js"></script>
-<script src="js/pwa.js?v=20260908-8"></script>
+<script src="js/pwa.js?v=20260908-e1"></script>
 </body>
 </html>

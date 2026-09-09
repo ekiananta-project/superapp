@@ -1,4 +1,4 @@
-const CACHE_NAME = "family-superapp-v1.2.0d4-editable-bill-payment-1";
+const CACHE_NAME = "family-superapp-v1.2.0e-finance-report-insight-1";
 const OFFLINE_URL = "./offline.html";
 
 const APP_FILES = [
@@ -24,6 +24,8 @@ const APP_FILES = [
   "./css/pages/family-invitation.css",
   "./css/pages/kelola-undangan.css",
   "./css/pages/home.css",
+  "./css/pages/home-report-entry.css",
+  "./css/pages/laporan-finance.css",
   "./css/pages/keamanan.css",
   "./css/pages/keluarga-awal.css",
   "./css/pages/keluarga-member-management.css",
@@ -43,6 +45,7 @@ const APP_FILES = [
   "./detail-transaksi.html",
   "./dompet-detail.html",
   "./laporan-dompet.html",
+  "./laporan.html",
   "./dompet-form.html",
   "./dompet.html",
   "./icons/apple-touch-icon.png",
@@ -72,6 +75,7 @@ const APP_FILES = [
   "./js/pages/dompet-backend.js",
   "./js/pages/dompet-detail-backend.js",
   "./js/pages/laporan-dompet-backend.js",
+  "./js/pages/laporan-finance-backend.js",
   "./js/pages/dompet-form-backend.js",
   "./js/pages/home-backend.js",
   "./js/pages/keamanan.js",

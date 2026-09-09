@@ -1099,7 +1099,98 @@
     };
   }
 
+
+
+  async function ambilAkunLaporan(familyId) {
+    if (!familyId) throw new Error("familyId wajib diisi.");
+
+    const { data, error } = await client
+      .from("finance_accounts")
+      .select(
+        "id,family_id,name,kind,parent_id,icon_type,icon_value,color,sort_order,created_by,created_at,updated_at,archived_at"
+      )
+      .eq("family_id", familyId)
+      .order("sort_order", { ascending: true });
+
+    lemparJikaError(error);
+    return data || [];
+  }
+
+  async function ambilTransaksiRentangLengkap({
+    familyId,
+    startDate,
+    endDate,
+    pageSize = 1000,
+    maxRows = 20000
+  } = {}) {
+    if (!familyId) throw new Error("familyId wajib diisi.");
+    if (!startDate || !endDate) throw new Error("Rentang tanggal laporan wajib diisi.");
+    if (String(endDate) < String(startDate)) throw new Error("Tanggal selesai tidak boleh sebelum tanggal mulai.");
+
+    const safePageSize = Math.min(1000, Math.max(100, Number(pageSize || 1000)));
+    const safeMaxRows = Math.max(safePageSize, Number(maxRows || 20000));
+    const rows = [];
+    let offset = 0;
+
+    while (offset < safeMaxRows) {
+      const take = Math.min(safePageSize, safeMaxRows - offset);
+      const { data, error } = await client
+        .from("finance_transactions")
+        .select(
+          "id,family_id,kind,account_id,amount,transfer_fee,transfer_fee_mode,occurred_on,note,created_by,created_by_name,client_operation_id,created_at,updated_at,voided_at"
+        )
+        .eq("family_id", familyId)
+        .is("voided_at", null)
+        .gte("occurred_on", startDate)
+        .lte("occurred_on", endDate)
+        .order("occurred_on", { ascending: false })
+        .order("created_at", { ascending: false })
+        .range(offset, offset + take - 1);
+
+      lemparJikaError(error);
+      const batch = data || [];
+      rows.push(...batch);
+
+      if (batch.length < take) return rows;
+      offset += batch.length;
+    }
+
+    throw new Error("Transaksi pada periode ini terlalu banyak untuk satu laporan. Perkecil rentang tanggal lalu coba lagi.");
+  }
+
+  async function ambilTagihanRentang({
+    familyId,
+    startDate,
+    endDate
+  } = {}) {
+    if (!familyId) throw new Error("familyId wajib diisi.");
+    if (!startDate || !endDate) throw new Error("Rentang tanggal tagihan wajib diisi.");
+    if (String(endDate) < String(startDate)) throw new Error("Tanggal selesai tidak boleh sebelum tanggal mulai.");
+
+    const { data, error } = await client.rpc(
+      "finance_bill_list_range",
+      {
+        p_family_id: familyId,
+        p_start_date: startDate,
+        p_end_date: endDate
+      }
+    );
+
+    lemparJikaError(error);
+    return (data || []).map(item => ({
+      ...item,
+      amount: Number(item.amount || 0),
+      paid_amount: Number(item.paid_amount || 0),
+      remaining_amount: Number(item.remaining_amount || 0),
+      payment_count: Number(item.payment_count || 0),
+      due_day: Number(item.due_day || 1)
+    }));
+  }
+
   window.FinanceService = {
+    ambilAkunLaporan,
+    ambilTransaksiRentangLengkap,
+    ambilTagihanRentang,
     ambilTagihanRingkas,
     ambilTagihanBulan,
     simpanTagihan,
