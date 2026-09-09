@@ -1,4 +1,4 @@
-/* v2.0.0a3 — Finance stays on the proven spacing; only the context bar is aligned. */
+/* v2.0.0a5 — Finance context bar follows the established Finance page rhythm. */
 .finance-context-bar {
   position: relative;
   display: grid;
@@ -40,11 +40,11 @@
   white-space: nowrap;
 }
 
-/* Do not inset the whole Finance page again. Existing Finance sections own spacing. */
+/* Keep horizontal spacing owned by Finance sections, but inherit the same top
+   breathing room as the established Finance page shell (Daftar Transaksi, etc.). */
 .finance-home-container {
   padding-left: 0;
   padding-right: 0;
-  padding-top: 0;
 }
 .finance-home-container .tombol-profil[data-avatar-preview-trigger] {
   padding: 0;

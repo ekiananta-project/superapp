@@ -1,4 +1,4 @@
-const CACHE_NAME = "family-superapp-v2.0.0a4-nav-row-finance-focus-1";
+const CACHE_NAME = "family-superapp-v2.0.0a5-finance-spacing-custom-lottie-1";
 const OFFLINE_URL = "./offline.html";
 
 const APP_FILES = [
@@ -64,6 +64,7 @@ const APP_FILES = [
   "./css/pages/finance-container.css",
   "./js/pages/superapp-home.js",
   "./js/pages/superapp-home-lottie.js",
+  "./assets/lottie/today-family.json",
   "./js/pages/superapp-calendar.js",
   "./js/pages/superapp-profile-shell.js",
   "./js/app.js",
