@@ -22,6 +22,17 @@
   backdrop-filter: blur(16px);
 }
 
+
+/* v2.0.0a29c — catatan anggota read-only tidak memakai sticky editor header.
+   Header ikut scroll agar terasa sebagai halaman baca, bukan editor milik sendiri. */
+.catatan-editor.is-member-readonly .catatan-editor-header {
+  position: relative;
+  top: auto;
+  background: transparent;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+
 .catatan-editor-header h1 {
   min-width: 0;
   margin: 0;

@@ -499,6 +499,10 @@
   }
 
   function applyContext() {
+    const root = q("[data-catatan-editor]");
+    const memberReadOnly = sourceContext === "member" && noteReadOnly;
+    root?.classList.toggle("is-member-readonly", memberReadOnly);
+
     const areaLabel = q("[data-area-label]");
     const areaChip = q("[data-area-chip]");
     const areaIcon = areaChip?.querySelector("ion-icon");
