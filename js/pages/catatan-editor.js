@@ -498,10 +498,33 @@
     return scope === "family" ? "catatan-keluarga.html" : "catatan-pribadi.html";
   }
 
+  function applyMemberReadOnlyHeaderFlow(memberReadOnly) {
+    const header = q(".catatan-editor-header");
+    if (!header) return;
+
+    if (memberReadOnly) {
+      header.setAttribute("data-member-readonly-header", "");
+      // Hard guard: member read-only harus selalu ikut document flow.
+      // Inline !important sengaja dipakai agar rule sticky global / cache CSS lama
+      // tidak dapat membuat header kembali menempel.
+      header.style.setProperty("position", "static", "important");
+      header.style.setProperty("top", "auto", "important");
+      header.style.setProperty("inset", "auto", "important");
+      header.style.setProperty("transform", "none", "important");
+    } else {
+      header.removeAttribute("data-member-readonly-header");
+      header.style.removeProperty("position");
+      header.style.removeProperty("top");
+      header.style.removeProperty("inset");
+      header.style.removeProperty("transform");
+    }
+  }
+
   function applyContext() {
     const root = q("[data-catatan-editor]");
     const memberReadOnly = sourceContext === "member" && noteReadOnly;
     root?.classList.toggle("is-member-readonly", memberReadOnly);
+    applyMemberReadOnlyHeaderFlow(memberReadOnly);
 
     const areaLabel = q("[data-area-label]");
     const areaChip = q("[data-area-chip]");

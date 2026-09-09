@@ -25,9 +25,15 @@
 
 /* v2.0.0a29c — catatan anggota read-only tidak memakai sticky editor header.
    Header ikut scroll agar terasa sebagai halaman baca, bukan editor milik sendiri. */
-.catatan-editor.is-member-readonly .catatan-editor-header {
-  position: relative;
-  top: auto;
+/* v2.0.0a29d — hard guard untuk member read-only.
+   Gunakan static + !important agar header mustahil kembali sticky karena
+   selector global, urutan stylesheet, atau CSS lama dari cache. */
+.catatan-editor.is-member-readonly .catatan-editor-header,
+.catatan-editor-header[data-member-readonly-header] {
+  position: static !important;
+  inset: auto !important;
+  top: auto !important;
+  transform: none !important;
   background: transparent;
   backdrop-filter: none;
   -webkit-backdrop-filter: none;
