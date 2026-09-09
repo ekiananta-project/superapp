@@ -423,3 +423,17 @@
   .today-lottie-wrap { min-height: 120px; }
   .today-lottie svg { max-width: 132px; max-height: 120px; }
 }
+
+/* v2.0.0a4 — Global quick nav: Kalender | Keluarga | Profil must stay on one row. */
+.global-quick-nav {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-rows: 1fr;
+  grid-auto-flow: column;
+  align-items: stretch;
+}
+.global-quick-nav > a {
+  grid-row: 1;
+  min-width: 0;
+  white-space: nowrap;
+}
