@@ -1,4 +1,4 @@
-const CACHE_NAME = "ruangkitha-v2.0.0a16-catatan-member-name-centered-1";
+const CACHE_NAME = "ruangkitha-v2.0.0a17-catatan-member-standard-header-1";
 const OFFLINE_URL = "./offline.html";
 
 const APP_FILES = [

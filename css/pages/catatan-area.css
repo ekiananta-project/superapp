@@ -1,4 +1,4 @@
-/* RuangKitha v2.0.0a16 — Catatan area UI foundation (Family design locked) */
+/* RuangKitha v2.0.0a17 — Catatan area UI foundation (Family design locked) */
 
 .catatan-area {
   padding-bottom: calc(104px + env(safe-area-inset-bottom));
@@ -256,44 +256,8 @@
 }
 
 
-/* a15: header anggota benar-benar memakai flow normal.
-   Tombol kembali + label "Catatan anggota" berada di kontainer pertama
-   tanpa absolute positioning, jadi keduanya tidak pernah saling menimpa. */
-.catatan-member-area > .catatan-member-top-header {
-  display: flex !important;
-  align-items: center !important;
-  justify-content: flex-start !important;
-  gap: 14px !important;
-  min-height: 58px;
-}
-
-.catatan-member-area > .catatan-member-top-header .catatan-back-ruangkitha {
-  position: static !important;
-  inset: auto !important;
-  transform: none !important;
-  flex: 0 0 auto;
-}
-
-.catatan-member-area > .catatan-member-top-header h1 {
-  position: static !important;
-  inset: auto !important;
-  transform: none !important;
-  flex: 1 1 auto;
-  width: auto !important;
-  max-width: none !important;
-  min-width: 0;
-  margin: 0;
-  overflow: visible;
-  text-overflow: clip;
-  white-space: normal;
-  text-align: left;
-  font-size: clamp(17px, 4.9vw, 22px);
-  line-height: 1.2;
-}
-
-.catatan-member-area > .catatan-member-top-header > .kosong {
-  display: none !important;
-}
+/* a17: Header Catatan Anggota kembali memakai pakem catatan-standard-header
+   yang sama persis dengan Catatan Keluarga dan Catatan Pribadi. */
 
 .catatan-member-name-container {
   display: block;
@@ -316,10 +280,6 @@
 }
 
 @media (max-width: 390px) {
-  .catatan-member-area > .catatan-member-top-header {
-    gap: 10px !important;
-  }
-
   .catatan-member-name-container {
     margin-left: 20px;
     margin-right: 20px;
