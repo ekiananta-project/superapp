@@ -1,14 +1,16 @@
-/* v2.0.0a2 — Finance container bridge.
-   Keep the proven Finance page spacing from pre-container builds. */
+/* v2.0.0a3 — Finance stays on the proven spacing; only the context bar is aligned. */
 .finance-context-bar {
-  display: flex;
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
   align-items: center;
-  justify-content: space-between;
   gap: var(--space-3);
-  margin-bottom: var(--space-3);
+  margin: 0 var(--space-5, 24px) var(--space-3);
 }
 
 .finance-superapp-back {
+  grid-column: 1;
+  justify-self: start;
   display: inline-flex;
   align-items: center;
   gap: 7px;
@@ -23,29 +25,36 @@
   font-size: var(--font-size-xs);
   font-weight: 700;
 }
-
 .finance-superapp-back ion-icon { font-size: 18px; }
 .finance-superapp-back:active { transform: scale(.98); }
 
 .finance-context-label {
-  color: var(--color-text-secondary);
-  font-size: var(--font-size-xs);
-  font-weight: 700;
-  letter-spacing: .04em;
+  grid-column: 2;
+  justify-self: center;
+  color: var(--color-text, #171a18);
+  font-size: 13px;
+  font-weight: 800;
+  letter-spacing: .08em;
+  text-align: center;
   text-transform: uppercase;
+  white-space: nowrap;
 }
 
-/* Important: do not add another horizontal inset here.
-   .aplikasi already owns the Finance page spacing. */
+/* Do not inset the whole Finance page again. Existing Finance sections own spacing. */
 .finance-home-container {
   padding-left: 0;
   padding-right: 0;
   padding-top: 0;
 }
-
 .finance-home-container .tombol-profil[data-avatar-preview-trigger] {
   padding: 0;
   border: 0;
   background: transparent;
   cursor: pointer;
+}
+
+@media (max-width: 380px) {
+  .finance-context-bar { margin-left: 20px; margin-right: 20px; }
+  .finance-superapp-back span { display: none; }
+  .finance-superapp-back { width: 40px; min-height: 40px; justify-content: center; padding: 0; }
 }

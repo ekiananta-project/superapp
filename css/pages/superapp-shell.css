@@ -66,3 +66,23 @@
     padding-right: 28px;
   }
 }
+
+/* v2.0.0a3 — Global quick access has exactly three destinations. */
+.global-quick-nav {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  padding-left: 18px;
+  padding-right: 18px;
+}
+.global-quick-nav a { min-width: 0; }
+.superapp-global-nav-page {
+  padding-bottom: calc(96px + env(safe-area-inset-bottom));
+}
+.profile-shell-no-nav {
+  padding-bottom: max(24px, env(safe-area-inset-bottom));
+}
+@media (max-width: 430px) {
+  .global-quick-nav {
+    padding-left: 12px;
+    padding-right: 12px;
+  }
+}

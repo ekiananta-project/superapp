@@ -24,7 +24,7 @@
   <link rel="stylesheet" href="css/style.css">
   <link rel="stylesheet" href="css/theme.css">
   <link rel="stylesheet" href="css/components/avatar-preview-dialog.css?v=20260909-v200a1">
-  <link rel="stylesheet" href="css/pages/superapp-home.css?v=20260909-v200a2">
+  <link rel="stylesheet" href="css/pages/superapp-home.css?v=20260909-v200a3">
 </head>
 <body>
 <div class="aplikasi superapp-home" data-superapp-home aria-busy="true">
@@ -55,12 +55,9 @@
         <div class="today-list" data-reminder-list>
           <div class="today-loading"><span></span><span></span><span></span></div>
         </div>
-        <div class="today-art" aria-hidden="true">
-          <span class="today-art-leaf leaf-a"></span>
-          <span class="today-art-leaf leaf-b"></span>
-          <span class="today-art-leaf leaf-c"></span>
-          <span class="today-art-house"><i></i></span>
-          <small>Keluarga lebih baik<br>setiap hari ♡</small>
+        <div class="today-lottie-wrap" aria-hidden="true">
+          <div class="today-lottie" data-today-lottie></div>
+          <span class="today-lottie-fallback"><ion-icon name="home-outline"></ion-icon></span>
         </div>
       </div>
     </section>
@@ -144,6 +141,7 @@
 
   <nav class="global-quick-nav" aria-label="Akses cepat Family Superapp">
     <a href="kalender.html"><ion-icon name="calendar-clear-outline"></ion-icon><span>Kalender</span></a>
+    <a href="keluarga.html"><ion-icon name="people-outline"></ion-icon><span>Keluarga</span></a>
     <a href="profil.html"><ion-icon name="person-outline"></ion-icon><span>Profil</span></a>
   </nav>
 
@@ -175,8 +173,10 @@
 <script src="js/backend/finance-service.js?v=20260908-e1"></script>
 <script src="js/backend/auth-router.js?v=20260908-2"></script>
 <script src="js/backend/auth-guard.js?v=20260908-2"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/lottie-web/5.12.2/lottie.min.js" referrerpolicy="no-referrer"></script>
+<script src="js/pages/superapp-home-lottie.js?v=20260909-v200a3"></script>
 <script src="js/pages/superapp-home.js?v=20260909-v200a1"></script>
 <script src="js/components/avatar-preview-dialog.js?v=20260909-v200a1"></script>
-<script src="js/pwa.js?v=20260909-v200a2"></script>
+<script src="js/pwa.js?v=20260909-v200a3"></script>
 </body>
 </html>

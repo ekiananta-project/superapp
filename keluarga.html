@@ -31,13 +31,14 @@
   <link rel="stylesheet" href="css/pages/keluarga-dissolve.css?v=20260908-1">
   <link rel="stylesheet" href="css/pages/keluarga-history.css?v=20260908-2">
   <link rel="stylesheet" href="css/theme.css">
+  <link rel="stylesheet" href="css/pages/superapp-shell.css?v=20260909-v200a3">
 </head>
 
 <body>
-<div class="aplikasi">
+<div class="aplikasi superapp-global-nav-page">
 
   <header class="header-halaman">
-    <a class="tombol-ikon" href="profil.html" aria-label="Kembali ke Profil">
+    <a class="tombol-ikon" href="index.html" aria-label="Kembali ke Superapp">
       <ion-icon name="arrow-back-outline"></ion-icon>
     </a>
 
@@ -180,6 +181,12 @@
     </section>
 
   </main>
+
+  <nav class="global-quick-nav" aria-label="Akses cepat Family Superapp">
+    <a href="kalender.html"><ion-icon name="calendar-clear-outline"></ion-icon><span>Kalender</span></a>
+    <a class="is-active" href="keluarga.html" aria-current="page"><ion-icon name="people-outline"></ion-icon><span>Keluarga</span></a>
+    <a href="profil.html"><ion-icon name="person-outline"></ion-icon><span>Profil</span></a>
+  </nav>
 </div>
 
 <div class="lapisan" data-relationship-sheet hidden>
@@ -511,6 +518,6 @@
 <script src="js/components/avatar.js?v=20260908-2"></script>
 <script src="js/pages/keluarga.js?v=20260908-7"></script>
 <script src="js/pages/keluarga-media.js?v=20260908-4"></script>
-<script src="js/pwa.js?v=20260909-v200a1"></script>
+<script src="js/pwa.js?v=20260909-v200a3"></script>
 </body>
 </html>

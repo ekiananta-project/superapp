@@ -1,4 +1,4 @@
-const CACHE_NAME = "family-superapp-v2.0.0a2-layout-containment-1";
+const CACHE_NAME = "family-superapp-v2.0.0a3-global-nav-lottie-1";
 const OFFLINE_URL = "./offline.html";
 
 const APP_FILES = [
@@ -63,6 +63,7 @@ const APP_FILES = [
   "./css/pages/superapp-shell.css",
   "./css/pages/finance-container.css",
   "./js/pages/superapp-home.js",
+  "./js/pages/superapp-home-lottie.js",
   "./js/pages/superapp-calendar.js",
   "./js/pages/superapp-profile-shell.js",
   "./js/app.js",
