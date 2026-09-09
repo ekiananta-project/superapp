@@ -84,6 +84,10 @@
           location.href = "catatan-checklist.html?scope=family";
           return;
         }
+        if (type === "Reminder") {
+          location.href = "catatan-editor.html?scope=family&type=reminder";
+          return;
+        }
         showToast(`${type} Keluarga akan aktif pada tahap berikutnya.`);
       });
     });

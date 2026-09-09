@@ -25,8 +25,8 @@
 
   <link rel="stylesheet" href="css/style.css">
   <link rel="stylesheet" href="css/theme.css">
-  <link rel="stylesheet" href="css/pages/catatan-home.css?v=20260909-v200a25">
-  <link rel="stylesheet" href="css/pages/catatan-editor.css?v=20260909-v200a25">
+  <link rel="stylesheet" href="css/pages/catatan-home.css?v=20260909-v200a26">
+  <link rel="stylesheet" href="css/pages/catatan-editor.css?v=20260909-v200a26">
   <style id="ruangkitha-auth-cloak">html[data-auth-guard] body{visibility:hidden!important}</style>
 </head>
 <body>
@@ -59,6 +59,10 @@
       <button class="catatan-context-chip is-folder" type="button" data-folder-chip hidden>
         <ion-icon name="folder-outline" aria-hidden="true"></ion-icon>
         <span data-folder-label>Folder</span>
+      </button>
+      <button class="catatan-context-chip is-reminder" type="button" data-reminder-chip hidden>
+        <ion-icon name="notifications-outline" aria-hidden="true"></ion-icon>
+        <span data-reminder-chip-label>Atur reminder</span>
       </button>
       <span class="catatan-context-tags" data-tag-chips></span>
       <button class="catatan-context-chip is-add-tag" type="button" data-tag-add>
@@ -134,7 +138,7 @@
         </button>
         <button type="button" data-info-action="reminder">
           <span class="catatan-info-icon"><ion-icon name="notifications-outline"></ion-icon></span>
-          <span><strong>Reminder</strong><small>Belum diatur</small></span>
+          <span><strong>Reminder</strong><small data-info-reminder>Belum diatur</small></span>
           <ion-icon name="chevron-forward-outline"></ion-icon>
         </button>
         <button type="button" data-info-action="related">
@@ -202,6 +206,31 @@
   </div>
 
 
+  <div class="catatan-sheet-layer" data-reminder-layer hidden>
+    <section class="catatan-sheet catatan-editor-sheet catatan-reminder-sheet" role="dialog" aria-modal="true" aria-labelledby="reminder-title">
+      <div class="catatan-sheet-handle" aria-hidden="true"></div>
+      <div class="catatan-sheet-header">
+        <div><small>Pengingat</small><h2 id="reminder-title">Atur Reminder</h2></div>
+        <button class="catatan-sheet-close" type="button" data-reminder-close aria-label="Tutup"><ion-icon name="close-outline"></ion-icon></button>
+      </div>
+      <p class="catatan-reminder-hint">Pilih tanggal dan waktu pengingat untuk catatan ini.</p>
+      <div class="catatan-reminder-fields">
+        <label>
+          <span>Tanggal</span>
+          <input type="date" data-reminder-date aria-label="Tanggal reminder">
+        </label>
+        <label>
+          <span>Waktu</span>
+          <input type="time" data-reminder-time aria-label="Waktu reminder">
+        </label>
+      </div>
+      <div class="catatan-reminder-actions">
+        <button class="is-danger" type="button" data-reminder-remove hidden>Hapus reminder</button>
+        <button class="is-primary" type="button" data-reminder-save>Simpan</button>
+      </div>
+    </section>
+  </div>
+
   <div class="catatan-sheet-layer" data-tag-layer hidden>
     <section class="catatan-sheet catatan-editor-sheet catatan-tag-sheet" role="dialog" aria-modal="true" aria-labelledby="catatan-tag-title">
       <div class="catatan-sheet-handle" aria-hidden="true"></div>
@@ -261,7 +290,7 @@
 <script src="js/backend/family-service.js?v=20260908-10"></script>
 <script src="js/backend/auth-router.js?v=20260909-v200a8"></script>
 <script src="js/backend/auth-guard.js?v=20260909-v200a8"></script>
-<script src="js/pages/catatan-editor.js?v=20260909-v200a25"></script>
-<script src="js/pwa.js?v=20260909-v200a25"></script>
+<script src="js/pages/catatan-editor.js?v=20260909-v200a26"></script>
+<script src="js/pwa.js?v=20260909-v200a26"></script>
 </body>
 </html>

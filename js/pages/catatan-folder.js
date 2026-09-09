@@ -153,6 +153,10 @@
             location.href = `catatan-checklist.html?scope=${encodeURIComponent(createScope || "personal")}`;
             return;
           }
+          if (type === "Reminder") {
+            location.href = `catatan-editor.html?scope=${encodeURIComponent(createScope || "personal")}&type=reminder`;
+            return;
+          }
           showToast(`${type} di ${destination} akan aktif pada tahap berikutnya.`);
           return;
         }
@@ -163,6 +167,10 @@
         }
         if (type === "Checklist") {
           location.href = `catatan-checklist.html?scope=${encodeURIComponent(scope)}&folder=${encodeURIComponent(folderName)}`;
+          return;
+        }
+        if (type === "Reminder") {
+          location.href = `catatan-editor.html?scope=${encodeURIComponent(scope)}&folder=${encodeURIComponent(folderName)}&type=reminder`;
           return;
         }
         showToast(`${type} akan dibuat langsung di folder ${folderName} pada tahap berikutnya.`);

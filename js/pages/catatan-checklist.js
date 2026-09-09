@@ -15,6 +15,8 @@
   let selectedTags = new Set();
   let draftTags = new Set();
   let itemSequence = 0;
+  let reminderDate = "";
+  let reminderTime = "";
 
   function clean(value, fallback = "") {
     const text = String(value ?? "").trim().replace(/\s+/g, " ");
@@ -73,6 +75,76 @@
     return scope === "family" ? "catatan-keluarga.html" : "catatan-pribadi.html";
   }
 
+  function localDateString(date = new Date()) {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, "0");
+    const day = String(date.getDate()).padStart(2, "0");
+    return `${year}-${month}-${day}`;
+  }
+
+  function reminderLabel() {
+    if (!reminderDate || !reminderTime) return "";
+    const value = new Date(`${reminderDate}T${reminderTime}:00`);
+    if (Number.isNaN(value.getTime())) return `${reminderDate} · ${reminderTime}`;
+    return new Intl.DateTimeFormat("id-ID", {
+      day: "numeric",
+      month: "short",
+      year: "numeric",
+      hour: "2-digit",
+      minute: "2-digit"
+    }).format(value).replace(" pukul ", " · ");
+  }
+
+  function renderReminder() {
+    const hasReminder = Boolean(reminderDate && reminderTime);
+    const chip = q("[data-reminder-chip]");
+    const chipLabel = q("[data-reminder-chip-label]");
+    const info = q("[data-info-reminder]");
+    const remove = q("[data-reminder-remove]");
+    const label = reminderLabel();
+    if (chip) chip.hidden = !hasReminder;
+    if (chipLabel) chipLabel.textContent = label;
+    if (info) info.textContent = hasReminder ? label : "Belum diatur";
+    if (remove) remove.hidden = !hasReminder;
+  }
+
+  function openReminderSheet() {
+    if (editorMode !== "edit") {
+      showToast("Masuk ke Edit catatan untuk mengubah reminder.");
+      return;
+    }
+    const dateInput = q("[data-reminder-date]");
+    const timeInput = q("[data-reminder-time]");
+    if (dateInput) {
+      dateInput.min = localDateString();
+      dateInput.value = reminderDate;
+    }
+    if (timeInput) timeInput.value = reminderTime;
+    openSheet("[data-reminder-layer]");
+  }
+
+  function saveReminder() {
+    const date = clean(q("[data-reminder-date]")?.value);
+    const time = clean(q("[data-reminder-time]")?.value);
+    if (!date || !time) {
+      showToast("Pilih tanggal dan waktu reminder dulu.");
+      return;
+    }
+    reminderDate = date;
+    reminderTime = time;
+    renderReminder();
+    setLayer("[data-reminder-layer]", false);
+    showToast("Reminder disimpan di checklist.");
+  }
+
+  function removeReminder() {
+    reminderDate = "";
+    reminderTime = "";
+    renderReminder();
+    setLayer("[data-reminder-layer]", false);
+    showToast("Reminder dihapus dari checklist.");
+  }
+
   function renderVisibility() {
     const privateMode = visibility === "private";
     const label = privateMode ? "Hanya Saya" : "Keluarga dapat melihat";
@@ -128,6 +200,7 @@
     }
 
     renderMetadataTags();
+    renderReminder();
   }
 
   function togglePin() {
@@ -401,6 +474,7 @@
     const label = q("[data-mode-label]");
     const icon = toggle?.querySelector("ion-icon");
     const visibilityChip = q("[data-visibility-chip]");
+    const reminderChip = q("[data-reminder-chip]");
     const view = editorMode === "view";
 
     root?.classList.toggle("is-view-mode", view);
@@ -409,6 +483,7 @@
     syncViewOnlyItems(view);
     updateProgress();
     if (visibilityChip) visibilityChip.disabled = view || scope !== "personal";
+    if (reminderChip) reminderChip.disabled = view;
     if (toggle) toggle.setAttribute("aria-label", view ? "Edit checklist" : "Lihat hasil checklist");
     if (label) label.textContent = view ? "Edit catatan" : "Lihat hasil";
     if (icon) icon.setAttribute("name", view ? "create-outline" : "eye-outline");
@@ -428,6 +503,10 @@
     q("[data-open-info]")?.addEventListener("click", () => openSheet("[data-info-layer]"));
     q("[data-info-close]")?.addEventListener("click", () => setLayer("[data-info-layer]", false));
     q("[data-visibility-close]")?.addEventListener("click", () => setLayer("[data-visibility-layer]", false));
+    q("[data-reminder-close]")?.addEventListener("click", () => setLayer("[data-reminder-layer]", false));
+    q("[data-reminder-chip]")?.addEventListener("click", openReminderSheet);
+    q("[data-reminder-save]")?.addEventListener("click", saveReminder);
+    q("[data-reminder-remove]")?.addEventListener("click", removeReminder);
     q("[data-tag-close]")?.addEventListener("click", () => closeTagSheet(false));
     q("[data-tag-cancel]")?.addEventListener("click", () => closeTagSheet(false));
     q("[data-tag-apply]")?.addEventListener("click", () => closeTagSheet(true));
@@ -480,6 +559,11 @@
           else showToast("Masuk ke Edit catatan untuk mengubah tag.");
           return;
         }
+        if (action === "reminder") {
+          setLayer("[data-info-layer]", false);
+          openReminderSheet();
+          return;
+        }
         if (action === "promote") {
           showToast("Pemindahan permanen ke Catatan Keluarga akan aktif bersama backend Catatan.");
           return;
@@ -524,6 +608,7 @@
 
     setupChecklist();
     applyContext();
+    renderReminder();
 
     if (window.AUTH_READY) {
       const allowed = await window.AUTH_READY;

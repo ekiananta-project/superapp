@@ -75,6 +75,10 @@
           location.href = `catatan-checklist.html?scope=${encodeURIComponent(createScope || "personal")}`;
           return;
         }
+        if (type === "Reminder") {
+          location.href = `catatan-editor.html?scope=${encodeURIComponent(createScope || "personal")}&type=reminder`;
+          return;
+        }
         showToast(`${type} di ${scopeLabel} akan aktif pada tahap berikutnya.`);
       });
     });

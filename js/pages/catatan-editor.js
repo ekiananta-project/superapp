@@ -16,6 +16,9 @@
   let availableTags = [];
   let selectedTags = new Set();
   let draftTags = new Set();
+  let reminderDate = "";
+  let reminderTime = "";
+  let reminderPreset = false;
 
   function clean(value, fallback = "") {
     const text = String(value ?? "").trim().replace(/\s+/g, " ");
@@ -245,6 +248,78 @@
     renderMetadataTags();
   }
 
+  function localDateString(date = new Date()) {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, "0");
+    const day = String(date.getDate()).padStart(2, "0");
+    return `${year}-${month}-${day}`;
+  }
+
+  function reminderLabel() {
+    if (!reminderDate || !reminderTime) return reminderPreset ? "Atur reminder" : "";
+    const value = new Date(`${reminderDate}T${reminderTime}:00`);
+    if (Number.isNaN(value.getTime())) return `${reminderDate} · ${reminderTime}`;
+    return new Intl.DateTimeFormat("id-ID", {
+      day: "numeric",
+      month: "short",
+      year: "numeric",
+      hour: "2-digit",
+      minute: "2-digit"
+    }).format(value).replace(" pukul ", " · ");
+  }
+
+  function renderReminder() {
+    const hasReminder = Boolean(reminderDate && reminderTime);
+    const chip = q("[data-reminder-chip]");
+    const chipLabel = q("[data-reminder-chip-label]");
+    const info = q("[data-info-reminder]");
+    const remove = q("[data-reminder-remove]");
+    const label = reminderLabel();
+
+    if (chip) chip.hidden = !(hasReminder || reminderPreset);
+    if (chipLabel) chipLabel.textContent = hasReminder ? label : "Atur reminder";
+    if (info) info.textContent = hasReminder ? label : "Belum diatur";
+    if (remove) remove.hidden = !hasReminder;
+  }
+
+  function openReminderSheet() {
+    if (editorMode !== "edit") {
+      showToast("Masuk ke Edit catatan untuk mengubah reminder.");
+      return;
+    }
+    const dateInput = q("[data-reminder-date]");
+    const timeInput = q("[data-reminder-time]");
+    if (dateInput) {
+      dateInput.min = localDateString();
+      dateInput.value = reminderDate;
+    }
+    if (timeInput) timeInput.value = reminderTime;
+    openSheet("[data-reminder-layer]", true);
+  }
+
+  function saveReminder() {
+    const date = clean(q("[data-reminder-date]")?.value);
+    const time = clean(q("[data-reminder-time]")?.value);
+    if (!date || !time) {
+      showToast("Pilih tanggal dan waktu reminder dulu.");
+      return;
+    }
+    reminderDate = date;
+    reminderTime = time;
+    reminderPreset = true;
+    renderReminder();
+    setLayer("[data-reminder-layer]", false);
+    showToast("Reminder disimpan di catatan.");
+  }
+
+  function removeReminder() {
+    reminderDate = "";
+    reminderTime = "";
+    renderReminder();
+    setLayer("[data-reminder-layer]", false);
+    showToast(reminderPreset ? "Jadwal reminder dihapus." : "Reminder dihapus.");
+  }
+
   function renderVisibility() {
     const privateMode = visibility === "private";
     const label = privateMode ? "Hanya Saya" : "Keluarga dapat melihat";
@@ -399,6 +474,7 @@
     const label = q("[data-mode-label]");
     const icon = toggle?.querySelector("ion-icon");
     const visibilityChip = q("[data-visibility-chip]");
+    const reminderChip = q("[data-reminder-chip]");
 
     const view = editorMode === "view";
     root?.classList.toggle("is-view-mode", view);
@@ -406,6 +482,7 @@
     if (editor) editor.contentEditable = view ? "false" : "true";
     if (toolbar) toolbar.hidden = view;
     if (visibilityChip) visibilityChip.disabled = view || scope !== "personal";
+    if (reminderChip) reminderChip.disabled = view;
     if (toggle) toggle.setAttribute("aria-label", view ? "Edit catatan" : "Lihat hasil catatan");
     if (label) label.textContent = view ? "Edit catatan" : "Lihat hasil";
     if (icon) icon.setAttribute("name", view ? "create-outline" : "eye-outline");
@@ -440,6 +517,10 @@
     q("[data-format-close]")?.addEventListener("click", () => setLayer("[data-format-layer]", false));
     q("[data-visibility-close]")?.addEventListener("click", () => setLayer("[data-visibility-layer]", false));
     q("[data-link-close]")?.addEventListener("click", () => setLayer("[data-link-layer]", false));
+    q("[data-reminder-close]")?.addEventListener("click", () => setLayer("[data-reminder-layer]", false));
+    q("[data-reminder-chip]")?.addEventListener("click", openReminderSheet);
+    q("[data-reminder-save]")?.addEventListener("click", saveReminder);
+    q("[data-reminder-remove]")?.addEventListener("click", removeReminder);
     q("[data-tag-close]")?.addEventListener("click", () => closeTagSheet(false));
     q("[data-tag-cancel]")?.addEventListener("click", () => closeTagSheet(false));
     q("[data-tag-apply]")?.addEventListener("click", () => closeTagSheet(true));
@@ -490,6 +571,11 @@
           setLayer("[data-info-layer]", false);
           if (editorMode === "edit") openTagSheet();
           else showToast("Masuk ke Edit catatan untuk mengubah tag.");
+          return;
+        }
+        if (action === "reminder") {
+          setLayer("[data-info-layer]", false);
+          openReminderSheet();
           return;
         }
         if (action === "promote") {
@@ -666,10 +752,21 @@
     const params = new URLSearchParams(location.search);
     scope = clean(params.get("scope"), "personal").toLowerCase();
     folderName = clean(params.get("folder"));
+    reminderPreset = clean(params.get("type")).toLowerCase() === "reminder";
     if (!["family", "personal"].includes(scope)) scope = "personal";
+
+    if (reminderPreset) {
+      document.title = "Reminder · RuangKitha";
+      const title = q("[data-note-title]");
+      if (title) {
+        title.placeholder = "Judul reminder...";
+        title.setAttribute("aria-label", "Judul reminder");
+      }
+    }
 
     setupEditor();
     applyContext();
+    renderReminder();
 
     if (window.AUTH_READY) {
       const allowed = await window.AUTH_READY;

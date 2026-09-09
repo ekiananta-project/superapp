@@ -622,3 +622,90 @@ html[data-theme="dark"] .catatan-tag-actions .is-secondary {
   .catatan-editor-header { grid-template-columns: 42px minmax(0,1fr) 42px; gap: 8px; }
   .catatan-editor-mode { min-width: 104px; padding-inline: 11px; font-size: 10.5px; }
 }
+
+
+/* =========================================================
+   v2.0.0a26 — Reminder editor UI
+   ========================================================= */
+.catatan-context-chip.is-reminder {
+  color: #a96116;
+  background: color-mix(in srgb, #e99032 9%, var(--color-surface, #fff));
+}
+.catatan-context-chip.is-reminder ion-icon { font-size: 15px; }
+.catatan-context-chip.is-reminder:disabled { cursor: default; }
+
+.catatan-reminder-hint {
+  margin: 0 0 14px;
+  color: var(--color-text-soft, #6f7b73);
+  font-size: 11px;
+  line-height: 1.55;
+}
+.catatan-reminder-fields {
+  display: grid;
+  grid-template-columns: 1.15fr .85fr;
+  gap: 9px;
+}
+.catatan-reminder-fields label {
+  display: grid;
+  gap: 7px;
+  min-width: 0;
+  color: var(--color-text-soft, #6f7b73);
+  font-size: 10px;
+  font-weight: 700;
+}
+.catatan-reminder-fields input {
+  width: 100%;
+  min-width: 0;
+  min-height: 48px;
+  padding: 0 12px;
+  border: 1px solid var(--color-border, #e0e4e1);
+  border-radius: 14px;
+  outline: 0;
+  background: var(--color-surface, #fff);
+  color: var(--color-text, #18201b);
+  color-scheme: light;
+  font: inherit;
+  font-size: 11px;
+  box-sizing: border-box;
+}
+.catatan-reminder-fields input:focus { border-color: var(--color-primary, #159447); }
+.catatan-reminder-actions {
+  display: grid;
+  grid-template-columns: minmax(0,1fr) auto;
+  align-items: center;
+  gap: 10px;
+  margin-top: 15px;
+}
+.catatan-reminder-actions button {
+  appearance: none;
+  min-height: 46px;
+  padding: 0 16px;
+  border-radius: 14px;
+  font: inherit;
+  font-size: 11px;
+  font-weight: 700;
+  cursor: pointer;
+}
+.catatan-reminder-actions .is-primary {
+  min-width: 112px;
+  border: 0;
+  background: var(--color-primary, #159447);
+  color: #fff;
+}
+.catatan-reminder-actions .is-danger {
+  justify-self: start;
+  border: 1px solid color-mix(in srgb, #c94646 24%, var(--color-border, #e0e4e1));
+  background: transparent;
+  color: #c94646;
+}
+.catatan-reminder-actions .is-danger[hidden] { display: none !important; }
+html[data-theme="dark"] .catatan-reminder-fields input {
+  background: var(--color-surface, #212422);
+  color-scheme: dark;
+}
+@media (max-width: 350px) {
+  .catatan-reminder-fields { grid-template-columns: 1fr; }
+  .catatan-reminder-actions { grid-template-columns: 1fr; }
+  .catatan-reminder-actions .is-primary,
+  .catatan-reminder-actions .is-danger { width: 100%; }
+}
