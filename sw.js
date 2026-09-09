@@ -1,4 +1,4 @@
-const CACHE_NAME = "family-superapp-v2.0.0a6-finance-standard-header-1";
+const CACHE_NAME = "ruangkitha-v2.0.0a7-branding-family-dissolve-1";
 const OFFLINE_URL = "./offline.html";
 
 const APP_FILES = [
@@ -143,7 +143,7 @@ self.addEventListener("activate", event => {
     caches.keys()
       .then(keys => Promise.all(
         keys
-          .filter(key => key.startsWith("family-superapp-") && key !== CACHE_NAME)
+          .filter(key => (key.startsWith("family-superapp-") || key.startsWith("ruangkitha-")) && key !== CACHE_NAME)
           .map(key => caches.delete(key))
       ))
       .then(() => self.clients.claim())

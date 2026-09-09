@@ -226,7 +226,7 @@
       const title = document.createElement("strong");
       title.textContent = item.title;
       const meta = document.createElement("small");
-      meta.textContent = item.meta || "Family Superapp";
+      meta.textContent = item.meta || "RuangKitha";
       copy.append(title, meta);
       row.append(icon, copy);
       root.appendChild(row);
@@ -244,7 +244,7 @@
 
   function setupInteractions() {
     document.querySelectorAll("[data-coming-soon]").forEach(button => {
-      button.addEventListener("click", () => showToast(`Modul ${button.dataset.comingSoon} akan dibangun setelah fondasi Superapp stabil.`));
+      button.addEventListener("click", () => showToast(`Modul ${button.dataset.comingSoon} akan dibangun setelah fondasi RuangKitha stabil.`));
     });
     q("[data-reminder-all]")?.addEventListener("click", () => {
       if (reminderSummary.length) showToast("Saat ini pengingat aktif berasal dari Keuangan. Pengingat lintas modul akan bertambah otomatis saat modul baru aktif.");
@@ -285,17 +285,17 @@
 
       if (cashflowResult.status === "fulfilled") renderCashflow(cashflowResult.value);
       else {
-        console.warn("[Superapp Home cashflow]", cashflowResult.reason);
+        console.warn("[RuangKitha Home cashflow]", cashflowResult.reason);
         renderCashflow({ net: 0 });
       }
 
       if (reminderResult.status === "fulfilled") renderReminders(reminderResult.value);
       else {
-        console.warn("[Superapp Home reminder]", reminderResult.reason);
+        console.warn("[RuangKitha Home reminder]", reminderResult.reason);
         renderReminders([]);
       }
     } catch (error) {
-      console.error("[Superapp Home]", error);
+      console.error("[RuangKitha Home]", error);
       renderReminders([]);
       renderCashflow({ net: 0 });
     } finally {

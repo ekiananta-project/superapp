@@ -29,7 +29,7 @@
         if (reducedMotion) animation.goToAndStop?.(90, true);
       });
     } catch (error) {
-      console.warn("[Superapp] Lottie Hari Ini gagal dimuat; fallback dipakai.", error);
+      console.warn("[RuangKitha] Lottie Hari Ini gagal dimuat; fallback dipakai.", error);
     }
   }
 

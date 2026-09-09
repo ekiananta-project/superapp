@@ -1,49 +1,25 @@
 {
-  "id": "./",
-  "name": "Family Superapp",
-  "short_name": "Family",
-  "description": "Keuangan keluarga dalam satu ruang bersama.",
+  "name": "RuangKitha",
+  "short_name": "RuangKitha",
+  "description": "Satu ruang untuk menjaga semua yang penting",
   "lang": "id-ID",
-  "dir": "ltr",
   "start_url": "./index.html",
   "scope": "./",
   "display": "standalone",
-  "background_color": "#0B0D0C",
+  "background_color": "#F7F7F5",
   "theme_color": "#0B0D0C",
   "icons": [
     {
-      "src": "icons/icon-192-v2.png",
+      "src": "./icons/icon-192-v2.png",
       "sizes": "192x192",
       "type": "image/png",
-      "purpose": "any"
+      "purpose": "any maskable"
     },
     {
-      "src": "icons/icon-512-v2.png",
+      "src": "./icons/icon-512-v2.png",
       "sizes": "512x512",
       "type": "image/png",
-      "purpose": "any"
+      "purpose": "any maskable"
     }
-  ],
-  "shortcuts": [
-    {
-      "name": "Tambah Transaksi",
-      "short_name": "Transaksi",
-      "url": "./transaksi.html"
-    },
-    {
-      "name": "Dompet",
-      "short_name": "Dompet",
-      "url": "./dompet.html"
-    }
-  ],
-  "categories": [
-    "finance",
-    "lifestyle"
-  ],
-  "launch_handler": {
-    "client_mode": [
-      "navigate-existing",
-      "auto"
-    ]
-  }
+  ]
 }
