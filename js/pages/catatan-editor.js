@@ -3,6 +3,7 @@
 
   const q = selector => document.querySelector(selector);
   const qa = selector => Array.from(document.querySelectorAll(selector));
+
   let scope = "personal";
   let folderName = "";
   let visibility = "private";
@@ -11,11 +12,26 @@
   let linkSelectedText = "";
   let userId = "guest";
   let toastTimer = null;
+  let editorMode = "edit";
+  let availableTags = [];
+  let selectedTags = new Set();
+  let draftTags = new Set();
 
   function clean(value, fallback = "") {
     const text = String(value ?? "").trim().replace(/\s+/g, " ");
     if (!text || ["undefined", "null", "[object object]"].includes(text.toLowerCase())) return fallback;
     return text;
+  }
+
+  function normalizeTag(value) {
+    return clean(value)
+      .replace(/^#+/, "")
+      .replace(/[\s#]+/g, "-")
+      .replace(/[^\p{L}\p{N}_-]/gu, "")
+      .replace(/-+/g, "-")
+      .replace(/^-|-$/g, "")
+      .toLowerCase()
+      .slice(0, 36);
   }
 
   function showToast(message) {
@@ -24,7 +40,7 @@
     clearTimeout(toastTimer);
     el.textContent = message;
     el.hidden = false;
-    toastTimer = setTimeout(() => { el.hidden = true; }, 2600);
+    toastTimer = setTimeout(() => { el.hidden = true; }, 2800);
   }
 
   function setLayer(selector, open) {
@@ -49,7 +65,7 @@
 
   function restoreSelection() {
     const editor = q("[data-note-content]");
-    if (!editor) return;
+    if (!editor || editorMode !== "edit") return;
     editor.focus({ preventScroll: true });
     if (!savedRange) return;
     const selection = window.getSelection?.();
@@ -59,6 +75,7 @@
   }
 
   function execute(command, value = null) {
+    if (editorMode !== "edit") return;
     restoreSelection();
     try {
       document.execCommand(command, false, value);
@@ -107,7 +124,7 @@
   }
 
   function refreshFormatState() {
-    if (!selectionNode()) return;
+    if (editorMode !== "edit" || !selectionNode()) return;
     const block = currentBlock();
     qa("[data-format-block]").forEach(button => {
       button.classList.toggle("is-active", button.dataset.formatBlock === block);
@@ -127,6 +144,7 @@
   }
 
   function setBlockStyle(tag) {
+    if (editorMode !== "edit") return;
     restoreSelection();
     const active = currentBlock();
     const target = active === tag && tag !== "p" ? "p" : tag;
@@ -140,6 +158,7 @@
   }
 
   function toggleHighlight() {
+    if (editorMode !== "edit") return;
     restoreSelection();
     const active = selectionHasHighlight();
     try {
@@ -158,6 +177,7 @@
   }
 
   function clearFormatting() {
+    if (editorMode !== "edit") return;
     restoreSelection();
     try {
       document.execCommand("removeFormat", false, null);
@@ -221,6 +241,8 @@
       if (folderChip) folderChip.hidden = true;
       if (infoFolder) infoFolder.textContent = "Tanpa folder";
     }
+
+    renderMetadataTags();
   }
 
   function renderVisibility() {
@@ -250,10 +272,164 @@
     return `ruangkitha_catatan_sensitive_notice_v1:${userId}`;
   }
 
+  function modeTipStorageKey() {
+    return `ruangkitha_catatan_mode_tip_v1:${userId}`;
+  }
+
+  function tagCatalogStorageKey() {
+    return `ruangkitha_catatan_tag_catalog_preview_v1:${userId}:${scope}`;
+  }
+
+  function loadTagCatalog() {
+    try {
+      const parsed = JSON.parse(localStorage.getItem(tagCatalogStorageKey()) || "[]");
+      if (Array.isArray(parsed)) {
+        availableTags = Array.from(new Set(parsed.map(normalizeTag).filter(Boolean))).sort();
+      }
+    } catch {
+      availableTags = [];
+    }
+  }
+
+  function saveTagCatalog() {
+    try { localStorage.setItem(tagCatalogStorageKey(), JSON.stringify(availableTags)); } catch {}
+  }
+
   function maybeShowSensitiveNotice() {
     let hidden = false;
     try { hidden = localStorage.getItem(warningStorageKey()) === "hidden"; } catch {}
     if (!hidden) setLayer("[data-sensitive-layer]", true);
+  }
+
+  function renderMetadataTags() {
+    const host = q("[data-tag-chips]");
+    if (!host) return;
+    host.textContent = "";
+
+    Array.from(selectedTags).sort().forEach(tag => {
+      const button = document.createElement("button");
+      button.type = "button";
+      button.className = "catatan-context-chip is-tag";
+      button.dataset.tagChip = tag;
+      button.disabled = editorMode !== "edit";
+      button.innerHTML = `<span>#${tag}</span>`;
+      button.addEventListener("click", openTagSheet);
+      host.appendChild(button);
+    });
+
+    const add = q("[data-tag-add]");
+    if (add) add.hidden = editorMode !== "edit";
+
+    const info = q("[data-info-tags]");
+    if (info) {
+      const tags = Array.from(selectedTags).sort();
+      info.textContent = tags.length ? tags.map(tag => `#${tag}`).join(" · ") : "Belum ada tag";
+    }
+  }
+
+  function renderTagPicker() {
+    const searchValue = normalizeTag(q("[data-tag-search]")?.value || "");
+    const list = q("[data-tag-list]");
+    const empty = q("[data-tag-empty]");
+    const create = q("[data-tag-create]");
+    const createLabel = q("[data-tag-create-label]");
+    if (!list) return;
+
+    list.textContent = "";
+    const source = availableTags.filter(tag => !searchValue || tag.includes(searchValue));
+
+    source.forEach(tag => {
+      const selected = draftTags.has(tag);
+      const button = document.createElement("button");
+      button.type = "button";
+      button.className = `catatan-tag-option${selected ? " is-selected" : ""}`;
+      button.dataset.tagOption = tag;
+      button.innerHTML = `<strong>#${tag}</strong><ion-icon name="${selected ? "checkmark-circle" : "ellipse-outline"}" aria-hidden="true"></ion-icon>`;
+      button.addEventListener("click", () => {
+        if (draftTags.has(tag)) draftTags.delete(tag);
+        else draftTags.add(tag);
+        renderTagPicker();
+      });
+      list.appendChild(button);
+    });
+
+    if (empty) empty.hidden = source.length > 0;
+
+    const exactExists = searchValue && availableTags.includes(searchValue);
+    if (create) create.hidden = !searchValue || exactExists;
+    if (createLabel && searchValue && !exactExists) createLabel.textContent = `Tambah tag baru “#${searchValue}”`;
+  }
+
+  function openTagSheet() {
+    if (editorMode !== "edit") return;
+    draftTags = new Set(selectedTags);
+    const search = q("[data-tag-search]");
+    if (search) search.value = "";
+    renderTagPicker();
+    openSheet("[data-tag-layer]", true);
+    setTimeout(() => search?.focus(), 80);
+  }
+
+  function closeTagSheet(apply = false) {
+    if (apply) {
+      selectedTags = new Set(draftTags);
+      renderMetadataTags();
+    }
+    setLayer("[data-tag-layer]", false);
+  }
+
+  function createTagFromSearch() {
+    const value = normalizeTag(q("[data-tag-search]")?.value || "");
+    if (!value) return;
+    if (!availableTags.includes(value)) {
+      availableTags.push(value);
+      availableTags.sort();
+      saveTagCatalog();
+    }
+    draftTags.add(value);
+    const search = q("[data-tag-search]");
+    if (search) search.value = "";
+    renderTagPicker();
+  }
+
+  function setMode(mode, announce = true) {
+    editorMode = mode === "view" ? "view" : "edit";
+    const root = q("[data-catatan-editor]");
+    const title = q("[data-note-title]");
+    const editor = q("[data-note-content]");
+    const toolbar = q("[data-editor-toolbar]");
+    const toggle = q("[data-mode-toggle]");
+    const label = q("[data-mode-label]");
+    const icon = toggle?.querySelector("ion-icon");
+    const visibilityChip = q("[data-visibility-chip]");
+
+    const view = editorMode === "view";
+    root?.classList.toggle("is-view-mode", view);
+    if (title) title.readOnly = view;
+    if (editor) editor.contentEditable = view ? "false" : "true";
+    if (toolbar) toolbar.hidden = view;
+    if (visibilityChip) visibilityChip.disabled = view || scope !== "personal";
+    if (toggle) toggle.setAttribute("aria-label", view ? "Edit catatan" : "Lihat hasil catatan");
+    if (label) label.textContent = view ? "Edit catatan" : "Lihat hasil";
+    if (icon) icon.setAttribute("name", view ? "create-outline" : "eye-outline");
+
+    renderMetadataTags();
+
+    if (view) {
+      title?.blur();
+      editor?.blur();
+      window.getSelection?.()?.removeAllRanges?.();
+      if (announce) {
+        let seen = false;
+        try { seen = localStorage.getItem(modeTipStorageKey()) === "seen"; } catch {}
+        if (!seen) {
+          showToast("Mode lihat — catatan tampil tanpa alat edit dan tautan bisa dibuka.");
+          try { localStorage.setItem(modeTipStorageKey(), "seen"); } catch {}
+        }
+      }
+    } else if (announce) {
+      showToast("Mode edit — kamu bisa mengubah isi dan format catatan.");
+    }
   }
 
   function setupKeyboardOffset() {
@@ -274,15 +450,29 @@
     q("[data-format-close]")?.addEventListener("click", () => setLayer("[data-format-layer]", false));
     q("[data-visibility-close]")?.addEventListener("click", () => setLayer("[data-visibility-layer]", false));
     q("[data-link-close]")?.addEventListener("click", () => setLayer("[data-link-layer]", false));
+    q("[data-tag-close]")?.addEventListener("click", () => closeTagSheet(false));
+    q("[data-tag-cancel]")?.addEventListener("click", () => closeTagSheet(false));
+    q("[data-tag-apply]")?.addEventListener("click", () => closeTagSheet(true));
+    q("[data-tag-add]")?.addEventListener("click", openTagSheet);
+    q("[data-tag-search]")?.addEventListener("input", renderTagPicker);
+    q("[data-tag-create]")?.addEventListener("click", createTagFromSearch);
+    q("[data-tag-search]")?.addEventListener("keydown", event => {
+      if (event.key === "Enter" && !q("[data-tag-create]")?.hidden) {
+        event.preventDefault();
+        createTagFromSearch();
+      }
+    });
 
     qa(".catatan-sheet-layer").forEach(layer => {
       layer.addEventListener("click", event => {
-        if (event.target === layer) layer.hidden = true;
+        if (event.target !== layer) return;
+        if (layer.matches("[data-tag-layer]")) closeTagSheet(false);
+        else layer.hidden = true;
       });
     });
 
     q("[data-visibility-chip]")?.addEventListener("click", () => {
-      if (scope === "personal") openSheet("[data-visibility-layer]", true);
+      if (scope === "personal" && editorMode === "edit") openSheet("[data-visibility-layer]", true);
     });
 
     qa("[data-set-visibility]").forEach(button => {
@@ -302,7 +492,14 @@
         }
         if (action === "visibility" && scope === "personal") {
           setLayer("[data-info-layer]", false);
-          openSheet("[data-visibility-layer]", true);
+          if (editorMode === "edit") openSheet("[data-visibility-layer]", true);
+          else showToast("Masuk ke Edit catatan untuk mengubah visibilitas.");
+          return;
+        }
+        if (action === "tag") {
+          setLayer("[data-info-layer]", false);
+          if (editorMode === "edit") openTagSheet();
+          else showToast("Masuk ke Edit catatan untuk mengubah tag.");
           return;
         }
         if (action === "promote") {
@@ -311,7 +508,6 @@
         }
         const names = {
           folder: "Pemilihan Folder",
-          tag: "Tag",
           color: "Warna Catatan",
           reminder: "Reminder",
           related: "Catatan Terkait"
@@ -323,14 +519,23 @@
 
   function setupToolbar() {
     const editor = q("[data-note-content]");
+
     document.addEventListener("selectionchange", () => {
-      if (!selectionNode()) return;
+      if (editorMode !== "edit" || !selectionNode()) return;
       saveSelection();
       refreshFormatState();
     });
     editor?.addEventListener("keyup", () => { saveSelection(); refreshFormatState(); });
     editor?.addEventListener("mouseup", () => { saveSelection(); refreshFormatState(); });
     editor?.addEventListener("input", refreshFormatState);
+    editor?.addEventListener("click", event => {
+      const anchor = event.target.closest?.("a");
+      if (!anchor) return;
+      if (editorMode === "edit") {
+        event.preventDefault();
+        showToast("Tautan bisa dibuka dari Lihat hasil.");
+      }
+    });
 
     q('[data-tool="format"]')?.addEventListener("click", () => {
       refreshFormatState();
@@ -408,10 +613,10 @@
       setLayer("[data-link-layer]", false);
       restoreSelection();
 
-      const editor = q("[data-note-content]");
+      const editorEl = q("[data-note-content]");
       const selection = window.getSelection?.();
       const range = selection && selection.rangeCount ? selection.getRangeAt(0) : null;
-      if (!editor || !selection || !range || !editor.contains(range.commonAncestorContainer)) {
+      if (!editorEl || !selection || !range || !editorEl.contains(range.commonAncestorContainer)) {
         showToast("Pilih posisi tautan di catatan lalu coba lagi.");
         return;
       }
@@ -446,7 +651,13 @@
         try { localStorage.setItem(warningStorageKey(), "hidden"); } catch {}
       }
       setLayer("[data-sensitive-layer]", false);
-      q("[data-note-title]")?.focus();
+      if (editorMode === "edit") q("[data-note-title]")?.focus();
+    });
+  }
+
+  function setupModeToggle() {
+    q("[data-mode-toggle]")?.addEventListener("click", () => {
+      setMode(editorMode === "edit" ? "view" : "edit", true);
     });
   }
 
@@ -456,14 +667,16 @@
     setupSheets();
     setupToolbar();
     setupSensitiveNotice();
+    setupModeToggle();
     setupKeyboardOffset();
+    setMode("edit", false);
   }
 
   async function init() {
     const params = new URLSearchParams(location.search);
     scope = clean(params.get("scope"), "personal").toLowerCase();
     folderName = clean(params.get("folder"));
-    if (!['family', 'personal'].includes(scope)) scope = "personal";
+    if (!["family", "personal"].includes(scope)) scope = "personal";
 
     setupEditor();
     applyContext();
@@ -480,9 +693,13 @@
       ]);
       if (!user || !family) return;
       userId = clean(user.id, "guest");
+      loadTagCatalog();
+      renderMetadataTags();
       maybeShowSensitiveNotice();
     } catch (error) {
       console.error("[Catatan Editor]", error);
+      loadTagCatalog();
+      renderMetadataTags();
       maybeShowSensitiveNotice();
     } finally {
       q("[data-catatan-editor]")?.setAttribute("aria-busy", "false");

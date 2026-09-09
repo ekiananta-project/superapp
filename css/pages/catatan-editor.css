@@ -1,4 +1,4 @@
-/* RuangKitha v2.0.0a21 — Catatan Biasa writing UX hotfix */
+/* RuangKitha v2.0.0a23 — Catatan tags + view/edit experience */
 
 .catatan-editor {
   position: relative;
@@ -419,4 +419,206 @@ html[data-theme="dark"] .catatan-context-chip { background: var(--color-surface,
   .catatan-editor-back:active,
   .catatan-editor-menu:active,
   .catatan-context-chip:active { transform: scale(.96); }
+}
+
+
+/* =========================================================
+   v2.0.0a23 — Mode Lihat/Edit + tag multi-select
+   ========================================================= */
+.catatan-editor-mode {
+  appearance: none;
+  justify-self: center;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  min-width: 112px;
+  min-height: 38px;
+  padding: 0 14px;
+  border: 1px solid var(--color-border, #e0e4e1);
+  border-radius: 999px;
+  background: var(--color-surface-soft, #eef1ef);
+  color: var(--color-text, #18201b);
+  font: inherit;
+  font-size: 11px;
+  line-height: 1;
+  font-weight: 700;
+  white-space: nowrap;
+  cursor: pointer;
+}
+.catatan-editor-mode ion-icon {
+  color: var(--color-primary, #159447);
+  font-size: 18px;
+}
+.catatan-editor-mode:active { transform: scale(.97); }
+
+.catatan-context-tags {
+  display: contents;
+}
+.catatan-context-chip.is-tag {
+  color: var(--color-primary, #159447);
+  background: color-mix(in srgb, var(--color-primary, #159447) 7%, var(--color-surface, #fff));
+}
+.catatan-context-chip.is-add-tag {
+  border-style: dashed;
+  color: var(--color-primary, #159447);
+  background: transparent;
+}
+.catatan-context-chip.is-add-tag ion-icon { font-size: 15px; }
+
+.catatan-editor.is-view-mode .catatan-editor-main {
+  padding-bottom: max(30px, env(safe-area-inset-bottom));
+}
+.catatan-editor.is-view-mode .catatan-title-input {
+  cursor: default;
+}
+.catatan-editor.is-view-mode .catatan-content-editor {
+  cursor: default;
+}
+.catatan-editor.is-view-mode .catatan-content-editor a {
+  cursor: pointer;
+  text-underline-offset: 2px;
+}
+.catatan-editor.is-view-mode .catatan-context-chip:not(.is-area) {
+  cursor: default;
+}
+.catatan-editor-toolbar[hidden] { display: none !important; }
+
+.catatan-tag-sheet { overflow: hidden; }
+.catatan-tag-search {
+  display: grid;
+  grid-template-columns: 24px minmax(0,1fr);
+  align-items: center;
+  gap: 8px;
+  min-height: 48px;
+  padding: 0 12px;
+  border: 1px solid var(--color-border, #e0e4e1);
+  border-radius: 15px;
+  background: var(--color-surface, #fff);
+}
+.catatan-tag-search:focus-within { border-color: var(--color-primary, #159447); }
+.catatan-tag-search ion-icon {
+  color: var(--color-text-muted, #879089);
+  font-size: 19px;
+}
+.catatan-tag-search input {
+  min-width: 0;
+  width: 100%;
+  height: 46px;
+  padding: 0;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  color: var(--color-text, #18201b);
+  font: inherit;
+  font-size: 12px;
+}
+.catatan-tag-search input::placeholder { color: var(--color-text-muted, #879089); }
+
+.catatan-tag-list {
+  display: grid;
+  gap: 7px;
+  max-height: min(38dvh, 300px);
+  margin-top: 12px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+.catatan-tag-option {
+  appearance: none;
+  display: grid;
+  grid-template-columns: minmax(0,1fr) 24px;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  min-height: 48px;
+  padding: 0 12px;
+  border: 1px solid var(--color-border, #e0e4e1);
+  border-radius: 14px;
+  background: var(--color-surface, #fff);
+  color: var(--color-text, #18201b);
+  text-align: left;
+  font: inherit;
+  cursor: pointer;
+}
+.catatan-tag-option strong {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-size: 11px;
+  white-space: nowrap;
+}
+.catatan-tag-option ion-icon {
+  justify-self: end;
+  color: var(--color-text-muted, #879089);
+  font-size: 20px;
+}
+.catatan-tag-option.is-selected {
+  border-color: color-mix(in srgb, var(--color-primary, #159447) 55%, var(--color-border, #e0e4e1));
+  background: color-mix(in srgb, var(--color-primary, #159447) 8%, var(--color-surface, #fff));
+}
+.catatan-tag-option.is-selected ion-icon { color: var(--color-primary, #159447); }
+
+.catatan-tag-empty {
+  padding: 18px 6px 8px;
+  color: var(--color-text-soft, #6f7b73);
+  text-align: center;
+  font-size: 10px;
+}
+.catatan-tag-create {
+  appearance: none;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  min-height: 46px;
+  margin-top: 10px;
+  padding: 0 12px;
+  border: 1px dashed color-mix(in srgb, var(--color-primary, #159447) 45%, var(--color-border, #e0e4e1));
+  border-radius: 14px;
+  background: color-mix(in srgb, var(--color-primary, #159447) 5%, transparent);
+  color: var(--color-primary, #159447);
+  font: inherit;
+  font-size: 10.5px;
+  font-weight: 700;
+  text-align: left;
+  cursor: pointer;
+}
+.catatan-tag-create ion-icon { font-size: 20px; }
+.catatan-tag-create[hidden] { display: none !important; }
+
+.catatan-tag-actions {
+  display: grid;
+  grid-template-columns: 1fr 1.25fr;
+  gap: 9px;
+  margin-top: 14px;
+}
+.catatan-tag-actions button {
+  appearance: none;
+  min-height: 46px;
+  border-radius: 14px;
+  font: inherit;
+  font-size: 11px;
+  font-weight: 700;
+  cursor: pointer;
+}
+.catatan-tag-actions .is-secondary {
+  border: 1px solid var(--color-border, #e0e4e1);
+  background: var(--color-surface, #fff);
+  color: var(--color-text, #18201b);
+}
+.catatan-tag-actions .is-primary {
+  border: 0;
+  background: var(--color-primary, #159447);
+  color: #fff;
+}
+
+html[data-theme="dark"] .catatan-editor-mode,
+html[data-theme="dark"] .catatan-tag-search,
+html[data-theme="dark"] .catatan-tag-option,
+html[data-theme="dark"] .catatan-tag-actions .is-secondary {
+  background: var(--color-surface, #212422);
+}
+
+@media (max-width: 360px) {
+  .catatan-editor-header { grid-template-columns: 42px minmax(0,1fr) 42px; gap: 8px; }
+  .catatan-editor-mode { min-width: 104px; padding-inline: 11px; font-size: 10.5px; }
 }
