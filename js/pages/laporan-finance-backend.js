@@ -182,19 +182,25 @@
 
     const status = q("[data-report-cash-status]");
     const hero = q("[data-report-hero]");
+    const heroIcon = hero?.querySelector(".report-hero-icon ion-icon");
     status.classList.remove("is-good", "is-bad");
-    hero.classList.remove("is-good", "is-bad");
+    hero?.classList.remove("is-good", "is-bad");
 
     if (net > 0) {
       status.textContent = "Surplus";
       status.classList.add("is-good");
+      hero?.classList.add("is-good");
+      heroIcon?.setAttribute("name", "trending-up-outline");
       q("[data-report-net-note]").textContent = `Pemasukan lebih besar ${rupiah(net)} dibanding pengeluaran pada periode ini.`;
     } else if (net < 0) {
       status.textContent = "Defisit";
       status.classList.add("is-bad");
+      hero?.classList.add("is-bad");
+      heroIcon?.setAttribute("name", "trending-down-outline");
       q("[data-report-net-note]").textContent = `Pengeluaran lebih besar ${rupiah(Math.abs(net))} dibanding pemasukan pada periode ini.`;
     } else {
       status.textContent = "Seimbang";
+      heroIcon?.setAttribute("name", "analytics-outline");
       q("[data-report-net-note]").textContent = "Pemasukan dan pengeluaran bernilai sama pada periode ini.";
     }
   }
@@ -344,7 +350,7 @@
             <span class="report-wallet-icon"><ion-icon name="${escapeHTML(item.icon_value || "wallet-outline")}"></ion-icon></span>
             <span><strong>${escapeHTML(item.name || "Dompet")}</strong><small>Saldo terkini</small></span>
           </div>
-          <strong>${escapeHTML(compactRupiah(amount))}</strong>
+          <strong>${escapeHTML(rupiah(amount))}</strong>
         </div>
         <div class="report-track" aria-hidden="true"><span style="width:${Math.min(100, percent)}%"></span></div>`;
       root.appendChild(div);

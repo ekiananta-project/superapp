@@ -1,4 +1,4 @@
-const CACHE_NAME = "family-superapp-v1.2.0e1-home-scroll-limit-1";
+const CACHE_NAME = "family-superapp-v1.2.0e2-report-visual-wallet-full-1";
 const OFFLINE_URL = "./offline.html";
 
 const APP_FILES = [
