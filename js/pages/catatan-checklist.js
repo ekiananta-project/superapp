@@ -141,9 +141,6 @@
     return `ruangkitha_catatan_sensitive_notice_v1:${userId}`;
   }
 
-  function modeTipStorageKey() {
-    return `ruangkitha_catatan_checklist_mode_tip_v1:${userId}`;
-  }
 
   function tagCatalogStorageKey() {
     return `ruangkitha_catatan_tag_catalog_preview_v1:${userId}:${scope}`;
@@ -263,7 +260,7 @@
   }
 
   function updateProgress() {
-    const items = itemElements();
+    const items = itemElements().filter(item => clean(item.querySelector("[data-check-text]")?.value));
     const done = items.filter(item => item.classList.contains("is-complete")).length;
     const total = items.length;
     const percent = total ? Math.round((done / total) * 100) : 0;
@@ -273,6 +270,15 @@
     if (label) label.textContent = `${done} dari ${total} selesai`;
     if (pct) pct.textContent = `${percent}%`;
     if (bar) bar.style.width = `${percent}%`;
+  }
+
+  function syncViewOnlyItems(view) {
+    itemElements().forEach(item => {
+      const input = item.querySelector("[data-check-text]");
+      const empty = !clean(input?.value);
+      item.classList.toggle("is-view-empty", view && empty);
+      item.setAttribute("aria-hidden", view && empty ? "true" : "false");
+    });
   }
 
   function setItemComplete(item, complete) {
@@ -338,7 +344,10 @@
     resizeItem(input);
     setItemComplete(item, complete);
 
-    input.addEventListener("input", () => resizeItem(input));
+    input.addEventListener("input", () => {
+      resizeItem(input);
+      updateProgress();
+    });
     input.addEventListener("keydown", event => {
       if (editorMode !== "edit") return;
       if (event.key === "Enter" && !event.shiftKey) {
@@ -397,6 +406,8 @@
     root?.classList.toggle("is-view-mode", view);
     if (title) title.readOnly = view;
     qa("[data-check-text]").forEach(input => { input.readOnly = view; });
+    syncViewOnlyItems(view);
+    updateProgress();
     if (visibilityChip) visibilityChip.disabled = view || scope !== "personal";
     if (toggle) toggle.setAttribute("aria-label", view ? "Edit checklist" : "Lihat hasil checklist");
     if (label) label.textContent = view ? "Edit catatan" : "Lihat hasil";
@@ -407,16 +418,9 @@
     if (view) {
       title?.blur();
       qa("[data-check-text]").forEach(input => input.blur());
-      if (announce) {
-        let seen = false;
-        try { seen = localStorage.getItem(modeTipStorageKey()) === "seen"; } catch {}
-        if (!seen) {
-          showToast("Mode lihat — teks terkunci, tetapi item checklist tetap bisa ditandai.");
-          try { localStorage.setItem(modeTipStorageKey(), "seen"); } catch {}
-        }
-      }
+      if (announce) showToast("Mode Lihat hasil aktif — hanya isi catatan yang ditampilkan.");
     } else if (announce) {
-      showToast("Mode edit — kamu bisa menambah, menghapus, dan mengubah item checklist.");
+      showToast("Mode Edit aktif — kamu bisa mengubah isi catatan.");
     }
   }
 

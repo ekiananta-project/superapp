@@ -1,4 +1,4 @@
-/* RuangKitha v2.0.0a24 — Checklist editor UI foundation */
+/* RuangKitha v2.0.0a25 — Checklist editor UI + clean View mode */
 
 .catatan-checklist-main {
   padding-bottom: max(38px, env(safe-area-inset-bottom));
@@ -168,6 +168,11 @@
 
 .catatan-checklist.is-view-mode .catatan-check-toggle {
   cursor: pointer;
+}
+
+/* v2.0.0a25 — Lihat hasil hanya menampilkan item yang benar-benar sudah ditulis. */
+.catatan-checklist.is-view-mode .catatan-checklist-item.is-view-empty {
+  display: none !important;
 }
 
 html[data-theme="dark"] .catatan-checklist-progress,

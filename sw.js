@@ -1,4 +1,4 @@
-const CACHE_NAME = "ruangkitha-v2.0.0a24-catatan-checklist-editor-1";
+const CACHE_NAME = "ruangkitha-v2.0.0a25-catatan-mode-feedback-checklist-view-1";
 const OFFLINE_URL = "./offline.html";
 
 const APP_FILES = [

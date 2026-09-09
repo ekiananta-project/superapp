@@ -272,9 +272,6 @@
     return `ruangkitha_catatan_sensitive_notice_v1:${userId}`;
   }
 
-  function modeTipStorageKey() {
-    return `ruangkitha_catatan_mode_tip_v1:${userId}`;
-  }
 
   function tagCatalogStorageKey() {
     return `ruangkitha_catatan_tag_catalog_preview_v1:${userId}:${scope}`;
@@ -419,16 +416,9 @@
       title?.blur();
       editor?.blur();
       window.getSelection?.()?.removeAllRanges?.();
-      if (announce) {
-        let seen = false;
-        try { seen = localStorage.getItem(modeTipStorageKey()) === "seen"; } catch {}
-        if (!seen) {
-          showToast("Mode lihat — catatan tampil tanpa alat edit dan tautan bisa dibuka.");
-          try { localStorage.setItem(modeTipStorageKey(), "seen"); } catch {}
-        }
-      }
+      if (announce) showToast("Mode Lihat hasil aktif — hanya isi catatan yang ditampilkan.");
     } else if (announce) {
-      showToast("Mode edit — kamu bisa mengubah isi dan format catatan.");
+      showToast("Mode Edit aktif — kamu bisa mengubah isi catatan.");
     }
   }
 
