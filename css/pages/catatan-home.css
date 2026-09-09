@@ -1,0 +1,384 @@
+/* RuangKitha v2.0.0a10 — Catatan Home UI foundation */
+
+.catatan-home {
+  position: relative;
+  min-height: 100dvh;
+  padding-left: 0;
+  padding-right: 0;
+  padding-bottom: calc(104px + env(safe-area-inset-bottom));
+}
+
+.catatan-home > .catatan-standard-header {
+  position: relative;
+  margin-left: var(--space-5, 24px);
+  margin-right: var(--space-5, 24px);
+}
+
+.catatan-back-ruangkitha {
+  position: absolute;
+  z-index: 2;
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  min-height: 42px;
+  padding: 0 10px;
+  border: 1px solid var(--color-border, #e0e4e1);
+  border-radius: 999px;
+  background: var(--color-surface-soft, #eef1ef);
+  color: var(--color-primary, #159447);
+  text-decoration: none;
+  font-size: 11.5px;
+  font-weight: 700;
+  box-shadow: var(--shadow-sm, 0 5px 16px rgba(20,40,28,.05));
+}
+
+.catatan-back-ruangkitha ion-icon { font-size: 20px; }
+
+.catatan-main {
+  display: grid;
+  gap: 20px;
+  padding: 0 var(--space-5, 24px) 24px;
+}
+
+.catatan-search-section { margin-top: 2px; }
+
+.catatan-search-box {
+  display: grid;
+  grid-template-columns: 22px minmax(0, 1fr);
+  align-items: center;
+  gap: 10px;
+  min-height: 52px;
+  padding: 0 15px;
+  border: 1px solid var(--color-border, #e0e4e1);
+  border-radius: 18px;
+  background: var(--color-surface, #fff);
+  box-shadow: var(--shadow-sm, 0 6px 18px rgba(20,40,28,.045));
+}
+
+.catatan-search-box ion-icon {
+  color: var(--color-text-secondary, #767c78);
+  font-size: 21px;
+}
+
+.catatan-search-box input {
+  width: 100%;
+  min-width: 0;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  color: var(--color-text, #171a18);
+  font: inherit;
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.catatan-search-box input::placeholder { color: var(--color-text-secondary, #8a908c); }
+
+.catatan-primary-section {
+  display: grid;
+  gap: 12px;
+}
+
+.catatan-primary-card {
+  appearance: none;
+  display: grid;
+  grid-template-columns: 50px minmax(0, 1fr) 20px;
+  align-items: center;
+  gap: 13px;
+  width: 100%;
+  padding: 17px;
+  border: 1px solid var(--color-border, #e0e4e1);
+  border-radius: 22px;
+  background: var(--color-surface, #fff);
+  color: var(--color-text, #171a18);
+  text-align: left;
+  font: inherit;
+  box-shadow: var(--shadow-sm, 0 8px 24px rgba(20,40,28,.05));
+  cursor: pointer;
+}
+
+.catatan-primary-card:active { transform: scale(.992); }
+
+.catatan-card-icon {
+  display: grid;
+  place-items: center;
+  width: 50px;
+  height: 50px;
+  border-radius: 17px;
+  background: rgba(48,168,118,.11);
+  color: var(--color-primary, #159447);
+}
+
+.catatan-primary-card.is-personal .catatan-card-icon {
+  background: rgba(229,171,70,.13);
+  color: #b67b19;
+}
+
+.catatan-card-icon ion-icon { font-size: 25px; }
+
+.catatan-card-copy { min-width: 0; }
+.catatan-card-copy strong {
+  display: block;
+  margin-bottom: 5px;
+  font-size: 15px;
+  line-height: 1.25;
+}
+.catatan-card-copy > span {
+  display: block;
+  color: var(--color-text-secondary, #737a76);
+  font-size: 10.5px;
+  line-height: 1.55;
+}
+.catatan-card-copy small {
+  display: block;
+  margin-top: 8px;
+  color: var(--color-primary, #159447);
+  font-size: 9.5px;
+  font-weight: 700;
+}
+
+.catatan-primary-card.is-personal .catatan-card-copy small { color: #a87218; }
+.catatan-card-chevron { color: var(--color-text-secondary, #8a908c); font-size: 19px; }
+
+.catatan-member-section { display: grid; gap: 11px; }
+.catatan-section-heading h2 { margin: 0; font-size: 15px; }
+.catatan-section-heading p {
+  margin: 5px 0 0;
+  color: var(--color-text-secondary, #767c78);
+  font-size: 10px;
+  line-height: 1.5;
+}
+
+.catatan-member-list { display: grid; gap: 9px; }
+
+.catatan-member-card {
+  appearance: none;
+  display: grid;
+  grid-template-columns: 42px minmax(0,1fr) 18px;
+  align-items: center;
+  gap: 11px;
+  width: 100%;
+  padding: 12px 13px;
+  border: 1px solid var(--color-border, #e0e4e1);
+  border-radius: 18px;
+  background: var(--color-surface, #fff);
+  color: var(--color-text, #171a18);
+  text-align: left;
+  font: inherit;
+  box-shadow: var(--shadow-sm, 0 5px 16px rgba(20,40,28,.04));
+  cursor: pointer;
+}
+
+.catatan-member-avatar {
+  display: grid;
+  place-items: center;
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  background: var(--color-surface-soft, #eef1ef);
+  color: var(--color-primary, #159447);
+  font-size: 13px;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.catatan-member-copy strong { display: block; font-size: 12.5px; }
+.catatan-member-copy small {
+  display: block;
+  margin-top: 3px;
+  color: var(--color-text-secondary, #767c78);
+  font-size: 9.5px;
+  line-height: 1.4;
+}
+.catatan-member-card > ion-icon { color: var(--color-text-secondary, #8a908c); font-size: 17px; }
+
+.catatan-bottom-nav {
+  position: fixed;
+  z-index: 50;
+  left: 50%;
+  bottom: 0;
+  display: grid;
+  grid-template-columns: 1fr 1fr 68px 1fr;
+  align-items: end;
+  width: min(100vw, 430px);
+  min-height: 78px;
+  padding: 8px 11px max(9px, env(safe-area-inset-bottom));
+  border-top: 1px solid var(--color-border, #e0e4e1);
+  background: rgba(255,255,255,.97);
+  box-shadow: 0 -10px 30px rgba(20,40,28,.05);
+  transform: translateX(-50%);
+  backdrop-filter: blur(16px);
+  box-sizing: border-box;
+}
+
+.catatan-nav-item {
+  appearance: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
+  min-height: 52px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--color-text-secondary, #737a76);
+  text-decoration: none;
+  font: inherit;
+  font-size: 10px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.catatan-nav-item ion-icon { font-size: 23px; }
+.catatan-nav-item.is-active { color: var(--color-primary, #159447); }
+
+.catatan-add-button {
+  appearance: none;
+  display: grid;
+  place-items: center;
+  width: 56px;
+  height: 56px;
+  margin: 0 auto 13px;
+  border: 0;
+  border-radius: 50%;
+  background: var(--color-primary, #159447);
+  color: #fff;
+  box-shadow: 0 10px 24px rgba(21,148,71,.28);
+  cursor: pointer;
+}
+.catatan-add-button ion-icon { font-size: 30px; }
+.catatan-add-button:active { transform: scale(.96); }
+
+.catatan-toast {
+  position: fixed;
+  z-index: 90;
+  left: 50%;
+  bottom: calc(94px + env(safe-area-inset-bottom));
+  width: min(calc(100vw - 48px), 360px);
+  padding: 11px 14px;
+  border-radius: 15px;
+  background: rgba(31,34,32,.96);
+  color: #fff;
+  transform: translateX(-50%);
+  box-shadow: 0 12px 30px rgba(0,0,0,.2);
+  font-size: 10.5px;
+  font-weight: 600;
+  line-height: 1.45;
+  text-align: center;
+}
+
+.catatan-sheet-layer {
+  position: fixed;
+  z-index: 80;
+  inset: 0;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  padding: 0;
+  background: rgba(9,12,10,.42);
+  backdrop-filter: blur(4px);
+}
+.catatan-sheet-layer[hidden] { display: none; }
+
+.catatan-sheet {
+  width: min(100vw, 430px);
+  max-height: min(78dvh, 620px);
+  overflow: auto;
+  padding: 9px 18px calc(24px + env(safe-area-inset-bottom));
+  border-radius: 26px 26px 0 0;
+  background: var(--color-surface, #fff);
+  box-shadow: 0 -18px 44px rgba(0,0,0,.18);
+}
+
+.catatan-sheet-handle {
+  width: 42px;
+  height: 4px;
+  margin: 1px auto 15px;
+  border-radius: 999px;
+  background: var(--color-border, #dfe3e0);
+}
+
+.catatan-sheet-header {
+  display: grid;
+  grid-template-columns: minmax(0,1fr) 40px;
+  align-items: start;
+  gap: 12px;
+  margin-bottom: 13px;
+}
+.catatan-sheet-header small { color: var(--color-text-secondary, #767c78); font-size: 9.5px; }
+.catatan-sheet-header h2 { margin: 3px 0 0; font-size: 17px; }
+.catatan-sheet-close {
+  display: grid;
+  place-items: center;
+  width: 38px;
+  height: 38px;
+  border: 1px solid var(--color-border, #e0e4e1);
+  border-radius: 50%;
+  background: var(--color-surface-soft, #eef1ef);
+  color: var(--color-text, #171a18);
+}
+.catatan-sheet-close ion-icon { font-size: 20px; }
+.catatan-create-step { display: grid; gap: 9px; }
+
+.catatan-create-option {
+  appearance: none;
+  display: grid;
+  grid-template-columns: 42px minmax(0,1fr) 18px;
+  align-items: center;
+  gap: 11px;
+  width: 100%;
+  padding: 12px;
+  border: 1px solid var(--color-border, #e0e4e1);
+  border-radius: 17px;
+  background: var(--color-surface, #fff);
+  color: var(--color-text, #171a18);
+  text-align: left;
+  font: inherit;
+}
+.catatan-create-icon {
+  display: grid;
+  place-items: center;
+  width: 42px;
+  height: 42px;
+  border-radius: 14px;
+  background: rgba(48,168,118,.1);
+  color: var(--color-primary, #159447);
+}
+.catatan-create-icon ion-icon { font-size: 21px; }
+.catatan-create-option strong { display: block; font-size: 12px; }
+.catatan-create-option small {
+  display: block;
+  margin-top: 3px;
+  color: var(--color-text-secondary, #767c78);
+  font-size: 9px;
+  line-height: 1.4;
+}
+.catatan-create-option > ion-icon { color: var(--color-text-secondary, #8a908c); font-size: 17px; }
+
+html[data-theme="dark"] .catatan-bottom-nav {
+  border-top-color: var(--color-border);
+  background: rgba(27,29,28,.97);
+  box-shadow: 0 -10px 30px rgba(0,0,0,.28);
+}
+html[data-theme="dark"] .catatan-nav-item { color: #b9bfbb; }
+html[data-theme="dark"] .catatan-nav-item.is-active { color: #63d290; }
+html[data-theme="dark"] .catatan-toast { background: rgba(8,10,9,.96); }
+
+@media (max-width: 380px) {
+  .catatan-home > .catatan-standard-header,
+  .catatan-main {
+    margin-left: 0;
+    margin-right: 0;
+  }
+  .catatan-home > .catatan-standard-header { margin-left: 20px; margin-right: 20px; }
+  .catatan-main { padding-left: 20px; padding-right: 20px; }
+  .catatan-back-ruangkitha { padding: 0 8px; font-size: 10px; gap: 3px; }
+  .catatan-back-ruangkitha ion-icon { font-size: 18px; }
+  .catatan-primary-card { padding: 15px; grid-template-columns: 46px minmax(0,1fr) 18px; }
+  .catatan-card-icon { width: 46px; height: 46px; border-radius: 15px; }
+}

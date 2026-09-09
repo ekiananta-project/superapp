@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="id" data-auth-guard="family">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#0B0D0C">
+  <meta name="application-name" content="RuangKitha">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="RuangKitha">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="robots" content="noindex,nofollow,noarchive">
+  <meta name="referrer" content="strict-origin-when-cross-origin">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32.png">
+  <link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png">
+  <link rel="apple-touch-icon" sizes="180x180" href="icons/apple-touch-icon.png">
+  <script src="js/theme.js"></script>
+  <title>Catatan · RuangKitha</title>
+
+  <link rel="preconnect" href="https://eipviruaffujxsfpupki.supabase.co" crossorigin>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/theme.css">
+  <link rel="stylesheet" href="css/pages/catatan-home.css?v=20260909-v200a10">
+  <style id="ruangkitha-auth-cloak">html[data-auth-guard] body{visibility:hidden!important}</style>
+</head>
+<body>
+<div class="aplikasi dengan-nav catatan-home" data-catatan-home aria-busy="true">
+  <header class="header-halaman catatan-standard-header">
+    <a class="catatan-back-ruangkitha" href="index.html" aria-label="Kembali ke RuangKitha">
+      <ion-icon name="arrow-back-outline" aria-hidden="true"></ion-icon>
+      <span>RuangKitha</span>
+    </a>
+    <span class="kosong" aria-hidden="true"></span>
+    <h1>Catatan</h1>
+    <span class="kosong" aria-hidden="true"></span>
+  </header>
+
+  <main class="catatan-main">
+    <section class="catatan-search-section" aria-label="Pencarian catatan">
+      <label class="catatan-search-box" for="catatan-global-search">
+        <ion-icon name="search-outline" aria-hidden="true"></ion-icon>
+        <input
+          id="catatan-global-search"
+          type="search"
+          inputmode="search"
+          autocomplete="off"
+          placeholder="Cari di semua catatan..."
+          aria-label="Cari di semua catatan">
+      </label>
+    </section>
+
+    <section class="catatan-primary-section" aria-label="Kelompok utama catatan">
+      <button class="catatan-primary-card is-family" type="button" data-open-scope="family">
+        <span class="catatan-card-icon" aria-hidden="true">
+          <ion-icon name="people-outline"></ion-icon>
+        </span>
+        <span class="catatan-card-copy">
+          <strong>Catatan Keluarga</strong>
+          <span>Ruang bersama untuk catatan yang dapat dilihat dan diedit semua anggota.</span>
+          <small data-family-note-meta>Catatan bersama keluarga</small>
+        </span>
+        <ion-icon class="catatan-card-chevron" name="chevron-forward-outline" aria-hidden="true"></ion-icon>
+      </button>
+
+      <button class="catatan-primary-card is-personal" type="button" data-open-scope="personal">
+        <span class="catatan-card-icon" aria-hidden="true">
+          <ion-icon name="person-outline"></ion-icon>
+        </span>
+        <span class="catatan-card-copy">
+          <strong>Catatan Pribadi</strong>
+          <span>Ruang catatan milik kamu. Atur sendiri mana yang hanya untukmu atau dapat dilihat keluarga.</span>
+          <small data-personal-note-meta>Catatan milik kamu</small>
+        </span>
+        <ion-icon class="catatan-card-chevron" name="chevron-forward-outline" aria-hidden="true"></ion-icon>
+      </button>
+    </section>
+
+    <section class="catatan-member-section" data-member-section hidden aria-labelledby="catatan-member-title">
+      <div class="catatan-section-heading">
+        <div>
+          <h2 id="catatan-member-title">Catatan Anggota</h2>
+          <p>Catatan pribadi anggota yang mereka izinkan untuk dilihat keluarga.</p>
+        </div>
+      </div>
+      <div class="catatan-member-list" data-member-list></div>
+    </section>
+  </main>
+
+  <nav class="catatan-bottom-nav" aria-label="Navigasi Catatan">
+    <a class="catatan-nav-item is-active" href="catatan.html" aria-current="page">
+      <ion-icon name="home-outline" aria-hidden="true"></ion-icon>
+      <span>Home</span>
+    </a>
+    <button class="catatan-nav-item" type="button" data-nav-placeholder="Dipin">
+      <ion-icon name="pin-outline" aria-hidden="true"></ion-icon>
+      <span>Dipin</span>
+    </button>
+    <button class="catatan-add-button" type="button" data-create-note aria-label="Buat catatan baru">
+      <ion-icon name="add-outline" aria-hidden="true"></ion-icon>
+    </button>
+    <button class="catatan-nav-item" type="button" data-nav-placeholder="Arsip">
+      <ion-icon name="archive-outline" aria-hidden="true"></ion-icon>
+      <span>Arsip</span>
+    </button>
+  </nav>
+
+  <div class="catatan-toast" data-catatan-toast role="status" hidden></div>
+
+  <div class="catatan-sheet-layer" data-create-layer hidden>
+    <section class="catatan-sheet" role="dialog" aria-modal="true" aria-labelledby="catatan-create-title">
+      <div class="catatan-sheet-handle" aria-hidden="true"></div>
+      <div class="catatan-sheet-header">
+        <div>
+          <small>Buat catatan baru</small>
+          <h2 id="catatan-create-title" data-create-title>Pilih ruang catatan</h2>
+        </div>
+        <button class="catatan-sheet-close" type="button" data-create-close aria-label="Tutup">
+          <ion-icon name="close-outline" aria-hidden="true"></ion-icon>
+        </button>
+      </div>
+
+      <div class="catatan-create-step" data-create-step="scope">
+        <button class="catatan-create-option" type="button" data-create-scope="family">
+          <span class="catatan-create-icon"><ion-icon name="people-outline"></ion-icon></span>
+          <span><strong>Catatan Keluarga</strong><small>Dapat dilihat dan diedit semua anggota.</small></span>
+          <ion-icon name="chevron-forward-outline" aria-hidden="true"></ion-icon>
+        </button>
+        <button class="catatan-create-option" type="button" data-create-scope="personal">
+          <span class="catatan-create-icon"><ion-icon name="person-outline"></ion-icon></span>
+          <span><strong>Catatan Pribadi</strong><small>Catatan milik kamu dengan visibilitas yang kamu tentukan.</small></span>
+          <ion-icon name="chevron-forward-outline" aria-hidden="true"></ion-icon>
+        </button>
+      </div>
+
+      <div class="catatan-create-step" data-create-step="type" hidden>
+        <button class="catatan-create-option" type="button" data-create-type="Catatan Biasa">
+          <span class="catatan-create-icon"><ion-icon name="document-text-outline"></ion-icon></span>
+          <span><strong>Catatan Biasa</strong><small>Tulis informasi, ide, atau hal yang ingin disimpan.</small></span>
+          <ion-icon name="chevron-forward-outline" aria-hidden="true"></ion-icon>
+        </button>
+        <button class="catatan-create-option" type="button" data-create-type="Checklist">
+          <span class="catatan-create-icon"><ion-icon name="checkbox-outline"></ion-icon></span>
+          <span><strong>Checklist</strong><small>Buat daftar yang dapat ditandai satu per satu.</small></span>
+          <ion-icon name="chevron-forward-outline" aria-hidden="true"></ion-icon>
+        </button>
+        <button class="catatan-create-option" type="button" data-create-type="Reminder">
+          <span class="catatan-create-icon"><ion-icon name="notifications-outline"></ion-icon></span>
+          <span><strong>Reminder</strong><small>Catatan yang terhubung dengan tanggal dan pengingat.</small></span>
+          <ion-icon name="chevron-forward-outline" aria-hidden="true"></ion-icon>
+        </button>
+      </div>
+    </section>
+  </div>
+</div>
+
+<script type="module" src="https://unpkg.com/ionicons@8.0.13/dist/ionicons/ionicons.esm.js"></script>
+<script nomodule src="https://unpkg.com/ionicons@8.0.13/dist/ionicons/ionicons.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="js/backend/supabase.js"></script>
+<script src="js/backend/auth-service.js"></script>
+<script src="js/backend/family-service.js?v=20260908-10"></script>
+<script src="js/backend/auth-router.js?v=20260909-v200a8"></script>
+<script src="js/backend/auth-guard.js?v=20260909-v200a8"></script>
+<script src="js/pages/catatan-home.js?v=20260909-v200a10"></script>
+<script src="js/pwa.js?v=20260909-v200a10"></script>
+</body>
+</html>

@@ -1,4 +1,4 @@
-const CACHE_NAME = "ruangkitha-v2.0.0a9-lottie-transparency-1";
+const CACHE_NAME = "ruangkitha-v2.0.0a10-catatan-home-1";
 const OFFLINE_URL = "./offline.html";
 
 const APP_FILES = [
@@ -56,6 +56,9 @@ const APP_FILES = [
   "./icons/icon-192-v2.png",
   "./icons/icon-512-v2.png",
   "./index.html",
+  "./catatan.html",
+  "./css/pages/catatan-home.css",
+  "./js/pages/catatan-home.js",
   "./finance.html",
   "./kalender.html",
   "./profil.html",
