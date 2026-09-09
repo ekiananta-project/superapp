@@ -1,4 +1,4 @@
-const CACHE_NAME = "ruangkitha-v2.0.0a29-catatan-supabase-data-foundation-1";
+const CACHE_NAME = "ruangkitha-v2.0.0a29a-catatan-family-shared-notes-hotfix-1";
 const OFFLINE_URL = "./offline.html";
 
 const APP_FILES = [

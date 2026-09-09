@@ -142,6 +142,27 @@
     return data || [];
   }
 
+  async function ambilBasicAnggotaDibagikan(familyId, memberId) {
+    const fid = clean(familyId);
+    const uid = clean(memberId);
+    if (!fid || !uid) return [];
+
+    const { data, error } = await client()
+      .from("notes")
+      .select(NOTE_FIELDS)
+      .eq("family_id", fid)
+      .eq("created_by", uid)
+      .eq("scope", "personal")
+      .eq("visibility", "family-read")
+      .eq("note_type", "basic")
+      .is("archived_at", null)
+      .order("pinned", { ascending: false })
+      .order("updated_at", { ascending: false });
+
+    if (error) throw error;
+    return data || [];
+  }
+
   async function arsipkan(id) {
     const noteId = clean(id);
     if (!noteId) throw new Error("Catatan tidak ditemukan.");
@@ -171,6 +192,7 @@
     ambilCatatan,
     ambilBasicPersonal,
     ambilBasicKeluarga,
+    ambilBasicAnggotaDibagikan,
     arsipkan,
     schemaBelumTerpasang
   };
