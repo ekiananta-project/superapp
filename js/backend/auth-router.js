@@ -20,45 +20,36 @@
     );
   }
 
-  function simpanTujuanSekarang() {
-    const file = location.pathname.split("/").pop() || "index.html";
-    if (["login.html", "daftar.html"].includes(file)) return;
-
-    const tujuan = `${file}${location.search || ""}${location.hash || ""}`;
-    sessionStorage.setItem(KUNCI_RETURN_TO, tujuan);
+  function bersihkanReturnTo() {
+    try { sessionStorage.removeItem(KUNCI_RETURN_TO); } catch {}
   }
 
-  function ambilReturnTo() {
-    const tujuan = sessionStorage.getItem(KUNCI_RETURN_TO) || "";
-    sessionStorage.removeItem(KUNCI_RETURN_TO);
-
-    if (!tujuan) return "";
-    if (/^(https?:|\/\/|javascript:)/i.test(tujuan)) return "";
-    if (tujuan.includes("..")) return "";
-    if (["login.html", "daftar.html", "keluarga-awal.html"].some(x => tujuan.startsWith(x))) {
-      return "";
-    }
-
-    return tujuan;
+  function simpanTujuanSekarang() {
+    const file = location.pathname.split("/").pop() || "index.html";
+    if (["login.html", "daftar.html", "keluarga-awal.html"].includes(file)) return;
+    const tujuan = `${file}${location.search || ""}${location.hash || ""}`;
+    try { sessionStorage.setItem(KUNCI_RETURN_TO, tujuan); } catch {}
   }
 
   async function ambilFamilyAktif() {
     const families = await FamilyService.ambilKeluargaSaya();
     if (!families.length) return null;
-
     const pref = bacaPreferensi();
     const family = families.find(item => item.id === pref.familyAktif) || families[0];
 
     if (family.id !== pref.familyAktif) {
       simpanPreferensi({ familyAktif: family.id });
     }
-
     return family;
   }
 
+  /*
+   * v2.0.0a8 — Global RuangKitha readiness no longer depends on Finance.
+   * A user who already has a family is ready for the global Home even when
+   * that family has zero wallets. Wallet onboarding belongs to wajibFinance().
+   */
   async function cekStatusAplikasi() {
     const session = await AuthService.ambilSession();
-
     if (!session) {
       return {
         session: null,
@@ -70,7 +61,6 @@
     }
 
     const family = await ambilFamilyAktif();
-
     if (!family) {
       return {
         session,
@@ -81,40 +71,24 @@
       };
     }
 
-    const wallets = await FinanceService.ambilSaldoDompet(family.id);
-
-    if (!wallets.length) {
-      return {
-        session,
-        family,
-        wallets: [],
-        state: "needs-wallet",
-        destination: "dompet-form.html?setup=awal"
-      };
-    }
-
     return {
       session,
       family,
-      wallets,
+      wallets: [],
       state: "ready",
       destination: "index.html"
     };
   }
 
-  async function tujuanSetelahLogin({ pakaiReturnTo = true } = {}) {
+  async function tujuanSetelahLogin() {
     const status = await cekStatusAplikasi();
-
-    if (status.state !== "ready") {
-      return status.destination;
-    }
-
-    const returnTo = pakaiReturnTo ? ambilReturnTo() : "";
-    return returnTo || "index.html";
+    /* Jangan hidupkan kembali halaman protected lama setelah logout/login. */
+    bersihkanReturnTo();
+    return status.destination || "index.html";
   }
 
-  async function redirectSetelahLogin(options = {}) {
-    const tujuan = await tujuanSetelahLogin(options);
+  async function redirectSetelahLogin() {
+    const tujuan = await tujuanSetelahLogin();
     location.replace(tujuan);
     return tujuan;
   }
@@ -122,15 +96,13 @@
   async function redirectJikaSudahLogin() {
     const session = await AuthService.ambilSession();
     if (!session) return false;
-
-    await redirectSetelahLogin({ pakaiReturnTo: false });
+    await redirectSetelahLogin();
     return true;
   }
 
   async function wajibLogin() {
     const session = await AuthService.ambilSession();
     if (session) return true;
-
     simpanTujuanSekarang();
     location.replace("login.html");
     return false;
@@ -138,22 +110,20 @@
 
   async function wajibFamily() {
     if (!(await wajibLogin())) return false;
-
     const family = await ambilFamilyAktif();
     if (family) return true;
-
+    bersihkanReturnTo();
     location.replace("keluarga-awal.html");
     return false;
   }
 
   async function wajibFinance() {
     if (!(await wajibFamily())) return false;
-
     const family = await ambilFamilyAktif();
     const wallets = await FinanceService.ambilSaldoDompet(family.id);
-
     if (wallets.length) return true;
 
+    /* Finance alone owns first-wallet onboarding. */
     location.replace("dompet-form.html?setup=awal");
     return false;
   }

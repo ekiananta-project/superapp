@@ -1,4 +1,4 @@
-const CACHE_NAME = "ruangkitha-v2.0.0a7-branding-family-dissolve-1";
+const CACHE_NAME = "ruangkitha-v2.0.0a8-core-qa-permissions-home-ux-1";
 const OFFLINE_URL = "./offline.html";
 
 const APP_FILES = [
@@ -74,6 +74,10 @@ const APP_FILES = [
   "./js/backend/family-service.js",
   "./js/backend/finance-service.js",
   "./js/backend/finance-cache.js",
+  "./js/backend/finance-member-access.js",
+  "./js/pages/category-member-mode.js",
+  "./js/pages/keluarga-awal-route-fix.js",
+  "./js/pages/superapp-module-order.js",
   "./js/backend/supabase.js",
   "./js/components/account-visual-picker.js",
   "./js/components/avatar.js",

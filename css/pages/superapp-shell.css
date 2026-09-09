@@ -86,3 +86,12 @@
     padding-right: 12px;
   }
 }
+
+/* v2.0.0a8 — Global nav remains legible in dark mode. */
+html[data-theme="dark"] .global-quick-nav {
+  border-top-color: var(--color-border);
+  background: rgba(27,29,28,.97);
+  box-shadow: 0 -10px 30px rgba(0,0,0,.28);
+}
+html[data-theme="dark"] .global-quick-nav a { color: #b9bfbb; }
+html[data-theme="dark"] .global-quick-nav a.is-active { color: #63d290; }

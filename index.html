@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="id" data-auth-guard="login">
+<html lang="id" data-auth-guard="family">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -24,7 +24,8 @@
   <link rel="stylesheet" href="css/style.css">
   <link rel="stylesheet" href="css/theme.css">
   <link rel="stylesheet" href="css/components/avatar-preview-dialog.css?v=20260909-v200a1">
-  <link rel="stylesheet" href="css/pages/superapp-home.css?v=20260909-v200a4">
+  <link rel="stylesheet" href="css/pages/superapp-home.css?v=20260909-v200a8">
+  <style id="ruangkitha-auth-cloak">html[data-auth-guard] body{visibility:hidden!important}</style>
 </head>
 <body>
 <div class="aplikasi superapp-home" data-superapp-home aria-busy="true">
@@ -64,12 +65,18 @@
 
     <section class="module-section" aria-labelledby="module-title">
       <div class="module-section-head">
-        <h2 id="module-title">Ruang Keluarga</h2>
-        <p>Semua yang penting, dalam satu aplikasi.</p>
+        <div class="module-section-copy">
+          <h2 id="module-title">Ruang Keluarga</h2>
+          <p>Semua yang penting, dalam satu aplikasi.</p>
+        </div>
+        <button class="module-order-trigger" type="button" data-module-order-open>
+          <ion-icon name="swap-vertical-outline" aria-hidden="true"></ion-icon>
+          <span>Atur urutan</span>
+        </button>
       </div>
 
       <div class="module-grid">
-        <a class="family-module-card finance-module" href="finance.html">
+        <a class="family-module-card finance-module" href="finance.html" data-module-id="finance">
           <div class="module-heading">
             <span class="module-icon is-green"><ion-icon name="wallet-outline"></ion-icon></span>
             <span class="module-title"><strong>Keuangan</strong><small>Saldo &amp; Tagihan</small></span>
@@ -85,7 +92,7 @@
           </div>
         </a>
 
-        <button class="family-module-card" type="button" data-coming-soon="Catatan">
+        <button class="family-module-card" type="button" data-module-id="notes" data-coming-soon="Catatan">
           <div class="module-heading">
             <span class="module-icon is-amber"><ion-icon name="document-text-outline"></ion-icon></span>
             <span class="module-title"><strong>Catatan</strong><small>Ide &amp; informasi keluarga</small></span>
@@ -97,7 +104,7 @@
           </div>
         </button>
 
-        <button class="family-module-card" type="button" data-coming-soon="Dokumen Keluarga">
+        <button class="family-module-card" type="button" data-module-id="documents" data-coming-soon="Dokumen Keluarga">
           <div class="module-heading">
             <span class="module-icon is-purple"><ion-icon name="folder-outline"></ion-icon></span>
             <span class="module-title"><strong>Dokumen Keluarga</strong><small>Identitas &amp; arsip penting</small></span>
@@ -109,7 +116,7 @@
           </div>
         </button>
 
-        <button class="family-module-card" type="button" data-coming-soon="Maintenance">
+        <button class="family-module-card" type="button" data-module-id="maintenance" data-coming-soon="Maintenance">
           <div class="module-heading">
             <span class="module-icon is-mint"><ion-icon name="construct-outline"></ion-icon></span>
             <span class="module-title"><strong>Maintenance</strong><small>Perawatan &amp; kewajiban</small></span>
@@ -121,7 +128,7 @@
           </div>
         </button>
 
-        <button class="family-module-card fun-module" type="button" data-coming-soon="Have Fun Family">
+        <button class="family-module-card fun-module" type="button" data-module-id="fun" data-coming-soon="Have Fun Family">
           <div class="module-heading">
             <span class="module-icon is-pink"><ion-icon name="heart-outline"></ion-icon></span>
             <span class="module-title"><strong>Have Fun Family</strong><small>Kartu obrolan untuk suami &amp; istri</small></span>
@@ -171,12 +178,13 @@
 <script src="js/backend/auth-service.js"></script>
 <script src="js/backend/family-service.js?v=20260908-10"></script>
 <script src="js/backend/finance-service.js?v=20260908-e1"></script>
-<script src="js/backend/auth-router.js?v=20260908-2"></script>
-<script src="js/backend/auth-guard.js?v=20260908-2"></script>
+<script src="js/backend/auth-router.js?v=20260909-v200a8"></script>
+<script src="js/backend/auth-guard.js?v=20260909-v200a8"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/lottie-web/5.12.2/lottie.min.js" referrerpolicy="no-referrer"></script>
 <script src="js/pages/superapp-home-lottie.js?v=20260909-v200a5"></script>
-<script src="js/pages/superapp-home.js?v=20260909-v200a1"></script>
+<script src="js/pages/superapp-home.js?v=20260909-v200a8"></script>
 <script src="js/components/avatar-preview-dialog.js?v=20260909-v200a1"></script>
-<script src="js/pwa.js?v=20260909-v200a7"></script>
+<script src="js/pages/superapp-module-order.js?v=20260909-v200a8"></script>
+<script src="js/pwa.js?v=20260909-v200a8"></script>
 </body>
 </html>
