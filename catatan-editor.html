@@ -25,8 +25,8 @@
 
   <link rel="stylesheet" href="css/style.css">
   <link rel="stylesheet" href="css/theme.css">
-  <link rel="stylesheet" href="css/pages/catatan-home.css?v=20260909-v200a20">
-  <link rel="stylesheet" href="css/pages/catatan-editor.css?v=20260909-v200a20">
+  <link rel="stylesheet" href="css/pages/catatan-home.css?v=20260909-v200a21">
+  <link rel="stylesheet" href="css/pages/catatan-editor.css?v=20260909-v200a21">
   <style id="ruangkitha-auth-cloak">html[data-auth-guard] body{visibility:hidden!important}</style>
 </head>
 <body>
@@ -150,19 +150,22 @@
         <div><small>Penulisan</small><h2 id="catatan-format-title">Format teks</h2></div>
         <button class="catatan-sheet-close" type="button" data-format-close aria-label="Tutup"><ion-icon name="close-outline"></ion-icon></button>
       </div>
+      <p class="catatan-format-hint">Format aktif ditandai hijau. Ketuk lagi untuk mematikannya atau pilih Normal untuk kembali ke paragraf biasa.</p>
       <div class="catatan-format-grid">
-        <button type="button" data-format-command="formatBlock" data-format-value="h2"><strong>H1</strong><span>Judul</span></button>
-        <button type="button" data-format-command="formatBlock" data-format-value="h3"><strong>H2</strong><span>Subjudul</span></button>
+        <button type="button" data-format-block="p"><strong>Aa</strong><span>Normal</span></button>
+        <button type="button" data-format-block="h2"><strong>H1</strong><span>Judul</span></button>
+        <button type="button" data-format-block="h3"><strong>H2</strong><span>Subjudul</span></button>
+        <button type="button" data-format-block="blockquote"><ion-icon name="chatbox-ellipses-outline"></ion-icon><span>Quote</span></button>
         <button type="button" data-format-command="bold"><strong>B</strong><span>Bold</span></button>
         <button type="button" data-format-command="italic"><strong><em>I</em></strong><span>Italic</span></button>
         <button type="button" data-format-command="underline"><strong><u>U</u></strong><span>Underline</span></button>
         <button type="button" data-format-command="strikeThrough"><strong><s>S</s></strong><span>Coret</span></button>
-        <button type="button" data-format-command="formatBlock" data-format-value="blockquote"><ion-icon name="chatbox-ellipses-outline"></ion-icon><span>Quote</span></button>
-        <button type="button" data-format-command="insertHorizontalRule"><ion-icon name="remove-outline"></ion-icon><span>Divider</span></button>
       </div>
       <div class="catatan-format-extra">
-        <button type="button" data-format-command="foreColor" data-format-value="#159447"><ion-icon name="text-outline"></ion-icon><span>Warna teks</span></button>
-        <button type="button" data-format-command="hiliteColor" data-format-value="#fff1a8"><ion-icon name="color-fill-outline"></ion-icon><span>Highlight</span></button>
+        <button type="button" data-format-command="foreColor" data-format-value="#159447"><ion-icon name="text-outline"></ion-icon><span>Warna teks</span><small>Hijau</small></button>
+        <button type="button" data-format-highlight><ion-icon name="color-fill-outline"></ion-icon><span data-highlight-label>Highlight</span><small data-highlight-state>Tidak aktif</small></button>
+        <button type="button" data-format-command="insertHorizontalRule"><ion-icon name="remove-outline"></ion-icon><span>Divider</span><small>Garis pemisah</small></button>
+        <button type="button" data-format-clear><ion-icon name="backspace-outline"></ion-icon><span>Hapus format</span><small>Kembali ke teks biasa</small></button>
         <button type="button" data-format-font><ion-icon name="text-outline"></ion-icon><span>Font / Typeface</span><small>Manrope</small></button>
       </div>
     </section>
@@ -211,7 +214,7 @@
 <script src="js/backend/family-service.js?v=20260908-10"></script>
 <script src="js/backend/auth-router.js?v=20260909-v200a8"></script>
 <script src="js/backend/auth-guard.js?v=20260909-v200a8"></script>
-<script src="js/pages/catatan-editor.js?v=20260909-v200a20"></script>
-<script src="js/pwa.js?v=20260909-v200a20"></script>
+<script src="js/pages/catatan-editor.js?v=20260909-v200a21"></script>
+<script src="js/pwa.js?v=20260909-v200a21"></script>
 </body>
 </html>

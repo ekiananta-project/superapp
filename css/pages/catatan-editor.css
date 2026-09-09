@@ -1,4 +1,4 @@
-/* RuangKitha v2.0.0a20 — Catatan Biasa editor UI foundation */
+/* RuangKitha v2.0.0a21 — Catatan Biasa writing UX hotfix */
 
 .catatan-editor {
   position: relative;
@@ -146,6 +146,16 @@
 }
 .catatan-content-editor hr { border: 0; border-top: 1px solid var(--color-border, #e0e4e1); margin: 20px 0; }
 .catatan-content-editor a { color: var(--color-primary, #159447); text-decoration: underline; }
+
+/* Highlight selalu memakai foreground gelap agar terbaca di light/dark mode.
+   execCommand menghasilkan inline style RGB/hex berbeda antar-browser. */
+.catatan-content-editor [style*="background-color: rgb(255, 241, 168)"],
+.catatan-content-editor [style*="background-color:#fff1a8"],
+.catatan-content-editor [style*="background-color: #fff1a8"] {
+  color: #18201b !important;
+  -webkit-text-fill-color: #18201b !important;
+  border-radius: 2px;
+}
 
 .catatan-editor-toolbar {
   position: fixed;
@@ -297,6 +307,13 @@
 .catatan-switch.is-on { background: var(--color-primary, #159447); }
 .catatan-switch.is-on i { transform: translateX(15px); }
 
+.catatan-format-hint {
+  margin: -2px 0 12px;
+  color: var(--color-text-soft, #6f7b73);
+  font-size: 9.5px;
+  line-height: 1.55;
+}
+
 .catatan-format-grid {
   display: grid;
   grid-template-columns: repeat(4, minmax(0,1fr));
@@ -319,6 +336,14 @@
 .catatan-format-grid button strong { font-size: 16px; }
 .catatan-format-grid button ion-icon { font-size: 20px; color: var(--color-primary, #159447); }
 .catatan-format-grid button span { color: var(--color-text-soft, #6f7b73); font-size: 8.5px; font-weight: 600; }
+.catatan-format-grid button.is-active,
+.catatan-format-extra button.is-active {
+  border-color: color-mix(in srgb, var(--color-primary, #159447) 54%, var(--color-border, #e0e4e1));
+  background: color-mix(in srgb, var(--color-primary, #159447) 10%, var(--color-surface, #fff));
+  color: var(--color-primary, #159447);
+}
+.catatan-format-grid button.is-active span,
+.catatan-format-extra button.is-active small { color: var(--color-primary, #159447); }
 .catatan-format-extra { display: grid; gap: 8px; margin-top: 12px; }
 .catatan-format-extra button {
   appearance: none;

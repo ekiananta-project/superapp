@@ -1,4 +1,4 @@
-const CACHE_NAME = "ruangkitha-v2.0.0a20-catatan-basic-editor-ui-1";
+const CACHE_NAME = "ruangkitha-v2.0.0a21-catatan-writing-ux-1";
 const OFFLINE_URL = "./offline.html";
 
 const APP_FILES = [
