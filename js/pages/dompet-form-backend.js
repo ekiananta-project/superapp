@@ -157,7 +157,7 @@
         isiFormEdit(walletAktif);
       } else {
         if (setupAwalDiminta && semuaWallet.length) {
-          location.replace("index.html");
+          location.replace("finance.html");
           return;
         }
         isiFormBaru(setupAwalDiminta);
@@ -233,7 +233,7 @@
 
       setTimeout(() => {
         location.href = setupAwalDiminta
-          ? "index.html"
+          ? "finance.html"
           : `dompet-detail.html?id=${encodeURIComponent(walletId)}`;
       }, 350);
     } catch (error) {

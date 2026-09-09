@@ -1,4 +1,4 @@
-const CACHE_NAME = "family-superapp-v1.2.0e4a-profile-preview-fit-1";
+const CACHE_NAME = "family-superapp-v2.0.0a-container-foundation-1";
 const OFFLINE_URL = "./offline.html";
 
 const APP_FILES = [
@@ -55,6 +55,15 @@ const APP_FILES = [
   "./icons/icon-192-v2.png",
   "./icons/icon-512-v2.png",
   "./index.html",
+  "./finance.html",
+  "./kalender.html",
+  "./profil.html",
+  "./css/pages/superapp-home.css",
+  "./css/pages/superapp-shell.css",
+  "./css/pages/finance-container.css",
+  "./js/pages/superapp-home.js",
+  "./js/pages/superapp-calendar.js",
+  "./js/pages/superapp-profile-shell.js",
   "./js/app.js",
   "./js/backend/auth-guard.js",
   "./js/backend/auth-router.js",

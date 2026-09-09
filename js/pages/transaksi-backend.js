@@ -622,7 +622,7 @@
 
     if (judul) judul.textContent = "Tambah Transaksi";
     document.title = "Tambah Transaksi";
-    if (tombolKembali) tombolKembali.href = "index.html";
+    if (tombolKembali) tombolKembali.href = "finance.html";
     if (tombolSimpan) tombolSimpan.textContent = labelSimpan();
 
     if (jenisAktif === "transfer" && dompet.length < 2) {
@@ -988,7 +988,7 @@
 
         location.href = idEdit
           ? hrefDetail(idEdit)
-          : "index.html";
+          : "finance.html";
       }, 450);
     } catch (error) {
       console.error(

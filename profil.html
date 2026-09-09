@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="id" data-auth-guard="login">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#0B0D0C"><meta name="robots" content="noindex,nofollow,noarchive">
+  <link rel="manifest" href="manifest.webmanifest"><link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32.png">
+  <script src="js/theme.js"></script><title>Profil · Family Superapp</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css"><link rel="stylesheet" href="css/theme.css"><link rel="stylesheet" href="css/pages/superapp-shell.css?v=20260909-v200a">
+</head>
+<body>
+<div class="aplikasi superapp-shell" data-profile-shell>
+  <header class="superapp-shell-header"><a class="superapp-shell-back" href="index.html" aria-label="Kembali ke Superapp"><ion-icon name="arrow-back-outline"></ion-icon></a><h1>Profil</h1><span class="superapp-shell-action is-placeholder"></span></header>
+  <main>
+    <section class="shell-card">
+      <div class="profile-shell-summary"><span class="profile-shell-avatar" data-profile-shell-avatar><ion-icon name="person-outline"></ion-icon></span><div><strong data-profile-shell-name>Profil Saya</strong><small>Identitas dan keluarga Family Superapp</small></div></div>
+      <div class="profile-shell-menu">
+        <a class="profile-shell-link" href="pengaturan.html"><span><ion-icon name="person-circle-outline"></ion-icon></span><span class="profile-shell-copy"><strong>Profil &amp; Pengaturan</strong><small>Foto profil, nama pengguna, tema, dan pengaturan akun saat ini.</small></span><ion-icon name="chevron-forward-outline"></ion-icon></a>
+        <a class="profile-shell-link" href="keluarga.html"><span><ion-icon name="people-outline"></ion-icon></span><span class="profile-shell-copy"><strong>Keluarga</strong><small>Anggota, undangan, peran Owner/Member, dan pengelolaan keluarga.</small></span><ion-icon name="chevron-forward-outline"></ion-icon></a>
+        <a class="profile-shell-link" href="keamanan.html"><span><ion-icon name="shield-checkmark-outline"></ion-icon></span><span class="profile-shell-copy"><strong>Keamanan</strong><small>Kelola keamanan akun dan akses.</small></span><ion-icon name="chevron-forward-outline"></ion-icon></a>
+      </div>
+      <p class="profile-foundation-note">Profil global sedang disiapkan. Untuk sementara, data profil dan keluarga tetap dikelola melalui halaman yang sudah ada dan tetap memakai data yang sama.</p>
+    </section>
+  </main>
+  <nav class="global-quick-nav" aria-label="Akses cepat Family Superapp"><a href="kalender.html"><ion-icon name="calendar-clear-outline"></ion-icon><span>Kalender</span></a><a class="is-active" href="profil.html" aria-current="page"><ion-icon name="person-outline"></ion-icon><span>Profil</span></a></nav>
+</div>
+<script type="module" src="https://unpkg.com/ionicons@8.0.13/dist/ionicons/ionicons.esm.js"></script><script nomodule src="https://unpkg.com/ionicons@8.0.13/dist/ionicons/ionicons.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script src="js/backend/supabase.js"></script><script src="js/backend/auth-service.js"></script><script src="js/backend/family-service.js?v=20260908-10"></script><script src="js/backend/auth-router.js?v=20260908-2"></script><script src="js/backend/auth-guard.js?v=20260908-2"></script>
+<script src="js/pages/superapp-profile-shell.js?v=20260909-v200a"></script><script src="js/pwa.js?v=20260909-v200a"></script>
+</body></html>
