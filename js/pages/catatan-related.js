@@ -2,7 +2,6 @@
   "use strict";
 
   const q = selector => document.querySelector(selector);
-
   let activeController = null;
 
   function clean(value, fallback = "") {
@@ -25,40 +24,15 @@
     const toast = typeof options.showToast === "function" ? options.showToast : () => {};
 
     const root = q("[data-catatan-editor]") || q("[data-catatan-checklist]");
-    const main = root?.querySelector(".catatan-editor-main");
-    if (!root || !main) return null;
+    if (!root) return null;
 
     let related = [];
     let candidates = [];
     let loaded = false;
     let draft = new Set();
     let busy = false;
-    let warnedSchema = false;
-    let actionTarget = null;
-
-    const section = document.createElement("section");
-    section.className = "catatan-related-section";
-    section.dataset.relatedSection = "";
-    section.hidden = true;
-    section.innerHTML = `
-      <div class="catatan-related-heading">
-        <div>
-          <h2>Catatan Terkait</h2>
-          <small data-related-count>0 catatan</small>
-        </div>
-        <button type="button" class="catatan-related-manage" data-related-manage>Kelola</button>
-      </div>
-      <div class="catatan-related-cards" data-related-cards></div>
-      <div class="catatan-related-empty" data-related-empty hidden>
-        <span><ion-icon name="git-network-outline" aria-hidden="true"></ion-icon></span>
-        <div>
-          <strong>Hubungkan catatan</strong>
-          <p>Buat jalan cepat ke catatan atau checklist yang masih berhubungan.</p>
-        </div>
-        <button type="button" data-related-empty-add>+ Hubungkan catatan</button>
-      </div>
-    `;
-    main.appendChild(section);
+    let pickerMode = "manage"; // manage | single
+    let singleOnSelect = null;
 
     const layer = document.createElement("div");
     layer.className = "catatan-sheet-layer catatan-related-layer";
@@ -68,7 +42,7 @@
       <section class="catatan-sheet catatan-editor-sheet catatan-related-sheet" role="dialog" aria-modal="true" aria-labelledby="catatan-related-title">
         <div class="catatan-sheet-handle" aria-hidden="true"></div>
         <div class="catatan-sheet-header">
-          <div><small>Hubungkan</small><h2 id="catatan-related-title">Catatan Terkait</h2></div>
+          <div><small data-related-kicker>Hubungkan</small><h2 id="catatan-related-title" data-related-title>Catatan Terkait</h2></div>
           <button class="catatan-sheet-close" type="button" data-related-close aria-label="Tutup"><ion-icon name="close-outline"></ion-icon></button>
         </div>
         <label class="catatan-related-search">
@@ -87,26 +61,8 @@
     `;
     root.appendChild(layer);
 
-    const actionLayer = document.createElement("div");
-    actionLayer.className = "catatan-sheet-layer catatan-related-action-layer";
-    actionLayer.hidden = true;
-    actionLayer.innerHTML = `
-      <section class="catatan-sheet catatan-related-action-sheet" role="dialog" aria-modal="true" aria-labelledby="catatan-related-action-title">
-        <div class="catatan-sheet-handle" aria-hidden="true"></div>
-        <div class="catatan-sheet-header">
-          <div><small>Catatan Terkait</small><h2 id="catatan-related-action-title" data-related-action-title>Catatan</h2></div>
-          <button class="catatan-sheet-close" type="button" data-related-action-close aria-label="Tutup"><ion-icon name="close-outline"></ion-icon></button>
-        </div>
-        <button class="catatan-related-unlink-action" type="button" data-related-unlink-action>
-          <ion-icon name="unlink-outline" aria-hidden="true"></ion-icon>
-          <span><strong>Lepas hubungan</strong><small>Catatan tidak dihapus. Hanya hubungan antarcatatan yang dilepas.</small></span>
-        </button>
-      </section>
-    `;
-    root.appendChild(actionLayer);
-
     function context() {
-      return { canManage: false, isReminder: false, noteId: "", userId: "", folderName: "", ...getContext() };
+      return { canManage: false, isReminder: false, noteId: "", userId: "", folderName: "", visibility: "private", ...getContext() };
     }
 
     function infoSummary() {
@@ -114,14 +70,16 @@
       if (!small) return;
       const ctx = context();
       if (ctx.noteId && !loaded) {
-        small.textContent = "Memuat hubungan...";
+        small.textContent = "Memuat tautan catatan...";
         return;
       }
-      small.textContent = related.length ? `${related.length} catatan terhubung` : "Belum ada catatan terhubung";
+      small.textContent = related.length ? `${related.length} catatan tertaut` : "Belum ada catatan tertaut";
     }
 
     function noteMeta(note) {
       const parts = [];
+      const type = note.note_type === "checklist" ? "Checklist" : note.note_type === "reminder" ? "Reminder" : "Catatan";
+      parts.push(type);
       parts.push(note.scope === "family" ? "Area Keluarga" : "Area Pribadi");
       if (note.folder_name) parts.push(note.folder_name);
       if (note.archived_at) parts.push("Diarsipkan");
@@ -129,7 +87,9 @@
     }
 
     function noteIcon(note) {
-      return note.note_type === "checklist" ? "checkbox-outline" : "document-text-outline";
+      if (note.note_type === "checklist") return "checkbox-outline";
+      if (note.note_type === "reminder") return "notifications-outline";
+      return "document-text-outline";
     }
 
     function noteHref(note) {
@@ -155,60 +115,20 @@
       location.href = noteHref(note);
     }
 
-    function renderSection() {
-      const ctx = context();
-      const canManage = Boolean(ctx.canManage && !ctx.isReminder);
+    function render() {
+      // a38: relasi tidak lagi memenuhi canvas editor/view. Hubungan dikelola
+      // sebagai metadata dan dipakai oleh inline links di dalam tulisan.
       infoSummary();
-      if (ctx.noteId && !loaded) {
-        section.hidden = true;
-        return;
-      }
-      const visible = !ctx.isReminder && (related.length > 0 || canManage);
-      section.hidden = !visible;
-      if (!visible) return;
-
-      const count = section.querySelector("[data-related-count]");
-      if (count) count.textContent = related.length ? `${related.length} terhubung` : "Belum ada";
-
-      const manage = section.querySelector("[data-related-manage]");
-      if (manage) {
-        manage.hidden = related.length === 0 || (!canManage && related.length <= 3);
-        manage.textContent = canManage
-          ? (related.length > 3 ? `Kelola · ${related.length}` : "Kelola")
-          : `Lihat semua · ${related.length}`;
-      }
-
-      const empty = section.querySelector("[data-related-empty]");
-      const cards = section.querySelector("[data-related-cards]");
-      if (empty) empty.hidden = related.length !== 0 || !canManage;
-      if (!cards) return;
-
-      cards.innerHTML = "";
-      related.slice(0, 3).forEach(note => {
-        const card = document.createElement("article");
-        card.className = "catatan-related-card";
-        card.innerHTML = `
-          <button class="catatan-related-card-main" type="button" data-open-related-note aria-label="Buka ${escapeHtml(clean(note.title, "Tanpa judul"))}">
-            <span class="catatan-related-card-icon"><ion-icon name="${noteIcon(note)}" aria-hidden="true"></ion-icon></span>
-            <span class="catatan-related-card-copy">
-              <strong>${escapeHtml(clean(note.title, "Tanpa judul"))}</strong>
-              <small>${escapeHtml(noteMeta(note))}</small>
-            </span>
-            <ion-icon class="catatan-related-card-chevron" name="chevron-forward-outline" aria-hidden="true"></ion-icon>
-          </button>
-          ${canManage ? '<button class="catatan-related-card-menu" type="button" data-related-card-menu aria-label="Menu hubungan"><ion-icon name="ellipsis-horizontal" aria-hidden="true"></ion-icon></button>' : ""}
-        `;
-        card.querySelector("[data-open-related-note]")?.addEventListener("click", () => openNote(note));
-        card.querySelector("[data-related-card-menu]")?.addEventListener("click", () => openAction(note));
-        cards.appendChild(card);
-      });
     }
 
     function matchSearch(note, query) {
       if (!query) return true;
-      const haystack = [note.title, note.folder_name, note.scope === "family" ? "keluarga" : "pribadi", note.note_type === "checklist" ? "checklist" : "catatan"]
-        .map(value => String(value || "").toLowerCase())
-        .join(" ");
+      const haystack = [
+        note.title,
+        note.folder_name,
+        note.scope === "family" ? "keluarga" : "pribadi",
+        note.note_type === "checklist" ? "checklist" : note.note_type === "reminder" ? "reminder" : "catatan"
+      ].map(value => String(value || "").toLowerCase()).join(" ");
       return haystack.includes(query);
     }
 
@@ -224,12 +144,21 @@
         </span>
         <ion-icon class="catatan-related-picker-check" name="${readOnly ? "chevron-forward-outline" : (selected ? "checkmark-circle" : "ellipse-outline")}" aria-hidden="true"></ion-icon>
       `;
-      if (readOnly) row.addEventListener("click", () => openNote(note));
-      else row.addEventListener("click", () => {
-        if (draft.has(note.id)) draft.delete(note.id);
-        else draft.add(note.id);
-        renderPicker();
-      });
+
+      if (readOnly) {
+        row.addEventListener("click", () => openNote(note));
+      } else {
+        row.addEventListener("click", () => {
+          if (pickerMode === "single") {
+            draft = new Set([note.id]);
+          } else if (draft.has(note.id)) {
+            draft.delete(note.id);
+          } else {
+            draft.add(note.id);
+          }
+          renderPicker();
+        });
+      }
       return row;
     }
 
@@ -245,6 +174,19 @@
       container.appendChild(group);
     }
 
+
+    function candidateSafeForInline(note, ctx) {
+      const sourceShared = ctx.scope === "family" || (ctx.scope === "personal" && ctx.visibility === "family-read");
+      if (!sourceShared) return true;
+      return note.scope === "family" || (note.scope === "personal" && note.visibility === "family-read");
+    }
+
+    function candidateMap() {
+      const byId = new Map(candidates.map(note => [note.id, note]));
+      related.forEach(note => { if (!byId.has(note.id)) byId.set(note.id, note); });
+      return byId;
+    }
+
     function renderPicker() {
       const container = layer.querySelector("[data-related-picker]");
       const empty = layer.querySelector("[data-related-picker-empty]");
@@ -253,18 +195,14 @@
       if (!container) return;
       container.innerHTML = "";
 
-      if (!ctx.canManage) {
+      if (!ctx.canManage && pickerMode === "manage") {
         const visible = related.filter(note => matchSearch(note, search));
-        addPickerGroup(container, "TERHUBUNG", visible, { readOnly: true });
+        addPickerGroup(container, "TERTAUT", visible, { readOnly: true });
         if (empty) empty.hidden = visible.length > 0;
         return;
       }
 
-      const byId = new Map(candidates.map(note => [note.id, note]));
-      related.forEach(note => { if (!byId.has(note.id)) byId.set(note.id, note); });
-
-      // Selected stays visible even while filtering, so users always know what
-      // will remain attached when they press Terapkan.
+      const byId = candidateMap();
       const selectedNotes = Array.from(draft).map(id => byId.get(id)).filter(Boolean);
       const unselected = Array.from(byId.values())
         .filter(note => !draft.has(note.id) && !note.archived_at && matchSearch(note, search));
@@ -272,7 +210,7 @@
       const sameIds = new Set(sameFolder.map(note => note.id));
       const others = unselected.filter(note => !sameIds.has(note.id));
 
-      addPickerGroup(container, "DIPILIH", selectedNotes, { selected: true });
+      addPickerGroup(container, pickerMode === "single" ? "DIPILIH" : "DIPILIH", selectedNotes, { selected: true });
       addPickerGroup(container, "FOLDER YANG SAMA", sameFolder);
       addPickerGroup(container, "CATATAN LAINNYA", others);
 
@@ -286,7 +224,7 @@
       await ensureSaved();
       ctx = context();
       if (!ctx.noteId) {
-        toast("Tulis judul atau isi catatan dulu sebelum menghubungkan catatan.");
+        toast("Tulis judul atau isi catatan dulu sebelum membuat tautan catatan.");
         return "";
       }
       return ctx.noteId;
@@ -297,24 +235,37 @@
       if (ctx.isReminder || !ctx.noteId || !window.NotesService?.ambilCatatanTerkait) {
         related = [];
         loaded = !ctx.noteId || ctx.isReminder;
-        renderSection();
+        render();
         return [];
       }
       try {
         related = await window.NotesService.ambilCatatanTerkait(ctx.noteId);
         loaded = true;
-        renderSection();
+        render();
         return related;
       } catch (error) {
         loaded = true;
         console.warn("[Catatan Terkait]", error);
         if (explicit && window.NotesService?.relatedSchemaBelumTerpasang?.(error)) {
           toast("Backend Catatan Terkait belum aktif — jalankan SQL 004I di Supabase dulu.");
-          warnedSchema = true;
         }
-        renderSection();
+        render();
         return [];
       }
+    }
+
+    function prepareLayer(mode) {
+      pickerMode = mode;
+      const search = layer.querySelector("[data-related-search]");
+      if (search) search.value = "";
+      const kicker = layer.querySelector("[data-related-kicker]");
+      const title = layer.querySelector("[data-related-title]");
+      const apply = layer.querySelector("[data-related-apply]");
+      if (kicker) kicker.textContent = mode === "single" ? "Tautkan teks" : "Hubungkan";
+      if (title) title.textContent = mode === "single" ? "Pilih Catatan" : "Catatan Terkait";
+      if (apply) apply.textContent = mode === "single" ? "Tautkan" : "Terapkan";
+      layer.hidden = false;
+      layer.classList.add("is-loading");
     }
 
     async function openPicker() {
@@ -328,10 +279,8 @@
       if (!id) return;
 
       busy = true;
-      layer.hidden = false;
-      layer.classList.add("is-loading");
-      const search = layer.querySelector("[data-related-search]");
-      if (search) search.value = "";
+      singleOnSelect = null;
+      prepareLayer("manage");
       try {
         related = await window.NotesService.ambilCatatanTerkait(id);
         loaded = true;
@@ -345,20 +294,54 @@
         }
         const actions = layer.querySelector("[data-related-actions]");
         if (actions) actions.hidden = !ctx.canManage;
-        const titleSmall = layer.querySelector(".catatan-sheet-header small");
-        if (titleSmall) titleSmall.textContent = ctx.canManage ? "Hubungkan" : "Lihat hubungan";
-        renderSection();
+        render();
         renderPicker();
-        setTimeout(() => search?.focus(), 80);
+        setTimeout(() => layer.querySelector("[data-related-search]")?.focus(), 80);
       } catch (error) {
         console.error("[Catatan Related Picker]", error);
         layer.hidden = true;
-        if (window.NotesService?.relatedSchemaBelumTerpasang?.(error)) {
-          toast("Backend Catatan Terkait belum aktif — jalankan SQL 004I di Supabase dulu.");
-          warnedSchema = true;
-        } else {
-          toast(error?.message || "Catatan Terkait belum dapat dimuat.");
-        }
+        if (window.NotesService?.relatedSchemaBelumTerpasang?.(error)) toast("Backend Catatan Terkait belum aktif — jalankan SQL 004I di Supabase dulu.");
+        else toast(error?.message || "Catatan Terkait belum dapat dimuat.");
+      } finally {
+        layer.classList.remove("is-loading");
+        busy = false;
+      }
+    }
+
+    async function openSingle({ onSelect, currentTargetId = "" } = {}) {
+      if (busy) return;
+      const ctxBefore = context();
+      if (ctxBefore.isReminder) {
+        toast("Tautan ke Reminder akan aktif setelah backend Reminder tersedia.");
+        return;
+      }
+      const id = await ensureNote();
+      if (!id) return;
+      if (!ctxBefore.canManage) {
+        toast("Catatan ini hanya bisa dibaca.");
+        return;
+      }
+
+      busy = true;
+      singleOnSelect = typeof onSelect === "function" ? onSelect : null;
+      prepareLayer("single");
+      try {
+        related = await window.NotesService.ambilCatatanTerkait(id);
+        loaded = true;
+        candidates = (await window.NotesService.ambilKandidatCatatanTerkait(id, 250))
+          .filter(note => candidateSafeForInline(note, context()));
+        const target = clean(currentTargetId);
+        draft = target ? new Set([target]) : new Set();
+        const actions = layer.querySelector("[data-related-actions]");
+        if (actions) actions.hidden = false;
+        render();
+        renderPicker();
+        setTimeout(() => layer.querySelector("[data-related-search]")?.focus(), 80);
+      } catch (error) {
+        console.error("[Catatan Inline Link Picker]", error);
+        layer.hidden = true;
+        if (window.NotesService?.relatedSchemaBelumTerpasang?.(error)) toast("Backend Catatan Terkait belum aktif — jalankan SQL 004I di Supabase dulu.");
+        else toast(error?.message || "Daftar catatan belum dapat dimuat.");
       } finally {
         layer.classList.remove("is-loading");
         busy = false;
@@ -367,11 +350,38 @@
 
     async function applyPicker() {
       const ctx = context();
-      if (!ctx.canManage || busy || !ctx.noteId) return;
-      busy = true;
+      if (busy || !ctx.noteId) return;
+      if (!ctx.canManage && pickerMode === "manage") return;
       const apply = layer.querySelector("[data-related-apply]");
+
+      if (pickerMode === "single" && draft.size !== 1) {
+        toast("Pilih satu catatan sebagai tujuan tautan.");
+        return;
+      }
+
+      busy = true;
       if (apply) apply.disabled = true;
       try {
+        if (pickerMode === "single") {
+          const selectedId = Array.from(draft)[0];
+          const selectedNote = candidateMap().get(selectedId);
+          if (!selectedNote) throw new Error("Catatan tujuan tidak ditemukan.");
+
+          // Simpan relation/backlink sebagai metadata. Backend 004I menjaga
+          // hidden/private relations yang tidak boleh dilihat collaborator.
+          const keep = new Set(related.map(note => note.id));
+          keep.add(selectedId);
+          await window.NotesService.syncCatatanTerkait(ctx.noteId, Array.from(keep));
+          related = await window.NotesService.ambilCatatanTerkait(ctx.noteId);
+          loaded = true;
+          layer.hidden = true;
+          render();
+          const callback = singleOnSelect;
+          singleOnSelect = null;
+          callback?.(selectedNote);
+          return;
+        }
+
         await window.NotesService.syncCatatanTerkait(ctx.noteId, Array.from(draft));
         layer.hidden = true;
         await loadRelated({ explicit: true });
@@ -379,57 +389,52 @@
       } catch (error) {
         console.error("[Catatan Related Apply]", error);
         if (window.NotesService?.relatedSchemaBelumTerpasang?.(error)) toast("Jalankan SQL 004I agar Catatan Terkait aktif.");
-        else toast(error?.message || "Hubungan catatan belum dapat disimpan.");
+        else toast(error?.message || "Tautan catatan belum dapat disimpan.");
       } finally {
         if (apply) apply.disabled = false;
         busy = false;
       }
     }
 
-    function openAction(note) {
-      if (!context().canManage || !note?.id) return;
-      actionTarget = note;
-      const title = actionLayer.querySelector("[data-related-action-title]");
-      if (title) title.textContent = clean(note.title, "Tanpa judul");
-      actionLayer.hidden = false;
-    }
-
-    async function unlinkAction() {
+    async function unlinkTarget(targetId) {
       const ctx = context();
-      if (!ctx.canManage || !ctx.noteId || !actionTarget || busy) return;
-      busy = true;
+      const id = clean(targetId);
+      if (!ctx.noteId || !ctx.canManage || !id || !window.NotesService?.syncCatatanTerkait) return false;
       try {
-        const keep = related.filter(note => note.id !== actionTarget.id).map(note => note.id);
+        const visible = await window.NotesService.ambilCatatanTerkait(ctx.noteId);
+        const keep = visible.filter(note => note.id !== id).map(note => note.id);
         await window.NotesService.syncCatatanTerkait(ctx.noteId, keep);
-        actionLayer.hidden = true;
-        actionTarget = null;
-        await loadRelated({ explicit: true });
-        toast("Hubungan catatan dilepas.");
+        related = await window.NotesService.ambilCatatanTerkait(ctx.noteId);
+        loaded = true;
+        render();
+        return true;
       } catch (error) {
-        console.error("[Catatan Related Unlink]", error);
-        toast(error?.message || "Hubungan catatan belum dapat dilepas.");
-      } finally {
-        busy = false;
+        console.warn("[Catatan Inline Unlink]", error);
+        return false;
       }
     }
 
-    section.querySelector("[data-related-manage]")?.addEventListener("click", openPicker);
-    section.querySelector("[data-related-empty-add]")?.addEventListener("click", openPicker);
-    layer.querySelector("[data-related-close]")?.addEventListener("click", () => { layer.hidden = true; });
-    layer.querySelector("[data-related-cancel]")?.addEventListener("click", () => { layer.hidden = true; });
+    function closePicker() {
+      layer.hidden = true;
+      singleOnSelect = null;
+      pickerMode = "manage";
+    }
+
+    layer.querySelector("[data-related-close]")?.addEventListener("click", closePicker);
+    layer.querySelector("[data-related-cancel]")?.addEventListener("click", closePicker);
     layer.querySelector("[data-related-apply]")?.addEventListener("click", applyPicker);
     layer.querySelector("[data-related-search]")?.addEventListener("input", renderPicker);
-    layer.addEventListener("click", event => { if (event.target === layer) layer.hidden = true; });
-    actionLayer.querySelector("[data-related-action-close]")?.addEventListener("click", () => { actionLayer.hidden = true; actionTarget = null; });
-    actionLayer.querySelector("[data-related-unlink-action]")?.addEventListener("click", unlinkAction);
-    actionLayer.addEventListener("click", event => { if (event.target === actionLayer) { actionLayer.hidden = true; actionTarget = null; } });
+    layer.addEventListener("click", event => { if (event.target === layer) closePicker(); });
 
-    renderSection();
+    render();
 
     return {
       open: openPicker,
+      openSingle,
       refresh: () => loadRelated({ explicit: false }),
-      render: renderSection,
+      render,
+      hrefFor: noteHref,
+      unlinkTarget,
       get count() { return related.length; }
     };
   }
@@ -442,7 +447,10 @@
   window.CatatanRelated = {
     init,
     open() { return activeController?.open?.(); },
+    openSingle(options) { return activeController?.openSingle?.(options); },
     refresh() { return activeController?.refresh?.(); },
-    render() { return activeController?.render?.(); }
+    render() { return activeController?.render?.(); },
+    hrefFor(note) { return activeController?.hrefFor?.(note) || ""; },
+    unlinkTarget(noteId) { return activeController?.unlinkTarget?.(noteId); }
   };
 })();

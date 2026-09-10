@@ -26,9 +26,9 @@
   <link rel="stylesheet" href="css/style.css">
   <link rel="stylesheet" href="css/theme.css">
   <link rel="stylesheet" href="css/pages/catatan-home.css?v=20260910-v200a29e">
-  <link rel="stylesheet" href="css/pages/catatan-editor.css?v=20260910-v200a37">
+  <link rel="stylesheet" href="css/pages/catatan-editor.css?v=20260910-v200a38">
   <style id="ruangkitha-auth-cloak">html[data-auth-guard] body{visibility:hidden!important}</style>
-  <link rel="stylesheet" href="css/pages/catatan-management.css?v=20260910-v200a37">
+  <link rel="stylesheet" href="css/pages/catatan-management.css?v=20260910-v200a38">
 </head>
 <body>
 <div class="aplikasi catatan-editor" data-catatan-editor aria-busy="true">
@@ -225,13 +225,13 @@
   </div>
 
   <div class="catatan-sheet-layer" data-format-layer hidden>
-    <section class="catatan-sheet catatan-editor-sheet" role="dialog" aria-modal="true" aria-labelledby="catatan-format-title">
+    <section class="catatan-sheet catatan-editor-sheet catatan-format-sheet" role="dialog" aria-modal="true" aria-labelledby="catatan-format-title">
       <div class="catatan-sheet-handle" aria-hidden="true"></div>
       <div class="catatan-sheet-header">
         <div><small>Penulisan</small><h2 id="catatan-format-title">Format teks</h2></div>
         <button class="catatan-sheet-close" type="button" data-format-close aria-label="Tutup"><ion-icon name="close-outline"></ion-icon></button>
       </div>
-      <p class="catatan-format-hint">Format aktif ditandai hijau. Ketuk lagi untuk mematikannya atau pilih Normal untuk kembali ke paragraf biasa.</p>
+      <p class="catatan-format-hint">Format aktif ditandai hijau. Kamu bisa menggabungkan beberapa format sebelum menekan Selesai.</p>
       <div class="catatan-format-grid">
         <button type="button" data-format-block="p"><strong>Aa</strong><span>Normal</span></button>
         <button type="button" data-format-block="h2"><strong>H1</strong><span>Judul</span></button>
@@ -243,11 +243,36 @@
         <button type="button" data-format-command="strikeThrough"><strong><s>S</s></strong><span>Coret</span></button>
       </div>
       <div class="catatan-format-extra">
-        <button type="button" data-format-command="foreColor" data-format-value="#159447"><ion-icon name="text-outline"></ion-icon><span>Warna teks</span><small>Hijau</small></button>
-        <button type="button" data-format-highlight><ion-icon name="color-fill-outline"></ion-icon><span data-highlight-label>Highlight</span><small data-highlight-state>Tidak aktif</small></button>
+        <button type="button" data-format-color><ion-icon name="text-outline"></ion-icon><span>Warna teks</span><small data-format-color-label>Default</small></button>
         <button type="button" data-format-command="insertHorizontalRule"><ion-icon name="remove-outline"></ion-icon><span>Divider</span><small>Garis pemisah</small></button>
         <button type="button" data-format-clear><ion-icon name="backspace-outline"></ion-icon><span>Hapus format</span><small>Kembali ke teks biasa</small></button>
-        <button type="button" data-format-font><ion-icon name="text-outline"></ion-icon><span>Font / Typeface</span><small>Manrope</small></button>
+        <button type="button" data-format-font><ion-icon name="text-outline"></ion-icon><span>Font / Typeface</span><small data-format-font-label>Default</small></button>
+      </div>
+
+      <section class="catatan-format-subpanel" data-format-color-panel hidden aria-label="Pilih warna teks">
+        <div class="catatan-format-subhead"><strong>Warna teks</strong><small>Pilih warna yang tetap nyaman di light &amp; dark mode.</small></div>
+        <div class="catatan-text-color-grid">
+          <button type="button" data-text-color="default"><i class="is-default">Aa</i><span>Default</span></button>
+          <button type="button" data-text-color="green"><i class="is-green">Aa</i><span>Hijau</span></button>
+          <button type="button" data-text-color="blue"><i class="is-blue">Aa</i><span>Biru</span></button>
+          <button type="button" data-text-color="rose"><i class="is-rose">Aa</i><span>Rose</span></button>
+          <button type="button" data-text-color="amber"><i class="is-amber">Aa</i><span>Amber</span></button>
+          <button type="button" data-text-color="purple"><i class="is-purple">Aa</i><span>Ungu</span></button>
+        </div>
+      </section>
+
+      <section class="catatan-format-subpanel" data-format-font-panel hidden aria-label="Pilih font">
+        <div class="catatan-format-subhead"><strong>Font / Typeface</strong><small>Font hanya diterapkan ke teks yang dipilih.</small></div>
+        <div class="catatan-font-grid">
+          <button type="button" data-font-token="default"><strong class="is-manrope">Aa</strong><span>Default</span></button>
+          <button type="button" data-font-token="serif"><strong class="is-serif">Aa</strong><span>Serif</span></button>
+          <button type="button" data-font-token="mono"><strong class="is-mono">Aa</strong><span>Mono</span></button>
+          <button type="button" data-font-token="system"><strong class="is-system">Aa</strong><span>Sistem</span></button>
+        </div>
+      </section>
+
+      <div class="catatan-format-footer">
+        <button type="button" data-format-done>Selesai</button>
       </div>
     </section>
   </div>
@@ -330,11 +355,34 @@
     </section>
   </div>
 
+  <div class="catatan-sheet-layer" data-link-choice-layer hidden>
+    <section class="catatan-sheet catatan-editor-sheet catatan-link-choice-sheet" role="dialog" aria-modal="true" aria-labelledby="catatan-link-choice-title">
+      <div class="catatan-sheet-handle" aria-hidden="true"></div>
+      <div class="catatan-sheet-header">
+        <div><small>Penulisan</small><h2 id="catatan-link-choice-title">Tambah tautan</h2></div>
+        <button class="catatan-sheet-close" type="button" data-link-choice-close aria-label="Tutup"><ion-icon name="close-outline"></ion-icon></button>
+      </div>
+      <p class="catatan-link-selection" data-link-selection-preview hidden></p>
+      <div class="catatan-link-choice-list">
+        <button type="button" data-link-choice="note">
+          <span class="catatan-info-icon"><ion-icon name="documents-outline" aria-hidden="true"></ion-icon></span>
+          <span><strong>Catatan RuangKitha</strong><small data-link-note-help>Hubungkan teks ke Catatan atau Checklist yang sudah ada.</small></span>
+          <ion-icon name="chevron-forward-outline" aria-hidden="true"></ion-icon>
+        </button>
+        <button type="button" data-link-choice="web">
+          <span class="catatan-info-icon"><ion-icon name="globe-outline" aria-hidden="true"></ion-icon></span>
+          <span><strong>Tautan web</strong><small>Buka alamat website dari teks di catatan.</small></span>
+          <ion-icon name="chevron-forward-outline" aria-hidden="true"></ion-icon>
+        </button>
+      </div>
+    </section>
+  </div>
+
   <div class="catatan-sheet-layer" data-link-layer hidden>
     <section class="catatan-sheet catatan-editor-sheet" role="dialog" aria-modal="true" aria-labelledby="catatan-link-title">
       <div class="catatan-sheet-handle" aria-hidden="true"></div>
       <div class="catatan-sheet-header">
-        <div><small>Penulisan</small><h2 id="catatan-link-title">Tambah tautan</h2></div>
+        <div><small>Penulisan</small><h2 id="catatan-link-title">Tautan web</h2></div>
         <button class="catatan-sheet-close" type="button" data-link-close aria-label="Tutup"><ion-icon name="close-outline"></ion-icon></button>
       </div>
       <div class="catatan-link-fields">
@@ -351,6 +399,21 @@
       <button class="catatan-link-apply" type="button" data-link-apply>Tambahkan tautan</button>
     </section>
   </div>
+
+  <div class="catatan-sheet-layer" data-link-action-layer hidden>
+    <section class="catatan-sheet catatan-editor-sheet catatan-link-action-sheet" role="dialog" aria-modal="true" aria-labelledby="catatan-link-action-title">
+      <div class="catatan-sheet-handle" aria-hidden="true"></div>
+      <div class="catatan-sheet-header">
+        <div><small>Tautan</small><h2 id="catatan-link-action-title">Kelola tautan</h2></div>
+        <button class="catatan-sheet-close" type="button" data-link-action-close aria-label="Tutup"><ion-icon name="close-outline"></ion-icon></button>
+      </div>
+      <div class="catatan-link-action-list">
+        <button type="button" data-link-action="open"><ion-icon name="open-outline"></ion-icon><span><strong>Buka</strong><small>Buka tujuan tautan.</small></span></button>
+        <button type="button" data-link-action="change"><ion-icon name="create-outline"></ion-icon><span><strong>Ubah tautan</strong><small>Ganti tujuan tanpa menghapus teks.</small></span></button>
+        <button type="button" class="is-danger" data-link-action="remove"><ion-icon name="unlink-outline"></ion-icon><span><strong>Hapus tautan</strong><small>Teks tetap ada, hanya tautannya dilepas.</small></span></button>
+      </div>
+    </section>
+  </div>
 </div>
 
 <script type="module" src="https://unpkg.com/ionicons@8.0.13/dist/ionicons/ionicons.esm.js"></script>
@@ -362,10 +425,10 @@
 <script src="js/backend/auth-router.js?v=20260909-v200a8"></script>
 <script src="js/backend/auth-guard.js?v=20260909-v200a8"></script>
 <script type="module" src="https://unpkg.com/@dotlottie/player-component@2.7.12/dist/dotlottie-player.mjs"></script>
-<script src="js/backend/notes-service.js?v=20260910-v200a37"></script>
-<script src="js/pages/catatan-management.js?v=20260910-v200a37"></script>
-<script src="js/pages/catatan-related.js?v=20260910-v200a37"></script>
-<script src="js/pages/catatan-editor.js?v=20260910-v200a37"></script>
-<script src="js/pwa.js?v=20260910-v200a37"></script>
+<script src="js/backend/notes-service.js?v=20260910-v200a38"></script>
+<script src="js/pages/catatan-management.js?v=20260910-v200a38"></script>
+<script src="js/pages/catatan-related.js?v=20260910-v200a38"></script>
+<script src="js/pages/catatan-editor.js?v=20260910-v200a38"></script>
+<script src="js/pwa.js?v=20260910-v200a38"></script>
 </body>
 </html>

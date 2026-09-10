@@ -11,6 +11,8 @@
   let cardColor = "default";
   let savedRange = null;
   let linkSelectedText = "";
+  let highlightTypingMode = false;
+  let activeLinkAnchor = null;
   let userId = "guest";
   let toastTimer = null;
   let editorMode = "edit";
@@ -29,7 +31,7 @@
   let reminderPreset = false;
   let familyReminderEnabled = false;
 
-  // v2.0.0a29 — Supabase Catatan Biasa foundation.
+  // v2.0.0a38 — editor foundation + inline navigation/formatting; backend note core began at a29.
   let noteId = "";
   let activeFamilyId = "";
   let noteOwnerId = "";
@@ -62,22 +64,30 @@
     const parser = new DOMParser();
     const doc = parser.parseFromString(`<body>${raw}</body>`, "text/html");
     const allowed = new Set([
-      "P", "DIV", "H2", "H3", "BLOCKQUOTE", "UL", "OL", "LI", "BR",
+      "P", "DIV", "H2", "H3", "BLOCKQUOTE", "UL", "OL", "LI", "BR", "HR",
       "B", "STRONG", "I", "EM", "U", "S", "STRIKE", "SPAN", "A"
     ]);
     const dropEntirely = new Set([
       "SCRIPT", "STYLE", "IFRAME", "OBJECT", "EMBED", "SVG", "MATH",
       "FORM", "INPUT", "TEXTAREA", "BUTTON", "SELECT", "OPTION", "LINK", "META"
     ]);
+    const textColors = new Set(["default", "green", "blue", "rose", "amber", "purple"]);
+    const fontTokens = new Set(["default", "serif", "mono", "system"]);
 
     function safeHref(rawHref) {
       const href = String(rawHref || "").trim();
-      if (!href) return "";
+      if (!href) return null;
       try {
-        const url = new URL(href, location.origin);
-        return ["http:", "https:"].includes(url.protocol) ? url.href : "";
+        const url = new URL(href, location.href);
+        if (!["http:", "https:"].includes(url.protocol)) return null;
+        const sameOrigin = url.origin === location.origin;
+        const internalNote = sameOrigin && /\/catatan-(?:editor|checklist)\.html$/i.test(url.pathname) && Boolean(url.searchParams.get("id"));
+        return {
+          href: internalNote ? `${url.pathname.split("/").pop()}${url.search}${url.hash}` : url.href,
+          internalNote
+        };
       } catch {
-        return "";
+        return null;
       }
     }
 
@@ -96,21 +106,41 @@
         return;
       }
 
-      const href = tag === "A" ? safeHref(node.getAttribute("href")) : "";
+      const link = tag === "A" ? safeHref(node.getAttribute("href")) : null;
       const background = tag === "SPAN" ? String(node.style?.backgroundColor || "").trim() : "";
+      const textColor = tag === "SPAN" && textColors.has(node.dataset?.textColor || "") ? node.dataset.textColor : "";
+      const fontToken = tag === "SPAN" && fontTokens.has(node.dataset?.fontToken || "") ? node.dataset.fontToken : "";
+      const inlineTask = tag === "SPAN" && ["0", "1"].includes(node.dataset?.inlineTask || "") ? node.dataset.inlineTask : "";
+      const inlineCheckbox = tag === "SPAN" && node.hasAttribute("data-inline-checkbox");
+      const inlineTaskText = tag === "SPAN" && node.hasAttribute("data-inline-task-text");
+
       Array.from(node.attributes || []).forEach(attr => node.removeAttribute(attr.name));
 
-      if (tag === "A" && href) {
-        node.setAttribute("href", href);
-        node.setAttribute("target", "_blank");
-        node.setAttribute("rel", "noopener noreferrer");
+      if (tag === "A" && link) {
+        node.setAttribute("href", link.href);
+        if (link.internalNote) {
+          node.setAttribute("data-rk-internal-link", "note");
+        } else {
+          node.setAttribute("target", "_blank");
+          node.setAttribute("rel", "noopener noreferrer");
+        }
       } else if (tag === "A") {
         node.replaceWith(...Array.from(node.childNodes));
         return;
       }
 
-      if (tag === "SPAN" && background && !/url\s*\(/i.test(background)) {
-        node.style.backgroundColor = background;
+      if (tag === "SPAN") {
+        if (background && !/url\s*\(/i.test(background)) node.style.backgroundColor = background;
+        if (textColor) node.dataset.textColor = textColor;
+        if (fontToken) node.dataset.fontToken = fontToken;
+        if (inlineTask !== "") node.dataset.inlineTask = inlineTask;
+        if (inlineCheckbox) {
+          node.dataset.inlineCheckbox = "";
+          node.setAttribute("contenteditable", "false");
+          node.setAttribute("role", "checkbox");
+          node.setAttribute("tabindex", "0");
+        }
+        if (inlineTaskText) node.dataset.inlineTaskText = "";
       }
     }
 
@@ -350,6 +380,7 @@
         if (safeHtml) editor.innerHTML = safeHtml;
         else editor.textContent = String(note.body_text || "");
       }
+      normalizeInlineTasks();
 
       resizeTitle();
       renderPinState();
@@ -519,32 +550,55 @@
       if (inline && inline !== "transparent" && inline !== "rgba(0, 0, 0, 0)") return true;
       node = node.parentElement;
     }
-    try {
-      const value = String(document.queryCommandValue("hiliteColor") || "").trim().toLowerCase();
-      return Boolean(value && !["transparent", "rgba(0, 0, 0, 0)", "rgb(0, 0, 0)", "#000000"].includes(value));
-    } catch {
-      return false;
-    }
+    return false;
   }
 
+  function selectionToken(attribute) {
+    const editor = q("[data-note-content]");
+    let node = selectionNode();
+    while (node && node !== editor) {
+      if (node.nodeType === Node.ELEMENT_NODE && node.hasAttribute?.(attribute)) return clean(node.getAttribute(attribute));
+      node = node.parentElement;
+    }
+    return "default";
+  }
+
+  const TEXT_COLOR_LABELS = {
+    default: "Default",
+    green: "Hijau",
+    blue: "Biru",
+    rose: "Rose",
+    amber: "Amber",
+    purple: "Ungu"
+  };
+  const FONT_LABELS = { default: "Default", serif: "Serif", mono: "Mono", system: "Sistem" };
+
   function refreshFormatState() {
-    if (editorMode !== "edit" || !selectionNode()) return;
-    const block = currentBlock();
-    qa("[data-format-block]").forEach(button => {
-      button.classList.toggle("is-active", button.dataset.formatBlock === block);
-    });
-    ["bold", "italic", "underline", "strikeThrough"].forEach(command => {
-      let active = false;
-      try { active = document.queryCommandState(command); } catch {}
-      q(`[data-format-command="${command}"]`)?.classList.toggle("is-active", active);
-    });
-    const highlighted = selectionHasHighlight();
-    q("[data-format-highlight]")?.classList.toggle("is-active", highlighted);
-    q('[data-tool="highlight"]')?.classList.toggle("is-active", highlighted);
-    const label = q("[data-highlight-label]");
-    const state = q("[data-highlight-state]");
-    if (label) label.textContent = highlighted ? "Hapus highlight" : "Highlight";
-    if (state) state.textContent = highlighted ? "Aktif · ketuk untuk hapus" : "Tidak aktif";
+    if (editorMode !== "edit") return;
+    if (selectionNode()) {
+      const block = currentBlock();
+      qa("[data-format-block]").forEach(button => {
+        button.classList.toggle("is-active", button.dataset.formatBlock === block);
+      });
+      ["bold", "italic", "underline", "strikeThrough"].forEach(command => {
+        let active = false;
+        try { active = document.queryCommandState(command); } catch {}
+        q(`[data-format-command="${command}"]`)?.classList.toggle("is-active", active);
+      });
+
+      const textColor = selectionToken("data-text-color");
+      const fontToken = selectionToken("data-font-token");
+      const colorLabel = q("[data-format-color-label]");
+      const fontLabel = q("[data-format-font-label]");
+      if (colorLabel) colorLabel.textContent = TEXT_COLOR_LABELS[textColor] || "Default";
+      if (fontLabel) fontLabel.textContent = FONT_LABELS[fontToken] || "Default";
+      qa("[data-text-color]").forEach(button => button.classList.toggle("is-active", button.dataset.textColor === textColor));
+      qa("[data-font-token]").forEach(button => button.classList.toggle("is-active", button.dataset.fontToken === fontToken));
+    }
+
+    const highlightButton = q('[data-tool="highlight"]');
+    highlightButton?.classList.toggle("is-active", highlightTypingMode);
+    highlightButton?.setAttribute("aria-pressed", highlightTypingMode ? "true" : "false");
   }
 
   function setBlockStyle(tag) {
@@ -562,24 +616,143 @@
     }
   }
 
+  function clearHighlightTypingState({ keepSelection = true } = {}) {
+    if (editorMode !== "edit") return;
+    if (keepSelection) restoreSelection();
+    try { document.execCommand("hiliteColor", false, "transparent"); }
+    catch {
+      try { document.execCommand("backColor", false, "transparent"); } catch {}
+    }
+  }
+
+  function collapseSavedSelectionToEnd() {
+    const editor = q("[data-note-content]");
+    const selection = window.getSelection?.();
+    if (!editor || !selection || !selection.rangeCount) return;
+    const range = selection.getRangeAt(0);
+    if (!editor.contains(range.commonAncestorContainer)) return;
+    range.collapse(false);
+    selection.removeAllRanges();
+    selection.addRange(range);
+    savedRange = range.cloneRange();
+  }
+
   function toggleHighlight() {
     if (editorMode !== "edit") return;
     restoreSelection();
-    const active = selectionHasHighlight();
+    const editor = q("[data-note-content]");
+    const selection = window.getSelection?.();
+    const range = selection?.rangeCount ? selection.getRangeAt(0) : null;
+    if (!editor || !range || !editor.contains(range.commonAncestorContainer)) return;
+
     try {
-      document.execCommand("hiliteColor", false, active ? "transparent" : "#fff1a8");
-      saveSelection();
+      if (!range.collapsed) {
+        if (selectionHasHighlight() && !highlightTypingMode) {
+          document.execCommand("hiliteColor", false, "transparent");
+          highlightTypingMode = false;
+          saveSelection();
+        } else {
+          document.execCommand("hiliteColor", false, "#fff1a8");
+          collapseSavedSelectionToEnd();
+          highlightTypingMode = true;
+        }
+      } else if (highlightTypingMode) {
+        clearHighlightTypingState({ keepSelection: false });
+        highlightTypingMode = false;
+        saveSelection();
+      } else {
+        document.execCommand("hiliteColor", false, "#fff1a8");
+        highlightTypingMode = true;
+        saveSelection();
+      }
       refreshFormatState();
       scheduleBasicAutosave();
     } catch {
       try {
-        document.execCommand("backColor", false, active ? "transparent" : "#fff1a8");
+        document.execCommand("backColor", false, highlightTypingMode ? "transparent" : "#fff1a8");
+        highlightTypingMode = !highlightTypingMode;
         saveSelection();
         refreshFormatState();
       } catch {
         showToast("Highlight belum didukung di perangkat ini.");
       }
     }
+  }
+
+  function selectedTextNodes(range, root) {
+    const nodes = [];
+    const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
+    let node;
+    while ((node = walker.nextNode())) {
+      if (!node.nodeValue?.length) continue;
+      try {
+        if (range.intersectsNode(node)) nodes.push(node);
+      } catch {}
+    }
+    return nodes;
+  }
+
+  function applyInlineToken(attribute, token) {
+    if (editorMode !== "edit") return false;
+    restoreSelection();
+    const editor = q("[data-note-content]");
+    const selection = window.getSelection?.();
+    const range = selection?.rangeCount ? selection.getRangeAt(0) : null;
+    if (!editor || !range || range.collapsed || !editor.contains(range.commonAncestorContainer)) {
+      showToast("Blok teks yang ingin diformat dulu.");
+      return false;
+    }
+
+    const originalStart = range.startContainer;
+    const originalEnd = range.endContainer;
+    const originalStartOffset = range.startOffset;
+    const originalEndOffset = range.endOffset;
+    const nodes = selectedTextNodes(range, editor);
+    const wrapped = [];
+
+    nodes.forEach(node => {
+      let start = node === originalStart ? originalStartOffset : 0;
+      let end = node === originalEnd ? originalEndOffset : node.nodeValue.length;
+      start = Math.max(0, Math.min(start, node.nodeValue.length));
+      end = Math.max(start, Math.min(end, node.nodeValue.length));
+      if (start === end) return;
+
+      if (end < node.nodeValue.length) node.splitText(end);
+      const selected = start > 0 ? node.splitText(start) : node;
+      const span = document.createElement("span");
+      span.setAttribute(attribute, token);
+      selected.replaceWith(span);
+      span.appendChild(selected);
+      wrapped.push({ span, text: selected });
+    });
+
+    if (!wrapped.length) return false;
+    const newRange = document.createRange();
+    newRange.setStart(wrapped[0].text, 0);
+    const last = wrapped[wrapped.length - 1].text;
+    newRange.setEnd(last, last.nodeValue.length);
+    selection.removeAllRanges();
+    selection.addRange(newRange);
+    savedRange = newRange.cloneRange();
+    scheduleBasicAutosave(120);
+    refreshFormatState();
+    return true;
+  }
+
+  function clearCustomInlineTokensInSelection() {
+    const editor = q("[data-note-content]");
+    const selection = window.getSelection?.();
+    const range = selection?.rangeCount ? selection.getRangeAt(0) : savedRange;
+    if (!editor || !range) return;
+    qa('[data-note-content] span[data-text-color], [data-note-content] span[data-font-token]').forEach(span => {
+      if (!editor.contains(span)) return;
+      let intersects = false;
+      try { intersects = range.intersectsNode(span); } catch {}
+      if (!intersects) return;
+      span.removeAttribute("data-text-color");
+      span.removeAttribute("data-font-token");
+      if (!span.attributes.length) span.replaceWith(...span.childNodes);
+    });
   }
 
   function clearFormatting() {
@@ -589,12 +762,209 @@
       document.execCommand("removeFormat", false, null);
       document.execCommand("formatBlock", false, "p");
       document.execCommand("hiliteColor", false, "transparent");
+      highlightTypingMode = false;
+      clearCustomInlineTokensInSelection();
       saveSelection();
       refreshFormatState();
       scheduleBasicAutosave();
     } catch {
       showToast("Format belum dapat dibersihkan di perangkat ini.");
     }
+  }
+
+  function buildInlineTask(checked = false, content = null) {
+    const task = document.createElement("span");
+    task.dataset.inlineTask = checked ? "1" : "0";
+    const box = document.createElement("span");
+    box.dataset.inlineCheckbox = "";
+    box.contentEditable = "false";
+    box.setAttribute("role", "checkbox");
+    box.setAttribute("aria-checked", checked ? "true" : "false");
+    box.setAttribute("tabindex", "0");
+    box.textContent = checked ? "☑" : "☐";
+    const text = document.createElement("span");
+    text.dataset.inlineTaskText = "";
+    if (content instanceof DocumentFragment) text.appendChild(content);
+    else if (content instanceof Node) text.appendChild(content);
+    else if (content != null) text.textContent = String(content);
+    task.append(box, document.createTextNode(" "), text);
+    return { task, box, text };
+  }
+
+  function migrateLegacyInlineCheckboxes(editor) {
+    const walker = document.createTreeWalker(editor, NodeFilter.SHOW_TEXT);
+    const nodes = [];
+    let node;
+    while ((node = walker.nextNode())) {
+      if (node.parentElement?.closest?.("[data-inline-task]")) continue;
+      if (/^\s*[☐☑]\s+\S/.test(node.nodeValue || "")) nodes.push(node);
+    }
+    nodes.forEach(textNode => {
+      const match = String(textNode.nodeValue || "").match(/^\s*([☐☑])\s+([\s\S]+)$/);
+      if (!match) return;
+      const { task } = buildInlineTask(match[1] === "☑", match[2]);
+      textNode.replaceWith(task);
+    });
+  }
+
+  function normalizeInlineTasks() {
+    const editor = q("[data-note-content]");
+    if (!editor) return;
+    migrateLegacyInlineCheckboxes(editor);
+    editor.querySelectorAll("[data-inline-task]").forEach(task => {
+      const checked = task.getAttribute("data-inline-task") === "1";
+      const box = task.querySelector("[data-inline-checkbox]");
+      if (box) {
+        box.textContent = checked ? "☑" : "☐";
+        box.setAttribute("aria-checked", checked ? "true" : "false");
+        box.setAttribute("role", "checkbox");
+        box.setAttribute("contenteditable", "false");
+        box.setAttribute("tabindex", "0");
+      }
+    });
+  }
+
+  function insertInlineChecklist() {
+    if (editorMode !== "edit") return;
+    restoreSelection();
+    const editor = q("[data-note-content]");
+    const selection = window.getSelection?.();
+    const range = selection?.rangeCount ? selection.getRangeAt(0) : null;
+    if (!editor || !range || !editor.contains(range.commonAncestorContainer)) return;
+
+    const selectedFragment = range.extractContents();
+    const { task, text } = buildInlineTask(false, selectedFragment.childNodes.length ? selectedFragment : null);
+    const br = document.createElement("br");
+    range.insertNode(br);
+    range.insertNode(task);
+
+    const next = document.createRange();
+    if (text.childNodes.length) {
+      next.selectNodeContents(text);
+      next.collapse(false);
+    } else {
+      next.setStart(text, 0);
+      next.collapse(true);
+    }
+    selection.removeAllRanges();
+    selection.addRange(next);
+    savedRange = next.cloneRange();
+    normalizeInlineTasks();
+    scheduleBasicAutosave(120);
+  }
+
+  function toggleInlineTask(task) {
+    if (!task || noteReadOnly) return;
+    const checked = task.getAttribute("data-inline-task") === "1";
+    task.setAttribute("data-inline-task", checked ? "0" : "1");
+    normalizeInlineTasks();
+    scheduleBasicAutosave(120);
+  }
+
+  function internalLinkHref(note) {
+    return window.CatatanRelated?.hrefFor?.(note) || "";
+  }
+
+  function internalTargetId(anchor) {
+    if (!anchor?.hasAttribute?.("data-rk-internal-link")) return "";
+    try {
+      const url = new URL(anchor.getAttribute("href") || "", location.href);
+      return clean(url.searchParams.get("id"));
+    } catch {
+      return "";
+    }
+  }
+
+  function hasAnotherInlineLinkTo(targetId, exceptAnchor = null) {
+    if (!targetId) return false;
+    return qa('[data-note-content] a[data-rk-internal-link="note"]').some(anchor => {
+      if (anchor === exceptAnchor) return false;
+      return internalTargetId(anchor) === targetId;
+    });
+  }
+
+  function insertAnchorAtSavedRange({ href, label = "", internal = false } = {}) {
+    if (!href || editorMode !== "edit") return false;
+    restoreSelection();
+    const editor = q("[data-note-content]");
+    const selection = window.getSelection?.();
+    const range = selection?.rangeCount ? selection.getRangeAt(0) : null;
+    if (!editor || !range || !editor.contains(range.commonAncestorContainer)) {
+      showToast("Pilih posisi tautan di catatan lalu coba lagi.");
+      return false;
+    }
+
+    const selectedText = clean(range.toString()) || linkSelectedText;
+    const visibleText = clean(label) || selectedText || href;
+    const anchor = document.createElement("a");
+    anchor.href = href;
+    anchor.textContent = visibleText;
+    if (internal) anchor.dataset.rkInternalLink = "note";
+    else {
+      anchor.target = "_blank";
+      anchor.rel = "noopener noreferrer";
+    }
+
+    try {
+      range.deleteContents();
+      range.insertNode(anchor);
+      range.setStartAfter(anchor);
+      range.collapse(true);
+      selection.removeAllRanges();
+      selection.addRange(range);
+      savedRange = range.cloneRange();
+      linkSelectedText = "";
+      scheduleBasicAutosave(120);
+      refreshFormatState();
+      return true;
+    } catch {
+      showToast("Tautan belum dapat ditambahkan di posisi ini.");
+      return false;
+    }
+  }
+
+  function prepareWebLinkSheet(anchor = null) {
+    const textInput = q("[data-link-text]");
+    const urlInput = q("[data-link-url]");
+    const helper = q("[data-link-text-help]");
+    const apply = q("[data-link-apply]");
+    if (anchor) {
+      linkSelectedText = clean(anchor.textContent);
+      if (textInput) textInput.value = linkSelectedText;
+      if (urlInput) urlInput.value = anchor.getAttribute("href") || "";
+      if (helper) helper.textContent = "Ubah teks atau alamat tautan lalu simpan.";
+      if (apply) apply.textContent = "Simpan perubahan";
+    } else {
+      if (textInput) textInput.value = linkSelectedText;
+      if (urlInput) urlInput.value = "";
+      if (helper) helper.textContent = linkSelectedText
+        ? "Teks yang dipilih sudah digunakan sebagai teks tautan. Kamu tetap bisa mengubahnya."
+        : "Opsional. Jika kosong, alamat tautan akan ditampilkan.";
+      if (apply) apply.textContent = "Tambahkan tautan";
+    }
+  }
+
+  function openLinkChooser() {
+    saveSelection();
+    linkSelectedText = clean(savedRange?.toString?.() || "");
+    const preview = q("[data-link-selection-preview]");
+    const noteChoice = q('[data-link-choice="note"]');
+    const noteHelp = q("[data-link-note-help]");
+    if (preview) {
+      preview.hidden = !linkSelectedText;
+      preview.textContent = linkSelectedText ? `Teks dipilih: “${linkSelectedText}”` : "";
+    }
+    if (noteChoice) noteChoice.disabled = !linkSelectedText;
+    if (noteHelp) noteHelp.textContent = linkSelectedText
+      ? "Pilih satu Catatan atau Checklist sebagai tujuan teks ini."
+      : "Blok teks di catatan dulu untuk membuat tautan antarcatatan.";
+    openSheet("[data-link-choice-layer]", false);
+  }
+
+  function openLinkAction(anchor) {
+    activeLinkAnchor = anchor || null;
+    if (!activeLinkAnchor) return;
+    setLayer("[data-link-action-layer]", true);
   }
 
   function resizeTitle() {
@@ -1263,6 +1633,9 @@
     renderMetadataTags();
 
     if (view) {
+      highlightTypingMode = false;
+      q('[data-tool="highlight"]')?.classList.remove("is-active");
+      q('[data-tool="highlight"]')?.setAttribute("aria-pressed", "false");
       if (!reminderPreset) saveBasicNoteNow();
       title?.blur();
       editor?.blur();
@@ -1289,8 +1662,11 @@
     q("[data-open-info]")?.addEventListener("click", () => openSheet("[data-info-layer]", true));
     q("[data-info-close]")?.addEventListener("click", () => setLayer("[data-info-layer]", false));
     q("[data-format-close]")?.addEventListener("click", () => setLayer("[data-format-layer]", false));
+    q("[data-format-done]")?.addEventListener("click", () => setLayer("[data-format-layer]", false));
     q("[data-visibility-close]")?.addEventListener("click", () => setLayer("[data-visibility-layer]", false));
+    q("[data-link-choice-close]")?.addEventListener("click", () => setLayer("[data-link-choice-layer]", false));
     q("[data-link-close]")?.addEventListener("click", () => setLayer("[data-link-layer]", false));
+    q("[data-link-action-close]")?.addEventListener("click", () => { setLayer("[data-link-action-layer]", false); activeLinkAnchor = null; });
     q("[data-reminder-close]")?.addEventListener("click", () => setLayer("[data-reminder-layer]", false));
     q("[data-reminder-chip]")?.addEventListener("click", openReminderSheet);
     q("[data-reminder-save]")?.addEventListener("click", saveReminder);
@@ -1414,14 +1790,36 @@
     });
     editor?.addEventListener("keyup", () => { saveSelection(); refreshFormatState(); });
     editor?.addEventListener("mouseup", () => { saveSelection(); refreshFormatState(); });
-    editor?.addEventListener("input", refreshFormatState);
+    editor?.addEventListener("input", () => { normalizeInlineTasks(); refreshFormatState(); });
+    editor?.addEventListener("beforeinput", () => {
+      // Browser contenteditable dapat mewariskan highlight dari karakter di
+      // sebelah caret. Saat mode highlight OFF, paksa insertion state normal.
+      if (!highlightTypingMode) clearHighlightTypingState({ keepSelection: false });
+    });
+
     editor?.addEventListener("click", event => {
+      const checkbox = event.target.closest?.("[data-inline-checkbox]");
+      if (checkbox) {
+        event.preventDefault();
+        event.stopPropagation();
+        toggleInlineTask(checkbox.closest("[data-inline-task]"));
+        return;
+      }
+
       const anchor = event.target.closest?.("a");
       if (!anchor) return;
       if (editorMode === "edit") {
         event.preventDefault();
-        showToast("Tautan bisa dibuka dari Lihat hasil.");
+        saveSelection();
+        openLinkAction(anchor);
       }
+    });
+
+    editor?.addEventListener("keydown", event => {
+      const checkbox = event.target.closest?.("[data-inline-checkbox]");
+      if (!checkbox || !["Enter", " "].includes(event.key)) return;
+      event.preventDefault();
+      toggleInlineTask(checkbox.closest("[data-inline-task]"));
     });
 
     q('[data-tool="format"]')?.addEventListener("click", () => {
@@ -1432,32 +1830,13 @@
       refreshFormatState();
       openSheet("[data-format-layer]", true);
     });
-    q('[data-tool="check"]')?.addEventListener("click", () => execute("insertText", "☐ "));
+    q('[data-tool="check"]')?.addEventListener("click", insertInlineChecklist);
     q('[data-tool="list"]')?.addEventListener("click", () => execute("insertUnorderedList"));
     q('[data-tool="highlight"]')?.addEventListener("click", toggleHighlight);
-    q('[data-tool="link"]')?.addEventListener("click", () => {
-      saveSelection();
-      linkSelectedText = clean(savedRange?.toString?.() || "");
-
-      const textInput = q("[data-link-text]");
-      const urlInput = q("[data-link-url]");
-      const helper = q("[data-link-text-help]");
-
-      if (textInput) textInput.value = linkSelectedText;
-      if (urlInput) urlInput.value = "";
-      if (helper) {
-        helper.textContent = linkSelectedText
-          ? "Teks yang dipilih sudah digunakan sebagai teks tautan. Kamu tetap bisa mengubahnya."
-          : "Opsional. Jika kosong, alamat tautan akan ditampilkan.";
-      }
-
-      openSheet("[data-link-layer]", false);
-      setTimeout(() => (linkSelectedText ? urlInput : textInput)?.focus(), 80);
-    });
+    q('[data-tool="link"]')?.addEventListener("click", openLinkChooser);
 
     qa("[data-format-block]").forEach(button => {
       button.addEventListener("click", () => {
-        setLayer("[data-format-layer]", false);
         setBlockStyle(button.dataset.formatBlock || "p");
       });
     });
@@ -1466,21 +1845,80 @@
       button.addEventListener("click", () => {
         const command = button.dataset.formatCommand;
         const value = button.dataset.formatValue || null;
-        setLayer("[data-format-layer]", false);
         execute(command, value);
       });
     });
 
-    q("[data-format-highlight]")?.addEventListener("click", () => {
-      setLayer("[data-format-layer]", false);
-      toggleHighlight();
+    q("[data-format-clear]")?.addEventListener("click", clearFormatting);
+
+    q("[data-format-color]")?.addEventListener("click", () => {
+      const panel = q("[data-format-color-panel]");
+      const fontPanel = q("[data-format-font-panel]");
+      if (fontPanel) fontPanel.hidden = true;
+      if (panel) panel.hidden = !panel.hidden;
+      refreshFormatState();
     });
-    q("[data-format-clear]")?.addEventListener("click", () => {
-      setLayer("[data-format-layer]", false);
-      clearFormatting();
+    q("[data-format-font]")?.addEventListener("click", () => {
+      const panel = q("[data-format-font-panel]");
+      const colorPanel = q("[data-format-color-panel]");
+      if (colorPanel) colorPanel.hidden = true;
+      if (panel) panel.hidden = !panel.hidden;
+      refreshFormatState();
     });
 
-    q("[data-format-font]")?.addEventListener("click", () => showToast("Pilihan font akan ditambahkan setelah gaya editor dikunci."));
+    qa("[data-text-color]").forEach(button => {
+      button.addEventListener("click", () => {
+        const token = button.dataset.textColor || "default";
+        if (applyInlineToken("data-text-color", token)) {
+          const panel = q("[data-format-color-panel]");
+          if (panel) panel.hidden = true;
+          const label = q("[data-format-color-label]");
+          if (label) label.textContent = TEXT_COLOR_LABELS[token] || "Default";
+        }
+      });
+    });
+
+    qa("[data-font-token]").forEach(button => {
+      button.addEventListener("click", () => {
+        const token = button.dataset.fontToken || "default";
+        if (applyInlineToken("data-font-token", token)) {
+          const panel = q("[data-format-font-panel]");
+          if (panel) panel.hidden = true;
+          const label = q("[data-format-font-label]");
+          if (label) label.textContent = FONT_LABELS[token] || "Default";
+        }
+      });
+    });
+
+    qa("[data-link-choice]").forEach(button => {
+      button.addEventListener("click", () => {
+        const type = button.dataset.linkChoice;
+        if (type === "note") {
+          if (!linkSelectedText) {
+            showToast("Blok teks yang ingin ditautkan ke catatan dulu.");
+            return;
+          }
+          setLayer("[data-link-choice-layer]", false);
+          window.CatatanRelated?.openSingle?.({
+            onSelect: note => {
+              const href = internalLinkHref(note);
+              if (!href) {
+                showToast("Tujuan catatan belum dapat dibuka.");
+                return;
+              }
+              insertAnchorAtSavedRange({ href, label: linkSelectedText, internal: true });
+            }
+          });
+          return;
+        }
+
+        setLayer("[data-link-choice-layer]", false);
+        activeLinkAnchor = null;
+        prepareWebLinkSheet(null);
+        openSheet("[data-link-layer]", false);
+        setTimeout(() => (linkSelectedText ? q("[data-link-url]") : q("[data-link-text]"))?.focus(), 80);
+      });
+    });
 
     q("[data-link-apply]")?.addEventListener("click", () => {
       const rawUrl = clean(q("[data-link-url]")?.value);
@@ -1498,38 +1936,78 @@
       }
 
       setLayer("[data-link-layer]", false);
-      restoreSelection();
-
-      const editorEl = q("[data-note-content]");
-      const selection = window.getSelection?.();
-      const range = selection && selection.rangeCount ? selection.getRangeAt(0) : null;
-      if (!editorEl || !selection || !range || !editorEl.contains(range.commonAncestorContainer)) {
-        showToast("Pilih posisi tautan di catatan lalu coba lagi.");
+      if (activeLinkAnchor && document.contains(activeLinkAnchor)) {
+        activeLinkAnchor.href = url;
+        activeLinkAnchor.target = "_blank";
+        activeLinkAnchor.rel = "noopener noreferrer";
+        activeLinkAnchor.removeAttribute("data-rk-internal-link");
+        if (alias) activeLinkAnchor.textContent = alias;
+        activeLinkAnchor = null;
+        scheduleBasicAutosave(120);
+        showToast("Tautan diperbarui.");
         return;
       }
+      insertAnchorAtSavedRange({ href: url, label: alias, internal: false });
+    });
 
-      const selectedText = clean(range.toString()) || linkSelectedText;
-      const visibleText = alias || selectedText || url;
-      const anchor = document.createElement("a");
-      anchor.href = url;
-      anchor.target = "_blank";
-      anchor.rel = "noopener noreferrer";
-      anchor.textContent = visibleText;
-
-      try {
-        range.deleteContents();
-        range.insertNode(anchor);
-        range.setStartAfter(anchor);
-        range.collapse(true);
-        selection.removeAllRanges();
-        selection.addRange(range);
-        savedRange = range.cloneRange();
-        linkSelectedText = "";
-        refreshFormatState();
-        scheduleBasicAutosave(120);
-      } catch {
-        showToast("Tautan belum dapat ditambahkan di posisi ini.");
-      }
+    qa("[data-link-action]").forEach(button => {
+      button.addEventListener("click", () => {
+        const action = button.dataset.linkAction;
+        const anchor = activeLinkAnchor;
+        if (!anchor) return;
+        if (action === "open") {
+          const href = anchor.getAttribute("href");
+          setLayer("[data-link-action-layer]", false);
+          activeLinkAnchor = null;
+          if (!href) return;
+          if (anchor.hasAttribute("data-rk-internal-link")) location.href = href;
+          else window.open(href, "_blank", "noopener,noreferrer");
+          return;
+        }
+        if (action === "remove") {
+          const oldTargetId = internalTargetId(anchor);
+          anchor.replaceWith(document.createTextNode(anchor.textContent || ""));
+          setLayer("[data-link-action-layer]", false);
+          activeLinkAnchor = null;
+          scheduleBasicAutosave(120);
+          if (oldTargetId && !hasAnotherInlineLinkTo(oldTargetId)) {
+            window.CatatanRelated?.unlinkTarget?.(oldTargetId);
+          }
+          showToast("Tautan dihapus. Teks tetap dipertahankan.");
+          return;
+        }
+        if (action === "change") {
+          setLayer("[data-link-action-layer]", false);
+          const internal = anchor.hasAttribute("data-rk-internal-link");
+          linkSelectedText = clean(anchor.textContent);
+          if (internal) {
+            const changingAnchor = anchor;
+            const oldTargetId = internalTargetId(changingAnchor);
+            window.CatatanRelated?.openSingle?.({
+              currentTargetId: oldTargetId,
+              onSelect: note => {
+                const href = internalLinkHref(note);
+                if (!href || !document.contains(changingAnchor)) return;
+                const newTargetId = clean(note?.id);
+                changingAnchor.href = href;
+                changingAnchor.dataset.rkInternalLink = "note";
+                changingAnchor.removeAttribute("target");
+                changingAnchor.removeAttribute("rel");
+                scheduleBasicAutosave(120);
+                if (oldTargetId && oldTargetId !== newTargetId && !hasAnotherInlineLinkTo(oldTargetId, changingAnchor)) {
+                  window.CatatanRelated?.unlinkTarget?.(oldTargetId);
+                }
+                activeLinkAnchor = null;
+                showToast("Tujuan catatan diperbarui.");
+              }
+            });
+          } else {
+            prepareWebLinkSheet(anchor);
+            openSheet("[data-link-layer]", false);
+            setTimeout(() => q("[data-link-url]")?.focus(), 80);
+          }
+        }
+      });
     });
   }
 
@@ -1651,6 +2129,7 @@
           userId,
           scope,
           folderName,
+          visibility,
           canManage: !noteReadOnly && noteBackendReady,
           isReminder: reminderPreset
         }),
