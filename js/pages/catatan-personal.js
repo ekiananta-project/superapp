@@ -457,9 +457,6 @@
         else if (type === "Reminder") location.href = "catatan-editor.html?scope=personal&type=reminder";
       });
     });
-    qa('[data-nav-placeholder]:not([data-nav-placeholder="Arsip"])').forEach(button => {
-      button.addEventListener("click", () => showToast(`${button.dataset.navPlaceholder} akan aktif bersama data Catatan.`));
-    });
   }
 
   async function init() {
@@ -500,7 +497,11 @@
   }
 
   window.addEventListener("pageshow", event => {
-    if (!event.persisted || !userId) return;
+    if (!event.persisted) return;
+    closeCreateSheet();
+    window.CatatanManagement?.closeActiveMenu?.();
+    if (selectionMode) setSelectionMode(false);
+    if (!userId) return;
     Promise.allSettled([loadBackendNotes(), loadBackendFolders()]);
   });
 

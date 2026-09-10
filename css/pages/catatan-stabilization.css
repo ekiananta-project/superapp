@@ -1,0 +1,35 @@
+/* RuangKitha v2.0.0a42 — Catatan UX stabilization */
+
+/* Bottom navigation is intentionally simplified to Home + Add + Arsip. */
+.catatan-bottom-nav {
+  grid-template-columns: minmax(0, 1fr) 68px minmax(0, 1fr) !important;
+}
+
+.catatan-bottom-nav > .catatan-nav-item {
+  min-width: 0;
+  justify-self: stretch;
+}
+
+.catatan-bottom-nav > .catatan-add-button {
+  justify-self: center;
+}
+
+/* Keep the center slot visually stable when Add is intentionally hidden
+   (for example, a read-only member folder). */
+.catatan-bottom-nav > .catatan-add-button[hidden] {
+  display: block !important;
+  visibility: hidden;
+  pointer-events: none;
+}
+
+/* Avoid accidental width shifts when a bottom-nav label becomes active. */
+.catatan-bottom-nav .catatan-nav-item span {
+  min-width: 42px;
+  text-align: center;
+}
+
+@media (max-width: 380px) {
+  .catatan-bottom-nav {
+    grid-template-columns: minmax(0, 1fr) 64px minmax(0, 1fr) !important;
+  }
+}

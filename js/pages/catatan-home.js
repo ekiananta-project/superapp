@@ -97,10 +97,6 @@
       });
     });
 
-    qa("[data-nav-placeholder]").forEach(button => {
-      button.addEventListener("click", () => showToast(`${button.dataset.navPlaceholder} akan aktif bersama data Catatan.`));
-    });
-
     const search = q("#catatan-global-search");
     search?.addEventListener("keydown", event => {
       if (event.key !== "Enter") return;
@@ -208,6 +204,12 @@
       q("[data-catatan-home]")?.setAttribute("aria-busy", "false");
     }
   }
+
+  window.addEventListener("pageshow", event => {
+    if (!event.persisted) return;
+    closeCreateSheet();
+    window.CatatanManagement?.closeActiveMenu?.();
+  });
 
   document.addEventListener("DOMContentLoaded", init, { once: true });
 })();

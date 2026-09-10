@@ -258,6 +258,7 @@
     const folder = q("[data-folder-name]");
     const search = q("#catatan-folder-search");
     const context = q("[data-create-context]");
+    const archiveNav = q("[data-folder-archive]");
 
     if (folder) folder.textContent = folderName;
     if (search) {
@@ -265,6 +266,11 @@
       search.setAttribute("aria-label", `Cari di folder ${folderName}`);
     }
     if (context) context.textContent = `Folder ${folderName}`;
+    if (archiveNav) {
+      const archiveScope = scope === "family" ? "family" : "personal";
+      archiveNav.href = `catatan-arsip.html?scope=${archiveScope}`;
+      archiveNav.setAttribute("aria-label", archiveScope === "family" ? "Buka Arsip Keluarga" : "Buka Arsip Pribadi");
+    }
 
     if (scope === "family") {
       if (title) title.textContent = "Catatan Keluarga";
@@ -359,10 +365,6 @@
         }
       });
     });
-
-    qa("[data-nav-placeholder]").forEach(button => {
-      button.addEventListener("click", () => showToast(`${button.dataset.navPlaceholder} akan aktif bersama data Catatan.`));
-    });
   }
 
   async function init() {
@@ -420,7 +422,10 @@
   }
 
   window.addEventListener("pageshow", event => {
-    if (!event.persisted || !userId || !folderName) return;
+    if (!event.persisted) return;
+    closeCreateSheet();
+    window.CatatanManagement?.closeActiveMenu?.();
+    if (!userId || !folderName) return;
     loadNotes();
   });
 

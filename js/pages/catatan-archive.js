@@ -285,9 +285,6 @@
   function setupInteractions() {
     q("#catatan-archive-search")?.addEventListener("input", filterArchive);
     q("[data-delete-all-archive]")?.addEventListener("click", deleteAllArchive);
-    qa("[data-nav-placeholder]").forEach(button => {
-      button.addEventListener("click", () => showToast(`${button.dataset.navPlaceholder} akan aktif pada tahap berikutnya.`));
-    });
   }
 
   async function init() {
@@ -335,7 +332,9 @@
   }
 
   window.addEventListener("pageshow", event => {
-    if (!event.persisted || !userId) return;
+    if (!event.persisted) return;
+    window.CatatanManagement?.closeActiveMenu?.();
+    if (!userId) return;
     loadArchive();
   });
 

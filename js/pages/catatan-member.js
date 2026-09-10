@@ -278,9 +278,6 @@
         else if (type === "Reminder") location.href = `catatan-editor.html?scope=${encodeURIComponent(createScope || "personal")}&type=reminder`;
       });
     });
-    qa("[data-nav-placeholder]").forEach(button => {
-      button.addEventListener("click", () => showToast(`${button.dataset.navPlaceholder} akan aktif bersama data Catatan.`));
-    });
   }
 
   async function init() {
@@ -335,7 +332,10 @@
   }
 
   window.addEventListener("pageshow", event => {
-    if (!event.persisted || !viewerUserId || !activeFamilyId || !activeMemberId) return;
+    if (!event.persisted) return;
+    closeCreateSheet();
+    window.CatatanManagement?.closeActiveMenu?.();
+    if (!viewerUserId || !activeFamilyId || !activeMemberId) return;
     Promise.allSettled([
       loadBackendNotes(activeFamilyId, activeMemberId),
       loadBackendFolders(activeFamilyId, activeMemberId)
