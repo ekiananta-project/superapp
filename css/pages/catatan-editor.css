@@ -1173,3 +1173,298 @@ html[data-theme="dark"].catatan-context-chip.is-add-tag {
   .catatan-editor-mode-main { gap: 5px; }
  .catatan-context-chip.is-add-tag { min-width: 108px; }
 }
+
+/* ============================================================
+   v2.0.0a37 — Catatan Terkait V1
+   ============================================================ */
+.catatan-related-section {
+  margin: 28px 0 10px;
+  padding: 18px;
+  border: 1px solid var(--color-border, #e0e4e1);
+  border-radius: 22px;
+  background: color-mix(in srgb, var(--color-surface, #fff) 94%, var(--color-primary, #159447) 6%);
+  box-shadow: var(--shadow-sm, 0 6px 20px rgba(20,40,28,.05));
+}
+.catatan-related-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  margin-bottom: 12px;
+}
+.catatan-related-heading h2 {
+  margin: 0;
+  color: var(--color-text, #18201b);
+  font-size: 15px;
+  line-height: 1.25;
+}
+.catatan-related-heading small {
+  display: block;
+  margin-top: 3px;
+  color: var(--color-text-soft, #6f7b73);
+  font-size: 10px;
+}
+.catatan-related-manage {
+  appearance: none;
+  flex: 0 0 auto;
+  min-height: 34px;
+  padding: 0 12px;
+  border: 1px solid color-mix(in srgb, var(--color-primary, #159447) 24%, var(--color-border, #e0e4e1));
+  border-radius: 999px;
+  background: var(--color-surface, #fff);
+  color: var(--color-primary, #159447);
+  font: inherit;
+  font-size: 10px;
+  font-weight: 700;
+}
+.catatan-related-cards { display: grid; gap: 8px; }
+.catatan-related-card {
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(0,1fr) auto;
+  align-items: stretch;
+  border: 1px solid var(--color-border, #e0e4e1);
+  border-radius: 16px;
+  background: var(--color-surface, #fff);
+  overflow: hidden;
+}
+.catatan-related-card-main {
+  appearance: none;
+  display: grid;
+  grid-template-columns: 38px minmax(0,1fr) 18px;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+  padding: 9px 8px 9px 10px;
+  border: 0;
+  background: transparent;
+  color: var(--color-text, #18201b);
+  text-align: left;
+  font: inherit;
+}
+.catatan-related-card-icon,
+.catatan-related-picker-icon {
+  display: grid;
+  place-items: center;
+  width: 38px;
+  height: 38px;
+  border-radius: 12px;
+  background: color-mix(in srgb, var(--color-primary, #159447) 9%, var(--color-surface, #fff));
+  color: var(--color-primary, #159447);
+}
+.catatan-related-card-icon ion-icon,
+.catatan-related-picker-icon ion-icon { font-size: 19px; }
+.catatan-related-card-copy,
+.catatan-related-picker-copy { min-width: 0; }
+.catatan-related-card-copy strong,
+.catatan-related-picker-copy strong {
+  display: block;
+  overflow: hidden;
+  color: var(--color-text, #18201b);
+  font-size: 11px;
+  line-height: 1.35;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.catatan-related-card-copy small,
+.catatan-related-picker-copy small {
+  display: block;
+  overflow: hidden;
+  margin-top: 3px;
+  color: var(--color-text-soft, #6f7b73);
+  font-size: 9px;
+  line-height: 1.35;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.catatan-related-card-chevron { color: var(--color-text-muted, #879089); font-size: 16px; }
+.catatan-related-card-menu {
+  appearance: none;
+  display: grid;
+  place-items: center;
+  width: 40px;
+  border: 0;
+  border-left: 1px solid var(--color-border, #e0e4e1);
+  background: transparent;
+  color: var(--color-text-soft, #6f7b73);
+  font-size: 18px;
+}
+.catatan-related-empty {
+  display: grid;
+  grid-template-columns: 42px minmax(0,1fr);
+  gap: 10px;
+  align-items: start;
+}
+.catatan-related-empty > span {
+  display: grid;
+  place-items: center;
+  width: 42px;
+  height: 42px;
+  border-radius: 14px;
+  background: color-mix(in srgb, var(--color-primary, #159447) 10%, var(--color-surface, #fff));
+  color: var(--color-primary, #159447);
+}
+.catatan-related-empty > span ion-icon { font-size: 21px; }
+.catatan-related-empty strong { display: block; color: var(--color-text, #18201b); font-size: 11.5px; }
+.catatan-related-empty p { margin: 3px 0 0; color: var(--color-text-soft, #6f7b73); font-size: 9.5px; line-height: 1.45; }
+.catatan-related-empty button {
+  grid-column: 1 / -1;
+  appearance: none;
+  min-height: 38px;
+  margin-top: 2px;
+  border: 1px dashed color-mix(in srgb, var(--color-primary, #159447) 38%, var(--color-border, #e0e4e1));
+  border-radius: 13px;
+  background: transparent;
+  color: var(--color-primary, #159447);
+  font: inherit;
+  font-size: 10px;
+  font-weight: 700;
+}
+
+.catatan-related-sheet {
+  display: flex;
+  flex-direction: column;
+  max-height: min(88dvh, 720px);
+  overflow: hidden;
+}
+.catatan-related-search {
+  flex: 0 0 auto;
+  display: grid;
+  grid-template-columns: 24px minmax(0,1fr);
+  align-items: center;
+  gap: 8px;
+  min-height: 48px;
+  margin-bottom: 12px;
+  padding: 0 12px;
+  border: 1px solid var(--color-border, #e0e4e1);
+  border-radius: 15px;
+  background: var(--color-surface, #fff);
+}
+.catatan-related-search:focus-within { border-color: var(--color-primary, #159447); }
+.catatan-related-search ion-icon { color: var(--color-text-muted, #879089); font-size: 19px; }
+.catatan-related-search input {
+  min-width: 0;
+  width: 100%;
+  height: 46px;
+  padding: 0;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  color: var(--color-text, #18201b);
+  font: inherit;
+  font-size: 12px;
+}
+.catatan-related-search input::placeholder { color: var(--color-text-muted, #879089); }
+.catatan-related-picker-scroll {
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-width: thin;
+  padding-right: 2px;
+}
+.catatan-related-picker { display: grid; gap: 15px; }
+.catatan-related-picker-group { display: grid; gap: 7px; }
+.catatan-related-picker-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 0 4px;
+  color: var(--color-text-soft, #6f7b73);
+}
+.catatan-related-picker-heading strong { font-size: 9px; letter-spacing: .04em; }
+.catatan-related-picker-heading span {
+  display: grid;
+  place-items: center;
+  min-width: 24px;
+  height: 24px;
+  padding: 0 7px;
+  border-radius: 999px;
+  background: var(--color-surface-soft, #eef1ef);
+  font-size: 9px;
+  font-weight: 700;
+}
+.catatan-related-picker-row {
+  appearance: none;
+  display: grid;
+  grid-template-columns: 38px minmax(0,1fr) 22px;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  min-height: 60px;
+  padding: 9px 10px;
+  border: 1px solid var(--color-border, #e0e4e1);
+  border-radius: 16px;
+  background: var(--color-surface, #fff);
+  color: var(--color-text, #18201b);
+  text-align: left;
+  font: inherit;
+}
+.catatan-related-picker-row.is-selected {
+  border-color: color-mix(in srgb, var(--color-primary, #159447) 56%, var(--color-border, #e0e4e1));
+  background: color-mix(in srgb, var(--color-primary, #159447) 7%, var(--color-surface, #fff));
+}
+.catatan-related-picker-row.is-archived { opacity: .78; }
+.catatan-related-picker-check { justify-self: end; color: var(--color-text-muted, #879089); font-size: 21px; }
+.catatan-related-picker-row.is-selected .catatan-related-picker-check { color: var(--color-primary, #159447); }
+.catatan-related-picker-empty {
+  padding: 28px 10px;
+  color: var(--color-text-soft, #6f7b73);
+  text-align: center;
+  font-size: 10px;
+}
+.catatan-related-actions {
+  flex: 0 0 auto;
+  display: grid;
+  grid-template-columns: .8fr 1.2fr;
+  gap: 9px;
+  margin: 12px -2px -2px;
+  padding: 12px 2px max(2px, env(safe-area-inset-bottom));
+  border-top: 1px solid var(--color-border, #e0e4e1);
+  background: var(--color-surface, #fff);
+}
+.catatan-related-actions button {
+  appearance: none;
+  min-height: 45px;
+  border-radius: 14px;
+  font: inherit;
+  font-size: 10.5px;
+  font-weight: 700;
+}
+.catatan-related-actions .is-secondary {
+  border: 1px solid var(--color-border, #e0e4e1);
+  background: var(--color-surface, #fff);
+  color: var(--color-text, #18201b);
+}
+.catatan-related-actions .is-primary { border: 0; background: var(--color-primary, #159447); color: #fff; }
+.catatan-related-actions button:disabled { opacity: .55; }
+.catatan-related-action-sheet { max-height: min(52dvh, 420px); }
+.catatan-related-unlink-action {
+  appearance: none;
+  display: grid;
+  grid-template-columns: 38px minmax(0,1fr);
+  align-items: center;
+  gap: 11px;
+  width: 100%;
+  min-height: 62px;
+  padding: 10px;
+  border: 1px solid color-mix(in srgb, #d14b4b 32%, var(--color-border, #e0e4e1));
+  border-radius: 16px;
+  background: color-mix(in srgb, #d14b4b 5%, var(--color-surface, #fff));
+  color: #b63b3b;
+  text-align: left;
+  font: inherit;
+}
+.catatan-related-unlink-action > ion-icon { justify-self: center; font-size: 21px; }
+.catatan-related-unlink-action strong { display: block; font-size: 11px; }
+.catatan-related-unlink-action small { display: block; margin-top: 3px; color: var(--color-text-soft, #6f7b73); font-size: 9px; line-height: 1.4; }
+.catatan-related-layer.is-loading .catatan-related-picker-scroll { opacity: .45; pointer-events: none; }
+.catatan-editor.is-member-readonly .catatan-related-section { margin-top: 24px; }
+.catatan-checklist .catatan-related-section { margin-bottom: 20px; }
+
+@media (max-width: 360px) {
+  .catatan-related-section { padding: 15px; border-radius: 19px; }
+  .catatan-related-card-main { grid-template-columns: 34px minmax(0,1fr) 16px; gap: 8px; }
+  .catatan-related-card-icon,
+  .catatan-related-picker-icon { width: 34px; height: 34px; }
+}

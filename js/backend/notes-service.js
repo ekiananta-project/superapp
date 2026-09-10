@@ -354,6 +354,65 @@
     return Number(data || 0);
   }
 
+  function normalizeRelatedRow(row = {}) {
+    return {
+      id: clean(row?.id),
+      created_by: clean(row?.created_by),
+      scope: normalizeScope(row?.scope),
+      visibility: String(row?.visibility || ""),
+      note_type: normalizeNoteType(row?.note_type),
+      title: String(row?.title || "").trim().slice(0, 160),
+      folder_id: clean(row?.folder_id) || null,
+      folder_name: clean(row?.folder_name, 80),
+      archived_at: row?.archived_at || null,
+      updated_at: row?.updated_at || null,
+      is_related: Boolean(row?.is_related),
+      is_same_folder: Boolean(row?.is_same_folder)
+    };
+  }
+
+  async function ambilCatatanTerkait(noteId) {
+    const id = clean(noteId);
+    if (!id) return [];
+    const { data, error } = await client().rpc("notes_list_related_v1", { p_note_id: id });
+    if (error) throw error;
+    return (data || []).map(normalizeRelatedRow).filter(row => row.id);
+  }
+
+  async function ambilKandidatCatatanTerkait(noteId, limit = 250) {
+    const id = clean(noteId);
+    if (!id) return [];
+    const safeLimit = Math.min(Math.max(Number(limit) || 250, 20), 400);
+    const { data, error } = await client().rpc("notes_list_related_candidates_v1", {
+      p_note_id: id,
+      p_limit: safeLimit
+    });
+    if (error) throw error;
+    return (data || []).map(normalizeRelatedRow).filter(row => row.id);
+  }
+
+  async function syncCatatanTerkait(noteId, relatedIds = []) {
+    const id = clean(noteId);
+    if (!id) throw new Error("Catatan belum tersimpan.");
+    const ids = Array.from(new Set((Array.isArray(relatedIds) ? relatedIds : []).map(clean).filter(Boolean))).slice(0, 250);
+    const { data, error } = await client().rpc("notes_sync_related_v1", {
+      p_note_id: id,
+      p_related_ids: ids
+    });
+    if (error) throw error;
+    return Number(data || 0);
+  }
+
+  function relatedSchemaBelumTerpasang(error) {
+    const code = String(error?.code || "").toUpperCase();
+    const message = String(error?.message || error?.details || error?.hint || "").toLowerCase();
+    return code === "PGRST202" ||
+      message.includes("notes_list_related_v1") ||
+      message.includes("notes_list_related_candidates_v1") ||
+      message.includes("notes_sync_related_v1") ||
+      message.includes("catatan_note_relations");
+  }
+
   function normalizeChecklistItem(item = {}, index = 0) {
     return {
       id: clean(item?.id),
@@ -795,6 +854,10 @@
     pulihkanCatatan,
     hapusPermanenArsip,
     hapusSemuaArsip,
+    ambilCatatanTerkait,
+    ambilKandidatCatatanTerkait,
+    syncCatatanTerkait,
+    relatedSchemaBelumTerpasang,
     hapusFolder,
     folderSchemaBelumTerpasang,
     managementSchemaBelumTerpasang,

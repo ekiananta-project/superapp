@@ -207,12 +207,15 @@
 
     currentSavePromise = (async () => {
       try {
+        const wasNewNote = !noteId;
         const saved = await window.NotesService.simpanBasic(snapshot);
         noteId = clean(saved?.id, noteId);
         noteOwnerId = clean(saved?.created_by, userId);
         noteDeleteAllowed = Boolean(noteId && noteOwnerId === userId);
         renderDeleteAction();
         updateNoteUrl();
+        if (wasNewNote) window.CatatanRelated?.refresh?.();
+        else window.CatatanRelated?.render?.();
         lastSavedFingerprint = fingerprint;
         q("[data-catatan-editor]")?.setAttribute("data-save-state", "saved");
         if (tagDirty || (noteId && selectedTags.size && lastSavedTagFingerprint === "[]")) {
@@ -1379,6 +1382,12 @@
           openReminderSheet();
           return;
         }
+        if (action === "related") {
+          setLayer("[data-info-layer]", false);
+          if (reminderPreset) showToast("Catatan Terkait untuk Reminder akan aktif bersama backend Reminder.");
+          else window.CatatanRelated?.open?.();
+          return;
+        }
         if (action === "promote") {
           setLayer("[data-info-layer]", false);
           if (reminderPreset && scope === "personal") showFamilyPushPrompt();
@@ -1635,6 +1644,23 @@
       if (!reminderPreset && noteId && noteBackendReady) {
         await loadBasicNote();
       }
+
+      window.CatatanRelated?.init?.({
+        getContext: () => ({
+          noteId,
+          userId,
+          scope,
+          folderName,
+          canManage: !noteReadOnly && noteBackendReady,
+          isReminder: reminderPreset
+        }),
+        ensureSaved: async () => {
+          await saveBasicNoteNow();
+          return noteId;
+        },
+        showToast
+      });
+      window.CatatanRelated?.refresh?.();
 
       await loadTagCatalog();
       renderMetadataTags();

@@ -939,12 +939,15 @@
 
     currentSavePromise = (async () => {
       try {
+        const wasNewNote = !noteId;
         const saved = await window.NotesService.simpanChecklist(snapshot);
         noteId = clean(saved?.id, noteId);
         noteOwnerId = clean(saved?.created_by, userId);
         noteDeleteAllowed = Boolean(noteId && noteOwnerId === userId);
         renderDeleteAction();
         updateNoteUrl();
+        if (wasNewNote) window.CatatanRelated?.refresh?.();
+        else window.CatatanRelated?.render?.();
 
         const savedItems = await window.NotesService.syncChecklistItems(noteId, snapshot.items);
         const currentFingerprint = checklistFingerprint();
@@ -1208,6 +1211,11 @@
           openReminderSheet();
           return;
         }
+        if (action === "related") {
+          setLayer("[data-info-layer]", false);
+          window.CatatanRelated?.open?.();
+          return;
+        }
         if (action === "promote") {
           showToast("Pemindahan permanen ke Catatan Keluarga akan aktif bersama backend Folder/Move berikutnya.");
           return;
@@ -1331,6 +1339,24 @@
       );
 
       if (noteId && checklistBackendReady) await loadChecklistNote();
+
+      window.CatatanRelated?.init?.({
+        getContext: () => ({
+          noteId,
+          userId,
+          scope,
+          folderName,
+          canManage: !noteReadOnly && checklistBackendReady,
+          isReminder: false
+        }),
+        ensureSaved: async () => {
+          await saveChecklistNow();
+          return noteId;
+        },
+        showToast
+      });
+      window.CatatanRelated?.refresh?.();
+
       await loadTagCatalog();
       renderMetadataTags();
       maybeShowSensitiveNotice();
