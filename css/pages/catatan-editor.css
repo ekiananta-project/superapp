@@ -1,4 +1,4 @@
-/* RuangKitha v2.0.0a31 — Catatan editor styles (a29e member reading view retained) */
+/* RuangKitha v2.0.0a32 — Catatan editor styles (a29e member reading view retained) */
 
 .catatan-editor {
   position: relative;
@@ -939,3 +939,237 @@ html[data-theme="dark"] .catatan-reminder-editor-card.is-family.is-locked { back
   .catatan-reminder-editor-split .catatan-reminder-editor-card { min-height: 86px; }
 }
 .catatan-editor.is-reminder-editor .catatan-editor-menu { grid-column: 3; }
+
+
+/* =========================================================
+   v2.0.0a32 — Context header + compact Tag UX
+   ========================================================= */
+
+/* Area Keluarga bersifat collaborative. Header tetap hadir sebagai kontrol
+   editor, tetapi ikut document flow dan tidak menempel saat konten discroll. */
+.catatan-editor.is-family-scope .catatan-editor-header {
+  position: relative;
+  top: auto;
+}
+
+/* Mode + lokasi catatan dibaca sebagai satu unit informasi. */
+.catatan-editor-mode {
+  display: grid;
+  grid-template-columns: 1fr;
+  justify-items: center;
+  gap: 3px;
+  min-width: 122px;
+  min-height: 48px;
+  padding: 6px 14px 7px;
+  border-radius: 17px;
+}
+.catatan-editor-mode-main {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-width: 0;
+}
+.catatan-editor-mode > small {
+  display: block;
+  color: var(--color-text-soft, #6f7b73);
+  font-size: 9.5px;
+  line-height: 1.1;
+  font-weight: 600;
+  letter-spacing: .01em;
+}
+.catatan-editor-mode ion-icon { font-size: 17px; }
+
+/* Reading view anggota tetap tanpa editor header, tetapi konteks area/milik
+   selalu terlihat sebagai micro-copy di document flow. */
+.catatan-member-readonly-nav {
+  flex-wrap: wrap;
+  gap: 8px 12px;
+}
+.catatan-member-readonly-context {
+  color: var(--color-text-soft, #6f7b73);
+  font-size: 10px;
+  line-height: 1.35;
+  font-weight: 600;
+}
+
+/* Chevron kecil memberi affordance bahwa visibilitas dapat diketuk. */
+.catatan-context-chip.is-visibility {
+  gap: 5px;
+}
+.catatan-context-chip.is-visibility .catatan-context-chevron {
+  margin-left: 1px;
+  color: var(--color-text-muted, #879089);
+  font-size: 12px;
+}
+
+/* Metadata tidak lagi menampilkan seluruh tag satu per satu. */
+.catatan-context-tags {
+  display: inline-flex;
+  flex: 0 0 auto;
+}
+.catatan-tag-stack-summary {
+  appearance: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  min-height: 32px;
+  padding: 0 10px 0 8px;
+  border: 1px solid var(--color-border, #e0e4e1);
+  border-radius: 999px;
+  background: var(--color-surface, #fff);
+  color: var(--color-primary, #159447);
+  font: inherit;
+  font-size: 10px;
+  line-height: 1;
+  font-weight: 700;
+  white-space: nowrap;
+  cursor: pointer;
+}
+.catatan-tag-stack-summary:disabled {
+  opacity: 1;
+  cursor: default;
+}
+.catatan-tag-stack-summary > ion-icon {
+  color: var(--color-text-muted, #879089);
+  font-size: 12px;
+}
+.catatan-tag-stack-visual {
+  position: relative;
+  display: inline-block;
+  width: 25px;
+  height: 17px;
+}
+.catatan-tag-stack-visual i {
+  position: absolute;
+  width: 18px;
+  height: 10px;
+  border: 1px solid color-mix(in srgb, var(--color-primary, #159447) 48%, var(--color-border, #e0e4e1));
+  border-radius: 4px;
+  background: color-mix(in srgb, var(--color-primary, #159447) 8%, var(--color-surface, #fff));
+  transform: rotate(-4deg);
+}
+.catatan-tag-stack-visual i:nth-child(1) { left: 0; top: 5px; opacity: .55; }
+.catatan-tag-stack-visual i:nth-child(2) { left: 3px; top: 3px; opacity: .75; transform: rotate(2deg); }
+.catatan-tag-stack-visual i:nth-child(3) { left: 6px; top: 1px; opacity: 1; transform: rotate(0); }
+.catatan-tag-stack-visual i:only-child { left: 4px; top: 3px; opacity: 1; transform: rotate(0); }
+.catatan-tag-stack-visual i:first-child:nth-last-child(2) { left: 2px; top: 4px; opacity: .68; transform: rotate(-3deg); }
+.catatan-tag-stack-visual i:nth-child(2):last-child { left: 6px; top: 2px; opacity: 1; transform: rotate(1deg); }
+
+.catatan-context-chip.is-add-tag {
+  min-width: 132px;
+  min-height: 34px;
+  justify-content: flex-start;
+  padding-inline: 10px 12px;
+  border-radius: 11px;
+  border-style: solid;
+  border-color: var(--color-border, #e0e4e1);
+  background: var(--color-surface, #fff);
+  color: var(--color-text-soft, #6f7b73);
+}
+.catatan-context-chip.is-add-tag ion-icon {
+  color: var(--color-primary, #159447);
+  font-size: 17px;
+}
+
+/* Explicit "Tulis tag baru..." input: tidak perlu menebak bahwa search field
+   juga dipakai membuat tag. */
+.catatan-tag-new-row {
+  display: grid;
+  grid-template-columns: 22px minmax(0,1fr) auto;
+  align-items: center;
+  gap: 8px;
+  min-height: 48px;
+  margin-top: 10px;
+  padding: 5px 6px 5px 11px;
+  border: 1px solid var(--color-border, #e0e4e1);
+  border-radius: 15px;
+  background: var(--color-surface, #fff);
+}
+.catatan-tag-new-row:focus-within {
+  border-color: var(--color-primary, #159447);
+}
+.catatan-tag-new-row > ion-icon {
+  color: var(--color-primary, #159447);
+  font-size: 20px;
+}
+.catatan-tag-new-row input {
+  width: 100%;
+  min-width: 0;
+  min-height: 36px;
+  padding: 0;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  color: var(--color-text, #18201b);
+  font: inherit;
+  font-size: 11.5px;
+}
+.catatan-tag-new-row input::placeholder {
+  color: var(--color-text-muted, #879089);
+}
+.catatan-tag-new-row .catatan-tag-create {
+  width: auto;
+  min-width: 68px;
+  min-height: 36px;
+  margin: 0;
+  padding: 0 12px;
+  border: 0;
+  border-radius: 11px;
+  background: var(--color-primary, #159447);
+  color: #fff;
+  justify-content: center;
+  font-size: 10px;
+  text-align: center;
+}
+.catatan-tag-new-row .catatan-tag-create:disabled {
+  opacity: .42;
+  cursor: default;
+}
+
+.catatan-tag-list {
+  max-height: min(43dvh, 340px);
+  margin-top: 12px;
+}
+.catatan-tag-section-title {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  min-height: 30px;
+  padding: 4px 3px 2px;
+  color: var(--color-text-soft, #6f7b73);
+}
+.catatan-tag-section-title strong {
+  font-size: 9.5px;
+  line-height: 1;
+  text-transform: uppercase;
+  letter-spacing: .055em;
+}
+.catatan-tag-section-title span {
+  display: grid;
+  place-items: center;
+  min-width: 24px;
+  height: 20px;
+  padding: 0 6px;
+  border-radius: 999px;
+  background: var(--color-surface-soft, #eef1ef);
+  color: var(--color-text-soft, #6f7b73);
+  font-size: 9px;
+  font-weight: 700;
+}
+
+html[data-theme="dark"] .catatan-tag-new-row,
+html[data-theme="dark"] .catatan-tag-stack-summary,
+html[data-theme="dark"].catatan-context-chip.is-add-tag {
+  background: var(--color-surface, #212422);
+}
+
+@media (max-width: 360px) {
+  .catatan-editor-mode {
+    min-width: 110px;
+    padding-inline: 10px;
+  }
+  .catatan-editor-mode-main { gap: 5px; }
+ .catatan-context-chip.is-add-tag { min-width: 108px; }
+}

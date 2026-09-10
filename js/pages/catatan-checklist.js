@@ -114,6 +114,9 @@
   }
 
   function editorBackUrl() {
+    if (sourceContext === "member" && noteReadOnly && memberSourceId && folderName) {
+      return `catatan-folder.html?scope=member&member=${encodeURIComponent(memberSourceId)}&folder=${encodeURIComponent(folderName)}`;
+    }
     if (sourceContext === "member" && noteReadOnly && memberSourceId) {
       return `catatan-anggota.html?member=${encodeURIComponent(memberSourceId)}`;
     }
@@ -171,10 +174,19 @@
   }
 
   function applyContext() {
+    const root = q("[data-catatan-checklist]");
+    root?.classList.toggle("is-family-scope", scope === "family");
+    const modeArea = q("[data-mode-area]");
+    if (modeArea) modeArea.textContent = scope === "family" ? "Area Keluarga" : "Area Pribadi";
+    const memberReadContext = q("[data-member-readonly-context]");
+    if (memberReadContext && sourceContext === "member" && noteReadOnly) {
+      memberReadContext.textContent = `Area Pribadi · Milik ${memberViewName || "anggota"}`;
+    }
     const areaLabel = q("[data-area-label]");
     const areaChip = q("[data-area-chip]");
     const areaIcon = areaChip?.querySelector("ion-icon");
     const visibilityChip = q("[data-visibility-chip]");
+    const visibilityChevron = visibilityChip?.querySelector(".catatan-context-chevron");
     const visibilityRow = q("[data-visibility-row]");
     const promoteRow = q("[data-promote-row]");
     const folderChip = q("[data-folder-chip]");
@@ -193,6 +205,7 @@
         visibilityChip.hidden = false;
         visibilityChip.disabled = true;
       }
+      if (visibilityChevron) visibilityChevron.hidden = true;
       const visibilityLabel = q("[data-visibility-label]");
       if (visibilityLabel) visibilityLabel.textContent = "Hanya baca";
       visibilityChip?.querySelector("ion-icon")?.setAttribute("name", "eye-outline");
@@ -202,12 +215,14 @@
       if (areaLabel) areaLabel.textContent = "Catatan Keluarga";
       if (areaIcon) areaIcon.setAttribute("name", "people-outline");
       if (visibilityChip) visibilityChip.hidden = true;
+      if (visibilityChevron) visibilityChevron.hidden = true;
       if (visibilityRow) visibilityRow.hidden = true;
       if (promoteRow) promoteRow.hidden = true;
     } else {
       if (areaLabel) areaLabel.textContent = "Pribadi";
       if (areaIcon) areaIcon.setAttribute("name", "person-outline");
       if (visibilityChip) visibilityChip.hidden = false;
+      if (visibilityChevron) visibilityChevron.hidden = false;
       if (visibilityRow) visibilityRow.hidden = false;
       if (promoteRow) promoteRow.hidden = false;
       renderVisibility();
@@ -436,68 +451,97 @@
     if (!host) return;
     host.textContent = "";
 
-    Array.from(selectedTags).sort().forEach(tag => {
-      const button = document.createElement("button");
-      button.type = "button";
-      button.className = "catatan-context-chip is-tag";
-      button.disabled = noteReadOnly || editorMode !== "edit";
-      button.innerHTML = `<span>#${tag}</span>`;
-      if (!button.disabled) button.addEventListener("click", openTagSheet);
-      host.appendChild(button);
-    });
-
+    const tags = Array.from(selectedTags).sort();
+    const canEditTags = !noteReadOnly && editorMode === "edit";
     const add = q("[data-tag-add]");
-    if (add) add.hidden = noteReadOnly || editorMode !== "edit";
+
+    if (tags.length) {
+      const summary = document.createElement("button");
+      summary.type = "button";
+      summary.className = "catatan-tag-stack-summary";
+      summary.disabled = !canEditTags;
+      summary.setAttribute("aria-label", `${tags.length} tag dipakai${canEditTags ? ", ketuk untuk mengelola" : ""}`);
+      const stackLayers = "<i></i>".repeat(Math.min(tags.length, 3));
+      summary.innerHTML = `
+        <span class="catatan-tag-stack-visual" aria-hidden="true">${stackLayers}</span>
+        <strong>${tags.length} tag</strong>
+        ${canEditTags ? '<ion-icon name="chevron-forward-outline" aria-hidden="true"></ion-icon>' : ""}
+      `;
+      if (canEditTags) summary.addEventListener("click", openTagSheet);
+      host.appendChild(summary);
+      if (add) add.hidden = true;
+    } else if (add) {
+      add.hidden = !canEditTags;
+      const label = add.querySelector("span");
+      if (label) label.textContent = "Tambah tag...";
+    }
 
     const info = q("[data-info-tags]");
-    if (info) {
-      const tags = Array.from(selectedTags).sort();
-      info.textContent = tags.length ? tags.map(tag => `#${tag}`).join(" · ") : "Belum ada tag";
-    }
+    if (info) info.textContent = tags.length ? `${tags.length} tag dipilih` : "Belum ada tag";
   }
 
   function renderTagPicker() {
     const searchValue = normalizeTag(q("[data-tag-search]")?.value || "");
     const list = q("[data-tag-list]");
     const empty = q("[data-tag-empty]");
+    const newInput = q("[data-tag-new-input]");
     const create = q("[data-tag-create]");
-    const createLabel = q("[data-tag-create-label]");
     if (!list) return;
 
     list.textContent = "";
-    const source = Array.from(new Set([...availableTags, ...draftTags]))
-      .sort()
+    const all = Array.from(new Set([...availableTags, ...draftTags])).sort();
+    const selected = Array.from(draftTags).sort();
+    const others = all
+      .filter(tag => !draftTags.has(tag))
       .filter(tag => !searchValue || tag.includes(searchValue));
 
-    source.forEach(tag => {
-      const selected = draftTags.has(tag);
+    const heading = (label, count) => {
+      const el = document.createElement("div");
+      el.className = "catatan-tag-section-title";
+      el.innerHTML = `<strong>${label}</strong><span>${count}</span>`;
+      list.appendChild(el);
+    };
+
+    const option = (tag, isSelected) => {
       const button = document.createElement("button");
       button.type = "button";
-      button.className = `catatan-tag-option${selected ? " is-selected" : ""}`;
-      button.innerHTML = `<strong>#${tag}</strong><ion-icon name="${selected ? "checkmark-circle" : "ellipse-outline"}" aria-hidden="true"></ion-icon>`;
+      button.className = `catatan-tag-option${isSelected ? " is-selected" : ""}`;
+      button.dataset.tagOption = tag;
+      button.innerHTML = `<strong>#${tag}</strong><ion-icon name="${isSelected ? "checkmark-circle" : "ellipse-outline"}" aria-hidden="true"></ion-icon>`;
       button.addEventListener("click", () => {
         if (draftTags.has(tag)) draftTags.delete(tag);
         else draftTags.add(tag);
         renderTagPicker();
       });
       list.appendChild(button);
-    });
+    };
 
-    if (empty) empty.hidden = source.length > 0;
-    const exactExists = searchValue && availableTags.includes(searchValue);
-    if (create) create.hidden = !searchValue || exactExists;
-    if (createLabel && searchValue && !exactExists) createLabel.textContent = `Tambah tag baru “#${searchValue}”`;
+    heading("Dipilih", selected.length);
+    selected.forEach(tag => option(tag, true));
+
+    heading("Tag lainnya", others.length);
+    others.forEach(tag => option(tag, false));
+
+    if (empty) {
+      empty.hidden = others.length > 0 || !searchValue;
+      empty.textContent = "Tidak ada tag lain yang cocok.";
+    }
+
+    const newValue = normalizeTag(newInput?.value || "");
+    if (create) create.disabled = !newValue;
   }
 
   async function openTagSheet() {
     if (noteReadOnly || editorMode !== "edit") return;
     draftTags = new Set(selectedTags);
     const search = q("[data-tag-search]");
+    const newInput = q("[data-tag-new-input]");
     if (search) search.value = "";
+    if (newInput) newInput.value = "";
     openSheet("[data-tag-layer]");
     await loadTagCatalog({ silent: false });
     renderTagPicker();
-    setTimeout(() => search?.focus(), 80);
+    setTimeout(() => (availableTags.length ? search : newInput)?.focus(), 80);
   }
 
   function closeTagSheet(apply = false) {
@@ -516,12 +560,15 @@
   }
 
   async function createTagFromSearch() {
-    const value = normalizeTag(q("[data-tag-search]")?.value || "");
+    const input = q("[data-tag-new-input]");
+    const value = normalizeTag(input?.value || "");
     if (!value || noteReadOnly) return;
 
-    let finalValue = value;
+    const existing = availableTags.find(tag => tag === value);
+    let finalValue = existing || value;
     let mayUseTag = true;
-    if (tagBackendReady && window.NotesService?.buatTag) {
+
+    if (!existing && tagBackendReady && window.NotesService?.buatTag) {
       const createButton = q("[data-tag-create]");
       if (createButton) createButton.disabled = true;
       try {
@@ -532,21 +579,22 @@
         if (missing) tagBackendReady = false;
         else mayUseTag = false;
         showTagBackendWarning(error);
-      } finally {
-        if (createButton) createButton.disabled = false;
       }
     }
 
-    if (!mayUseTag) return;
+    if (!mayUseTag) {
+      renderTagPicker();
+      return;
+    }
     if (!availableTags.includes(finalValue)) {
       availableTags.push(finalValue);
       availableTags.sort();
       if (!tagBackendReady) saveLegacyTagCatalog();
     }
     draftTags.add(finalValue);
-    const search = q("[data-tag-search]");
-    if (search) search.value = "";
+    if (input) input.value = "";
     renderTagPicker();
+    input?.focus();
   }
 
   function itemElements() {
@@ -759,7 +807,9 @@
   function showBackendWarning(error) {
     if (backendWarningShown) return;
     backendWarningShown = true;
-    if (window.NotesService?.checklistSchemaBelumTerpasang?.(error)) {
+    if (window.NotesService?.folderSchemaBelumTerpasang?.(error)) {
+      showToast("Backend kolaborasi/folder belum aktif — jalankan SQL 004D di Supabase dulu.");
+    } else if (window.NotesService?.checklistSchemaBelumTerpasang?.(error)) {
       showToast("Backend Checklist belum aktif — jalankan SQL 004C di Supabase dulu.");
     } else if (window.NotesService?.schemaBelumTerpasang?.(error)) {
       showToast("Backend Catatan belum aktif — jalankan SQL 004A di Supabase dulu.");
@@ -874,7 +924,7 @@
       folderName = clean(note.folder_name);
       pinned = Boolean(note.pinned);
       noteOwnerId = clean(note.created_by);
-      noteReadOnly = Boolean(noteOwnerId && noteOwnerId !== userId);
+      noteReadOnly = Boolean(noteOwnerId && noteOwnerId !== userId && scope !== "family");
 
       const [items] = await Promise.all([
         window.NotesService.ambilChecklistItems(noteId),
@@ -966,9 +1016,10 @@
     q("[data-tag-apply]")?.addEventListener("click", () => closeTagSheet(true));
     q("[data-tag-add]")?.addEventListener("click", openTagSheet);
     q("[data-tag-search]")?.addEventListener("input", renderTagPicker);
+    q("[data-tag-new-input]")?.addEventListener("input", renderTagPicker);
     q("[data-tag-create]")?.addEventListener("click", createTagFromSearch);
-    q("[data-tag-search]")?.addEventListener("keydown", event => {
-      if (event.key === "Enter" && !q("[data-tag-create]")?.hidden) {
+    q("[data-tag-new-input]")?.addEventListener("keydown", event => {
+      if (event.key === "Enter" && normalizeTag(event.currentTarget.value)) {
         event.preventDefault();
         createTagFromSearch();
       }

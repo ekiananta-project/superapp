@@ -47,17 +47,17 @@
     const input = q("#catatan-member-search");
     const needle = clean(input?.value).toLocaleLowerCase("id-ID");
     const items = qa("[data-preview-item]");
-    let visibleNotes = 0;
+    let visibleItems = 0;
 
     items.forEach(item => {
       const haystack = clean(item.dataset.searchText).toLocaleLowerCase("id-ID");
       const visible = !needle || haystack.includes(needle);
       item.hidden = !visible;
-      if (visible && item.classList.contains("catatan-note-card")) visibleNotes += 1;
+      if (visible) visibleItems += 1;
     });
 
     const empty = q("[data-search-empty]");
-    if (empty) empty.hidden = !needle || visibleNotes > 0;
+    if (empty) empty.hidden = !needle || visibleItems > 0;
     const backendEmpty = q("[data-backend-notes-empty]");
     if (backendEmpty && backendNoteCount !== null) {
       backendEmpty.hidden = backendNoteCount !== 0 || Boolean(needle);
@@ -76,6 +76,51 @@
     empty.hidden = true;
     section.appendChild(empty);
     return empty;
+  }
+
+  function folderCard(folder) {
+    const button = document.createElement("button");
+    button.type = "button";
+    button.className = "catatan-folder-card";
+    button.dataset.previewItem = "";
+    button.dataset.folderName = clean(folder?.name);
+    button.dataset.searchText = clean(`${folder?.name || ""} folder catatan anggota`);
+
+    const icon = document.createElement("span");
+    icon.className = "catatan-folder-icon";
+    icon.innerHTML = '<ion-icon name="folder-outline" aria-hidden="true"></ion-icon>';
+
+    const copy = document.createElement("span");
+    copy.className = "catatan-folder-copy";
+    const strong = document.createElement("strong");
+    strong.textContent = clean(folder?.name, "Folder");
+    const small = document.createElement("small");
+    small.textContent = `${Number(folder?.noteCount || 0)} catatan`;
+    copy.append(strong, small);
+    button.append(icon, copy);
+
+    button.addEventListener("click", () => {
+      if (!activeMemberId || !folder?.name) return;
+      location.href = `catatan-folder.html?scope=member&member=${encodeURIComponent(activeMemberId)}&folder=${encodeURIComponent(folder.name)}`;
+    });
+    return button;
+  }
+
+  function renderBackendFolders(folders) {
+    const grid = q("[data-member-folder-grid]");
+    if (!grid) return;
+    grid.textContent = "";
+    (folders || []).forEach(folder => grid.appendChild(folderCard(folder)));
+  }
+
+  async function loadBackendFolders(familyId, memberId) {
+    if (!window.NotesService?.ambilFolderAnggota) return;
+    try {
+      const folders = await window.NotesService.ambilFolderAnggota(familyId, memberId);
+      renderBackendFolders(folders);
+    } catch (error) {
+      console.warn("[Catatan Member Folder Backend]", error);
+    }
   }
 
   function noteCard(note) {
@@ -141,7 +186,9 @@
       renderBackendNotes(notes);
     } catch (error) {
       console.error("[Catatan Member Backend]", error);
-      if (window.NotesService.schemaBelumTerpasang?.(error)) {
+      if (window.NotesService.folderSchemaBelumTerpasang?.(error)) {
+        showToast("Backend Folder belum aktif — jalankan SQL 004D di Supabase dulu.");
+      } else if (window.NotesService.schemaBelumTerpasang?.(error)) {
         showToast("Backend Catatan belum aktif — jalankan SQL 004A di Supabase dulu.");
       } else {
         showToast(error?.message || "Catatan anggota belum dapat dimuat.");
@@ -253,7 +300,10 @@
       }
 
       applyMemberName(member?.profile?.display_name);
-      await loadBackendNotes(family.id, memberId);
+      await Promise.all([
+        loadBackendNotes(family.id, memberId),
+        loadBackendFolders(family.id, memberId)
+      ]);
     } catch (error) {
       console.error("[Catatan Member]", error);
       showToast("Ruang catatan anggota tidak dapat dimuat.");

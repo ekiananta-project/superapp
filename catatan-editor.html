@@ -26,7 +26,7 @@
   <link rel="stylesheet" href="css/style.css">
   <link rel="stylesheet" href="css/theme.css">
   <link rel="stylesheet" href="css/pages/catatan-home.css?v=20260910-v200a29e">
-  <link rel="stylesheet" href="css/pages/catatan-editor.css?v=20260910-v200a31">
+  <link rel="stylesheet" href="css/pages/catatan-editor.css?v=20260910-v200a32">
   <style id="ruangkitha-auth-cloak">html[data-auth-guard] body{visibility:hidden!important}</style>
 </head>
 <body>
@@ -36,8 +36,11 @@
       <ion-icon name="arrow-back-outline" aria-hidden="true"></ion-icon>
     </a>
     <button class="catatan-editor-mode" type="button" data-mode-toggle aria-label="Lihat hasil catatan">
-      <ion-icon name="eye-outline" aria-hidden="true"></ion-icon>
-      <span data-mode-label>Lihat hasil</span>
+      <span class="catatan-editor-mode-main">
+        <ion-icon name="eye-outline" aria-hidden="true"></ion-icon>
+        <span data-mode-label>Lihat hasil</span>
+      </span>
+      <small data-mode-area>Area Pribadi</small>
     </button>
     <button class="catatan-editor-menu" type="button" data-open-info aria-label="Info Catatan">
       <ion-icon name="ellipsis-horizontal" aria-hidden="true"></ion-icon>
@@ -50,6 +53,7 @@
         <ion-icon name="arrow-back-outline" aria-hidden="true"></ion-icon>
         <span>Kembali</span>
       </a>
+      <small class="catatan-member-readonly-context" data-member-readonly-context>Area Pribadi · Milik anggota</small>
     </div>
 
     <textarea class="catatan-title-input" data-note-title rows="1" maxlength="160" placeholder="Judul catatan..." aria-label="Judul catatan"></textarea>
@@ -109,13 +113,10 @@
     </section>
 
     <div class="catatan-editor-context" aria-label="Konteks catatan">
-      <button class="catatan-context-chip is-area" type="button" data-area-chip disabled>
-        <ion-icon name="person-outline" aria-hidden="true"></ion-icon>
-        <span data-area-label>Pribadi</span>
-      </button>
       <button class="catatan-context-chip is-visibility" type="button" data-visibility-chip>
         <ion-icon name="lock-closed-outline" aria-hidden="true"></ion-icon>
         <span data-visibility-label>Hanya Saya</span>
+        <ion-icon class="catatan-context-chevron" name="chevron-forward-outline" aria-hidden="true"></ion-icon>
       </button>
       <button class="catatan-context-chip is-folder" type="button" data-folder-chip hidden>
         <ion-icon name="folder-outline" aria-hidden="true"></ion-icon>
@@ -127,8 +128,8 @@
       </button>
       <span class="catatan-context-tags" data-tag-chips></span>
       <button class="catatan-context-chip is-add-tag" type="button" data-tag-add>
-        <ion-icon name="add-outline" aria-hidden="true"></ion-icon>
-        <span>Tag</span>
+        <ion-icon name="add-circle-outline" aria-hidden="true"></ion-icon>
+        <span>Tambah tag...</span>
       </button>
     </div>
 
@@ -306,13 +307,15 @@
         <input type="search" autocomplete="off" placeholder="Cari tag..." data-tag-search>
       </label>
 
-      <div class="catatan-tag-list" data-tag-list></div>
-      <div class="catatan-tag-empty" data-tag-empty hidden>Belum ada tag yang cocok.</div>
-
-      <button class="catatan-tag-create" type="button" data-tag-create hidden>
+      <div class="catatan-tag-new-row">
         <ion-icon name="add-circle-outline" aria-hidden="true"></ion-icon>
-        <span data-tag-create-label>Tambah tag baru</span>
-      </button>
+        <input type="text" maxlength="36" autocomplete="off" placeholder="Tulis tag baru..." data-tag-new-input aria-label="Tulis tag baru">
+        <button class="catatan-tag-create" type="button" data-tag-create disabled>
+          <span data-tag-create-label>Tambah</span>
+        </button>
+      </div>
+      <div class="catatan-tag-list" data-tag-list></div>
+      <div class="catatan-tag-empty" data-tag-empty hidden>Belum ada tag lain yang cocok.</div>
 
       <div class="catatan-tag-actions">
         <button class="is-secondary" type="button" data-tag-cancel>Batal</button>
@@ -352,8 +355,8 @@
 <script src="js/backend/family-service.js?v=20260908-10"></script>
 <script src="js/backend/auth-router.js?v=20260909-v200a8"></script>
 <script src="js/backend/auth-guard.js?v=20260909-v200a8"></script>
-<script src="js/backend/notes-service.js?v=20260910-v200a31"></script>
-<script src="js/pages/catatan-editor.js?v=20260910-v200a31"></script>
-<script src="js/pwa.js?v=20260910-v200a31"></script>
+<script src="js/backend/notes-service.js?v=20260910-v200a32"></script>
+<script src="js/pages/catatan-editor.js?v=20260910-v200a32"></script>
+<script src="js/pwa.js?v=20260910-v200a32"></script>
 </body>
 </html>

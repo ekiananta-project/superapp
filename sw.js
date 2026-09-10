@@ -1,4 +1,4 @@
-const CACHE_NAME = "ruangkitha-v2.0.0a31-catatan-checklist-backend-1";
+const CACHE_NAME = "ruangkitha-v2.0.0a32-catatan-collab-folder-tag-1";
 const OFFLINE_URL = "./offline.html";
 
 const APP_FILES = [

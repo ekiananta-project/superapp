@@ -127,7 +127,9 @@
       renderBackendNotes(notes);
     } catch (error) {
       console.error("[Catatan Personal Backend]", error);
-      if (window.NotesService.schemaBelumTerpasang?.(error)) {
+      if (window.NotesService.folderSchemaBelumTerpasang?.(error)) {
+        showToast("Backend Folder belum aktif — jalankan SQL 004D di Supabase dulu.");
+      } else if (window.NotesService.schemaBelumTerpasang?.(error)) {
         showToast("Backend Catatan belum aktif — jalankan SQL 004A di Supabase dulu.");
       } else {
         showToast(error?.message || "Catatan Pribadi belum dapat dimuat.");
@@ -135,9 +137,25 @@
     }
   }
 
+  async function refreshFolderCounts() {
+    if (!window.NotesService?.ambilFolderCatalog) return;
+    try {
+      const folders = await window.NotesService.ambilFolderCatalog("personal", null);
+      const counts = new Map((folders || []).map(item => [clean(item.name).toLocaleLowerCase("id-ID"), Number(item.noteCount || 0)]));
+      qa(".catatan-folder-card").forEach(card => {
+        const name = clean(card.dataset.folderName || card.querySelector("strong")?.textContent);
+        const count = counts.get(name.toLocaleLowerCase("id-ID")) || 0;
+        const small = card.querySelector("small");
+        if (small) small.textContent = `${count} catatan`;
+      });
+    } catch (error) {
+      console.warn("[Catatan Personal Folder Count]", error);
+    }
+  }
+
   function setupInteractions() {
     q("[data-add-folder]")?.addEventListener("click", () => {
-      showToast("Tambah Folder Pribadi masuk tahap backend Folder berikutnya.");
+      showToast("Tambah Folder khusus akan aktif pada tahap berikutnya. Catatan di folder yang sudah ada kini tersimpan ke backend.");
     });
 
     qa("[data-preview-item]").forEach(item => {
@@ -199,7 +217,7 @@
     try {
       const user = await AuthService.ambilUserAktif();
       if (!user) return;
-      await loadBackendNotes(user.id);
+      await Promise.all([loadBackendNotes(user.id), refreshFolderCounts()]);
     } catch (error) {
       console.error("[Catatan Personal]", error);
     } finally {

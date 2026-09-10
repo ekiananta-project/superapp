@@ -11,6 +11,7 @@
     "title",
     "body_html",
     "body_text",
+    "folder_id",
     "folder_name",
     "pinned",
     "created_at",
@@ -63,6 +64,7 @@
       title: clean(input.title, 160),
       body_html: String(input.bodyHtml ?? input.body_html ?? "").slice(0, 1000000),
       body_text: String(input.bodyText ?? input.body_text ?? "").trim().slice(0, 500000),
+      folder_id: clean(input.folderId ?? input.folder_id) || null,
       folder_name: clean(input.folderName ?? input.folder_name, 80) || null,
       pinned: Boolean(input.pinned)
     };
@@ -72,6 +74,13 @@
     const db = client();
     const id = clean(input.id);
     const payload = normalizePayload(input, noteType);
+
+    // a32: folder_name bukan lagi sekadar snapshot. Jika editor dibuka dari
+    // sebuah folder, resolve/create relasi folder Supabase sebelum menyimpan.
+    if (payload.folder_name && !payload.folder_id) {
+      payload.folder_id = await resolveFolder(payload.scope, payload.family_id, payload.folder_name);
+    }
+    if (!payload.folder_name) payload.folder_id = null;
 
     if (id) {
       const updatePayload = { ...payload };
@@ -140,7 +149,8 @@
       .select(NOTE_FIELDS)
       .eq("created_by", uid)
       .eq("scope", "personal")
-      .is("archived_at", null);
+      .is("archived_at", null)
+      .is("folder_id", null);
     query = applyTypeFilter(query, noteTypes);
 
     const { data, error } = await query
@@ -163,7 +173,8 @@
       .eq("created_by", uid)
       .eq("scope", "personal")
       .eq("visibility", "family-read")
-      .is("archived_at", null);
+      .is("archived_at", null)
+      .is("folder_id", null);
     query = applyTypeFilter(query, noteTypes);
 
     const { data, error } = await query
@@ -172,6 +183,33 @@
 
     if (error) throw error;
     return data || [];
+  }
+
+  async function ambilFolderAnggota(familyId, memberId) {
+    const fid = clean(familyId);
+    const uid = clean(memberId);
+    if (!fid || !uid) return [];
+
+    const { data, error } = await client()
+      .from("notes")
+      .select("folder_name")
+      .eq("family_id", fid)
+      .eq("created_by", uid)
+      .eq("scope", "personal")
+      .eq("visibility", "family-read")
+      .not("folder_id", "is", null)
+      .is("archived_at", null)
+      .order("folder_name", { ascending: true });
+
+    if (error) throw error;
+
+    const counts = new Map();
+    (data || []).forEach(row => {
+      const name = clean(row?.folder_name, 80);
+      if (!name) return;
+      counts.set(name, (counts.get(name) || 0) + 1);
+    });
+    return Array.from(counts, ([name, noteCount]) => ({ name, noteCount }));
   }
 
   async function ambilCatatanKeluarga(familyId, noteTypes = ACTIVE_NOTE_TYPES) {
@@ -183,7 +221,8 @@
       .select(NOTE_FIELDS)
       .eq("family_id", fid)
       .eq("scope", "family")
-      .is("archived_at", null);
+      .is("archived_at", null)
+      .is("folder_id", null);
     query = applyTypeFilter(query, noteTypes);
 
     const { data, error } = await query
@@ -262,6 +301,93 @@
 
     if (error) throw error;
     return (data || []).map((item, index) => normalizeChecklistItem(item, index));
+  }
+
+  async function resolveFolder(scope, familyId, name) {
+    const folderName = clean(name, 80);
+    if (!folderName) return null;
+    const folderScope = normalizeScope(scope);
+    const fid = clean(familyId);
+
+    const { data, error } = await client().rpc("notes_resolve_folder_v1", {
+      p_scope: folderScope,
+      p_family_id: folderScope === "family" ? (fid || null) : null,
+      p_name: folderName
+    });
+    if (error) throw error;
+    return clean(data) || null;
+  }
+
+  async function ambilFolderCatalog(scope, familyId = null) {
+    const folderScope = normalizeScope(scope);
+    const fid = clean(familyId);
+    const { data, error } = await client().rpc("notes_list_folders_v1", {
+      p_scope: folderScope,
+      p_family_id: folderScope === "family" ? (fid || null) : null
+    });
+    if (error) throw error;
+    return (data || []).map(row => ({
+      id: clean(row?.id),
+      name: clean(row?.name),
+      noteCount: Number(row?.note_count || 0)
+    })).filter(row => row.name);
+  }
+
+  async function ambilCatatanDalamFolder({
+    scope = "personal",
+    familyId = null,
+    ownerId = null,
+    folderName = "",
+    noteTypes = ACTIVE_NOTE_TYPES,
+    sharedWithFamilyOnly = false
+  } = {}) {
+    const folderScope = normalizeScope(scope);
+    const folder = clean(folderName, 80);
+    const fid = clean(familyId);
+    const uid = clean(ownerId);
+    if (!folder) return [];
+
+    let query = client()
+      .from("notes")
+      .select(NOTE_FIELDS)
+      .eq("scope", folderScope)
+      .eq("folder_name", folder)
+      .is("archived_at", null);
+
+    if (folderScope === "family") {
+      if (!fid) return [];
+      query = query.eq("family_id", fid);
+    } else if (uid) {
+      query = query.eq("created_by", uid);
+      // Member-folder view harus tetap dibatasi ke catatan Personal yang
+      // memang dibagikan ke family aktif ini. RLS tetap menjadi pagar utama,
+      // filter ini mencegah konteks silang bila user punya >1 membership.
+      if (sharedWithFamilyOnly) {
+        if (!fid) return [];
+        query = query
+          .eq("family_id", fid)
+          .eq("visibility", "family-read");
+      }
+    }
+
+    query = applyTypeFilter(query, noteTypes);
+    const { data, error } = await query
+      .order("pinned", { ascending: false })
+      .order("updated_at", { ascending: false });
+
+    if (error) throw error;
+    return data || [];
+  }
+
+  function folderSchemaBelumTerpasang(error) {
+    const code = String(error?.code || "").toUpperCase();
+    const message = String(error?.message || error?.details || error?.hint || "").toLowerCase();
+    return code === "PGRST202" ||
+      code === "PGRST204" ||
+      message.includes("notes_resolve_folder_v1") ||
+      message.includes("notes_list_folders_v1") ||
+      message.includes("catatan_folders") ||
+      message.includes("folder_id");
   }
 
   function normalizeTagScope(value) {
@@ -376,12 +502,17 @@
     ambilCatatan,
     ambilCatatanPersonal,
     ambilCatatanAnggota,
+    ambilFolderAnggota,
     ambilCatatanKeluarga,
     ambilBasicPersonal,
     ambilBasicAnggota,
     ambilBasicKeluarga,
     ambilChecklistItems,
     syncChecklistItems,
+    resolveFolder,
+    ambilFolderCatalog,
+    ambilCatatanDalamFolder,
+    folderSchemaBelumTerpasang,
     arsipkan,
     ambilTagCatalog,
     buatTag,

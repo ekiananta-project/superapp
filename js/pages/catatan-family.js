@@ -76,7 +76,7 @@
     const body = clean(note?.body_text) || (isChecklist ? "Checklist belum memiliki item." : "Catatan belum memiliki isi.");
     const preview = body.length > 180 ? `${body.slice(0, 177)}...` : body;
     const own = note?.created_by === userId;
-    const access = own ? "Keluarga dapat melihat · Kamu pembuat" : "Keluarga dapat melihat · Hanya baca";
+    const access = own ? "Area Keluarga · Kamu pembuat" : "Area Keluarga · Kolaboratif";
     button.dataset.searchText = clean(`${title} ${body} ${note?.folder_name || ""} ${access}`);
 
     const type = document.createElement("span");
@@ -128,7 +128,9 @@
       renderBackendNotes(notes, userId);
     } catch (error) {
       console.error("[Catatan Family Backend]", error);
-      if (window.NotesService.schemaBelumTerpasang?.(error)) {
+      if (window.NotesService.folderSchemaBelumTerpasang?.(error)) {
+        showToast("Backend Folder belum aktif — jalankan SQL 004D di Supabase dulu.");
+      } else if (window.NotesService.schemaBelumTerpasang?.(error)) {
         showToast("Backend Catatan belum aktif — jalankan SQL 004A di Supabase dulu.");
       } else {
         showToast(error?.message || "Catatan Keluarga belum dapat dimuat.");
@@ -136,9 +138,25 @@
     }
   }
 
+  async function refreshFolderCounts(familyId) {
+    if (!window.NotesService?.ambilFolderCatalog) return;
+    try {
+      const folders = await window.NotesService.ambilFolderCatalog("family", familyId);
+      const counts = new Map((folders || []).map(item => [clean(item.name).toLocaleLowerCase("id-ID"), Number(item.noteCount || 0)]));
+      qa(".catatan-folder-card").forEach(card => {
+        const name = clean(card.dataset.folderName || card.querySelector("strong")?.textContent);
+        const count = counts.get(name.toLocaleLowerCase("id-ID")) || 0;
+        const small = card.querySelector("small");
+        if (small) small.textContent = `${count} catatan`;
+      });
+    } catch (error) {
+      console.warn("[Catatan Family Folder Count]", error);
+    }
+  }
+
   function setupInteractions() {
     q("[data-add-folder]")?.addEventListener("click", () => {
-      showToast("Tambah Folder masuk tahap backend Folder berikutnya.");
+      showToast("Tambah Folder khusus akan aktif pada tahap berikutnya. Catatan di folder yang sudah ada kini tersimpan ke backend.");
     });
 
     qa("[data-preview-item]").forEach(item => {
@@ -203,7 +221,7 @@
         AuthRouter.ambilFamilyAktif()
       ]);
       if (!user || !family) return;
-      await loadBackendNotes(family.id, user.id);
+      await Promise.all([loadBackendNotes(family.id, user.id), refreshFolderCounts(family.id)]);
     } catch (error) {
       console.error("[Catatan Family]", error);
     } finally {

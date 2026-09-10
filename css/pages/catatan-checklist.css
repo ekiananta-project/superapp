@@ -1,4 +1,4 @@
-/* RuangKitha v2.0.0a31 — Checklist editor UI + Supabase persistence/read-only guards */
+/* RuangKitha v2.0.0a32 — Checklist editor UI + Supabase persistence/collaboration guards */
 
 .catatan-checklist-main {
   padding-bottom: max(38px, env(safe-area-inset-bottom));
@@ -189,8 +189,8 @@ html[data-theme="dark"] .catatan-check-text::placeholder {
   .catatan-check-text { font-size: 13.5px; }
 }
 
-/* v2.0.0a31 — backend/read-only guard. Pembaca family/member tidak dapat
-   mengubah status item; owner tetap dapat mencentang saat Lihat hasil. */
+/* v2.0.0a32 — read-only guard hanya untuk Personal shared/member view.
+   Area Keluarga collaborative tidak memakai class is-readonly. */
 .catatan-checklist.is-readonly .catatan-check-toggle {
   cursor: default;
   pointer-events: none;
