@@ -77,24 +77,25 @@
     if (backendEmpty) backendEmpty.hidden = noteCount !== 0 || Boolean(needle);
   }
 
-  async function confirmDeleteNote(note) {
+  async function confirmArchiveNote(note) {
     if (scope === "member") return;
     const title = clean(note?.title, "Tanpa judul");
-    const ok = await CatatanManagement.confirmDanger({
-      title: `Hapus “${title}”?`,
+    const ok = await CatatanManagement.confirmArchive({
+      title: `Arsipkan “${title}”?`,
       message: scope === "family"
-        ? "Catatan ini akan dihapus permanen untuk seluruh anggota keluarga."
-        : "Catatan ini akan dihapus permanen dan tidak dapat dipulihkan dari Arsip.",
-      confirmLabel: "Hapus catatan"
+        ? "Catatan ini akan dipindahkan ke Arsip untuk seluruh keluarga dan dapat dipulihkan nanti."
+        : "Catatan ini akan dipindahkan ke Arsip dan dapat dipulihkan nanti.",
+      confirmLabel: "Arsipkan"
     });
     if (!ok) return;
     try {
-      await NotesService.hapusCatatan(note.id);
-      showToast("Catatan dihapus.");
+      await NotesService.arsipkan(note.id);
+      showToast("Catatan dipindahkan ke Arsip.");
       await loadNotes();
     } catch (error) {
-      console.error("[Catatan Folder Delete]", error);
-      showToast(error?.message || "Catatan belum dapat dihapus.");
+      console.error("[Catatan Folder Archive]", error);
+      if (NotesService.lifecycleSchemaBelumTerpasang?.(error)) showToast("Jalankan SQL 004F agar fitur Arsip aktif.");
+      else showToast(error?.message || "Catatan belum dapat diarsipkan.");
     }
   }
 
@@ -155,9 +156,13 @@
     button.dataset.folderNote = "";
 
     return CatatanManagement.createCardShell(button, {
-      canDelete: scope !== "member" && Boolean(note?._canDelete),
       menuLabel: `Menu ${title}`,
-      onDelete: () => confirmDeleteNote(note)
+      actions: scope !== "member" && note?._canArchive ? [{
+        label: "Arsipkan",
+        icon: "archive-outline",
+        tone: "archive",
+        onSelect: () => confirmArchiveNote(note)
+      }] : []
     });
   }
 
@@ -232,10 +237,10 @@
       try {
         const tags = await NotesService.ambilTagMapCatatan(ids);
         let capabilities = {};
-        if (scope !== "member") capabilities = await NotesService.ambilHakHapusCatatan(ids);
+        if (scope !== "member") capabilities = await NotesService.ambilHakLifecycleCatatan(ids);
         notes.forEach(note => {
           note._tags = tags[note.id] || [];
-          note._canDelete = Boolean(capabilities[note.id]);
+          note._canArchive = Boolean(capabilities[note.id]?.canArchive);
         });
       } catch (metaError) {
         console.warn("[Catatan Folder Card Metadata]", metaError);
@@ -243,7 +248,7 @@
       renderNotes(notes);
     } catch (error) {
       console.error("[Catatan Folder Backend]", error);
-      if (NotesService?.managementSchemaBelumTerpasang?.(error)) showToast("Backend management belum aktif — jalankan SQL 004E di Supabase dulu.");
+      if (NotesService?.managementSchemaBelumTerpasang?.(error)) showToast("Backend lifecycle belum aktif — jalankan SQL 004F di Supabase dulu.");
       else if (NotesService?.folderSchemaBelumTerpasang?.(error)) showToast("Backend Folder belum aktif — jalankan SQL 004D di Supabase dulu.");
       else showToast(error?.message || "Isi folder belum dapat dimuat.");
       renderNotes([]);

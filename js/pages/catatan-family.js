@@ -8,6 +8,9 @@
   let familyId = "";
   let backendNoteCount = null;
   let backendFolderCount = null;
+  let notesById = new Map();
+  let selectionMode = false;
+  const selectedIds = new Set();
 
   function clean(value) {
     return String(value ?? "").trim().replace(/\s+/g, " ");
@@ -70,23 +73,26 @@
     if (noteEmpty && backendNoteCount !== null) noteEmpty.hidden = backendNoteCount !== 0 || Boolean(needle);
     const folderEmpty = q("[data-backend-folders-empty]");
     if (folderEmpty && backendFolderCount !== null) folderEmpty.hidden = backendFolderCount !== 0 || Boolean(needle);
+    if (selectionMode) renderSelectionUI();
   }
 
-  async function confirmDeleteNote(note) {
+  async function confirmArchiveNote(note) {
     const title = clean(note?.title) || "Tanpa judul";
-    const ok = await CatatanManagement.confirmDanger({
-      title: `Hapus “${title}”?`,
-      message: "Catatan Keluarga ini akan dihapus permanen untuk seluruh anggota.",
-      confirmLabel: "Hapus catatan"
+    const ok = await CatatanManagement.confirmArchive({
+      title: `Arsipkan “${title}”?`,
+      message: "Catatan Keluarga ini akan dipindahkan ke Arsip untuk seluruh anggota dan dapat dipulihkan nanti.",
+      confirmLabel: "Arsipkan"
     });
     if (!ok) return;
     try {
-      await NotesService.hapusCatatan(note.id);
-      showToast("Catatan Keluarga dihapus.");
+      await NotesService.arsipkan(note.id);
+      showToast("Catatan Keluarga dipindahkan ke Arsip.");
+      selectedIds.delete(note.id);
       await loadBackendNotes();
     } catch (error) {
-      console.error("[Catatan Family Delete]", error);
-      showToast(error?.message || "Catatan belum dapat dihapus.");
+      console.error("[Catatan Family Archive]", error);
+      if (NotesService.lifecycleSchemaBelumTerpasang?.(error)) showToast("Jalankan SQL 004F agar fitur Arsip aktif.");
+      else showToast(error?.message || "Catatan belum dapat diarsipkan.");
     }
   }
 
@@ -103,11 +109,22 @@
     try {
       await NotesService.hapusFolder(folder.id);
       showToast("Folder Keluarga dihapus.");
-      await loadBackendFolders();
+      await Promise.all([loadBackendFolders(), loadBackendNotes()]);
     } catch (error) {
       console.error("[Catatan Family Folder Delete]", error);
       showToast(error?.message || "Folder belum dapat dihapus.");
     }
+  }
+
+  function toggleSelected(id, canSelect = true) {
+    if (!selectionMode || !id) return;
+    if (!canSelect) {
+      showToast("Hanya pembuat catatan atau Family Owner yang dapat mengarsipkannya.");
+      return;
+    }
+    if (selectedIds.has(id)) selectedIds.delete(id);
+    else selectedIds.add(id);
+    renderSelectionUI();
   }
 
   function noteCard(note) {
@@ -148,17 +165,29 @@
     if (tagSummary) button.appendChild(tagSummary);
     button.appendChild(accessEl);
     button.addEventListener("click", () => {
+      if (selectionMode) return toggleSelected(note.id, Boolean(note?._canArchive));
       location.href = isChecklist
         ? `catatan-checklist.html?scope=family&id=${encodeURIComponent(note.id)}`
         : `catatan-editor.html?scope=family&id=${encodeURIComponent(note.id)}`;
     });
     button.dataset.previewItem = "";
 
-    return CatatanManagement.createCardShell(button, {
-      canDelete: Boolean(note?._canDelete),
-      menuLabel: `Menu ${title}`,
-      onDelete: () => confirmDeleteNote(note)
+    const actions = note?._canArchive ? [{
+      label: "Arsipkan",
+      icon: "archive-outline",
+      tone: "archive",
+      onSelect: () => confirmArchiveNote(note)
+    }] : [];
+    const shell = CatatanManagement.createCardShell(button, {
+      actions,
+      menuLabel: `Menu ${title}`
     });
+    CatatanManagement.attachSelectionControl(shell, {
+      selectable: Boolean(note?._canArchive),
+      label: note?._canArchive ? `Pilih ${title}` : `${title} tidak dapat diarsipkan oleh akun ini`,
+      onToggle: () => toggleSelected(note.id, Boolean(note?._canArchive))
+    });
+    return shell;
   }
 
   function folderCard(folder) {
@@ -194,10 +223,15 @@
     if (!grid) return;
     grid.textContent = "";
     backendNoteCount = notes.length;
+    notesById = new Map(notes.map(note => [clean(note.id), note]));
+    for (const id of Array.from(selectedIds)) {
+      if (!notesById.get(id)?._canArchive) selectedIds.delete(id);
+    }
     notes.forEach(note => grid.appendChild(noteCard(note)));
     const empty = ensureEmpty("notes");
     if (empty) empty.hidden = notes.length !== 0;
     filterPreview();
+    renderSelectionUI();
   }
 
   function renderBackendFolders(folders = []) {
@@ -211,6 +245,80 @@
     filterPreview();
   }
 
+  function visibleSelectableIds() {
+    return qa('[data-family-note-grid] .catatan-card-shell[data-note-selectable="true"]')
+      .filter(shell => !shell.hidden)
+      .map(shell => clean(shell.dataset.noteId))
+      .filter(Boolean);
+  }
+
+  function manageableCount() {
+    return Array.from(notesById.values()).filter(note => note?._canArchive).length;
+  }
+
+  function renderSelectionUI() {
+    const root = q("[data-catatan-family]");
+    root?.classList.toggle("is-selection-mode", selectionMode);
+    const toggle = q("[data-toggle-selection]");
+    const selectAll = q("[data-select-all]");
+    const countLabel = q("[data-selection-count]");
+    const bulk = q("[data-bulk-bar]");
+    const bulkCount = q("[data-bulk-count]");
+    const bulkArchive = q("[data-bulk-archive]");
+
+    if (toggle) {
+      toggle.textContent = selectionMode ? "Selesai" : "Pilih";
+      toggle.disabled = !selectionMode && manageableCount() === 0;
+    }
+    if (selectAll) selectAll.hidden = !selectionMode;
+    if (countLabel) {
+      countLabel.hidden = !selectionMode;
+      countLabel.textContent = `${selectedIds.size} dipilih`;
+    }
+    if (bulk) bulk.hidden = !selectionMode;
+    if (bulkCount) bulkCount.textContent = `${selectedIds.size} dipilih`;
+    if (bulkArchive) bulkArchive.disabled = selectedIds.size === 0;
+
+    const visibleIds = visibleSelectableIds();
+    if (selectAll && selectionMode) {
+      const allSelected = visibleIds.length > 0 && visibleIds.every(id => selectedIds.has(id));
+      selectAll.textContent = allSelected ? "Batalkan semua" : "Pilih semua";
+      selectAll.disabled = visibleIds.length === 0;
+    }
+
+    qa("[data-family-note-grid] .catatan-card-shell[data-note-id]").forEach(shell => {
+      CatatanManagement.setSelectionState(shell, selectedIds.has(clean(shell.dataset.noteId)));
+    });
+  }
+
+  function setSelectionMode(active) {
+    selectionMode = Boolean(active);
+    CatatanManagement.closeActiveMenu?.();
+    if (!selectionMode) selectedIds.clear();
+    renderSelectionUI();
+  }
+
+  async function archiveSelected() {
+    const ids = Array.from(selectedIds).filter(id => notesById.get(id)?._canArchive);
+    if (!ids.length) return;
+    const ok = await CatatanManagement.confirmArchive({
+      title: `Arsipkan ${ids.length} catatan keluarga?`,
+      message: "Catatan yang dipilih akan dipindahkan ke Arsip untuk seluruh keluarga dan dapat dipulihkan nanti.",
+      confirmLabel: `Arsipkan ${ids.length}`
+    });
+    if (!ok) return;
+    try {
+      const count = await NotesService.arsipkanBanyak(ids);
+      showToast(`${count} catatan keluarga dipindahkan ke Arsip.`);
+      setSelectionMode(false);
+      await loadBackendNotes();
+    } catch (error) {
+      console.error("[Catatan Family Bulk Archive]", error);
+      if (NotesService.lifecycleSchemaBelumTerpasang?.(error)) showToast("Jalankan SQL 004F agar bulk Arsip aktif.");
+      else showToast(error?.message || "Catatan terpilih belum dapat diarsipkan.");
+    }
+  }
+
   async function loadBackendNotes() {
     if (!familyId || !window.NotesService?.ambilCatatanKeluarga) return;
     try {
@@ -219,21 +327,21 @@
       try {
         const [tags, capabilities] = await Promise.all([
           NotesService.ambilTagMapCatatan(ids),
-          NotesService.ambilHakHapusCatatan(ids)
+          NotesService.ambilHakLifecycleCatatan(ids)
         ]);
         notes.forEach(note => {
           note._tags = tags[note.id] || [];
-          note._canDelete = Boolean(capabilities[note.id]);
+          note._canArchive = Boolean(capabilities[note.id]?.canArchive);
         });
       } catch (metaError) {
-        if (NotesService.managementSchemaBelumTerpasang?.(metaError)) showToast("Jalankan SQL 004E agar tag kartu & fitur hapus aktif.");
+        if (NotesService.lifecycleSchemaBelumTerpasang?.(metaError)) showToast("Jalankan SQL 004F agar Arsip & multi-select aktif.");
+        else if (NotesService.managementSchemaBelumTerpasang?.(metaError)) showToast("Jalankan SQL 004E agar tag kartu aktif.");
         else console.warn("[Catatan Family Card Metadata]", metaError);
       }
       renderBackendNotes(notes);
     } catch (error) {
       console.error("[Catatan Family Backend]", error);
-      if (NotesService.managementSchemaBelumTerpasang?.(error)) showToast("Backend management belum aktif — jalankan SQL 004E di Supabase dulu.");
-      else if (NotesService.folderSchemaBelumTerpasang?.(error)) showToast("Backend Folder belum aktif — jalankan SQL 004D di Supabase dulu.");
+      if (NotesService.folderSchemaBelumTerpasang?.(error)) showToast("Backend Folder belum aktif — jalankan SQL 004D di Supabase dulu.");
       else if (NotesService.schemaBelumTerpasang?.(error)) showToast("Backend Catatan belum aktif — jalankan SQL 004A di Supabase dulu.");
       else showToast(error?.message || "Catatan Keluarga belum dapat dimuat.");
     }
@@ -258,6 +366,15 @@
     q("[data-create-layer]")?.addEventListener("click", event => {
       if (event.target === event.currentTarget) closeCreateSheet();
     });
+    q("[data-toggle-selection]")?.addEventListener("click", () => setSelectionMode(!selectionMode));
+    q("[data-bulk-cancel]")?.addEventListener("click", () => setSelectionMode(false));
+    q("[data-bulk-archive]")?.addEventListener("click", archiveSelected);
+    q("[data-select-all]")?.addEventListener("click", () => {
+      const ids = visibleSelectableIds();
+      const allSelected = ids.length > 0 && ids.every(id => selectedIds.has(id));
+      ids.forEach(id => allSelected ? selectedIds.delete(id) : selectedIds.add(id));
+      renderSelectionUI();
+    });
     qa("[data-create-type]").forEach(button => {
       button.addEventListener("click", () => {
         const type = button.dataset.createType || "Catatan";
@@ -267,7 +384,7 @@
         else if (type === "Reminder") location.href = "catatan-editor.html?scope=family&type=reminder";
       });
     });
-    qa("[data-nav-placeholder]").forEach(button => {
+    qa('[data-nav-placeholder]:not([data-nav-placeholder="Arsip"])').forEach(button => {
       button.addEventListener("click", () => showToast(`${button.dataset.navPlaceholder} akan aktif bersama data Catatan.`));
     });
   }

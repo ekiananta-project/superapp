@@ -1,4 +1,4 @@
-const CACHE_NAME = "ruangkitha-v2.0.0a33-catatan-delete-card-empty-1";
+const CACHE_NAME = "ruangkitha-v2.0.0a34-catatan-archive-bulk-1";
 const OFFLINE_URL = "./offline.html";
 
 const APP_FILES = [
@@ -63,6 +63,7 @@ const APP_FILES = [
   "./catatan-folder.html",
   "./catatan-editor.html",
   "./catatan-checklist.html",
+  "./catatan-arsip.html",
   "./css/pages/catatan-home.css",
   "./css/pages/catatan-area.css",
   "./css/pages/catatan-editor.css",
@@ -76,6 +77,7 @@ const APP_FILES = [
   "./js/pages/catatan-editor.js",
   "./js/pages/catatan-checklist.js",
   "./js/pages/catatan-management.js",
+  "./js/pages/catatan-archive.js",
   "./finance.html",
   "./kalender.html",
   "./profil.html",

@@ -246,19 +246,108 @@
     return ambilCatatanKeluarga(familyId, ["basic"]);
   }
 
+  async function ambilHakLifecycleCatatan(noteIds = []) {
+    const ids = Array.from(new Set((Array.isArray(noteIds) ? noteIds : []).map(clean).filter(Boolean))).slice(0, 250);
+    if (!ids.length) return {};
+    const { data, error } = await client().rpc("notes_get_lifecycle_capabilities_v1", {
+      p_note_ids: ids
+    });
+    if (error) throw error;
+    const map = {};
+    (data || []).forEach(row => {
+      const id = clean(row?.note_id);
+      if (!id) return;
+      map[id] = {
+        canArchive: Boolean(row?.can_archive),
+        canRestore: Boolean(row?.can_restore),
+        canDeletePermanent: Boolean(row?.can_delete_permanent)
+      };
+    });
+    return map;
+  }
+
+  async function bolehArsipkanCatatan(noteId) {
+    const id = clean(noteId);
+    if (!id) return false;
+    const map = await ambilHakLifecycleCatatan([id]);
+    return Boolean(map[id]?.canArchive);
+  }
+
   async function arsipkan(id) {
     const noteId = clean(id);
     if (!noteId) throw new Error("Catatan tidak ditemukan.");
-
-    const { data, error } = await client()
-      .from("notes")
-      .update({ archived_at: new Date().toISOString() })
-      .eq("id", noteId)
-      .select(NOTE_FIELDS)
-      .single();
-
+    const { data, error } = await client().rpc("notes_archive_note_v1", {
+      p_note_id: noteId
+    });
     if (error) throw error;
-    return data;
+    return Boolean(data);
+  }
+
+  async function arsipkanBanyak(noteIds = []) {
+    const ids = Array.from(new Set((Array.isArray(noteIds) ? noteIds : []).map(clean).filter(Boolean))).slice(0, 250);
+    if (!ids.length) return 0;
+    const { data, error } = await client().rpc("notes_archive_notes_v1", {
+      p_note_ids: ids
+    });
+    if (error) throw error;
+    return Number(data || 0);
+  }
+
+  async function ambilCatatanArsip(scope = "personal", familyId = null) {
+    const archiveScope = normalizeScope(scope);
+    const fid = clean(familyId);
+    const { data, error } = await client().rpc("notes_list_archived_v1", {
+      p_scope: archiveScope,
+      p_family_id: archiveScope === "family" ? (fid || null) : null
+    });
+    if (error) throw error;
+    return (data || []).filter(row => ["basic", "checklist"].includes(normalizeNoteType(row?.note_type)));
+  }
+
+  async function ambilTagMapArsip(noteIds = []) {
+    const ids = Array.from(new Set((Array.isArray(noteIds) ? noteIds : []).map(clean).filter(Boolean))).slice(0, 250);
+    if (!ids.length) return {};
+    const { data, error } = await client().rpc("notes_get_archived_tags_v1", {
+      p_note_ids: ids
+    });
+    if (error) throw error;
+    const map = {};
+    (data || []).forEach(row => {
+      const id = clean(row?.note_id);
+      const name = normalizeTagName(row?.name);
+      if (!id || !name) return;
+      if (!map[id]) map[id] = [];
+      if (!map[id].includes(name)) map[id].push(name);
+    });
+    Object.values(map).forEach(values => values.sort());
+    return map;
+  }
+
+  async function pulihkanCatatan(noteId) {
+    const id = clean(noteId);
+    if (!id) throw new Error("Catatan Arsip tidak ditemukan.");
+    const { data, error } = await client().rpc("notes_restore_note_v1", { p_note_id: id });
+    if (error) throw error;
+    return Boolean(data);
+  }
+
+  async function hapusPermanenArsip(noteId) {
+    const id = clean(noteId);
+    if (!id) throw new Error("Catatan Arsip tidak ditemukan.");
+    const { data, error } = await client().rpc("notes_delete_archived_note_v1", { p_note_id: id });
+    if (error) throw error;
+    return Boolean(data);
+  }
+
+  async function hapusSemuaArsip(scope = "personal", familyId = null) {
+    const archiveScope = normalizeScope(scope);
+    const fid = clean(familyId);
+    const { data, error } = await client().rpc("notes_delete_archived_all_v1", {
+      p_scope: archiveScope,
+      p_family_id: archiveScope === "family" ? (fid || null) : null
+    });
+    if (error) throw error;
+    return Number(data || 0);
   }
 
   function normalizeChecklistItem(item = {}, index = 0) {
@@ -542,6 +631,20 @@
       message.includes("notes_delete_folder_v1");
   }
 
+  function lifecycleSchemaBelumTerpasang(error) {
+    const code = String(error?.code || "").toUpperCase();
+    const message = String(error?.message || error?.details || error?.hint || "").toLowerCase();
+    return code === "PGRST202" ||
+      message.includes("notes_get_lifecycle_capabilities_v1") ||
+      message.includes("notes_archive_note_v1") ||
+      message.includes("notes_archive_notes_v1") ||
+      message.includes("notes_list_archived_v1") ||
+      message.includes("notes_get_archived_tags_v1") ||
+      message.includes("notes_restore_note_v1") ||
+      message.includes("notes_delete_archived_note_v1") ||
+      message.includes("notes_delete_archived_all_v1");
+  }
+
   function tagSchemaBelumTerpasang(error) {
     const code = String(error?.code || "").toUpperCase();
     const message = String(error?.message || error?.details || error?.hint || "").toLowerCase();
@@ -592,10 +695,19 @@
     ambilHakHapusCatatan,
     bolehHapusCatatan,
     hapusCatatan,
+    ambilHakLifecycleCatatan,
+    bolehArsipkanCatatan,
+    arsipkan,
+    arsipkanBanyak,
+    ambilCatatanArsip,
+    ambilTagMapArsip,
+    pulihkanCatatan,
+    hapusPermanenArsip,
+    hapusSemuaArsip,
     hapusFolder,
     folderSchemaBelumTerpasang,
     managementSchemaBelumTerpasang,
-    arsipkan,
+    lifecycleSchemaBelumTerpasang,
     ambilTagCatalog,
     buatTag,
     ambilTagCatatan,

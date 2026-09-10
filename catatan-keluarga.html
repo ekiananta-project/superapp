@@ -28,7 +28,7 @@
   <link rel="stylesheet" href="css/pages/catatan-home.css?v=20260909-v200a21">
   <link rel="stylesheet" href="css/pages/catatan-area.css?v=20260909-v200a21">
   <style id="ruangkitha-auth-cloak">html[data-auth-guard] body{visibility:hidden!important}</style>
-  <link rel="stylesheet" href="css/pages/catatan-management.css?v=20260910-v200a33">
+  <link rel="stylesheet" href="css/pages/catatan-management.css?v=20260910-v200a34">
 </head>
 <body>
 <div class="aplikasi dengan-nav catatan-home catatan-area catatan-family-area" data-catatan-family aria-busy="true">
@@ -86,6 +86,11 @@
     <section class="catatan-area-section catatan-notes-section" aria-labelledby="catatan-family-notes-title">
       <div class="catatan-area-heading">
         <h2 id="catatan-family-notes-title">Catatan</h2>
+        <div class="catatan-note-heading-actions">
+          <span class="catatan-selection-count" data-selection-count hidden>0 dipilih</span>
+          <button class="catatan-selection-action" type="button" data-select-all hidden>Pilih semua</button>
+          <button class="catatan-selection-action" type="button" data-toggle-selection>Pilih</button>
+        </div>
       </div>
 
       <div class="catatan-note-grid" data-family-note-grid>
@@ -144,11 +149,17 @@
     <button class="catatan-add-button" type="button" data-create-note aria-label="Buat Catatan Keluarga baru">
       <ion-icon name="add-outline" aria-hidden="true"></ion-icon>
     </button>
-    <button class="catatan-nav-item" type="button" data-nav-placeholder="Arsip">
+    <a class="catatan-nav-item" href="catatan-arsip.html?scope=family">
       <ion-icon name="archive-outline" aria-hidden="true"></ion-icon>
       <span>Arsip</span>
-    </button>
+    </a>
   </nav>
+
+  <div class="catatan-bulk-bar" data-bulk-bar hidden aria-live="polite">
+    <button class="is-secondary" type="button" data-bulk-cancel>Batal</button>
+    <strong data-bulk-count>0 dipilih</strong>
+    <button class="is-archive" type="button" data-bulk-archive disabled>Arsipkan</button>
+  </div>
 
   <div class="catatan-toast" data-catatan-toast role="status" hidden></div>
 
@@ -195,9 +206,9 @@
 <script src="js/backend/auth-router.js?v=20260909-v200a8"></script>
 <script src="js/backend/auth-guard.js?v=20260909-v200a8"></script>
 <script type="module" src="https://unpkg.com/@dotlottie/player-component@2.7.12/dist/dotlottie-player.mjs"></script>
-<script src="js/backend/notes-service.js?v=20260910-v200a33"></script>
-<script src="js/pages/catatan-management.js?v=20260910-v200a33"></script>
-<script src="js/pages/catatan-family.js?v=20260910-v200a33"></script>
-<script src="js/pwa.js?v=20260910-v200a33"></script>
+<script src="js/backend/notes-service.js?v=20260910-v200a34"></script>
+<script src="js/pages/catatan-management.js?v=20260910-v200a34"></script>
+<script src="js/pages/catatan-family.js?v=20260910-v200a34"></script>
+<script src="js/pwa.js?v=20260910-v200a34"></script>
 </body>
 </html>

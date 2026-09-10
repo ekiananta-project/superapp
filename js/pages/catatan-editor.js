@@ -320,14 +320,14 @@
 
   async function refreshDeletePermission() {
     noteDeleteAllowed = false;
-    if (!noteId || noteReadOnly || reminderPreset || !window.NotesService?.bolehHapusCatatan) {
+    if (!noteId || noteReadOnly || reminderPreset || !window.NotesService?.bolehArsipkanCatatan) {
       renderDeleteAction();
       return;
     }
     try {
-      noteDeleteAllowed = await window.NotesService.bolehHapusCatatan(noteId);
+      noteDeleteAllowed = await window.NotesService.bolehArsipkanCatatan(noteId);
     } catch (error) {
-      console.warn("[Catatan Delete Permission]", error);
+      console.warn("[Catatan Archive Permission]", error);
       noteDeleteAllowed = noteOwnerId === userId;
     }
     renderDeleteAction();
@@ -337,12 +337,12 @@
     if (!noteId || !noteDeleteAllowed || noteReadOnly || reminderPreset || noteDeleting) return;
     const title = clean(q("[data-note-title]")?.value, "Tanpa judul");
     setLayer("[data-info-layer]", false);
-    const ok = await window.CatatanManagement?.confirmDanger?.({
-      title: `Hapus “${title}”?`,
+    const ok = await window.CatatanManagement?.confirmArchive?.({
+      title: `Arsipkan “${title}”?`,
       message: scope === "family"
-        ? "Catatan Keluarga ini akan dihapus permanen untuk seluruh anggota."
-        : "Catatan ini akan dihapus permanen dan tidak dapat dipulihkan dari Arsip.",
-      confirmLabel: "Hapus catatan"
+        ? "Catatan Keluarga ini akan dipindahkan ke Arsip untuk seluruh anggota dan dapat dipulihkan nanti."
+        : "Catatan ini akan dipindahkan ke Arsip dan dapat dipulihkan nanti.",
+      confirmLabel: "Arsipkan"
     });
     if (!ok) return;
 
@@ -356,12 +356,13 @@
     try {
       if (currentSavePromise) await currentSavePromise;
       if (currentTagSavePromise) await currentTagSavePromise;
-      await window.NotesService.hapusCatatan(noteId);
+      await window.NotesService.arsipkan(noteId);
       location.replace(editorBackUrl());
     } catch (error) {
       noteDeleting = false;
-      console.error("[Catatan Delete]", error);
-      showToast(error?.message || "Catatan belum dapat dihapus.");
+      console.error("[Catatan Archive]", error);
+      if (window.NotesService?.lifecycleSchemaBelumTerpasang?.(error)) showToast("Backend Arsip belum aktif — jalankan SQL 004F di Supabase dulu.");
+      else showToast(error?.message || "Catatan belum dapat diarsipkan.");
     }
   }
 

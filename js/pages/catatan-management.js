@@ -105,6 +105,7 @@
   }
 
   function createCardShell(card, {
+    actions = null,
     canDelete = false,
     deleteLabel = "Hapus catatan",
     menuLabel = "Menu catatan",
@@ -120,7 +121,16 @@
     card.removeAttribute?.("data-search-text");
     shell.appendChild(card);
 
-    if (!canDelete || typeof onDelete !== "function") return shell;
+    let menuActions = Array.isArray(actions) ? actions.filter(item => item && typeof item.onSelect === "function") : [];
+    if (!menuActions.length && canDelete && typeof onDelete === "function") {
+      menuActions = [{
+        label: clean(deleteLabel, "Hapus"),
+        icon: "trash-outline",
+        tone: "danger",
+        onSelect: onDelete
+      }];
+    }
+    if (!menuActions.length) return shell;
 
     const menuButton = document.createElement("button");
     menuButton.type = "button";
@@ -134,12 +144,25 @@
     menu.className = "catatan-card-menu";
     menu.setAttribute("role", "menu");
     menu.hidden = true;
-    const remove = document.createElement("button");
-    remove.type = "button";
-    remove.className = "is-danger";
-    remove.setAttribute("role", "menuitem");
-    remove.innerHTML = `<ion-icon name="trash-outline" aria-hidden="true"></ion-icon><span>${clean(deleteLabel, "Hapus")}</span>`;
-    menu.appendChild(remove);
+
+    menuActions.forEach(action => {
+      const item = document.createElement("button");
+      item.type = "button";
+      item.setAttribute("role", "menuitem");
+      if (action.tone === "danger") item.classList.add("is-danger");
+      else if (action.tone === "archive") item.classList.add("is-archive");
+      else if (action.tone === "restore") item.classList.add("is-restore");
+      const icon = clean(action.icon, action.tone === "danger" ? "trash-outline" : "archive-outline");
+      item.innerHTML = `<ion-icon name="${icon}" aria-hidden="true"></ion-icon><span>${clean(action.label, "Pilih")}</span>`;
+      item.addEventListener("click", async event => {
+        event.preventDefault();
+        event.stopPropagation();
+        closeActiveMenu();
+        await action.onSelect();
+      });
+      menu.appendChild(item);
+    });
+
     shell.classList.add("has-overflow");
     shell.append(menuButton, menu);
 
@@ -154,14 +177,36 @@
       if (opening) activeMenu = menu;
     });
 
-    remove.addEventListener("click", async event => {
+    return shell;
+  }
+
+  function attachSelectionControl(shell, { selectable = true, label = "Pilih catatan", onToggle = null } = {}) {
+    if (!shell) return null;
+    shell.dataset.noteSelectable = String(Boolean(selectable));
+    const button = document.createElement("button");
+    button.type = "button";
+    button.className = "catatan-card-select";
+    button.setAttribute("aria-label", label);
+    button.setAttribute("aria-pressed", "false");
+    button.innerHTML = '<ion-icon name="ellipse-outline" aria-hidden="true"></ion-icon>';
+    button.addEventListener("click", event => {
       event.preventDefault();
       event.stopPropagation();
-      closeActiveMenu();
-      await onDelete();
+      if (!selectable) return;
+      onToggle?.();
     });
+    shell.appendChild(button);
+    return button;
+  }
 
-    return shell;
+  function setSelectionState(shell, selected) {
+    if (!shell) return;
+    const active = Boolean(selected);
+    shell.classList.toggle("is-selected", active);
+    const button = shell.querySelector(".catatan-card-select");
+    button?.setAttribute("aria-pressed", String(active));
+    const icon = button?.querySelector("ion-icon");
+    if (icon) icon.setAttribute("name", active ? "checkmark" : "ellipse-outline");
   }
 
   function ensureConfirmLayer() {
@@ -172,13 +217,13 @@
     layer.dataset.catatanConfirmLayer = "";
     layer.hidden = true;
     layer.innerHTML = `
-      <section class="catatan-confirm-dialog" role="alertdialog" aria-modal="true" aria-labelledby="catatan-confirm-title" aria-describedby="catatan-confirm-message">
-        <span class="catatan-confirm-icon"><ion-icon name="trash-outline" aria-hidden="true"></ion-icon></span>
-        <h2 id="catatan-confirm-title" data-catatan-confirm-title>Hapus?</h2>
-        <p id="catatan-confirm-message" data-catatan-confirm-message>Tindakan ini tidak dapat dibatalkan.</p>
+      <section class="catatan-confirm-dialog" role="alertdialog" aria-modal="true" aria-labelledby="catatan-confirm-title" aria-describedby="catatan-confirm-message" data-catatan-confirm-dialog>
+        <span class="catatan-confirm-icon" data-catatan-confirm-icon><ion-icon name="trash-outline" aria-hidden="true"></ion-icon></span>
+        <h2 id="catatan-confirm-title" data-catatan-confirm-title>Konfirmasi</h2>
+        <p id="catatan-confirm-message" data-catatan-confirm-message>Pastikan tindakan ini memang kamu inginkan.</p>
         <div class="catatan-confirm-actions">
           <button type="button" class="is-secondary" data-catatan-confirm-cancel>Batal</button>
-          <button type="button" class="is-danger" data-catatan-confirm-ok>Hapus</button>
+          <button type="button" data-catatan-confirm-ok>OK</button>
         </div>
       </section>`;
     document.body.appendChild(layer);
@@ -200,16 +245,38 @@
     return layer;
   }
 
-  function confirmDanger({ title = "Hapus?", message = "Tindakan ini tidak dapat dibatalkan.", confirmLabel = "Hapus" } = {}) {
+  function confirmAction({
+    title = "Konfirmasi",
+    message = "Pastikan tindakan ini memang kamu inginkan.",
+    confirmLabel = "OK",
+    tone = "default",
+    icon = "checkmark-circle-outline"
+  } = {}) {
     const layer = ensureConfirmLayer();
     if (confirmResolve) confirmResolve(false);
     layer.querySelector("[data-catatan-confirm-title]").textContent = title;
     layer.querySelector("[data-catatan-confirm-message]").textContent = message;
+    const dialog = layer.querySelector("[data-catatan-confirm-dialog]");
+    const iconWrap = layer.querySelector("[data-catatan-confirm-icon]");
+    const iconEl = iconWrap?.querySelector("ion-icon");
+    if (dialog) dialog.dataset.tone = tone;
+    if (iconEl) iconEl.setAttribute("name", icon);
     const ok = layer.querySelector("[data-catatan-confirm-ok]");
-    if (ok) ok.textContent = confirmLabel;
+    if (ok) {
+      ok.textContent = confirmLabel;
+      ok.className = tone === "danger" ? "is-danger" : (tone === "archive" ? "is-archive" : "is-primary");
+    }
     layer.hidden = false;
     requestAnimationFrame(() => layer.querySelector("[data-catatan-confirm-cancel]")?.focus());
     return new Promise(resolve => { confirmResolve = resolve; });
+  }
+
+  function confirmDanger({ title = "Hapus?", message = "Tindakan ini tidak dapat dibatalkan.", confirmLabel = "Hapus" } = {}) {
+    return confirmAction({ title, message, confirmLabel, tone: "danger", icon: "trash-outline" });
+  }
+
+  function confirmArchive({ title = "Arsipkan?", message = "Catatan akan dipindahkan ke Arsip dan dapat dipulihkan.", confirmLabel = "Arsipkan" } = {}) {
+    return confirmAction({ title, message, confirmLabel, tone: "archive", icon: "archive-outline" });
   }
 
   document.addEventListener("click", event => {
@@ -222,7 +289,11 @@
     createEmptyState,
     renderTagSummary,
     createCardShell,
+    attachSelectionControl,
+    setSelectionState,
+    confirmAction,
     confirmDanger,
+    confirmArchive,
     closeActiveMenu,
     syncEmptyLottieTheme
   };
