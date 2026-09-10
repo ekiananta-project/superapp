@@ -25,9 +25,9 @@
 
   <link rel="stylesheet" href="css/style.css">
   <link rel="stylesheet" href="css/theme.css">
-  <link rel="stylesheet" href="css/pages/catatan-home.css?v=20260909-v200a26">
-  <link rel="stylesheet" href="css/pages/catatan-editor.css?v=20260909-v200a26">
-  <link rel="stylesheet" href="css/pages/catatan-checklist.css?v=20260909-v200a26">
+  <link rel="stylesheet" href="css/pages/catatan-home.css?v=20260910-v200a31">
+  <link rel="stylesheet" href="css/pages/catatan-editor.css?v=20260910-v200a31">
+  <link rel="stylesheet" href="css/pages/catatan-checklist.css?v=20260910-v200a31">
   <style id="ruangkitha-auth-cloak">html[data-auth-guard] body{visibility:hidden!important}</style>
 </head>
 <body>
@@ -46,6 +46,13 @@
   </header>
 
   <main class="catatan-editor-main catatan-checklist-main">
+    <div class="catatan-member-readonly-nav" data-member-readonly-nav hidden>
+      <a class="catatan-member-readonly-back" href="catatan.html" data-member-readonly-back aria-label="Kembali ke Catatan Anggota">
+        <ion-icon name="arrow-back-outline" aria-hidden="true"></ion-icon>
+        <span>Kembali</span>
+      </a>
+    </div>
+
     <textarea class="catatan-title-input" data-note-title rows="1" maxlength="160" placeholder="Judul checklist..." aria-label="Judul checklist"></textarea>
 
     <div class="catatan-editor-context" aria-label="Konteks checklist">
@@ -240,8 +247,8 @@
 <script src="js/backend/family-service.js?v=20260908-10"></script>
 <script src="js/backend/auth-router.js?v=20260909-v200a8"></script>
 <script src="js/backend/auth-guard.js?v=20260909-v200a8"></script>
-<script src="js/backend/notes-service.js?v=20260910-v200a30"></script>
-<script src="js/pages/catatan-checklist.js?v=20260910-v200a30"></script>
-<script src="js/pwa.js?v=20260910-v200a30"></script>
+<script src="js/backend/notes-service.js?v=20260910-v200a31"></script>
+<script src="js/pages/catatan-checklist.js?v=20260910-v200a31"></script>
+<script src="js/pwa.js?v=20260910-v200a31"></script>
 </body>
 </html>

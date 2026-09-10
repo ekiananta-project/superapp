@@ -58,7 +58,7 @@
     empty = document.createElement("div");
     empty.className = "catatan-area-empty";
     empty.dataset.backendNotesEmpty = "";
-    empty.innerHTML = '<ion-icon name="document-text-outline" aria-hidden="true"></ion-icon><strong>Belum ada catatan</strong><span>Buat Catatan Biasa pertamamu dari tombol +.</span>';
+    empty.innerHTML = '<ion-icon name="document-text-outline" aria-hidden="true"></ion-icon><strong>Belum ada catatan</strong><span>Buat catatan atau checklist pertamamu dari tombol +.</span>';
     empty.hidden = true;
     section.appendChild(empty);
     return empty;
@@ -71,15 +71,16 @@
     button.dataset.previewItem = "";
     button.dataset.noteId = clean(note?.id);
 
+    const isChecklist = note?.note_type === "checklist";
     const title = clean(note?.title) || "Tanpa judul";
-    const body = clean(note?.body_text) || "Catatan belum memiliki isi.";
+    const body = clean(note?.body_text) || (isChecklist ? "Checklist belum memiliki item." : "Catatan belum memiliki isi.");
     const preview = body.length > 180 ? `${body.slice(0, 177)}...` : body;
     const access = note?.visibility === "family-read" ? "Keluarga dapat melihat" : "Hanya Saya";
     button.dataset.searchText = clean(`${title} ${body} ${note?.folder_name || ""} ${access}`);
 
     const type = document.createElement("span");
     type.className = "catatan-note-type";
-    type.innerHTML = '<ion-icon name="document-text-outline" aria-hidden="true"></ion-icon>';
+    type.innerHTML = `<ion-icon name="${isChecklist ? "checkbox-outline" : "document-text-outline"}" aria-hidden="true"></ion-icon>`;
 
     const titleEl = document.createElement("strong");
     titleEl.textContent = title;
@@ -101,7 +102,9 @@
     }
     button.append(previewEl, accessEl);
     button.addEventListener("click", () => {
-      location.href = `catatan-editor.html?scope=personal&id=${encodeURIComponent(note.id)}`;
+      location.href = isChecklist
+        ? `catatan-checklist.html?scope=personal&id=${encodeURIComponent(note.id)}`
+        : `catatan-editor.html?scope=personal&id=${encodeURIComponent(note.id)}`;
     });
     return button;
   }
@@ -118,9 +121,9 @@
   }
 
   async function loadBackendNotes(userId) {
-    if (!window.NotesService) return;
+    if (!window.NotesService?.ambilCatatanPersonal) return;
     try {
-      const notes = await window.NotesService.ambilBasicPersonal(userId);
+      const notes = await window.NotesService.ambilCatatanPersonal(userId);
       renderBackendNotes(notes);
     } catch (error) {
       console.error("[Catatan Personal Backend]", error);

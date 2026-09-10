@@ -58,7 +58,7 @@
     empty = document.createElement("div");
     empty.className = "catatan-area-empty";
     empty.dataset.backendNotesEmpty = "";
-    empty.innerHTML = '<ion-icon name="people-outline" aria-hidden="true"></ion-icon><strong>Belum ada Catatan Keluarga</strong><span>Buat Catatan Biasa pertama untuk ruang keluarga ini.</span>';
+    empty.innerHTML = '<ion-icon name="people-outline" aria-hidden="true"></ion-icon><strong>Belum ada Catatan Keluarga</strong><span>Buat catatan atau checklist pertama untuk ruang keluarga ini.</span>';
     empty.hidden = true;
     section.appendChild(empty);
     return empty;
@@ -71,8 +71,9 @@
     button.dataset.previewItem = "";
     button.dataset.noteId = clean(note?.id);
 
+    const isChecklist = note?.note_type === "checklist";
     const title = clean(note?.title) || "Tanpa judul";
-    const body = clean(note?.body_text) || "Catatan belum memiliki isi.";
+    const body = clean(note?.body_text) || (isChecklist ? "Checklist belum memiliki item." : "Catatan belum memiliki isi.");
     const preview = body.length > 180 ? `${body.slice(0, 177)}...` : body;
     const own = note?.created_by === userId;
     const access = own ? "Keluarga dapat melihat · Kamu pembuat" : "Keluarga dapat melihat · Hanya baca";
@@ -80,7 +81,7 @@
 
     const type = document.createElement("span");
     type.className = "catatan-note-type";
-    type.innerHTML = '<ion-icon name="document-text-outline" aria-hidden="true"></ion-icon>';
+    type.innerHTML = `<ion-icon name="${isChecklist ? "checkbox-outline" : "document-text-outline"}" aria-hidden="true"></ion-icon>`;
 
     const titleEl = document.createElement("strong");
     titleEl.textContent = title;
@@ -102,7 +103,9 @@
     }
     button.append(previewEl, accessEl);
     button.addEventListener("click", () => {
-      location.href = `catatan-editor.html?scope=family&id=${encodeURIComponent(note.id)}`;
+      location.href = isChecklist
+        ? `catatan-checklist.html?scope=family&id=${encodeURIComponent(note.id)}`
+        : `catatan-editor.html?scope=family&id=${encodeURIComponent(note.id)}`;
     });
     return button;
   }
@@ -119,9 +122,9 @@
   }
 
   async function loadBackendNotes(familyId, userId) {
-    if (!window.NotesService) return;
+    if (!window.NotesService?.ambilCatatanKeluarga) return;
     try {
-      const notes = await window.NotesService.ambilBasicKeluarga(familyId);
+      const notes = await window.NotesService.ambilCatatanKeluarga(familyId);
       renderBackendNotes(notes, userId);
     } catch (error) {
       console.error("[Catatan Family Backend]", error);

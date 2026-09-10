@@ -85,14 +85,15 @@
     button.dataset.previewItem = "";
     button.dataset.noteId = clean(note?.id);
 
+    const isChecklist = note?.note_type === "checklist";
     const title = clean(note?.title) || "Tanpa judul";
-    const body = clean(note?.body_text) || "Catatan belum memiliki isi.";
+    const body = clean(note?.body_text) || (isChecklist ? "Checklist belum memiliki item." : "Catatan belum memiliki isi.");
     const preview = body.length > 180 ? `${body.slice(0, 177)}...` : body;
     button.dataset.searchText = clean(`${title} ${body} ${note?.folder_name || ""} keluarga dapat melihat hanya baca`);
 
     const type = document.createElement("span");
     type.className = "catatan-note-type";
-    type.innerHTML = '<ion-icon name="document-text-outline" aria-hidden="true"></ion-icon>';
+    type.innerHTML = `<ion-icon name="${isChecklist ? "checkbox-outline" : "document-text-outline"}" aria-hidden="true"></ion-icon>`;
 
     const titleEl = document.createElement("strong");
     titleEl.textContent = title;
@@ -115,7 +116,9 @@
     button.append(previewEl, accessEl);
     button.addEventListener("click", () => {
       const member = encodeURIComponent(activeMemberId);
-      location.href = `catatan-editor.html?scope=personal&id=${encodeURIComponent(note.id)}&from=member&member=${member}`;
+      location.href = isChecklist
+        ? `catatan-checklist.html?scope=personal&id=${encodeURIComponent(note.id)}&from=member&member=${member}`
+        : `catatan-editor.html?scope=personal&id=${encodeURIComponent(note.id)}&from=member&member=${member}`;
     });
     return button;
   }
@@ -132,9 +135,9 @@
   }
 
   async function loadBackendNotes(familyId, memberId) {
-    if (!window.NotesService?.ambilBasicAnggota) return;
+    if (!window.NotesService?.ambilCatatanAnggota) return;
     try {
-      const notes = await window.NotesService.ambilBasicAnggota(familyId, memberId);
+      const notes = await window.NotesService.ambilCatatanAnggota(familyId, memberId);
       renderBackendNotes(notes);
     } catch (error) {
       console.error("[Catatan Member Backend]", error);

@@ -1,4 +1,4 @@
-/* RuangKitha v2.0.0a26 — Checklist editor UI + clean View mode */
+/* RuangKitha v2.0.0a31 — Checklist editor UI + Supabase persistence/read-only guards */
 
 .catatan-checklist-main {
   padding-bottom: max(38px, env(safe-area-inset-bottom));
@@ -187,4 +187,18 @@ html[data-theme="dark"] .catatan-check-text::placeholder {
 @media (max-width: 390px) {
   .catatan-checklist-item { gap: 6px; }
   .catatan-check-text { font-size: 13.5px; }
+}
+
+/* v2.0.0a31 — backend/read-only guard. Pembaca family/member tidak dapat
+   mengubah status item; owner tetap dapat mencentang saat Lihat hasil. */
+.catatan-checklist.is-readonly .catatan-check-toggle {
+  cursor: default;
+  pointer-events: none;
+}
+.catatan-checklist.is-readonly .catatan-check-remove,
+.catatan-checklist.is-readonly .catatan-checklist-add {
+  display: none !important;
+}
+.catatan-checklist.is-readonly .catatan-check-text {
+  cursor: default;
 }

@@ -10,13 +10,36 @@
   let pinned = false;
   let userId = "guest";
   let activeFamilyId = "";
+  let noteId = "";
+  let noteOwnerId = "";
+  let noteReadOnly = false;
+  let sourceContext = "";
+  let memberSourceId = "";
+  let memberViewName = "Anggota";
+
+  let checklistBackendReady = false;
+  let backendWarningShown = false;
+  let hydratingNote = false;
+  let noteDirty = false;
+  let autosaveTimer = null;
+  let saveRunning = false;
+  let saveAgain = false;
+  let currentSavePromise = null;
+  let lastSavedFingerprint = "";
+
   let tagBackendReady = false;
   let tagBackendWarningShown = false;
-  let toastTimer = null;
-  let editorMode = "edit";
+  let tagDirty = false;
+  let tagSaveRunning = false;
+  let tagSaveAgain = false;
+  let currentTagSavePromise = null;
+  let lastSavedTagFingerprint = "[]";
   let availableTags = [];
   let selectedTags = new Set();
   let draftTags = new Set();
+
+  let toastTimer = null;
+  let editorMode = "edit";
   let itemSequence = 0;
   let reminderDate = "";
   let reminderTime = "";
@@ -25,6 +48,10 @@
     const text = String(value ?? "").trim().replace(/\s+/g, " ");
     if (!text || ["undefined", "null", "[object object]"].includes(text.toLowerCase())) return fallback;
     return text;
+  }
+
+  function itemText(value) {
+    return String(value ?? "").trim().slice(0, 600);
   }
 
   function normalizeTag(value) {
@@ -71,11 +98,134 @@
     input.style.height = `${Math.min(Math.max(input.scrollHeight, 34), 132)}px`;
   }
 
+  async function resolveMemberViewContext() {
+    if (sourceContext !== "member" || !noteReadOnly || !noteOwnerId) return;
+    if (!memberSourceId || memberSourceId !== noteOwnerId) memberSourceId = noteOwnerId;
+    memberViewName = "Anggota";
+    if (!activeFamilyId || !window.FamilyService?.ambilAnggotaKeluarga) return;
+
+    try {
+      const members = await FamilyService.ambilAnggotaKeluarga(activeFamilyId);
+      const owner = (members || []).find(item => item?.user_id === noteOwnerId);
+      memberViewName = clean(owner?.profile?.display_name, "Anggota");
+    } catch (error) {
+      console.warn("[Checklist Member View Context]", error);
+    }
+  }
+
   function editorBackUrl() {
+    if (sourceContext === "member" && noteReadOnly && memberSourceId) {
+      return `catatan-anggota.html?member=${encodeURIComponent(memberSourceId)}`;
+    }
     if (folderName) {
       return `catatan-folder.html?scope=${encodeURIComponent(scope)}&folder=${encodeURIComponent(folderName)}`;
     }
     return scope === "family" ? "catatan-keluarga.html" : "catatan-pribadi.html";
+  }
+
+  function applyMemberReadingView() {
+    const memberReadOnly = sourceContext === "member" && noteReadOnly;
+    const root = q("[data-catatan-checklist]");
+    const header = q(".catatan-editor-header");
+    const nav = q("[data-member-readonly-nav]");
+    const navBack = q("[data-member-readonly-back]");
+
+    root?.classList.toggle("is-member-readonly", memberReadOnly);
+    root?.classList.toggle("is-readonly", noteReadOnly);
+
+    if (header) {
+      header.hidden = memberReadOnly;
+      if (memberReadOnly) header.style.setProperty("display", "none", "important");
+      else header.style.removeProperty("display");
+    }
+    if (nav) nav.hidden = !memberReadOnly;
+    if (navBack) navBack.href = editorBackUrl();
+
+    const modeToggle = q("[data-mode-toggle]");
+    const infoButton = q("[data-open-info]");
+    if (modeToggle) modeToggle.hidden = noteReadOnly;
+    if (infoButton) infoButton.hidden = noteReadOnly;
+  }
+
+  function renderVisibility() {
+    const privateMode = visibility === "private";
+    const label = privateMode ? "Hanya Saya" : "Keluarga dapat melihat";
+    const icon = privateMode ? "lock-closed-outline" : "eye-outline";
+    const chip = q("[data-visibility-chip]");
+    const chipLabel = q("[data-visibility-label]");
+    const info = q("[data-info-visibility]");
+    if (chipLabel) chipLabel.textContent = label;
+    chip?.querySelector("ion-icon")?.setAttribute("name", icon);
+    if (info) info.textContent = label;
+    qa("[data-visibility-check]").forEach(el => {
+      const expected = String(el.dataset.visibilityCheck || "").replace("_", "-");
+      const active = expected === visibility;
+      el.setAttribute("name", active ? "checkmark-circle" : "ellipse-outline");
+    });
+  }
+
+  function renderPinState() {
+    q("[data-pin-switch]")?.classList.toggle("is-on", pinned);
+    const state = q("[data-pin-state]");
+    if (state) state.textContent = pinned ? "Dipin" : "Tidak dipin";
+  }
+
+  function applyContext() {
+    const areaLabel = q("[data-area-label]");
+    const areaChip = q("[data-area-chip]");
+    const areaIcon = areaChip?.querySelector("ion-icon");
+    const visibilityChip = q("[data-visibility-chip]");
+    const visibilityRow = q("[data-visibility-row]");
+    const promoteRow = q("[data-promote-row]");
+    const folderChip = q("[data-folder-chip]");
+    const folderLabel = q("[data-folder-label]");
+    const infoFolder = q("[data-info-folder]");
+    const back = q("[data-editor-back]");
+    const readBack = q("[data-member-readonly-back]");
+
+    if (back) back.href = editorBackUrl();
+    if (readBack) readBack.href = editorBackUrl();
+
+    if (sourceContext === "member" && noteReadOnly) {
+      if (areaLabel) areaLabel.textContent = memberViewName ? `Milik ${memberViewName}` : "Milik anggota";
+      if (areaIcon) areaIcon.setAttribute("name", "person-circle-outline");
+      if (visibilityChip) {
+        visibilityChip.hidden = false;
+        visibilityChip.disabled = true;
+      }
+      const visibilityLabel = q("[data-visibility-label]");
+      if (visibilityLabel) visibilityLabel.textContent = "Hanya baca";
+      visibilityChip?.querySelector("ion-icon")?.setAttribute("name", "eye-outline");
+      if (visibilityRow) visibilityRow.hidden = false;
+      if (promoteRow) promoteRow.hidden = true;
+    } else if (scope === "family") {
+      if (areaLabel) areaLabel.textContent = "Catatan Keluarga";
+      if (areaIcon) areaIcon.setAttribute("name", "people-outline");
+      if (visibilityChip) visibilityChip.hidden = true;
+      if (visibilityRow) visibilityRow.hidden = true;
+      if (promoteRow) promoteRow.hidden = true;
+    } else {
+      if (areaLabel) areaLabel.textContent = "Pribadi";
+      if (areaIcon) areaIcon.setAttribute("name", "person-outline");
+      if (visibilityChip) visibilityChip.hidden = false;
+      if (visibilityRow) visibilityRow.hidden = false;
+      if (promoteRow) promoteRow.hidden = false;
+      renderVisibility();
+    }
+
+    if (folderName) {
+      if (folderChip) folderChip.hidden = false;
+      if (folderLabel) folderLabel.textContent = folderName;
+      if (infoFolder) infoFolder.textContent = folderName;
+    } else {
+      if (folderChip) folderChip.hidden = true;
+      if (infoFolder) infoFolder.textContent = "Tanpa folder";
+    }
+
+    renderPinState();
+    renderMetadataTags();
+    renderReminder();
+    applyMemberReadingView();
   }
 
   function localDateString(date = new Date()) {
@@ -112,7 +262,7 @@
   }
 
   function openReminderSheet() {
-    if (editorMode !== "edit") {
+    if (noteReadOnly || editorMode !== "edit") {
       showToast("Masuk ke Edit catatan untuk mengubah reminder.");
       return;
     }
@@ -127,6 +277,7 @@
   }
 
   function saveReminder() {
+    if (noteReadOnly) return;
     const date = clean(q("[data-reminder-date]")?.value);
     const time = clean(q("[data-reminder-time]")?.value);
     if (!date || !time) {
@@ -137,10 +288,11 @@
     reminderTime = time;
     renderReminder();
     setLayer("[data-reminder-layer]", false);
-    showToast("Reminder disimpan di checklist.");
+    showToast("Reminder disimpan di checklist. Backend Reminder menyusul di tahap berikutnya.");
   }
 
   function removeReminder() {
+    if (noteReadOnly) return;
     reminderDate = "";
     reminderTime = "";
     renderReminder();
@@ -148,75 +300,9 @@
     showToast("Reminder dihapus dari checklist.");
   }
 
-  function renderVisibility() {
-    const privateMode = visibility === "private";
-    const label = privateMode ? "Hanya Saya" : "Keluarga dapat melihat";
-    const icon = privateMode ? "lock-closed-outline" : "eye-outline";
-    const chip = q("[data-visibility-chip]");
-    const chipLabel = q("[data-visibility-label]");
-    const info = q("[data-info-visibility]");
-    if (chipLabel) chipLabel.textContent = label;
-    chip?.querySelector("ion-icon")?.setAttribute("name", icon);
-    if (info) info.textContent = label;
-    qa("[data-visibility-check]").forEach(el => {
-      const active = el.dataset.visibilityCheck === visibility;
-      el.setAttribute("name", active ? "checkmark-circle" : "ellipse-outline");
-    });
-  }
-
-  function applyContext() {
-    const areaLabel = q("[data-area-label]");
-    const areaChip = q("[data-area-chip]");
-    const areaIcon = areaChip?.querySelector("ion-icon");
-    const visibilityChip = q("[data-visibility-chip]");
-    const visibilityRow = q("[data-visibility-row]");
-    const promoteRow = q("[data-promote-row]");
-    const folderChip = q("[data-folder-chip]");
-    const folderLabel = q("[data-folder-label]");
-    const infoFolder = q("[data-info-folder]");
-    const back = q("[data-editor-back]");
-
-    if (back) back.href = editorBackUrl();
-
-    if (scope === "family") {
-      if (areaLabel) areaLabel.textContent = "Catatan Keluarga";
-      if (areaIcon) areaIcon.setAttribute("name", "people-outline");
-      if (visibilityChip) visibilityChip.hidden = true;
-      if (visibilityRow) visibilityRow.hidden = true;
-      if (promoteRow) promoteRow.hidden = true;
-    } else {
-      if (areaLabel) areaLabel.textContent = "Pribadi";
-      if (areaIcon) areaIcon.setAttribute("name", "person-outline");
-      if (visibilityChip) visibilityChip.hidden = false;
-      if (visibilityRow) visibilityRow.hidden = false;
-      if (promoteRow) promoteRow.hidden = false;
-      renderVisibility();
-    }
-
-    if (folderName) {
-      if (folderChip) folderChip.hidden = false;
-      if (folderLabel) folderLabel.textContent = folderName;
-      if (infoFolder) infoFolder.textContent = folderName;
-    } else {
-      if (folderChip) folderChip.hidden = true;
-      if (infoFolder) infoFolder.textContent = "Tanpa folder";
-    }
-
-    renderMetadataTags();
-    renderReminder();
-  }
-
-  function togglePin() {
-    pinned = !pinned;
-    q("[data-pin-switch]")?.classList.toggle("is-on", pinned);
-    const state = q("[data-pin-state]");
-    if (state) state.textContent = pinned ? "Dipin" : "Tidak dipin";
-  }
-
   function warningStorageKey() {
     return `ruangkitha_catatan_sensitive_notice_v1:${userId}`;
   }
-
 
   function tagCatalogStorageKey() {
     return `ruangkitha_catatan_tag_catalog_preview_v1:${userId}:${scope}`;
@@ -237,13 +323,17 @@
     try { localStorage.setItem(tagCatalogStorageKey(), JSON.stringify(availableTags)); } catch {}
   }
 
+  function tagFingerprint(tags = selectedTags) {
+    return JSON.stringify(Array.from(tags || []).map(normalizeTag).filter(Boolean).sort());
+  }
+
   function showTagBackendWarning(error) {
     if (tagBackendWarningShown) return;
     tagBackendWarningShown = true;
     if (window.NotesService?.tagSchemaBelumTerpasang?.(error)) {
       showToast("Backend Tag belum aktif — jalankan SQL 004B di Supabase dulu.");
     } else {
-      showToast(error?.message || "Katalog tag belum dapat disinkronkan.");
+      showToast(error?.message || "Tag belum dapat disinkronkan ke Supabase.");
     }
   }
 
@@ -266,10 +356,79 @@
     }
   }
 
-  function maybeShowSensitiveNotice() {
-    let hidden = false;
-    try { hidden = localStorage.getItem(warningStorageKey()) === "hidden"; } catch {}
-    if (!hidden) setLayer("[data-sensitive-layer]", true);
+  async function loadSelectedTags() {
+    if (!noteId || !tagBackendReady || !window.NotesService?.ambilTagCatatan) {
+      selectedTags = new Set();
+      lastSavedTagFingerprint = tagFingerprint();
+      tagDirty = false;
+      return;
+    }
+    try {
+      const tags = await window.NotesService.ambilTagCatatan(noteId);
+      selectedTags = new Set((tags || []).map(normalizeTag).filter(Boolean));
+      lastSavedTagFingerprint = tagFingerprint();
+      tagDirty = false;
+    } catch (error) {
+      console.error("[Checklist Tags Load]", error);
+      if (window.NotesService?.tagSchemaBelumTerpasang?.(error)) tagBackendReady = false;
+      showTagBackendWarning(error);
+    }
+  }
+
+  async function saveTagsNow({ announce = false } = {}) {
+    if (noteReadOnly || !noteId || !tagBackendReady || !window.NotesService?.syncTagCatatan) return [];
+    const currentFingerprint = tagFingerprint();
+    if (!tagDirty && currentFingerprint === lastSavedTagFingerprint) return Array.from(selectedTags);
+
+    if (tagSaveRunning) {
+      tagSaveAgain = true;
+      if (currentTagSavePromise) await currentTagSavePromise;
+      if (tagDirty && tagBackendReady) return saveTagsNow({ announce });
+      return Array.from(selectedTags);
+    }
+
+    const requestedNames = Array.from(selectedTags);
+    const requestedFingerprint = tagFingerprint(new Set(requestedNames));
+    tagSaveRunning = true;
+    currentTagSavePromise = (async () => {
+      try {
+        const tags = await window.NotesService.syncTagCatatan(noteId, requestedNames);
+        const savedSet = new Set((tags || []).map(normalizeTag).filter(Boolean));
+        const savedFingerprint = tagFingerprint(savedSet);
+        availableTags = Array.from(new Set([...availableTags, ...savedSet])).sort();
+        lastSavedTagFingerprint = savedFingerprint;
+
+        if (tagFingerprint() === requestedFingerprint) {
+          selectedTags = savedSet;
+          tagDirty = false;
+        } else {
+          tagDirty = true;
+          tagSaveAgain = true;
+        }
+        renderMetadataTags();
+        if (announce && !tagDirty) showToast("Tag tersimpan.");
+        return Array.from(savedSet);
+      } catch (error) {
+        tagDirty = true;
+        console.error("[Checklist Tags Save]", error);
+        if (window.NotesService?.tagSchemaBelumTerpasang?.(error)) tagBackendReady = false;
+        showTagBackendWarning(error);
+        return Array.from(selectedTags);
+      }
+    })();
+
+    try {
+      return await currentTagSavePromise;
+    } finally {
+      currentTagSavePromise = null;
+      tagSaveRunning = false;
+      if (tagSaveAgain && tagBackendReady) {
+        tagSaveAgain = false;
+        if (tagDirty && tagFingerprint() !== lastSavedTagFingerprint) setTimeout(() => saveTagsNow(), 0);
+      } else {
+        tagSaveAgain = false;
+      }
+    }
   }
 
   function renderMetadataTags() {
@@ -281,14 +440,14 @@
       const button = document.createElement("button");
       button.type = "button";
       button.className = "catatan-context-chip is-tag";
-      button.disabled = editorMode !== "edit";
+      button.disabled = noteReadOnly || editorMode !== "edit";
       button.innerHTML = `<span>#${tag}</span>`;
-      button.addEventListener("click", openTagSheet);
+      if (!button.disabled) button.addEventListener("click", openTagSheet);
       host.appendChild(button);
     });
 
     const add = q("[data-tag-add]");
-    if (add) add.hidden = editorMode !== "edit";
+    if (add) add.hidden = noteReadOnly || editorMode !== "edit";
 
     const info = q("[data-info-tags]");
     if (info) {
@@ -331,7 +490,7 @@
   }
 
   async function openTagSheet() {
-    if (editorMode !== "edit") return;
+    if (noteReadOnly || editorMode !== "edit") return;
     draftTags = new Set(selectedTags);
     const search = q("[data-tag-search]");
     if (search) search.value = "";
@@ -342,16 +501,23 @@
   }
 
   function closeTagSheet(apply = false) {
-    if (apply) {
-      selectedTags = new Set(draftTags);
+    if (apply && !noteReadOnly) {
+      const next = new Set(draftTags);
+      const changed = tagFingerprint(next) !== tagFingerprint(selectedTags);
+      selectedTags = next;
+      if (changed) tagDirty = true;
       renderMetadataTags();
+      if (changed) {
+        if (noteId) saveTagsNow();
+        else scheduleChecklistAutosave(120);
+      }
     }
     setLayer("[data-tag-layer]", false);
   }
 
   async function createTagFromSearch() {
     const value = normalizeTag(q("[data-tag-search]")?.value || "");
-    if (!value) return;
+    if (!value || noteReadOnly) return;
 
     let finalValue = value;
     let mayUseTag = true;
@@ -387,9 +553,18 @@
     return qa("[data-checklist-item]");
   }
 
+  function serializableItems() {
+    return itemElements().map((item, index) => ({
+      id: clean(item.dataset.itemId),
+      text: itemText(item.querySelector("[data-check-text]")?.value),
+      completed: item.classList.contains("is-complete"),
+      sortOrder: index
+    })).filter(item => item.text);
+  }
+
   function updateProgress() {
-    const items = itemElements().filter(item => clean(item.querySelector("[data-check-text]")?.value));
-    const done = items.filter(item => item.classList.contains("is-complete")).length;
+    const items = serializableItems();
+    const done = items.filter(item => item.completed).length;
     const total = items.length;
     const percent = total ? Math.round((done / total) * 100) : 0;
     const label = q("[data-progress-label]");
@@ -403,7 +578,7 @@
   function syncViewOnlyItems(view) {
     itemElements().forEach(item => {
       const input = item.querySelector("[data-check-text]");
-      const empty = !clean(input?.value);
+      const empty = !itemText(input?.value);
       item.classList.toggle("is-view-empty", view && empty);
       item.setAttribute("aria-hidden", view && empty ? "true" : "false");
     });
@@ -422,7 +597,7 @@
   }
 
   function focusItem(item, atEnd = true) {
-    if (editorMode !== "edit") return;
+    if (noteReadOnly || editorMode !== "edit") return;
     const input = item?.querySelector("[data-check-text]");
     if (!input) return;
     input.focus();
@@ -433,6 +608,7 @@
   }
 
   function removeItem(item, focusNeighbor = true) {
+    if (noteReadOnly) return;
     const list = q("[data-checklist-list]");
     if (!item || !list) return;
     const items = itemElements();
@@ -449,13 +625,15 @@
       focusItem(previous || next, true);
     }
     updateProgress();
+    scheduleChecklistAutosave(120);
   }
 
-  function createItem(text = "", complete = false) {
+  function createItem(text = "", complete = false, id = "") {
     itemSequence += 1;
     const item = document.createElement("div");
     item.className = "catatan-checklist-item";
     item.dataset.checklistItem = String(itemSequence);
+    if (id) item.dataset.itemId = id;
     item.innerHTML = `
       <button class="catatan-check-toggle" type="button" role="checkbox" aria-checked="false" aria-label="Tandai selesai" data-check-toggle>
         <ion-icon name="ellipse-outline" aria-hidden="true"></ion-icon>
@@ -475,9 +653,11 @@
     input.addEventListener("input", () => {
       resizeItem(input);
       updateProgress();
+      scheduleChecklistAutosave();
     });
+    input.addEventListener("blur", () => saveChecklistNow());
     input.addEventListener("keydown", event => {
-      if (editorMode !== "edit") return;
+      if (noteReadOnly || editorMode !== "edit") return;
       if (event.key === "Enter" && !event.shiftKey) {
         event.preventDefault();
         const newItem = createItem("");
@@ -493,11 +673,13 @@
     });
 
     toggle.addEventListener("click", () => {
+      if (noteReadOnly) return;
       setItemComplete(item, !item.classList.contains("is-complete"));
+      scheduleChecklistAutosave(120);
     });
 
     remove.addEventListener("click", () => {
-      if (editorMode !== "edit") return;
+      if (noteReadOnly || editorMode !== "edit") return;
       removeItem(item, true);
     });
 
@@ -505,7 +687,7 @@
   }
 
   function addItem(focus = true) {
-    if (editorMode !== "edit") return;
+    if (noteReadOnly || editorMode !== "edit") return;
     const list = q("[data-checklist-list]");
     if (!list) return;
     const item = createItem("");
@@ -521,8 +703,206 @@
     updateProgress();
   }
 
+  function renderLoadedItems(items = []) {
+    const list = q("[data-checklist-list]");
+    if (!list) return;
+    list.textContent = "";
+    itemSequence = 0;
+    (items || []).forEach(item => {
+      list.appendChild(createItem(item.text || item.item_text || "", Boolean(item.completed ?? item.is_completed), clean(item.id)));
+    });
+    if (!list.children.length) list.appendChild(createItem(""));
+    itemElements().forEach(item => resizeItem(item.querySelector("[data-check-text]")));
+    updateProgress();
+  }
+
+  function checklistSnapshot() {
+    const items = serializableItems();
+    return {
+      id: noteId || null,
+      familyId: activeFamilyId || null,
+      scope,
+      visibility,
+      title: String(q("[data-note-title]")?.value || "").trim(),
+      bodyHtml: "",
+      bodyText: items.map(item => item.text).join("\n"),
+      folderName,
+      pinned,
+      items
+    };
+  }
+
+  function checklistFingerprint(snapshot = checklistSnapshot()) {
+    return JSON.stringify({
+      familyId: snapshot.familyId || "",
+      scope: snapshot.scope,
+      visibility: snapshot.visibility,
+      title: snapshot.title,
+      folderName: snapshot.folderName || "",
+      pinned: Boolean(snapshot.pinned),
+      items: snapshot.items.map(item => ({ text: item.text, completed: Boolean(item.completed) }))
+    });
+  }
+
+  function hasMeaningfulChecklist(snapshot = checklistSnapshot()) {
+    return Boolean(snapshot.title || snapshot.items.length);
+  }
+
+  function updateNoteUrl() {
+    if (!noteId) return;
+    const url = new URL(location.href);
+    url.searchParams.set("id", noteId);
+    url.searchParams.set("scope", scope);
+    history.replaceState(history.state, "", `${url.pathname}${url.search}${url.hash}`);
+  }
+
+  function showBackendWarning(error) {
+    if (backendWarningShown) return;
+    backendWarningShown = true;
+    if (window.NotesService?.checklistSchemaBelumTerpasang?.(error)) {
+      showToast("Backend Checklist belum aktif — jalankan SQL 004C di Supabase dulu.");
+    } else if (window.NotesService?.schemaBelumTerpasang?.(error)) {
+      showToast("Backend Catatan belum aktif — jalankan SQL 004A di Supabase dulu.");
+    } else {
+      showToast(error?.message || "Checklist belum dapat disimpan ke Supabase.");
+    }
+  }
+
+  async function saveChecklistNow({ announce = false } = {}) {
+    clearTimeout(autosaveTimer);
+    autosaveTimer = null;
+
+    if (!checklistBackendReady || noteReadOnly || hydratingNote) return null;
+    if (saveRunning) {
+      saveAgain = true;
+      if (currentSavePromise) await currentSavePromise;
+      if (noteDirty) return saveChecklistNow({ announce });
+      return null;
+    }
+
+    const snapshot = checklistSnapshot();
+    const fingerprint = checklistFingerprint(snapshot);
+    if (!noteDirty && fingerprint === lastSavedFingerprint) {
+      if (tagDirty && noteId) await saveTagsNow();
+      return null;
+    }
+
+    if (!noteId && !hasMeaningfulChecklist(snapshot)) {
+      noteDirty = false;
+      return null;
+    }
+
+    saveRunning = true;
+    noteDirty = false;
+    q("[data-catatan-checklist]")?.setAttribute("data-save-state", "saving");
+
+    currentSavePromise = (async () => {
+      try {
+        const saved = await window.NotesService.simpanChecklist(snapshot);
+        noteId = clean(saved?.id, noteId);
+        noteOwnerId = clean(saved?.created_by, userId);
+        updateNoteUrl();
+
+        const savedItems = await window.NotesService.syncChecklistItems(noteId, snapshot.items);
+        const currentFingerprint = checklistFingerprint();
+        if (currentFingerprint === fingerprint) {
+          const visibleItems = itemElements().filter(item => itemText(item.querySelector("[data-check-text]")?.value));
+          (savedItems || []).forEach((item, index) => {
+            if (visibleItems[index] && item?.id) visibleItems[index].dataset.itemId = item.id;
+          });
+          lastSavedFingerprint = fingerprint;
+          noteDirty = false;
+        } else {
+          noteDirty = true;
+          saveAgain = true;
+        }
+
+        q("[data-catatan-checklist]")?.setAttribute("data-save-state", "saved");
+        if (tagDirty || (noteId && selectedTags.size && lastSavedTagFingerprint === "[]")) await saveTagsNow();
+        if (announce && !noteDirty) showToast("Checklist tersimpan.");
+        return saved;
+      } catch (error) {
+        noteDirty = true;
+        q("[data-catatan-checklist]")?.setAttribute("data-save-state", "error");
+        console.error("[Checklist Save]", error);
+        if (window.NotesService?.checklistSchemaBelumTerpasang?.(error)) checklistBackendReady = false;
+        showBackendWarning(error);
+        return null;
+      }
+    })();
+
+    try {
+      return await currentSavePromise;
+    } finally {
+      currentSavePromise = null;
+      saveRunning = false;
+      if (saveAgain) {
+        saveAgain = false;
+        if (noteDirty) setTimeout(() => saveChecklistNow(), 0);
+      }
+    }
+  }
+
+  function scheduleChecklistAutosave(delay = 700) {
+    if (!checklistBackendReady || noteReadOnly || hydratingNote) return;
+    noteDirty = true;
+    clearTimeout(autosaveTimer);
+    autosaveTimer = setTimeout(() => saveChecklistNow(), delay);
+  }
+
+  async function loadChecklistNote() {
+    if (!noteId || !window.NotesService) return true;
+    hydratingNote = true;
+    try {
+      const note = await window.NotesService.ambilCatatan(noteId);
+      if (!note) {
+        noteReadOnly = true;
+        setMode("view", false);
+        showToast("Checklist tidak ditemukan atau kamu tidak punya akses.");
+        return false;
+      }
+      if (note.note_type !== "checklist") {
+        noteReadOnly = true;
+        setMode("view", false);
+        showToast("Tipe catatan ini dibuka dari editor lain.");
+        return false;
+      }
+
+      scope = note.scope === "family" ? "family" : "personal";
+      visibility = note.visibility === "family-read" ? "family-read" : "private";
+      if (note.family_id) activeFamilyId = clean(note.family_id, activeFamilyId);
+      folderName = clean(note.folder_name);
+      pinned = Boolean(note.pinned);
+      noteOwnerId = clean(note.created_by);
+      noteReadOnly = Boolean(noteOwnerId && noteOwnerId !== userId);
+
+      const [items] = await Promise.all([
+        window.NotesService.ambilChecklistItems(noteId),
+        loadSelectedTags()
+      ]);
+
+      const title = q("[data-note-title]");
+      if (title) title.value = String(note.title || "");
+      renderLoadedItems(items);
+      resizeTitle();
+      await resolveMemberViewContext();
+      applyContext();
+      setMode(noteReadOnly ? "view" : "edit", false);
+      lastSavedFingerprint = checklistFingerprint();
+      noteDirty = false;
+      return true;
+    } catch (error) {
+      console.error("[Checklist Load]", error);
+      if (window.NotesService?.checklistSchemaBelumTerpasang?.(error)) checklistBackendReady = false;
+      showBackendWarning(error);
+      return false;
+    } finally {
+      hydratingNote = false;
+    }
+  }
+
   function setMode(mode, announce = true) {
-    editorMode = mode === "view" ? "view" : "edit";
+    editorMode = noteReadOnly ? "view" : (mode === "view" ? "view" : "edit");
     const root = q("[data-catatan-checklist]");
     const title = q("[data-note-title]");
     const toggle = q("[data-mode-toggle]");
@@ -533,29 +913,48 @@
     const view = editorMode === "view";
 
     root?.classList.toggle("is-view-mode", view);
-    if (title) title.readOnly = view;
-    qa("[data-check-text]").forEach(input => { input.readOnly = view; });
+    root?.classList.toggle("is-readonly", noteReadOnly);
+    if (title) title.readOnly = view || noteReadOnly;
+    qa("[data-check-text]").forEach(input => { input.readOnly = view || noteReadOnly; });
+    qa("[data-check-toggle]").forEach(button => { button.disabled = noteReadOnly; });
+    qa("[data-check-remove]").forEach(button => { button.disabled = noteReadOnly; });
+    const addItemButton = q("[data-add-item]");
+    if (addItemButton) addItemButton.disabled = noteReadOnly;
+
     syncViewOnlyItems(view);
     updateProgress();
-    if (visibilityChip) visibilityChip.disabled = view || scope !== "personal";
-    if (reminderChip) reminderChip.disabled = view;
-    if (toggle) toggle.setAttribute("aria-label", view ? "Edit checklist" : "Lihat hasil checklist");
+    if (visibilityChip) visibilityChip.disabled = noteReadOnly || view || scope !== "personal";
+    if (reminderChip) reminderChip.disabled = noteReadOnly || view;
+    if (toggle) {
+      toggle.hidden = noteReadOnly;
+      toggle.setAttribute("aria-label", view ? "Edit checklist" : "Lihat hasil checklist");
+    }
     if (label) label.textContent = view ? "Edit catatan" : "Lihat hasil";
     if (icon) icon.setAttribute("name", view ? "create-outline" : "eye-outline");
 
     renderMetadataTags();
+    applyMemberReadingView();
 
     if (view) {
       title?.blur();
       qa("[data-check-text]").forEach(input => input.blur());
-      if (announce) showToast("Mode Lihat hasil aktif — hanya isi catatan yang ditampilkan.");
+      if (announce && !noteReadOnly) showToast("Mode Lihat hasil aktif — hanya isi catatan yang ditampilkan.");
     } else if (announce) {
       showToast("Mode Edit aktif — kamu bisa mengubah isi catatan.");
     }
   }
 
+  function togglePin() {
+    if (noteReadOnly) return;
+    pinned = !pinned;
+    renderPinState();
+    scheduleChecklistAutosave(120);
+  }
+
   function setupSheets() {
-    q("[data-open-info]")?.addEventListener("click", () => openSheet("[data-info-layer]"));
+    q("[data-open-info]")?.addEventListener("click", () => {
+      if (!noteReadOnly) openSheet("[data-info-layer]");
+    });
     q("[data-info-close]")?.addEventListener("click", () => setLayer("[data-info-layer]", false));
     q("[data-visibility-close]")?.addEventListener("click", () => setLayer("[data-visibility-layer]", false));
     q("[data-reminder-close]")?.addEventListener("click", () => setLayer("[data-reminder-layer]", false));
@@ -584,19 +983,23 @@
     });
 
     q("[data-visibility-chip]")?.addEventListener("click", () => {
-      if (scope === "personal" && editorMode === "edit") openSheet("[data-visibility-layer]");
+      if (!noteReadOnly && scope === "personal" && editorMode === "edit") openSheet("[data-visibility-layer]");
     });
 
     qa("[data-set-visibility]").forEach(button => {
       button.addEventListener("click", () => {
-        visibility = button.dataset.setVisibility || "private";
+        if (noteReadOnly) return;
+        const value = String(button.dataset.setVisibility || "private").replace("_", "-");
+        visibility = value === "family-read" ? "family-read" : "private";
         renderVisibility();
         setLayer("[data-visibility-layer]", false);
+        scheduleChecklistAutosave(120);
       });
     });
 
     qa("[data-info-action]").forEach(button => {
       button.addEventListener("click", () => {
+        if (noteReadOnly) return;
         const action = button.dataset.infoAction;
         if (action === "pin") {
           togglePin();
@@ -620,16 +1023,15 @@
           return;
         }
         if (action === "promote") {
-          showToast("Pemindahan permanen ke Catatan Keluarga akan aktif bersama backend Catatan.");
+          showToast("Pemindahan permanen ke Catatan Keluarga akan aktif bersama backend Folder/Move berikutnya.");
           return;
         }
         const names = {
           folder: "Pemilihan Folder",
           color: "Warna Catatan",
-          reminder: "Reminder",
           related: "Catatan Terkait"
         };
-        showToast(`${names[action] || "Fitur"} akan aktif bersama backend Catatan.`);
+        showToast(`${names[action] || "Fitur"} akan aktif pada tahap backend berikutnya.`);
       });
     });
   }
@@ -640,16 +1042,42 @@
         try { localStorage.setItem(warningStorageKey(), "hidden"); } catch {}
       }
       setLayer("[data-sensitive-layer]", false);
-      if (editorMode === "edit") q("[data-note-title]")?.focus();
+      if (!noteReadOnly && editorMode === "edit") q("[data-note-title]")?.focus();
     });
+  }
+
+  function maybeShowSensitiveNotice() {
+    if (noteReadOnly) return;
+    let hidden = false;
+    try { hidden = localStorage.getItem(warningStorageKey()) === "hidden"; } catch {}
+    if (!hidden) setLayer("[data-sensitive-layer]", true);
   }
 
   function setupChecklist() {
     seedChecklist();
     q("[data-add-item]")?.addEventListener("click", () => addItem(true));
-    q("[data-note-title]")?.addEventListener("input", resizeTitle);
+    q("[data-note-title]")?.addEventListener("input", () => {
+      resizeTitle();
+      scheduleChecklistAutosave();
+    });
+    q("[data-note-title]")?.addEventListener("blur", () => saveChecklistNow());
     resizeTitle();
     q("[data-mode-toggle]")?.addEventListener("click", () => setMode(editorMode === "edit" ? "view" : "edit", true));
+
+    document.addEventListener("visibilitychange", () => {
+      if (document.visibilityState === "hidden") saveChecklistNow();
+    });
+    window.addEventListener("pagehide", () => { saveChecklistNow(); });
+
+    q("[data-editor-back]")?.addEventListener("click", async event => {
+      if (!checklistBackendReady || noteReadOnly || (!noteDirty && !autosaveTimer && !tagDirty && !tagSaveRunning)) return;
+      event.preventDefault();
+      const href = event.currentTarget.href;
+      await saveChecklistNow();
+      if (tagDirty && noteId) await saveTagsNow();
+      location.href = href;
+    });
+
     setupSheets();
     setupSensitiveNotice();
     setMode("edit", false);
@@ -659,7 +1087,15 @@
     const params = new URLSearchParams(location.search);
     scope = clean(params.get("scope"), "personal").toLowerCase();
     folderName = clean(params.get("folder"));
+    noteId = clean(params.get("id"));
+    sourceContext = clean(params.get("from")).toLowerCase();
+    memberSourceId = clean(params.get("member"));
+    if (sourceContext !== "member") {
+      sourceContext = "";
+      memberSourceId = "";
+    }
     if (!["family", "personal"].includes(scope)) scope = "personal";
+    if (scope === "family") visibility = "family-read";
 
     setupChecklist();
     applyContext();
@@ -671,14 +1107,32 @@
     }
 
     try {
-      const [user, family] = await Promise.all([
-        AuthService.ambilUserAktif(),
-        AuthRouter.ambilFamilyAktif()
-      ]);
-      if (!user || !family) return;
+      const user = await AuthService.ambilUserAktif();
+      if (!user) return;
       userId = clean(user.id, "guest");
-      activeFamilyId = clean(family.id);
-      tagBackendReady = Boolean(window.NotesService?.ambilTagCatalog && window.NotesService?.buatTag);
+
+      try {
+        const family = await AuthRouter.ambilFamilyAktif();
+        activeFamilyId = clean(family?.id);
+      } catch (familyError) {
+        console.warn("[Checklist Family Context]", familyError);
+        activeFamilyId = "";
+      }
+
+      checklistBackendReady = Boolean(
+        window.NotesService?.simpanChecklist &&
+        window.NotesService?.ambilCatatan &&
+        window.NotesService?.ambilChecklistItems &&
+        window.NotesService?.syncChecklistItems
+      );
+      tagBackendReady = Boolean(
+        window.NotesService?.ambilTagCatalog &&
+        window.NotesService?.buatTag &&
+        window.NotesService?.ambilTagCatatan &&
+        window.NotesService?.syncTagCatatan
+      );
+
+      if (noteId && checklistBackendReady) await loadChecklistNote();
       await loadTagCatalog();
       renderMetadataTags();
       maybeShowSensitiveNotice();
