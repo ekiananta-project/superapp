@@ -251,7 +251,7 @@
   }
 
   async function ambilHakLifecycleCatatan(noteIds = []) {
-    const ids = Array.from(new Set((Array.isArray(noteIds) ? noteIds : []).map(clean).filter(Boolean))).slice(0, 250);
+    const ids = Array.from(new Set((Array.isArray(noteIds) ? noteIds : []).map(value => clean(value)).filter(Boolean))).slice(0, 250);
     if (!ids.length) return {};
     const { data, error } = await client().rpc("notes_get_lifecycle_capabilities_v1", {
       p_note_ids: ids
@@ -288,7 +288,7 @@
   }
 
   async function arsipkanBanyak(noteIds = []) {
-    const ids = Array.from(new Set((Array.isArray(noteIds) ? noteIds : []).map(clean).filter(Boolean))).slice(0, 250);
+    const ids = Array.from(new Set((Array.isArray(noteIds) ? noteIds : []).map(value => clean(value)).filter(Boolean))).slice(0, 250);
     if (!ids.length) return 0;
     const { data, error } = await client().rpc("notes_archive_notes_v1", {
       p_note_ids: ids
@@ -309,7 +309,7 @@
   }
 
   async function ambilTagMapArsip(noteIds = []) {
-    const ids = Array.from(new Set((Array.isArray(noteIds) ? noteIds : []).map(clean).filter(Boolean))).slice(0, 250);
+    const ids = Array.from(new Set((Array.isArray(noteIds) ? noteIds : []).map(value => clean(value)).filter(Boolean))).slice(0, 250);
     if (!ids.length) return {};
     const { data, error } = await client().rpc("notes_get_archived_tags_v1", {
       p_note_ids: ids
@@ -394,7 +394,7 @@
   async function syncCatatanTerkait(noteId, relatedIds = []) {
     const id = clean(noteId);
     if (!id) throw new Error("Catatan belum tersimpan.");
-    const ids = Array.from(new Set((Array.isArray(relatedIds) ? relatedIds : []).map(clean).filter(Boolean))).slice(0, 250);
+    const ids = Array.from(new Set((Array.isArray(relatedIds) ? relatedIds : []).map(value => clean(value)).filter(Boolean))).slice(0, 250);
     const { data, error } = await client().rpc("notes_sync_related_v1", {
       p_note_id: id,
       p_related_ids: ids
@@ -493,7 +493,7 @@
   }
 
   async function ambilPreferensiCatatan(noteIds = []) {
-    const ids = Array.from(new Set((Array.isArray(noteIds) ? noteIds : []).map(clean).filter(Boolean))).slice(0, 250);
+    const ids = Array.from(new Set((Array.isArray(noteIds) ? noteIds : []).map(value => clean(value)).filter(Boolean))).slice(0, 250);
     if (!ids.length) return {};
 
     let result = await client().rpc("notes_get_preferences_v2", { p_note_ids: ids });
@@ -557,7 +557,7 @@
   }
 
   async function ambilTagMapCatatan(noteIds = []) {
-    const ids = Array.from(new Set((Array.isArray(noteIds) ? noteIds : []).map(clean).filter(Boolean))).slice(0, 250);
+    const ids = Array.from(new Set((Array.isArray(noteIds) ? noteIds : []).map(value => clean(value)).filter(Boolean))).slice(0, 250);
     if (!ids.length) return {};
     const { data, error } = await client().rpc("notes_get_tags_for_notes_v1", {
       p_note_ids: ids
@@ -576,7 +576,7 @@
   }
 
   async function ambilHakHapusCatatan(noteIds = []) {
-    const ids = Array.from(new Set((Array.isArray(noteIds) ? noteIds : []).map(clean).filter(Boolean))).slice(0, 250);
+    const ids = Array.from(new Set((Array.isArray(noteIds) ? noteIds : []).map(value => clean(value)).filter(Boolean))).slice(0, 250);
     if (!ids.length) return {};
     const { data, error } = await client().rpc("notes_get_delete_capabilities_v1", {
       p_note_ids: ids
