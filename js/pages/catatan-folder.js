@@ -13,6 +13,7 @@
   let familyId = "";
   let noteCount = 0;
   let renderedNotes = [];
+  let notesFingerprint = "";
 
   function clean(value, fallback = "") {
     const text = String(value ?? "").trim().replace(/\s+/g, " ");
@@ -107,7 +108,15 @@
       await NotesService.setPinCatatan(note.id, next);
       note._pinned = next;
       showToast(next ? "Catatan dipin." : "Pin dilepas.");
-      renderNotes(CatatanManagement.sortPinnedFirst(renderedNotes));
+      const sorted = CatatanManagement.sortPinnedFirst(renderedNotes);
+      renderNotes(sorted);
+      window.CatatanPerformance?.write?.("folder-notes", {
+        userId,
+        familyId,
+        scope,
+        memberId,
+        folderName
+      }, sorted);
     } catch (error) {
       console.error("[Catatan Folder Pin]", error);
       if (NotesService.customizationSchemaBelumTerpasang?.(error)) showToast("Jalankan SQL 004G agar Pin aktif.");
@@ -223,8 +232,15 @@
   function renderNotes(notes = []) {
     const grid = q("[data-folder-note-grid]");
     if (!grid) return;
+    const list = Array.isArray(notes) ? notes : [];
+    const nextFingerprint = window.CatatanPerformance?.fingerprint?.(list) || "";
+    if (nextFingerprint && nextFingerprint === notesFingerprint) {
+      noteCount = list.length;
+      return;
+    }
+    notesFingerprint = nextFingerprint;
     grid.textContent = "";
-    renderedNotes = Array.isArray(notes) ? notes : [];
+    renderedNotes = list;
     noteCount = renderedNotes.length;
     renderedNotes.forEach(note => {
       const shell = noteCard(note);
@@ -304,13 +320,20 @@
       } catch (metaError) {
         console.warn("[Catatan Folder Card Metadata]", metaError);
       }
-      renderNotes(CatatanManagement.sortPinnedFirst(notes));
+      const sorted = CatatanManagement.sortPinnedFirst(notes);
+      renderNotes(sorted);
+      window.CatatanPerformance?.write?.("folder-notes", {
+        userId,
+        familyId,
+        scope,
+        memberId,
+        folderName
+      }, sorted);
     } catch (error) {
       console.error("[Catatan Folder Backend]", error);
       if (NotesService?.managementSchemaBelumTerpasang?.(error)) showToast("Backend lifecycle belum aktif — jalankan SQL 004F di Supabase dulu.");
       else if (NotesService?.folderSchemaBelumTerpasang?.(error)) showToast("Backend Folder belum aktif — jalankan SQL 004D di Supabase dulu.");
       else showToast(error?.message || "Isi folder belum dapat dimuat.");
-      renderNotes([]);
     }
   }
 
@@ -376,7 +399,18 @@
         applyMemberContext(member?.profile?.display_name);
       }
 
-      await loadNotes();
+      const perf = window.CatatanPerformance;
+      const cacheContext = { userId, familyId, scope, memberId, folderName };
+      const cachedNotes = perf?.read?.("folder-notes", cacheContext);
+      if (Array.isArray(cachedNotes)) renderNotes(cachedNotes);
+      const loading = Array.isArray(cachedNotes)
+        ? null
+        : perf?.startSkeleton?.(q("[data-folder-note-grid]"), { kind: "notes", count: 4 });
+      try {
+        await loadNotes();
+      } finally {
+        loading?.finish?.();
+      }
     } catch (error) {
       console.error("[Catatan Folder]", error);
       showToast("Folder Catatan tidak dapat dimuat.");
@@ -384,6 +418,11 @@
       q("[data-catatan-folder]")?.setAttribute("aria-busy", "false");
     }
   }
+
+  window.addEventListener("pageshow", event => {
+    if (!event.persisted || !userId || !folderName) return;
+    loadNotes();
+  });
 
   document.addEventListener("DOMContentLoaded", init, { once: true });
 })();

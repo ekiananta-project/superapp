@@ -1,4 +1,4 @@
-const CACHE_NAME = "ruangkitha-v2.0.0a40-catatan-reminder-backend-v1";
+const CACHE_NAME = "ruangkitha-v2.0.0a41-catatan-performance-flicker";
 const OFFLINE_URL = "./offline.html";
 
 const APP_FILES = [
@@ -77,6 +77,7 @@ const APP_FILES = [
   "./js/pages/catatan-editor.js",
   "./js/pages/catatan-checklist.js",
   "./js/pages/catatan-management.js",
+  "./js/pages/catatan-performance.js",
   "./js/pages/catatan-related.js",
   "./js/pages/catatan-archive.js",
   "./js/pages/catatan-reminder-runtime.js",

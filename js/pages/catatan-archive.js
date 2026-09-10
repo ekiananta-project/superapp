@@ -9,6 +9,7 @@
   let familyId = "";
   let source = "";
   let archiveNotes = [];
+  let archiveFingerprint = "";
 
   function clean(value, fallback = "") {
     const text = String(value ?? "").trim().replace(/\s+/g, " ");
@@ -207,7 +208,14 @@
   }
 
   function renderArchive(notes = []) {
-    archiveNotes = notes;
+    const list = Array.isArray(notes) ? notes : [];
+    const nextFingerprint = window.CatatanPerformance?.fingerprint?.(list) || "";
+    if (nextFingerprint && nextFingerprint === archiveFingerprint) {
+      archiveNotes = list;
+      return;
+    }
+    archiveFingerprint = nextFingerprint;
+    archiveNotes = list;
     const grid = q("[data-archive-note-grid]");
     if (!grid) return;
     grid.textContent = "";
@@ -262,11 +270,15 @@
         note._canDeletePermanent = Boolean(capabilities[note.id]?.canDeletePermanent);
       });
       renderArchive(notes);
+      window.CatatanPerformance?.write?.("archive-notes", {
+        userId,
+        familyId,
+        scope
+      }, notes);
     } catch (error) {
       console.error("[Catatan Archive Load]", error);
       if (NotesService.lifecycleSchemaBelumTerpasang?.(error)) showToast("Backend Arsip belum aktif — jalankan SQL 004F di Supabase dulu.");
       else showToast(error?.message || "Arsip belum dapat dimuat.");
-      renderArchive([]);
     }
   }
 
@@ -302,7 +314,18 @@
           return;
         }
       }
-      await loadArchive();
+      const perf = window.CatatanPerformance;
+      const cacheContext = { userId, familyId, scope };
+      const cachedNotes = perf?.read?.("archive-notes", cacheContext);
+      if (Array.isArray(cachedNotes)) renderArchive(cachedNotes);
+      const loading = Array.isArray(cachedNotes)
+        ? null
+        : perf?.startSkeleton?.(q("[data-archive-note-grid]"), { kind: "notes", count: 4 });
+      try {
+        await loadArchive();
+      } finally {
+        loading?.finish?.();
+      }
     } catch (error) {
       console.error("[Catatan Archive Init]", error);
       showToast("Arsip belum dapat dibuka.");
@@ -310,6 +333,11 @@
       q("[data-catatan-archive]")?.setAttribute("aria-busy", "false");
     }
   }
+
+  window.addEventListener("pageshow", event => {
+    if (!event.persisted || !userId) return;
+    loadArchive();
+  });
 
   document.addEventListener("DOMContentLoaded", init, { once: true });
 })();

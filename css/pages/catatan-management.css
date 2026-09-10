@@ -807,3 +807,53 @@ html[data-theme="dark"] .catatan-archive-area .catatan-area-main {
 html[data-theme="dark"] .catatan-archive-area .catatan-standard-header {
   background: color-mix(in srgb, var(--color-background, #0b0d0c) 94%, transparent) !important;
 }
+
+/* RuangKitha v2.0.0a41 — Catatan performance/flicker foundation */
+.catatan-skeleton-card {
+  position: relative;
+  min-height: 132px;
+  padding: 16px;
+  border: 1px solid var(--color-border, #e0e4e1);
+  border-radius: 18px;
+  background: var(--color-surface, #fff);
+  overflow: hidden;
+}
+.catatan-skeleton-card.is-folders { min-height: 92px; }
+.catatan-skeleton-card::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  transform: translateX(-100%);
+  background: linear-gradient(90deg, transparent, color-mix(in srgb, var(--color-text, #18201b) 5%, transparent), transparent);
+  animation: catatan-skeleton-sweep 1.35s ease-in-out infinite;
+  pointer-events: none;
+}
+.catatan-skeleton-icon,
+.catatan-skeleton-line {
+  display: block;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--color-text, #18201b) 8%, var(--color-surface, #fff));
+}
+.catatan-skeleton-icon {
+  width: 28px;
+  height: 28px;
+  margin-bottom: 13px;
+  border-radius: 9px;
+}
+.catatan-skeleton-line { height: 9px; margin-top: 8px; }
+.catatan-skeleton-line.is-title { width: 62%; height: 11px; margin-top: 0; }
+.catatan-skeleton-line.is-body { width: 88%; }
+.catatan-skeleton-line.is-meta { width: 42%; margin-top: 16px; }
+.catatan-skeleton-card.is-folders .catatan-skeleton-line.is-body { width: 48%; }
+.catatan-skeleton-card.is-folders .catatan-skeleton-line.is-meta { display: none; }
+@keyframes catatan-skeleton-sweep { to { transform: translateX(100%); } }
+@media (prefers-reduced-motion: reduce) {
+  .catatan-skeleton-card::after { animation: none; }
+}
+
+/* Existing notes must not flash default editor values while Supabase is hydrating. */
+html[data-catatan-existing-note="true"] [data-catatan-editor][aria-busy="true"] .catatan-editor-main,
+html[data-catatan-existing-note="true"] [data-catatan-editor][aria-busy="true"] .catatan-editor-toolbar,
+html[data-catatan-existing-note="true"] [data-catatan-checklist][aria-busy="true"] .catatan-editor-main {
+  visibility: hidden;
+}

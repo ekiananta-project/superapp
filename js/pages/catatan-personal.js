@@ -10,6 +10,9 @@
   let notesById = new Map();
   let selectionMode = false;
   const selectedIds = new Set();
+  let notesFingerprint = "";
+  let foldersFingerprint = "";
+
 
   function clean(value) {
     return String(value ?? "").trim().replace(/\s+/g, " ");
@@ -106,7 +109,9 @@
       await NotesService.setPinCatatan(note.id, next);
       note._pinned = next;
       showToast(next ? "Catatan dipin." : "Pin dilepas.");
-      renderBackendNotes(CatatanManagement.sortPinnedFirst(Array.from(notesById.values())));
+      const sorted = CatatanManagement.sortPinnedFirst(Array.from(notesById.values()));
+      renderBackendNotes(sorted);
+      window.CatatanPerformance?.write?.("personal-notes", { userId }, sorted);
     } catch (error) {
       console.error("[Catatan Personal Pin]", error);
       if (NotesService.customizationSchemaBelumTerpasang?.(error)) showToast("Jalankan SQL 004G agar Pin aktif.");
@@ -279,6 +284,13 @@
   function renderBackendNotes(notes = []) {
     const grid = q("[data-personal-note-grid]");
     if (!grid) return;
+    const nextFingerprint = window.CatatanPerformance?.fingerprint?.(notes) || "";
+    if (nextFingerprint && nextFingerprint === notesFingerprint) {
+      backendNoteCount = notes.length;
+      renderSelectionUI();
+      return;
+    }
+    notesFingerprint = nextFingerprint;
     grid.textContent = "";
     backendNoteCount = notes.length;
     notesById = new Map(notes.map(note => [clean(note.id), note]));
@@ -293,6 +305,12 @@
   function renderBackendFolders(folders = []) {
     const grid = q("[data-personal-folder-grid]");
     if (!grid) return;
+    const nextFingerprint = window.CatatanPerformance?.fingerprint?.(folders) || "";
+    if (nextFingerprint && nextFingerprint === foldersFingerprint) {
+      backendFolderCount = folders.length;
+      return;
+    }
+    foldersFingerprint = nextFingerprint;
     grid.textContent = "";
     backendFolderCount = folders.length;
     folders.forEach(folder => grid.appendChild(folderCard(folder)));
@@ -390,7 +408,9 @@
         else if (NotesService.managementSchemaBelumTerpasang?.(metaError)) showToast("Jalankan SQL 004E agar tag kartu aktif.");
         else console.warn("[Catatan Personal Card Metadata]", metaError);
       }
-      renderBackendNotes(CatatanManagement.sortPinnedFirst(notes));
+      const sorted = CatatanManagement.sortPinnedFirst(notes);
+      renderBackendNotes(sorted);
+      window.CatatanPerformance?.write?.("personal-notes", { userId }, sorted);
     } catch (error) {
       console.error("[Catatan Personal Backend]", error);
       if (NotesService.folderSchemaBelumTerpasang?.(error)) showToast("Backend Folder belum aktif — jalankan SQL 004D di Supabase dulu.");
@@ -404,6 +424,7 @@
     try {
       const folders = await NotesService.ambilFolderCatalog("personal", null);
       renderBackendFolders(folders);
+      window.CatatanPerformance?.write?.("personal-folders", { userId }, folders || []);
     } catch (error) {
       console.warn("[Catatan Personal Folder]", error);
       if (NotesService.managementSchemaBelumTerpasang?.(error)) showToast("Backend management belum aktif — jalankan SQL 004E di Supabase dulu.");
@@ -451,13 +472,37 @@
       const user = await AuthService.ambilUserAktif();
       if (!user) return;
       userId = clean(user.id);
-      await Promise.all([loadBackendNotes(), loadBackendFolders()]);
+
+      const perf = window.CatatanPerformance;
+      const cachedNotes = perf?.read?.("personal-notes", { userId });
+      const cachedFolders = perf?.read?.("personal-folders", { userId });
+      if (Array.isArray(cachedNotes)) renderBackendNotes(cachedNotes);
+      if (Array.isArray(cachedFolders)) renderBackendFolders(cachedFolders);
+
+      const notesLoading = Array.isArray(cachedNotes)
+        ? null
+        : perf?.startSkeleton?.(q("[data-personal-note-grid]"), { kind: "notes", count: 4 });
+      const foldersLoading = Array.isArray(cachedFolders)
+        ? null
+        : perf?.startSkeleton?.(q("[data-personal-folder-grid]"), { kind: "folders", count: 2 });
+
+      try {
+        await Promise.all([loadBackendNotes(), loadBackendFolders()]);
+      } finally {
+        notesLoading?.finish?.();
+        foldersLoading?.finish?.();
+      }
     } catch (error) {
       console.error("[Catatan Personal]", error);
     } finally {
       q("[data-catatan-personal]")?.setAttribute("aria-busy", "false");
     }
   }
+
+  window.addEventListener("pageshow", event => {
+    if (!event.persisted || !userId) return;
+    Promise.allSettled([loadBackendNotes(), loadBackendFolders()]);
+  });
 
   document.addEventListener("DOMContentLoaded", init, { once: true });
 })();

@@ -5,6 +5,7 @@
   const qa = selector => Array.from(document.querySelectorAll(selector));
   let toastTimer = null;
   let createScope = null;
+  let membersFingerprint = "";
 
   function clean(value, fallback = "") {
     const text = String(value ?? "").trim().replace(/\s+/g, " ");
@@ -114,6 +115,11 @@
     if (!section || !root) return;
 
     const others = (members || []).filter(item => item?.user_id && item.user_id !== userId);
+    const nextFingerprint = window.CatatanPerformance?.fingerprint?.(
+      others.map(item => ({ id: item?.user_id, name: item?.profile?.display_name || "" }))
+    ) || "";
+    if (nextFingerprint && nextFingerprint === membersFingerprint) return;
+    membersFingerprint = nextFingerprint;
     root.replaceChildren();
 
     if (!others.length) {
@@ -179,13 +185,23 @@
       if (familyMeta) familyMeta.textContent = `Ruang bersama ${familyName}`;
       if (personalMeta) personalMeta.textContent = `Ruang pribadi ${personalName}`;
 
+      const perf = window.CatatanPerformance;
+      const homeContext = { userId: clean(user.id), familyId: clean(family.id) };
+      const cachedMembers = perf?.read?.("home-members", homeContext);
+      if (Array.isArray(cachedMembers)) renderMembers(cachedMembers, user.id);
+
       try {
         const members = await FamilyService.ambilAnggotaKeluarga(family.id);
         renderMembers(members, user.id);
+        perf?.write?.("home-members", homeContext, members || []);
       } catch (error) {
         console.warn("[Catatan Home members]", error);
-        renderMembers([], user.id);
+        if (!Array.isArray(cachedMembers)) renderMembers([], user.id);
       }
+
+      // Warm Personal + Family card/folder snapshots after Home is ready.
+      // This is intentionally fire-and-forget so navigation stays responsive.
+      perf?.prefetchCore?.({ userId: user.id, familyId: family.id });
     } catch (error) {
       console.error("[Catatan Home]", error);
     } finally {
