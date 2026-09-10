@@ -141,8 +141,9 @@
     card.dataset.noteId = clean(note?.id);
     CatatanManagement.applyCardColor(card, note?.card_color || "default");
     const isChecklist = note?.note_type === "checklist";
+    const isReminder = note?.note_type === "reminder";
     const title = clean(note?.title, "Tanpa judul");
-    const body = clean(note?.body_text) || (isChecklist ? "Checklist belum memiliki item." : "Catatan belum memiliki isi.");
+    const body = clean(note?.body_text) || (isChecklist ? "Checklist belum memiliki item." : isReminder ? "Reminder belum memiliki catatan." : "Catatan belum memiliki isi.");
     const preview = body.length > 180 ? `${body.slice(0, 177)}...` : body;
     const tags = Array.isArray(note?._tags) ? note._tags : [];
     const ownerLabel = scope === "family"
@@ -152,7 +153,7 @@
 
     const type = document.createElement("span");
     type.className = "catatan-note-type";
-    type.innerHTML = `<ion-icon name="${isChecklist ? "checkbox-outline" : "document-text-outline"}" aria-hidden="true"></ion-icon>`;
+    type.innerHTML = `<ion-icon name="${isChecklist ? "checkbox-outline" : isReminder ? "notifications-outline" : "document-text-outline"}" aria-hidden="true"></ion-icon>`;
     const titleEl = document.createElement("strong");
     titleEl.textContent = title;
     const previewEl = document.createElement("span");

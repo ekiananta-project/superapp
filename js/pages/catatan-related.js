@@ -98,6 +98,7 @@
       const url = new URL(page, location.href);
       url.searchParams.set("scope", note.scope === "family" ? "family" : "personal");
       url.searchParams.set("id", note.id);
+      if (note.note_type === "reminder") url.searchParams.set("type", "reminder");
       if (note.folder_name) url.searchParams.set("folder", note.folder_name);
       if (note.scope === "personal" && note.created_by && note.created_by !== ctx.userId) {
         url.searchParams.set("from", "member");
@@ -232,9 +233,9 @@
 
     async function loadRelated({ explicit = false } = {}) {
       const ctx = context();
-      if (ctx.isReminder || !ctx.noteId || !window.NotesService?.ambilCatatanTerkait) {
+      if (!ctx.noteId || !window.NotesService?.ambilCatatanTerkait) {
         related = [];
-        loaded = !ctx.noteId || ctx.isReminder;
+        loaded = !ctx.noteId;
         render();
         return [];
       }
@@ -271,10 +272,6 @@
     async function openPicker() {
       if (busy) return;
       const ctxBefore = context();
-      if (ctxBefore.isReminder) {
-        toast("Catatan Terkait untuk Reminder akan aktif bersama backend Reminder.");
-        return;
-      }
       const id = await ensureNote();
       if (!id) return;
 
@@ -311,10 +308,6 @@
     async function openSingle({ onSelect, currentTargetId = "" } = {}) {
       if (busy) return;
       const ctxBefore = context();
-      if (ctxBefore.isReminder) {
-        toast("Tautan ke Reminder akan aktif setelah backend Reminder tersedia.");
-        return;
-      }
       const id = await ensureNote();
       if (!id) return;
       if (!ctxBefore.canManage) {

@@ -25,10 +25,10 @@
 
   <link rel="stylesheet" href="css/style.css">
   <link rel="stylesheet" href="css/theme.css">
-  <link rel="stylesheet" href="css/pages/catatan-home.css?v=20260910-v200a39e">
-  <link rel="stylesheet" href="css/pages/catatan-editor.css?v=20260910-v200a39">
+  <link rel="stylesheet" href="css/pages/catatan-home.css?v=20260910-v200a40">
+  <link rel="stylesheet" href="css/pages/catatan-editor.css?v=20260910-v200a40">
   <style id="ruangkitha-auth-cloak">html[data-auth-guard] body{visibility:hidden!important}</style>
-  <link rel="stylesheet" href="css/pages/catatan-management.css?v=20260910-v200a39">
+  <link rel="stylesheet" href="css/pages/catatan-management.css?v=20260910-v200a40">
 </head>
 <body>
 <div class="aplikasi catatan-editor" data-catatan-editor aria-busy="true">
@@ -318,9 +318,43 @@
           <input type="time" data-reminder-time aria-label="Waktu reminder">
         </label>
       </div>
+      <label class="catatan-reminder-recurrence">
+        <span>Ulangi</span>
+        <select data-reminder-recurrence aria-label="Pengulangan reminder">
+          <option value="none">Tidak berulang</option>
+          <option value="daily">Setiap hari</option>
+          <option value="weekly">Setiap minggu</option>
+          <option value="monthly">Setiap bulan</option>
+          <option value="yearly">Setiap tahun</option>
+        </select>
+      </label>
       <div class="catatan-reminder-actions">
-        <button class="is-danger" type="button" data-reminder-remove hidden>Hapus reminder</button>
+        <button class="is-danger" type="button" data-reminder-remove hidden>Hapus jadwal</button>
         <button class="is-primary" type="button" data-reminder-save>Simpan</button>
+      </div>
+    </section>
+  </div>
+
+  <div class="catatan-sheet-layer" data-reminder-recipient-layer hidden>
+    <section class="catatan-sheet catatan-editor-sheet catatan-reminder-recipient-sheet" role="dialog" aria-modal="true" aria-labelledby="reminder-recipient-title">
+      <div class="catatan-sheet-handle" aria-hidden="true"></div>
+      <div class="catatan-sheet-header">
+        <div><small>Pengingat keluarga</small><h2 id="reminder-recipient-title">Pilih penerima</h2></div>
+        <button class="catatan-sheet-close" type="button" data-reminder-recipient-close aria-label="Tutup"><ion-icon name="close-outline"></ion-icon></button>
+      </div>
+      <p class="catatan-reminder-recipient-hint">Pembuat reminder selalu ikut diingatkan. Pilih anggota keluarga lain yang juga perlu menerima pengingat.</p>
+      <div class="catatan-reminder-recipient-scroll">
+        <button class="catatan-reminder-recipient-all" type="button" data-reminder-recipient-all>
+          <span class="catatan-info-icon"><ion-icon name="people-outline" aria-hidden="true"></ion-icon></span>
+          <span><strong>Semua anggota</strong><small data-reminder-recipient-all-copy>Pilih semua anggota lain</small></span>
+          <ion-icon data-reminder-recipient-all-check name="ellipse-outline" aria-hidden="true"></ion-icon>
+        </button>
+        <div class="catatan-reminder-recipient-list" data-reminder-recipient-list></div>
+        <div class="catatan-reminder-recipient-empty" data-reminder-recipient-empty hidden>Tidak ada anggota lain untuk dipilih.</div>
+      </div>
+      <div class="catatan-reminder-recipient-actions">
+        <button class="is-secondary" type="button" data-reminder-recipient-cancel>Batal</button>
+        <button class="is-primary" type="button" data-reminder-recipient-apply>Terapkan</button>
       </div>
     </section>
   </div>
@@ -366,7 +400,7 @@
       <div class="catatan-link-choice-list">
         <button type="button" data-link-choice="note">
           <span class="catatan-info-icon"><ion-icon name="documents-outline" aria-hidden="true"></ion-icon></span>
-          <span><strong>Catatan RuangKitha</strong><small data-link-note-help>Hubungkan teks ke Catatan atau Checklist yang sudah ada.</small></span>
+          <span><strong>Catatan RuangKitha</strong><small data-link-note-help>Hubungkan teks ke Catatan, Checklist, atau Reminder yang sudah ada.</small></span>
           <ion-icon name="chevron-forward-outline" aria-hidden="true"></ion-icon>
         </button>
         <button type="button" data-link-choice="web">
@@ -425,10 +459,11 @@
 <script src="js/backend/auth-router.js?v=20260909-v200a8"></script>
 <script src="js/backend/auth-guard.js?v=20260909-v200a8"></script>
 <script type="module" src="https://unpkg.com/@dotlottie/player-component@2.7.12/dist/dotlottie-player.mjs"></script>
-<script src="js/backend/notes-service.js?v=20260910-v200a39"></script>
-<script src="js/pages/catatan-management.js?v=20260910-v200a39"></script>
-<script src="js/pages/catatan-related.js?v=20260910-v200a39"></script>
-<script src="js/pages/catatan-editor.js?v=20260910-v200a39"></script>
-<script src="js/pwa.js?v=20260910-v200a39"></script>
+<script src="js/backend/notes-service.js?v=20260910-v200a40"></script>
+<script src="js/pages/catatan-management.js?v=20260910-v200a40"></script>
+<script src="js/pages/catatan-related.js?v=20260910-v200a40"></script>
+<script src="js/pages/catatan-editor.js?v=20260910-v200a40"></script>
+<script src="js/pages/catatan-reminder-runtime.js?v=20260910-v200a40"></script>
+<script src="js/pwa.js?v=20260910-v200a40"></script>
 </body>
 </html>

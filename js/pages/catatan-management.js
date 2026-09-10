@@ -87,7 +87,7 @@
   }
 
   function renderTagSummary(tags = []) {
-    const values = Array.from(new Set((Array.isArray(tags) ? tags : []).map(clean).filter(Boolean)));
+    const values = Array.from(new Set((Array.isArray(tags) ? tags : []).map(value => clean(value)).filter(Boolean)));
     if (!values.length) return null;
     const wrap = document.createElement("span");
     wrap.className = "catatan-note-tags catatan-note-tags-compact";

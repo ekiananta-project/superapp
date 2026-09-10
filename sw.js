@@ -1,4 +1,4 @@
-const CACHE_NAME = "ruangkitha-v2.0.0a39-catatan-uuid-array-hotfix-v1";
+const CACHE_NAME = "ruangkitha-v2.0.0a40-catatan-reminder-backend-v1";
 const OFFLINE_URL = "./offline.html";
 
 const APP_FILES = [
@@ -79,6 +79,7 @@ const APP_FILES = [
   "./js/pages/catatan-management.js",
   "./js/pages/catatan-related.js",
   "./js/pages/catatan-archive.js",
+  "./js/pages/catatan-reminder-runtime.js",
   "./finance.html",
   "./kalender.html",
   "./profil.html",
@@ -238,4 +239,25 @@ self.addEventListener("fetch", event => {
       ? navigationResponse(request)
       : assetResponse(request)
   );
+});
+
+
+// a40: system notification yang dipicu saat Catatan/PWA aktif dapat membuka
+// Reminder tujuan melalui service worker notification surface. Ini bukan
+// background scheduler; due-check tetap dilakukan client ketika app aktif.
+self.addEventListener("notificationclick", event => {
+  event.notification?.close();
+  const target = event.notification?.data?.url;
+  if (!target) return;
+  event.waitUntil((async () => {
+    const windows = await self.clients.matchAll({ type: "window", includeUncontrolled: true });
+    for (const client of windows) {
+      if ("focus" in client) {
+        await client.focus();
+        if ("navigate" in client) await client.navigate(target);
+        return;
+      }
+    }
+    if (self.clients.openWindow) await self.clients.openWindow(target);
+  })());
 });

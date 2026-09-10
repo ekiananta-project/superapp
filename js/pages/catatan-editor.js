@@ -30,6 +30,13 @@
   let reminderTime = "";
   let reminderPreset = false;
   let familyReminderEnabled = false;
+  let reminderRecurrence = "none";
+  let reminderRecipients = new Set();
+  let reminderRecipientDraft = new Set();
+  let reminderMembers = [];
+  let reminderRecipientsDirty = false;
+  let reminderRecipientSaveRunning = false;
+  let currentReminderRecipientSavePromise = null;
 
   // v2.0.0a38 — editor foundation + inline navigation/formatting; backend note core began at a29.
   let noteId = "";
@@ -149,7 +156,7 @@
   }
 
   function basicBackendMode() {
-    return !reminderPreset && Boolean(window.NotesService) && noteBackendReady;
+    return Boolean(window.NotesService) && noteBackendReady;
   }
 
   function noteSnapshot() {
@@ -157,7 +164,7 @@
     const editor = q("[data-note-content]");
     const bodyHtml = sanitizeNoteHtml(editor?.innerHTML || "");
     const bodyText = String(editor?.innerText || "").trim();
-    return {
+    const snapshot = {
       id: noteId || null,
       familyId: activeFamilyId || null,
       scope,
@@ -168,6 +175,14 @@
       folderName,
       cardColor
     };
+    if (reminderPreset) {
+      snapshot.reminderAt = reminderDate && reminderTime
+        ? new Date(`${reminderDate}T${reminderTime}:00`).toISOString()
+        : null;
+      snapshot.reminderTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone || "UTC";
+      snapshot.reminderRecurrence = reminderRecurrence || "none";
+    }
+    return snapshot;
   }
 
   function noteFingerprint(snapshot = noteSnapshot()) {
@@ -179,26 +194,48 @@
       bodyHtml: snapshot.bodyHtml,
       bodyText: snapshot.bodyText,
       folderName: snapshot.folderName || "",
-      cardColor: snapshot.cardColor || "default"
+      cardColor: snapshot.cardColor || "default",
+      reminderAt: snapshot.reminderAt || "",
+      reminderTimezone: snapshot.reminderTimezone || "",
+      reminderRecurrence: snapshot.reminderRecurrence || "none"
     });
   }
 
   function hasMeaningfulBasicNote(snapshot = noteSnapshot()) {
-    return Boolean(snapshot.title || snapshot.bodyText);
+    return Boolean(snapshot.title || snapshot.bodyText || (reminderPreset && snapshot.reminderAt));
   }
 
   function updateNoteUrl() {
-    if (!noteId || reminderPreset) return;
+    if (!noteId) return;
     const url = new URL(location.href);
     url.searchParams.set("id", noteId);
     url.searchParams.set("scope", scope);
+    if (reminderPreset) url.searchParams.set("type", "reminder");
     history.replaceState(history.state, "", `${url.pathname}${url.search}${url.hash}`);
+  }
+
+  function applyDocumentTypeCopy() {
+    if (!reminderPreset) return;
+    document.title = "Reminder · RuangKitha";
+    const title = q("[data-note-title]");
+    const content = q("[data-note-content]");
+    if (title) {
+      title.placeholder = "Judul reminder...";
+      title.setAttribute("aria-label", "Judul reminder");
+    }
+    if (content) content.dataset.placeholder = "Tulis catatan reminder...";
+    const infoTitle = document.getElementById("catatan-info-title");
+    if (infoTitle) infoTitle.textContent = "Info Reminder";
+    const linkHelp = q("[data-link-note-help]");
+    if (linkHelp) linkHelp.textContent = "Hubungkan teks ke Catatan, Checklist, atau Reminder yang sudah ada.";
   }
 
   function showBackendWarning(error) {
     if (backendWarningShown) return;
     backendWarningShown = true;
-    if (window.NotesService?.folderSchemaBelumTerpasang?.(error)) {
+    if (reminderPreset && window.NotesService?.reminderSchemaBelumTerpasang?.(error)) {
+      showToast("Backend Reminder belum aktif — jalankan SQL 004J di Supabase dulu.");
+    } else if (window.NotesService?.folderSchemaBelumTerpasang?.(error)) {
       showToast("Backend kolaborasi/folder belum aktif — jalankan SQL 004D di Supabase dulu.");
     } else if (window.NotesService?.schemaBelumTerpasang?.(error)) {
       showToast("Backend Catatan belum aktif — jalankan SQL 004A di Supabase dulu.");
@@ -223,6 +260,7 @@
     const fingerprint = noteFingerprint(snapshot);
     if (!noteDirty && fingerprint === lastSavedFingerprint) {
       if (tagDirty && noteId) await saveTagsNow();
+      if (reminderPreset && reminderRecipientsDirty && noteId) await saveReminderRecipientsNow();
       return null;
     }
 
@@ -238,7 +276,9 @@
     currentSavePromise = (async () => {
       try {
         const wasNewNote = !noteId;
-        const saved = await window.NotesService.simpanBasic(snapshot);
+        const saved = reminderPreset
+          ? await window.NotesService.simpanReminder(snapshot)
+          : await window.NotesService.simpanBasic(snapshot);
         noteId = clean(saved?.id, noteId);
         noteOwnerId = clean(saved?.created_by, userId);
         noteDeleteAllowed = Boolean(noteId && noteOwnerId === userId);
@@ -251,19 +291,23 @@
         if (tagDirty || (noteId && selectedTags.size && lastSavedTagFingerprint === "[]")) {
           await saveTagsNow();
         }
+        if (reminderPreset && noteId && reminderRecipientsDirty) {
+          await saveReminderRecipientsNow();
+        }
         if (noteId && pinned && window.NotesService?.setPinCatatan) {
           try { await window.NotesService.setPinCatatan(noteId, true); } catch (error) { console.warn("[Catatan Pin Save]", error); }
         }
         if (noteId && cardColor !== "default" && window.NotesService?.setWarnaKartuCatatan) {
           try { await window.NotesService.setWarnaKartuCatatan(noteId, cardColor); } catch (error) { console.warn("[Catatan Color Save]", error); }
         }
-        if (announce) showToast("Catatan tersimpan.");
+        if (announce) showToast(reminderPreset ? "Reminder tersimpan." : "Catatan tersimpan.");
         return saved;
       } catch (error) {
         noteDirty = true;
         q("[data-catatan-editor]")?.setAttribute("data-save-state", "error");
-        console.error("[Catatan Basic Save]", error);
-        if (window.NotesService?.schemaBelumTerpasang?.(error)) noteBackendReady = false;
+        console.error(reminderPreset ? "[Catatan Reminder Save]" : "[Catatan Basic Save]", error);
+        if (reminderPreset && window.NotesService?.reminderSchemaBelumTerpasang?.(error)) noteBackendReady = false;
+        else if (window.NotesService?.schemaBelumTerpasang?.(error)) noteBackendReady = false;
         showBackendWarning(error);
         return null;
       }
@@ -307,14 +351,6 @@
     cardColor = next;
     renderCardColorState();
 
-    if (reminderPreset && !noteId) {
-      const url = new URL(location.href);
-      url.searchParams.set("color", cardColor);
-      history.replaceState(history.state, "", `${url.pathname}${url.search}${url.hash}`);
-      showToast("Warna kartu Reminder dipilih.");
-      return;
-    }
-
     if (!noteId) {
       await saveBasicNoteNow();
       if (!noteId) {
@@ -336,7 +372,7 @@
   }
 
   async function loadBasicNote() {
-    if (!noteId || reminderPreset || !window.NotesService) return true;
+    if (!noteId || !window.NotesService) return true;
 
     hydratingNote = true;
     try {
@@ -347,12 +383,19 @@
         showToast("Catatan tidak ditemukan atau kamu tidak punya akses.");
         return false;
       }
-      if (note.note_type !== "basic") {
-        noteReadOnly = true;
-        setMode("view", false);
-        showToast("Tipe catatan ini dibuka dari editor lain.");
+      const loadedType = String(note.note_type || "basic").toLowerCase();
+      if (loadedType === "checklist") {
+        location.replace(`catatan-checklist.html?scope=${encodeURIComponent(note.scope === "family" ? "family" : "personal")}&id=${encodeURIComponent(noteId)}`);
         return false;
       }
+      if (!["basic", "reminder"].includes(loadedType)) {
+        noteReadOnly = true;
+        setMode("view", false);
+        showToast("Tipe catatan ini belum dapat dibuka di editor ini.");
+        return false;
+      }
+      reminderPreset = loadedType === "reminder";
+      applyDocumentTypeCopy();
 
       scope = note.scope === "family" ? "family" : "personal";
       visibility = note.visibility === "family-read" ? "family-read" : "private";
@@ -370,6 +413,22 @@
       noteOwnerId = clean(note.created_by);
       noteReadOnly = Boolean(noteOwnerId && noteOwnerId !== userId && scope !== "family");
 
+      if (reminderPreset) {
+        if (scope === "family") await loadReminderMembers();
+        reminderRecurrence = normalizeReminderRecurrence(note.reminder_recurrence);
+        if (note.reminder_at) {
+          const due = new Date(note.reminder_at);
+          if (!Number.isNaN(due.getTime())) {
+            reminderDate = localDateString(due);
+            reminderTime = `${String(due.getHours()).padStart(2, "0")}:${String(due.getMinutes()).padStart(2, "0")}`;
+          }
+        } else {
+          reminderDate = "";
+          reminderTime = "";
+        }
+        await loadReminderRecipients();
+      }
+
       await loadSelectedTags();
 
       const title = q("[data-note-title]");
@@ -385,6 +444,7 @@
       resizeTitle();
       renderPinState();
       renderCardColorState();
+      renderReminder();
       await resolveMemberViewContext();
       applyContext();
       if (!(sourceContext === "member" && noteReadOnly)) renderVisibility();
@@ -394,8 +454,9 @@
       noteDirty = false;
       return true;
     } catch (error) {
-      console.error("[Catatan Basic Load]", error);
-      if (window.NotesService?.schemaBelumTerpasang?.(error)) noteBackendReady = false;
+      console.error(reminderPreset ? "[Catatan Reminder Load]" : "[Catatan Basic Load]", error);
+      if (reminderPreset && window.NotesService?.reminderSchemaBelumTerpasang?.(error)) noteBackendReady = false;
+      else if (window.NotesService?.schemaBelumTerpasang?.(error)) noteBackendReady = false;
       showBackendWarning(error);
       return false;
     } finally {
@@ -406,12 +467,12 @@
   function renderDeleteAction() {
     const row = q("[data-delete-row]");
     if (!row) return;
-    row.hidden = !noteId || !noteDeleteAllowed || noteReadOnly || reminderPreset;
+    row.hidden = !noteId || !noteDeleteAllowed || noteReadOnly;
   }
 
   async function refreshDeletePermission() {
     noteDeleteAllowed = false;
-    if (!noteId || noteReadOnly || reminderPreset || !window.NotesService?.bolehArsipkanCatatan) {
+    if (!noteId || noteReadOnly || !window.NotesService?.bolehArsipkanCatatan) {
       renderDeleteAction();
       return;
     }
@@ -425,14 +486,14 @@
   }
 
   async function deleteCurrentNote() {
-    if (!noteId || !noteDeleteAllowed || noteReadOnly || reminderPreset || noteDeleting) return;
+    if (!noteId || !noteDeleteAllowed || noteReadOnly || noteDeleting) return;
     const title = clean(q("[data-note-title]")?.value, "Tanpa judul");
     setLayer("[data-info-layer]", false);
     const ok = await window.CatatanManagement?.confirmArchive?.({
       title: `Arsipkan “${title}”?`,
       message: scope === "family"
-        ? "Catatan Keluarga ini akan dipindahkan ke Arsip untuk seluruh anggota dan dapat dipulihkan nanti."
-        : "Catatan ini akan dipindahkan ke Arsip dan dapat dipulihkan nanti.",
+        ? `${reminderPreset ? "Reminder" : "Catatan"} Keluarga ini akan dipindahkan ke Arsip untuk seluruh anggota dan dapat dipulihkan nanti.`
+        : `${reminderPreset ? "Reminder" : "Catatan"} ini akan dipindahkan ke Arsip dan dapat dipulihkan nanti.`,
       confirmLabel: "Arsipkan"
     });
     if (!ok) return;
@@ -956,7 +1017,7 @@
     }
     if (noteChoice) noteChoice.disabled = !linkSelectedText;
     if (noteHelp) noteHelp.textContent = linkSelectedText
-      ? "Pilih satu Catatan atau Checklist sebagai tujuan teks ini."
+      ? "Pilih satu Catatan, Checklist, atau Reminder sebagai tujuan teks ini."
       : "Blok teks di catatan dulu untuk membuat tautan antarcatatan.";
     openSheet("[data-link-choice-layer]", false);
   }
@@ -1121,6 +1182,163 @@
     }).format(value).replace(" pukul ", " · ");
   }
 
+  function normalizeReminderRecurrence(value) {
+    const recurrence = String(value || "none").toLowerCase();
+    return ["none", "daily", "weekly", "monthly", "yearly"].includes(recurrence) ? recurrence : "none";
+  }
+
+  function reminderRecurrenceLabel(value = reminderRecurrence) {
+    return ({
+      none: "Tidak berulang",
+      daily: "Setiap hari",
+      weekly: "Setiap minggu",
+      monthly: "Setiap bulan",
+      yearly: "Setiap tahun"
+    })[normalizeReminderRecurrence(value)] || "Tidak berulang";
+  }
+
+  function reminderMemberName(member) {
+    return clean(member?.profile?.display_name || member?.display_name, "Anggota");
+  }
+
+  function reminderEligibleMembers() {
+    const creatorId = clean(noteOwnerId || userId);
+    return (reminderMembers || []).filter(member => {
+      const id = clean(member?.user_id);
+      return id && id !== creatorId;
+    });
+  }
+
+  async function loadReminderMembers() {
+    if (scope !== "family" || !activeFamilyId || !window.FamilyService?.ambilAnggotaKeluarga) {
+      reminderMembers = [];
+      return reminderMembers;
+    }
+    try {
+      const members = await FamilyService.ambilAnggotaKeluarga(activeFamilyId);
+      reminderMembers = (members || []).filter(member => member?.user_id && (!member?.status || member.status === "active"));
+    } catch (error) {
+      console.warn("[Reminder Members]", error);
+      reminderMembers = [];
+    }
+    return reminderMembers;
+  }
+
+  async function loadReminderRecipients() {
+    reminderRecipients = new Set();
+    reminderRecipientsDirty = false;
+    if (!reminderPreset || !noteId || !window.NotesService?.ambilReminderRecipients) {
+      familyReminderEnabled = false;
+      return;
+    }
+    try {
+      const ids = await window.NotesService.ambilReminderRecipients(noteId);
+      reminderRecipients = new Set((ids || []).map(id => clean(id)).filter(Boolean));
+      familyReminderEnabled = reminderRecipients.size > 0;
+    } catch (error) {
+      console.warn("[Reminder Recipients Load]", error);
+      if (window.NotesService?.reminderSchemaBelumTerpasang?.(error)) showBackendWarning(error);
+    }
+  }
+
+  async function saveReminderRecipientsNow() {
+    if (!reminderPreset || !noteId || noteReadOnly || !window.NotesService?.syncReminderRecipients) return 0;
+    if (!reminderRecipientsDirty && scope === "family") return reminderRecipients.size;
+    if (reminderRecipientSaveRunning) {
+      if (currentReminderRecipientSavePromise) await currentReminderRecipientSavePromise;
+      return reminderRecipients.size;
+    }
+    reminderRecipientSaveRunning = true;
+    const requested = scope === "family" ? Array.from(reminderRecipients) : [];
+    currentReminderRecipientSavePromise = (async () => {
+      try {
+        const count = await window.NotesService.syncReminderRecipients(noteId, requested);
+        reminderRecipientsDirty = false;
+        familyReminderEnabled = scope === "family" && count > 0;
+        renderReminderDedicated();
+        return count;
+      } catch (error) {
+        reminderRecipientsDirty = true;
+        console.error("[Reminder Recipients Save]", error);
+        if (window.NotesService?.reminderSchemaBelumTerpasang?.(error)) showBackendWarning(error);
+        else showToast(error?.message || "Penerima reminder belum dapat disimpan.");
+        return reminderRecipients.size;
+      }
+    })();
+    try {
+      return await currentReminderRecipientSavePromise;
+    } finally {
+      currentReminderRecipientSavePromise = null;
+      reminderRecipientSaveRunning = false;
+    }
+  }
+
+  function renderReminderRecipientPicker() {
+    const list = q("[data-reminder-recipient-list]");
+    const empty = q("[data-reminder-recipient-empty]");
+    const allButton = q("[data-reminder-recipient-all]");
+    const allCheck = q("[data-reminder-recipient-all-check]");
+    const allCopy = q("[data-reminder-recipient-all-copy]");
+    if (!list) return;
+    list.replaceChildren();
+    const eligible = reminderEligibleMembers();
+    const eligibleIds = eligible.map(member => clean(member.user_id));
+    const allSelected = eligibleIds.length > 0 && eligibleIds.every(id => reminderRecipientDraft.has(id));
+    if (allButton) {
+      allButton.disabled = eligibleIds.length === 0;
+      allButton.classList.toggle("is-selected", allSelected);
+    }
+    if (allCheck) allCheck.setAttribute("name", allSelected ? "checkmark-circle" : "ellipse-outline");
+    if (allCopy) allCopy.textContent = eligibleIds.length ? `${eligibleIds.length} anggota lain` : "Tidak ada anggota lain";
+
+    eligible.forEach(member => {
+      const id = clean(member.user_id);
+      const selected = reminderRecipientDraft.has(id);
+      const row = document.createElement("button");
+      row.type = "button";
+      row.className = `catatan-reminder-recipient-row${selected ? " is-selected" : ""}`;
+      row.dataset.reminderRecipientId = id;
+      row.innerHTML = `
+        <span class="catatan-info-icon"><ion-icon name="person-outline" aria-hidden="true"></ion-icon></span>
+        <span><strong></strong><small>Anggota keluarga</small></span>
+        <ion-icon name="${selected ? "checkmark-circle" : "ellipse-outline"}" aria-hidden="true"></ion-icon>
+      `;
+      row.querySelector("strong").textContent = reminderMemberName(member);
+      row.addEventListener("click", () => {
+        if (reminderRecipientDraft.has(id)) reminderRecipientDraft.delete(id);
+        else reminderRecipientDraft.add(id);
+        renderReminderRecipientPicker();
+      });
+      list.appendChild(row);
+    });
+    if (empty) empty.hidden = eligible.length !== 0;
+  }
+
+  async function openReminderRecipientSheet() {
+    if (!reminderPreset || scope !== "family") return;
+    if (noteReadOnly) {
+      showToast("Reminder ini hanya bisa dibaca.");
+      return;
+    }
+    await loadReminderMembers();
+    reminderRecipientDraft = new Set(reminderRecipients);
+    renderReminderRecipientPicker();
+    openSheet("[data-reminder-recipient-layer]", true);
+  }
+
+  function closeReminderRecipientSheet(apply = false) {
+    if (apply) {
+      reminderRecipients = new Set(reminderRecipientDraft);
+      reminderRecipientsDirty = true;
+      familyReminderEnabled = reminderRecipients.size > 0;
+      renderReminderDedicated();
+      if (noteId) saveReminderRecipientsNow();
+      else if (hasMeaningfulBasicNote()) scheduleBasicAutosave(120);
+      else showToast("Penerima akan tersimpan setelah reminder mulai diisi.");
+    }
+    setLayer("[data-reminder-recipient-layer]", false);
+  }
+
   function renderReminder() {
     const hasReminder = Boolean(reminderDate && reminderTime);
     const chip = q("[data-reminder-chip]");
@@ -1148,6 +1366,8 @@
     const familyCard = q("[data-reminder-family-card]");
     const familyState = q("[data-reminder-family-state]");
     const familyIcon = q("[data-reminder-family-icon]");
+    const tagCard = q("[data-reminder-tag-card]");
+    const scheduleCard = q("[data-reminder-schedule-card]");
 
     if (visibilityValue) {
       visibilityValue.textContent = familyScope
@@ -1160,25 +1380,36 @@
         ? "people-outline"
         : (visibility === "family-read" ? "eye-outline" : "lock-closed-outline"));
     }
+    if (visibilityCard) visibilityCard.disabled = Boolean(noteReadOnly);
+    if (scheduleCard) scheduleCard.disabled = Boolean(noteReadOnly);
+    if (tagCard) tagCard.disabled = Boolean(noteReadOnly);
 
-    if (scheduleValue) scheduleValue.textContent = reminderDate && reminderTime ? reminderLabel() : "Atur tanggal & waktu";
+    if (scheduleValue) {
+      const schedule = reminderDate && reminderTime ? reminderLabel() : "Atur tanggal & waktu";
+      scheduleValue.textContent = reminderRecurrence === "none" ? schedule : `${schedule} · ${reminderRecurrenceLabel()}`;
+    }
 
+    const eligibleIds = reminderEligibleMembers().map(member => clean(member?.user_id)).filter(Boolean);
+    const recipientCount = eligibleIds.filter(id => reminderRecipients.has(id)).length;
+    const allSelected = eligibleIds.length > 0 && eligibleIds.every(id => reminderRecipients.has(id));
+    familyReminderEnabled = familyScope && recipientCount > 0;
     if (familyCard) {
       familyCard.classList.toggle("is-locked", !familyScope);
-      familyCard.classList.toggle("is-on", familyScope && familyReminderEnabled);
+      familyCard.classList.toggle("is-on", familyScope && recipientCount > 0);
+      familyCard.disabled = Boolean(noteReadOnly);
       familyCard.setAttribute("aria-label", familyScope
-        ? `Ingatkan keluarga: ${familyReminderEnabled ? "aktif" : "belum aktif"}`
+        ? `Ingatkan keluarga: ${allSelected ? "semua anggota" : recipientCount ? `${recipientCount} anggota dipilih` : "hanya pembuat"}`
         : "Ingatkan keluarga tersedia setelah reminder dipindahkan ke Area Keluarga");
     }
     if (familyState) {
       familyState.textContent = !familyScope
         ? "Hanya di Area Keluarga"
-        : (familyReminderEnabled ? "Aktif untuk keluarga" : "Belum aktif");
+        : (allSelected ? "Semua anggota" : recipientCount ? `${recipientCount} anggota dipilih` : "Hanya pembuat");
     }
     if (familyIcon) {
       familyIcon.setAttribute("name", !familyScope
         ? "lock-closed-outline"
-        : (familyReminderEnabled ? "checkmark-circle" : "notifications-outline"));
+        : (recipientCount ? "checkmark-circle" : "notifications-outline"));
     }
   }
 
@@ -1204,19 +1435,24 @@
     history.replaceState(history.state, "", `${url.pathname}${url.search}${url.hash}`);
   }
 
-  function pushReminderToFamily() {
-    if (scope === "family") return;
+  async function pushReminderToFamily() {
+    if (scope === "family" || noteReadOnly) return;
     scope = "family";
     visibility = "family-read";
-    familyReminderEnabled = true;
     folderName = "";
+    reminderRecipients = new Set();
+    reminderRecipientsDirty = true;
+    familyReminderEnabled = false;
     hideFamilyPushPrompt();
     updateReminderUrlScope();
     applyContext();
     renderVisibility();
     renderReminderDedicated();
+    await loadReminderMembers();
     loadTagCatalog().then(() => renderMetadataTags());
-    showToast("Reminder dipindahkan ke Area Keluarga — pengingat keluarga aktif.");
+    scheduleBasicAutosave(120);
+    showToast("Reminder dipindahkan ke Area Keluarga. Pilih siapa yang ingin ikut diingatkan.");
+    setTimeout(() => openReminderRecipientSheet(), 180);
   }
 
   function openReminderSheet() {
@@ -1231,10 +1467,12 @@
       dateInput.value = reminderDate;
     }
     if (timeInput) timeInput.value = reminderTime;
+    const recurrence = q("[data-reminder-recurrence]");
+    if (recurrence) recurrence.value = normalizeReminderRecurrence(reminderRecurrence);
     openSheet("[data-reminder-layer]", true);
   }
 
-  function saveReminder() {
+  async function saveReminder() {
     const date = clean(q("[data-reminder-date]")?.value);
     const time = clean(q("[data-reminder-time]")?.value);
     if (!date || !time) {
@@ -1243,18 +1481,23 @@
     }
     reminderDate = date;
     reminderTime = time;
+    reminderRecurrence = normalizeReminderRecurrence(q("[data-reminder-recurrence]")?.value);
     reminderPreset = true;
     renderReminder();
     setLayer("[data-reminder-layer]", false);
-    showToast("Reminder disimpan di catatan.");
+    scheduleBasicAutosave(0);
+    await saveBasicNoteNow({ announce: true });
   }
 
-  function removeReminder() {
+  async function removeReminder() {
     reminderDate = "";
     reminderTime = "";
+    reminderRecurrence = "none";
     renderReminder();
     setLayer("[data-reminder-layer]", false);
-    showToast(reminderPreset ? "Jadwal reminder dihapus." : "Reminder dihapus.");
+    scheduleBasicAutosave(0);
+    await saveBasicNoteNow();
+    showToast("Jadwal reminder dihapus.");
   }
 
   function renderVisibility() {
@@ -1376,7 +1619,7 @@
   }
 
   async function saveTagsNow({ announce = false } = {}) {
-    if (reminderPreset || noteReadOnly || noteDeleting || !noteId || !tagBackendReady || !window.NotesService?.syncTagCatatan) return [];
+    if (noteReadOnly || noteDeleting || !noteId || !tagBackendReady || !window.NotesService?.syncTagCatatan) return [];
 
     const currentFingerprint = tagFingerprint();
     if (!tagDirty && currentFingerprint === lastSavedTagFingerprint) return Array.from(selectedTags);
@@ -1551,7 +1794,7 @@
       const before = tagFingerprint(selectedTags);
       selectedTags = new Set(Array.from(draftTags).map(normalizeTag).filter(Boolean));
       renderMetadataTags();
-      if (tagFingerprint() !== before && !reminderPreset && !noteReadOnly) {
+      if (tagFingerprint() !== before && !noteReadOnly) {
         tagDirty = true;
         if (noteId) {
           saveTagsNow();
@@ -1604,7 +1847,7 @@
   }
 
   function setMode(mode, announce = true) {
-    editorMode = reminderPreset ? "edit" : (noteReadOnly ? "view" : (mode === "view" ? "view" : "edit"));
+    editorMode = noteReadOnly ? "view" : (reminderPreset ? "edit" : (mode === "view" ? "view" : "edit"));
     const root = q("[data-catatan-editor]");
     const title = q("[data-note-title]");
     const editor = q("[data-note-content]");
@@ -1636,7 +1879,7 @@
       highlightTypingMode = false;
       q('[data-tool="highlight"]')?.classList.remove("is-active");
       q('[data-tool="highlight"]')?.setAttribute("aria-pressed", "false");
-      if (!reminderPreset) saveBasicNoteNow();
+      saveBasicNoteNow();
       title?.blur();
       editor?.blur();
       window.getSelection?.()?.removeAllRanges?.();
@@ -1674,19 +1917,26 @@
     q("[data-reminder-schedule-card]")?.addEventListener("click", openReminderSheet);
     q("[data-reminder-tag-card]")?.addEventListener("click", openTagSheet);
     q("[data-reminder-visibility-card]")?.addEventListener("click", () => {
-      if (!reminderPreset) return;
+      if (!reminderPreset || noteReadOnly) return;
       if (scope === "personal") openSheet("[data-visibility-layer]", true);
       else showToast("Reminder ini berada di Area Keluarga.");
     });
     q("[data-reminder-family-card]")?.addEventListener("click", () => {
-      if (!reminderPreset) return;
+      if (!reminderPreset || noteReadOnly) return;
       if (scope !== "family") {
         showFamilyPushPrompt();
         return;
       }
-      familyReminderEnabled = !familyReminderEnabled;
-      renderReminderDedicated();
-      showToast(familyReminderEnabled ? "Pengingat keluarga diaktifkan." : "Pengingat keluarga dimatikan.");
+      openReminderRecipientSheet();
+    });
+    q("[data-reminder-recipient-close]")?.addEventListener("click", () => closeReminderRecipientSheet(false));
+    q("[data-reminder-recipient-cancel]")?.addEventListener("click", () => closeReminderRecipientSheet(false));
+    q("[data-reminder-recipient-apply]")?.addEventListener("click", () => closeReminderRecipientSheet(true));
+    q("[data-reminder-recipient-all]")?.addEventListener("click", () => {
+      const ids = reminderEligibleMembers().map(member => clean(member.user_id)).filter(Boolean);
+      const allSelected = ids.length > 0 && ids.every(id => reminderRecipientDraft.has(id));
+      ids.forEach(id => allSelected ? reminderRecipientDraft.delete(id) : reminderRecipientDraft.add(id));
+      renderReminderRecipientPicker();
     });
     q("[data-reminder-family-cancel]")?.addEventListener("click", hideFamilyPushPrompt);
     q("[data-reminder-family-push]")?.addEventListener("click", pushReminderToFamily);
@@ -1708,6 +1958,7 @@
       layer.addEventListener("click", event => {
         if (event.target !== layer) return;
         if (layer.matches("[data-tag-layer]")) closeTagSheet(false);
+        else if (layer.matches("[data-reminder-recipient-layer]")) closeReminderRecipientSheet(false);
         else layer.hidden = true;
       });
     });
@@ -1760,8 +2011,7 @@
         }
         if (action === "related") {
           setLayer("[data-info-layer]", false);
-          if (reminderPreset) showToast("Catatan Terkait untuk Reminder akan aktif bersama backend Reminder.");
-          else window.CatatanRelated?.open?.();
+          window.CatatanRelated?.open?.();
           return;
         }
         if (action === "promote") {
@@ -2040,11 +2290,13 @@
     });
     window.addEventListener("pagehide", () => { saveBasicNoteNow(); });
     q("[data-editor-back]")?.addEventListener("click", async event => {
-      if (noteDeleting || !basicBackendMode() || noteReadOnly || (!noteDirty && !autosaveTimer && !tagDirty && !tagSaveRunning)) return;
+      const cleanState = !noteDirty && !autosaveTimer && !tagDirty && !tagSaveRunning && !reminderRecipientsDirty && !reminderRecipientSaveRunning;
+      if (noteDeleting || !basicBackendMode() || noteReadOnly || cleanState) return;
       event.preventDefault();
       const href = event.currentTarget.href;
       await saveBasicNoteNow();
       if (tagDirty && noteId) await saveTagsNow();
+      if (reminderPreset && reminderRecipientsDirty && noteId) await saveReminderRecipientsNow();
       location.href = href;
     });
     resizeTitle();
@@ -2073,17 +2325,8 @@
     if (scope === "family") visibility = "family-read";
 
     if (reminderPreset) {
-      document.title = "Reminder · RuangKitha";
       if (scope === "family") visibility = "family-read";
-      const title = q("[data-note-title]");
-      const content = q("[data-note-content]");
-      if (title) {
-        title.placeholder = "Judul reminder...";
-        title.setAttribute("aria-label", "Judul reminder");
-      }
-      if (content) content.dataset.placeholder = "Tulis catatan reminder...";
-      const infoTitle = document.getElementById("catatan-info-title");
-      if (infoTitle) infoTitle.textContent = "Info Reminder";
+      applyDocumentTypeCopy();
     }
 
     setupEditor();
@@ -2119,8 +2362,12 @@
         window.NotesService?.syncTagCatatan
       );
 
-      if (!reminderPreset && noteId && noteBackendReady) {
+      if (noteId && noteBackendReady) {
         await loadBasicNote();
+      }
+      if (reminderPreset && scope === "family") {
+        await loadReminderMembers();
+        renderReminderDedicated();
       }
 
       window.CatatanRelated?.init?.({

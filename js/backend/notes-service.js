@@ -15,12 +15,15 @@
     "folder_name",
     "pinned",
     "card_color",
+    "reminder_at",
+    "reminder_timezone",
+    "reminder_recurrence",
     "created_at",
     "updated_at",
     "archived_at"
   ].join(",");
 
-  const ACTIVE_NOTE_TYPES = ["basic", "checklist"];
+  const ACTIVE_NOTE_TYPES = ["basic", "checklist", "reminder"];
 
   function client() {
     const value = window.supabaseClient;
@@ -121,6 +124,66 @@
 
   function simpanChecklist(input = {}) {
     return simpanByType(input, "checklist");
+  }
+
+
+  function normalizeReminderRecurrence(value) {
+    const recurrence = String(value || "none").toLowerCase();
+    return ["none", "daily", "weekly", "monthly", "yearly"].includes(recurrence) ? recurrence : "none";
+  }
+
+  async function simpanReminder(input = {}) {
+    const payload = normalizePayload(input, "reminder");
+    if (payload.folder_name && !payload.folder_id) {
+      payload.folder_id = await resolveFolder(payload.scope, payload.family_id, payload.folder_name);
+    }
+    if (!payload.folder_name) payload.folder_id = null;
+
+    const { data, error } = await client().rpc("notes_save_reminder_v1", {
+      p_note_id: clean(input.id) || null,
+      p_family_id: payload.family_id,
+      p_scope: payload.scope,
+      p_visibility: payload.visibility,
+      p_title: payload.title,
+      p_body_html: payload.body_html,
+      p_body_text: payload.body_text,
+      p_folder_id: payload.folder_id,
+      p_folder_name: payload.folder_name,
+      p_card_color: payload.card_color,
+      p_reminder_at: input.reminderAt ?? input.reminder_at ?? null,
+      p_reminder_timezone: clean(input.reminderTimezone ?? input.reminder_timezone, 80) || null,
+      p_reminder_recurrence: normalizeReminderRecurrence(input.reminderRecurrence ?? input.reminder_recurrence)
+    });
+    if (error) throw error;
+    const row = Array.isArray(data) ? data[0] : data;
+    return row || null;
+  }
+
+  async function ambilReminderRecipients(noteId) {
+    const id = clean(noteId);
+    if (!id) return [];
+    const { data, error } = await client().rpc("notes_get_reminder_recipients_v1", { p_note_id: id });
+    if (error) throw error;
+    return Array.from(new Set((data || []).map(row => clean(row?.user_id)).filter(Boolean)));
+  }
+
+  async function syncReminderRecipients(noteId, userIds = []) {
+    const id = clean(noteId);
+    if (!id) throw new Error("Reminder belum tersimpan.");
+    const ids = Array.from(new Set((Array.isArray(userIds) ? userIds : []).map(value => clean(value)).filter(Boolean))).slice(0, 250);
+    const { data, error } = await client().rpc("notes_sync_reminder_recipients_v1", {
+      p_note_id: id,
+      p_user_ids: ids
+    });
+    if (error) throw error;
+    return Number(data || 0);
+  }
+
+  async function claimDueReminders(limit = 20) {
+    const safeLimit = Math.min(Math.max(Number(limit) || 20, 1), 100);
+    const { data, error } = await client().rpc("notes_claim_due_reminders_v1", { p_limit: safeLimit });
+    if (error) throw error;
+    return data || [];
   }
 
   async function ambilCatatan(id) {
@@ -305,7 +368,7 @@
       p_family_id: archiveScope === "family" ? (fid || null) : null
     });
     if (error) throw error;
-    return (data || []).filter(row => ["basic", "checklist"].includes(normalizeNoteType(row?.note_type)));
+    return (data || []).filter(row => ACTIVE_NOTE_TYPES.includes(normalizeNoteType(row?.note_type)));
   }
 
   async function ambilTagMapArsip(noteIds = []) {
@@ -812,6 +875,21 @@
       message.includes("catatan_checklist_items");
   }
 
+
+  function reminderSchemaBelumTerpasang(error) {
+    const code = String(error?.code || "").toUpperCase();
+    const message = String(error?.message || error?.details || error?.hint || "").toLowerCase();
+    return code === "PGRST202" ||
+      code === "PGRST204" ||
+      message.includes("notes_save_reminder_v1") ||
+      message.includes("notes_get_reminder_recipients_v1") ||
+      message.includes("notes_sync_reminder_recipients_v1") ||
+      message.includes("notes_claim_due_reminders_v1") ||
+      message.includes("catatan_reminder_recipients") ||
+      message.includes("reminder_at") ||
+      message.includes("reminder_recurrence");
+  }
+
   function schemaBelumTerpasang(error) {
     const code = String(error?.code || "").toUpperCase();
     const message = String(error?.message || error?.details || "").toLowerCase();
@@ -824,6 +902,7 @@
   window.NotesService = {
     simpanBasic,
     simpanChecklist,
+    simpanReminder,
     ambilCatatan,
     ambilCatatanPersonal,
     ambilCatatanAnggota,
@@ -834,6 +913,9 @@
     ambilBasicKeluarga,
     ambilChecklistItems,
     syncChecklistItems,
+    ambilReminderRecipients,
+    syncReminderRecipients,
+    claimDueReminders,
     resolveFolder,
     buatFolder,
     ambilFolderCatalog,
@@ -869,6 +951,7 @@
     syncTagCatatan,
     tagSchemaBelumTerpasang,
     checklistSchemaBelumTerpasang,
+    reminderSchemaBelumTerpasang,
     schemaBelumTerpasang
   };
 })();

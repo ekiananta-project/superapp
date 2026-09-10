@@ -48,7 +48,7 @@
       message: "Folder bersama yang dibuat keluarga akan tampil di sini."
     } : {
       title: "Belum ada Catatan Keluarga",
-      message: "Buat catatan atau checklist pertama untuk ruang keluarga ini.",
+      message: "Buat catatan, checklist, atau reminder pertama untuk ruang keluarga ini.",
       actionLabel: "Buat catatan",
       onAction: openCreateSheet
     });
@@ -144,7 +144,7 @@
     const ok = await CatatanManagement.confirmDanger({
       title: `Hapus folder “${clean(folder?.name) || "Folder"}”?`,
       message: count
-        ? `${count} catatan/checklist keluarga di dalam folder ini juga akan dihapus permanen untuk seluruh anggota.`
+        ? `${count} catatan/checklist/reminder keluarga di dalam folder ini juga akan dihapus permanen untuk seluruh anggota.`
         : "Folder keluarga ini kosong dan akan dihapus permanen.",
       confirmLabel: "Hapus folder"
     });
@@ -177,8 +177,9 @@
     button.dataset.noteId = clean(note?.id);
     CatatanManagement.applyCardColor(button, note?.card_color || "default");
     const isChecklist = note?.note_type === "checklist";
+    const isReminder = note?.note_type === "reminder";
     const title = clean(note?.title) || "Tanpa judul";
-    const body = clean(note?.body_text) || (isChecklist ? "Checklist belum memiliki item." : "Catatan belum memiliki isi.");
+    const body = clean(note?.body_text) || (isChecklist ? "Checklist belum memiliki item." : isReminder ? "Reminder belum memiliki catatan." : "Catatan belum memiliki isi.");
     const preview = body.length > 180 ? `${body.slice(0, 177)}...` : body;
     const own = note?.created_by === userId;
     const access = own ? "Area Keluarga · Kamu pembuat" : "Area Keluarga · Kolaboratif";
@@ -187,7 +188,7 @@
 
     const type = document.createElement("span");
     type.className = "catatan-note-type";
-    type.innerHTML = `<ion-icon name="${isChecklist ? "checkbox-outline" : "document-text-outline"}" aria-hidden="true"></ion-icon>`;
+    type.innerHTML = `<ion-icon name="${isChecklist ? "checkbox-outline" : isReminder ? "notifications-outline" : "document-text-outline"}" aria-hidden="true"></ion-icon>`;
     const titleEl = document.createElement("strong");
     titleEl.textContent = title;
     const previewEl = document.createElement("span");
@@ -214,7 +215,7 @@
       if (selectionMode) return toggleSelected(note.id, Boolean(note?._canArchive));
       location.href = isChecklist
         ? `catatan-checklist.html?scope=family&id=${encodeURIComponent(note.id)}`
-        : `catatan-editor.html?scope=family&id=${encodeURIComponent(note.id)}`;
+        : `catatan-editor.html?scope=family&id=${encodeURIComponent(note.id)}${isReminder ? "&type=reminder" : ""}`;
     });
     button.dataset.previewItem = "";
 

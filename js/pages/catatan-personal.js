@@ -148,7 +148,7 @@
     const ok = await CatatanManagement.confirmDanger({
       title: `Hapus folder “${clean(folder?.name) || "Folder"}”?`,
       message: count
-        ? `${count} catatan/checklist di dalam folder ini juga akan dihapus permanen.`
+        ? `${count} catatan/checklist/reminder di dalam folder ini juga akan dihapus permanen.`
         : "Folder ini kosong dan akan dihapus permanen.",
       confirmLabel: "Hapus folder"
     });
@@ -178,8 +178,9 @@
     CatatanManagement.applyCardColor(button, note?.card_color || "default");
 
     const isChecklist = note?.note_type === "checklist";
+    const isReminder = note?.note_type === "reminder";
     const title = clean(note?.title) || "Tanpa judul";
-    const body = clean(note?.body_text) || (isChecklist ? "Checklist belum memiliki item." : "Catatan belum memiliki isi.");
+    const body = clean(note?.body_text) || (isChecklist ? "Checklist belum memiliki item." : isReminder ? "Reminder belum memiliki catatan." : "Catatan belum memiliki isi.");
     const preview = body.length > 180 ? `${body.slice(0, 177)}...` : body;
     const access = note?.visibility === "family-read" ? "Keluarga dapat melihat" : "Hanya Saya";
     const tags = Array.isArray(note?._tags) ? note._tags : [];
@@ -187,7 +188,7 @@
 
     const type = document.createElement("span");
     type.className = "catatan-note-type";
-    type.innerHTML = `<ion-icon name="${isChecklist ? "checkbox-outline" : "document-text-outline"}" aria-hidden="true"></ion-icon>`;
+    type.innerHTML = `<ion-icon name="${isChecklist ? "checkbox-outline" : isReminder ? "notifications-outline" : "document-text-outline"}" aria-hidden="true"></ion-icon>`;
     const titleEl = document.createElement("strong");
     titleEl.textContent = title;
     const previewEl = document.createElement("span");
@@ -214,7 +215,7 @@
       if (selectionMode) return toggleSelected(note.id);
       location.href = isChecklist
         ? `catatan-checklist.html?scope=personal&id=${encodeURIComponent(note.id)}`
-        : `catatan-editor.html?scope=personal&id=${encodeURIComponent(note.id)}`;
+        : `catatan-editor.html?scope=personal&id=${encodeURIComponent(note.id)}${isReminder ? "&type=reminder" : ""}`;
     });
 
     button.dataset.previewItem = "";
