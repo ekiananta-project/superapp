@@ -1,3 +1,4 @@
+// RuangKitha v2.0.0a42a — Info Folder Picker hotfix
 (() => {
   "use strict";
 
@@ -261,6 +262,96 @@
       if (window.NotesService?.customizationSchemaBelumTerpasang?.(error)) showToast("Jalankan SQL 004G agar Warna Catatan aktif.");
       else showToast(error?.message || "Warna checklist belum dapat diubah.");
     }
+  }
+
+  function invalidateFolderCaches(previousFolder = "", nextFolder = "") {
+    const perf = window.CatatanPerformance;
+    if (!perf?.remove || !userId) return;
+    if (scope === "family") {
+      perf.remove("family-notes", { userId, familyId: activeFamilyId });
+      perf.remove("family-folders", { userId, familyId: activeFamilyId });
+    } else {
+      perf.remove("personal-notes", { userId });
+      perf.remove("personal-folders", { userId });
+    }
+    Array.from(new Set([clean(previousFolder), clean(nextFolder)].filter(Boolean))).forEach(name => {
+      perf.remove("folder-notes", {
+        userId,
+        familyId: activeFamilyId,
+        scope,
+        memberId: "",
+        folderName: name
+      });
+    });
+  }
+
+  async function changeFolder() {
+    if (noteReadOnly) return;
+    if (!window.NotesService?.ambilFolderCatalog || !window.CatatanManagement?.pickFolder) {
+      showToast("Pemilih folder belum siap.");
+      return;
+    }
+    if (scope === "family" && !activeFamilyId) {
+      showToast("Keluarga aktif belum ditemukan.");
+      return;
+    }
+
+    let folders = [];
+    try {
+      folders = await window.NotesService.ambilFolderCatalog(scope, activeFamilyId || null);
+    } catch (error) {
+      console.error("[Checklist Folder Catalog]", error);
+      if (window.NotesService?.folderSchemaBelumTerpasang?.(error)) showToast("Backend Folder belum aktif — jalankan SQL 004D di Supabase dulu.");
+      else showToast(error?.message || "Folder belum dapat dimuat.");
+      return;
+    }
+
+    let choice = await window.CatatanManagement.pickFolder(folders, {
+      currentName: folderName,
+      context: scope === "family" ? "Checklist Keluarga" : "Checklist Pribadi"
+    });
+    if (!choice) return;
+
+    if (choice.create) {
+      const requested = await window.CatatanManagement.askFolderName({
+        context: scope === "family" ? "Checklist Keluarga" : "Checklist Pribadi"
+      });
+      if (!requested) return;
+      try {
+        const created = await window.NotesService.buatFolder(scope, activeFamilyId || null, requested);
+        choice = { name: clean(created?.name, requested) };
+      } catch (error) {
+        console.error("[Checklist Create Folder]", error);
+        if (window.NotesService?.folderSchemaBelumTerpasang?.(error)) showToast("Backend Folder belum aktif — jalankan SQL 004G di Supabase dulu.");
+        else showToast(error?.message || "Folder belum dapat dibuat.");
+        return;
+      }
+    }
+
+    const nextName = clean(choice.name);
+    if (nextName === folderName) return;
+    const previous = folderName;
+    const hadPersistedNote = Boolean(noteId);
+    folderName = nextName;
+    applyContext();
+    noteDirty = true;
+
+    const saved = await saveChecklistNow();
+    const saveState = q("[data-catatan-checklist]")?.getAttribute("data-save-state");
+    if (hadPersistedNote && !saved && saveState === "error") {
+      folderName = previous;
+      applyContext();
+      return;
+    }
+
+    if (!noteId) {
+      showToast(folderName
+        ? `Folder “${folderName}” akan diterapkan setelah checklist mulai diisi.`
+        : "Checklist akan disimpan tanpa folder setelah mulai diisi.");
+      return;
+    }
+    invalidateFolderCaches(previous, folderName);
+    showToast(folderName ? `Dipindahkan ke folder “${folderName}”.` : "Checklist dikeluarkan dari folder.");
   }
 
   function applyContext() {
@@ -1194,6 +1285,11 @@
           changeCardColor();
           return;
         }
+        if (action === "folder") {
+          setLayer("[data-info-layer]", false);
+          changeFolder();
+          return;
+        }
         if (action === "visibility" && scope === "personal") {
           setLayer("[data-info-layer]", false);
           if (editorMode === "edit") openSheet("[data-visibility-layer]");
@@ -1221,7 +1317,6 @@
           return;
         }
         const names = {
-          folder: "Pemilihan Folder",
           related: "Catatan Terkait"
         };
         showToast(`${names[action] || "Fitur"} akan aktif pada tahap backend berikutnya.`);

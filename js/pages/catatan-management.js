@@ -1,3 +1,4 @@
+// RuangKitha v2.0.0a42a — Info Folder Picker hotfix
 (() => {
   "use strict";
 
@@ -6,6 +7,7 @@
   let confirmResolve = null;
   let colorResolve = null;
   let folderResolve = null;
+  let folderPickerResolve = null;
   let themeObserver = null;
 
   function clean(value, fallback = "") {
@@ -454,6 +456,110 @@
     return new Promise(resolve => { folderResolve = resolve; });
   }
 
+  function settleFolderPicker(value = null) {
+    const layer = q("[data-catatan-folder-picker-layer]");
+    if (layer) layer.hidden = true;
+    const resolver = folderPickerResolve;
+    folderPickerResolve = null;
+    resolver?.(value);
+  }
+
+  function ensureFolderPickerLayer() {
+    let layer = q("[data-catatan-folder-picker-layer]");
+    if (layer) return layer;
+    layer = document.createElement("div");
+    layer.className = "catatan-picker-layer";
+    layer.dataset.catatanFolderPickerLayer = "";
+    layer.hidden = true;
+    layer.innerHTML = `
+      <section class="catatan-picker-sheet catatan-folder-picker-sheet" role="dialog" aria-modal="true" aria-labelledby="catatan-folder-picker-title">
+        <div class="catatan-picker-handle" aria-hidden="true"></div>
+        <div class="catatan-picker-header">
+          <div><small data-catatan-folder-picker-context>Organisasi</small><h2 id="catatan-folder-picker-title">Pilih folder</h2></div>
+          <button type="button" data-catatan-folder-picker-close aria-label="Tutup"><ion-icon name="close-outline" aria-hidden="true"></ion-icon></button>
+        </div>
+        <p class="catatan-picker-help">Pindahkan catatan ke folder yang sudah ada, atau kembalikan ke daftar utama.</p>
+        <div class="catatan-folder-picker-list" data-catatan-folder-picker-list></div>
+        <button class="catatan-folder-picker-create" type="button" data-catatan-folder-picker-create>
+          <ion-icon name="add-circle-outline" aria-hidden="true"></ion-icon>
+          <span><strong>Buat folder baru</strong><small>Tambahkan folder lalu gunakan untuk catatan ini</small></span>
+          <ion-icon name="chevron-forward-outline" aria-hidden="true"></ion-icon>
+        </button>
+      </section>`;
+    document.body.appendChild(layer);
+
+    layer.querySelector("[data-catatan-folder-picker-close]")?.addEventListener("click", () => settleFolderPicker(null));
+    layer.querySelector("[data-catatan-folder-picker-create]")?.addEventListener("click", () => settleFolderPicker({ create: true }));
+    layer.addEventListener("click", event => {
+      if (event.target === layer) settleFolderPicker(null);
+    });
+    return layer;
+  }
+
+  function pickFolder(folders = [], { currentName = "", context = "Catatan" } = {}) {
+    const layer = ensureFolderPickerLayer();
+    if (folderPickerResolve) folderPickerResolve(null);
+
+    const current = clean(currentName);
+    const contextEl = layer.querySelector("[data-catatan-folder-picker-context]");
+    if (contextEl) contextEl.textContent = clean(context, "Catatan");
+
+    const list = layer.querySelector("[data-catatan-folder-picker-list]");
+    if (list) {
+      list.textContent = "";
+      const normalized = (Array.isArray(folders) ? folders : [])
+        .map(item => ({
+          id: clean(item?.id),
+          name: clean(item?.name),
+          noteCount: Math.max(0, Number(item?.noteCount || 0))
+        }))
+        .filter(item => item.name)
+        .sort((a, b) => a.name.localeCompare(b.name, "id-ID", { sensitivity: "base" }));
+
+      if (current && !normalized.some(item => item.name.toLocaleLowerCase("id-ID") === current.toLocaleLowerCase("id-ID"))) {
+        normalized.unshift({ id: "", name: current, noteCount: 0 });
+      }
+
+      const makeOption = ({ name = "", noteCount = 0 } = {}) => {
+        const safeName = clean(name);
+        const active = safeName.toLocaleLowerCase("id-ID") === current.toLocaleLowerCase("id-ID");
+        const button = document.createElement("button");
+        button.type = "button";
+        button.className = "catatan-folder-picker-option";
+        button.dataset.selected = String(active);
+
+        const iconWrap = document.createElement("span");
+        iconWrap.className = "catatan-folder-picker-icon";
+        const folderIcon = document.createElement("ion-icon");
+        folderIcon.setAttribute("name", safeName ? "folder-outline" : "albums-outline");
+        folderIcon.setAttribute("aria-hidden", "true");
+        iconWrap.appendChild(folderIcon);
+
+        const copy = document.createElement("span");
+        const strong = document.createElement("strong");
+        strong.textContent = safeName || "Tanpa folder";
+        const small = document.createElement("small");
+        small.textContent = safeName ? `${noteCount} catatan` : "Tampilkan di daftar utama";
+        copy.append(strong, small);
+
+        const check = document.createElement("ion-icon");
+        check.setAttribute("name", active ? "checkmark-circle" : "ellipse-outline");
+        check.setAttribute("aria-hidden", "true");
+
+        button.append(iconWrap, copy, check);
+        button.addEventListener("click", () => settleFolderPicker({ name: safeName }));
+        return button;
+      };
+
+      list.appendChild(makeOption({ name: "", noteCount: 0 }));
+      normalized.forEach(item => list.appendChild(makeOption(item)));
+    }
+
+    layer.hidden = false;
+    requestAnimationFrame(() => layer.querySelector('[data-selected="true"]')?.focus());
+    return new Promise(resolve => { folderPickerResolve = resolve; });
+  }
+
   document.addEventListener("click", event => {
     if (!activeMenu) return;
     if (event.target.closest?.(".catatan-card-shell.is-menu-open")) return;
@@ -470,6 +576,7 @@
     sortPinnedFirst,
     pickCardColor,
     askFolderName,
+    pickFolder,
     createCardShell,
     attachSelectionControl,
     setSelectionState,

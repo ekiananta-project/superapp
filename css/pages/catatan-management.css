@@ -714,6 +714,93 @@ html[data-theme="dark"] .catatan-note-card[data-card-color="lavender"] {
   cursor: pointer;
 }
 .catatan-folder-create-sheet { overflow: visible; }
+
+.catatan-folder-picker-sheet {
+  overflow: hidden;
+}
+.catatan-folder-picker-list {
+  display: grid;
+  gap: 9px;
+  max-height: min(46dvh, 390px);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: 2px 2px 4px;
+  scrollbar-width: thin;
+}
+.catatan-folder-picker-option,
+.catatan-folder-picker-create {
+  appearance: none;
+  width: 100%;
+  display: grid;
+  grid-template-columns: 44px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 12px;
+  min-height: 68px;
+  padding: 10px 12px;
+  border: 1px solid var(--color-border, #e0e4e1);
+  border-radius: 18px;
+  background: var(--color-surface, #fff);
+  color: var(--color-text, #18201b);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+.catatan-folder-picker-option > span:nth-child(2),
+.catatan-folder-picker-create > span {
+  display: grid;
+  gap: 3px;
+  min-width: 0;
+}
+.catatan-folder-picker-option strong,
+.catatan-folder-picker-create strong {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 14px;
+}
+.catatan-folder-picker-option small,
+.catatan-folder-picker-create small {
+  color: var(--color-text-soft, #6f7b73);
+  font-size: 11px;
+  line-height: 1.35;
+}
+.catatan-folder-picker-option > ion-icon,
+.catatan-folder-picker-create > ion-icon {
+  color: var(--color-text-soft, #6f7b73);
+  font-size: 20px;
+}
+.catatan-folder-picker-option[data-selected="true"] {
+  border-color: color-mix(in srgb, var(--color-primary, #159447) 62%, var(--color-border, #e0e4e1));
+  background: color-mix(in srgb, var(--color-primary, #159447) 8%, var(--color-surface, #fff));
+}
+.catatan-folder-picker-option[data-selected="true"] > ion-icon {
+  color: var(--color-primary, #159447);
+}
+.catatan-folder-picker-icon {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 14px;
+  background: color-mix(in srgb, var(--color-primary, #159447) 10%, var(--color-surface-soft, #eef1ef));
+  color: var(--color-primary, #159447);
+}
+.catatan-folder-picker-icon ion-icon { font-size: 22px; }
+.catatan-folder-picker-create {
+  margin-top: 12px;
+  border-style: dashed;
+}
+.catatan-folder-picker-create > ion-icon:first-child {
+  color: var(--color-primary, #159447);
+  font-size: 25px;
+}
+html[data-theme="dark"] .catatan-folder-picker-option,
+html[data-theme="dark"] .catatan-folder-picker-create {
+  background: var(--color-surface, #212422);
+}
+html[data-theme="dark"] .catatan-folder-picker-option[data-selected="true"] {
+  background: color-mix(in srgb, var(--color-primary, #159447) 13%, var(--color-surface, #212422));
+}
 .catatan-folder-name-field {
   display: grid;
   gap: 7px;
