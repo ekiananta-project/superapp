@@ -99,12 +99,44 @@
     }
   }
 
+  async function togglePinNote(note) {
+    if (scope === "member") return;
+    try {
+      const next = !Boolean(note?._pinned);
+      await NotesService.setPinCatatan(note.id, next);
+      note._pinned = next;
+      showToast(next ? "Catatan dipin." : "Pin dilepas.");
+      await loadNotes();
+    } catch (error) {
+      console.error("[Catatan Folder Pin]", error);
+      if (NotesService.customizationSchemaBelumTerpasang?.(error)) showToast("Jalankan SQL 004G agar Pin aktif.");
+      else showToast(error?.message || "Pin belum dapat diubah.");
+    }
+  }
+
+  async function changeCardColor(note) {
+    if (scope === "member") return;
+    const color = await CatatanManagement.pickCardColor(note?.card_color || "default");
+    if (!color) return;
+    try {
+      await NotesService.setWarnaKartuCatatan(note.id, color);
+      note.card_color = color;
+      showToast("Warna kartu diperbarui.");
+      await loadNotes();
+    } catch (error) {
+      console.error("[Catatan Folder Color]", error);
+      if (NotesService.customizationSchemaBelumTerpasang?.(error)) showToast("Jalankan SQL 004G agar Warna Catatan aktif.");
+      else showToast(error?.message || "Warna catatan belum dapat diubah.");
+    }
+  }
+
   function noteCard(note) {
     const isChecklist = note?.note_type === "checklist";
     const button = document.createElement("button");
     button.type = "button";
     button.className = "catatan-note-card";
     button.dataset.noteId = clean(note?.id);
+    CatatanManagement.applyCardColor(button, note?.card_color || "default");
 
     const title = clean(note?.title, "Tanpa judul");
     const body = clean(note?.body_text) || (isChecklist ? "Checklist belum memiliki item." : "Catatan belum memiliki isi.");
@@ -131,7 +163,7 @@
     accessEl.textContent = access;
 
     button.append(type, titleEl);
-    if (note?.pinned) {
+    if (note?._pinned) {
       const pin = document.createElement("span");
       pin.className = "catatan-note-special";
       pin.textContent = "Dipin";
@@ -155,14 +187,31 @@
     });
     button.dataset.folderNote = "";
 
-    return CatatanManagement.createCardShell(button, {
-      menuLabel: `Menu ${title}`,
-      actions: scope !== "member" && note?._canArchive ? [{
+    const actions = [];
+    if (scope !== "member") {
+      actions.push(
+        {
+          label: note?._pinned ? "Lepas pin" : "Pin catatan",
+          icon: note?._pinned ? "pin" : "pin-outline",
+          onSelect: () => togglePinNote(note)
+        },
+        {
+          label: "Ganti warna",
+          icon: "color-palette-outline",
+          onSelect: () => changeCardColor(note)
+        }
+      );
+      if (note?._canArchive) actions.push({
         label: "Arsipkan",
         icon: "archive-outline",
         tone: "archive",
         onSelect: () => confirmArchiveNote(note)
-      }] : []
+      });
+    }
+
+    return CatatanManagement.createCardShell(button, {
+      menuLabel: `Menu ${title}`,
+      actions
     });
   }
 
@@ -235,17 +284,21 @@
       });
       const ids = notes.map(note => note.id);
       try {
-        const tags = await NotesService.ambilTagMapCatatan(ids);
+        const [tags, preferences] = await Promise.all([
+          NotesService.ambilTagMapCatatan(ids),
+          NotesService.ambilPreferensiCatatan(ids)
+        ]);
         let capabilities = {};
         if (scope !== "member") capabilities = await NotesService.ambilHakLifecycleCatatan(ids);
         notes.forEach(note => {
           note._tags = tags[note.id] || [];
           note._canArchive = Boolean(capabilities[note.id]?.canArchive);
+          note._pinned = Boolean(preferences[note.id]?.pinned);
         });
       } catch (metaError) {
         console.warn("[Catatan Folder Card Metadata]", metaError);
       }
-      renderNotes(notes);
+      renderNotes(CatatanManagement.sortPinnedFirst(notes));
     } catch (error) {
       console.error("[Catatan Folder Backend]", error);
       if (NotesService?.managementSchemaBelumTerpasang?.(error)) showToast("Backend lifecycle belum aktif — jalankan SQL 004F di Supabase dulu.");

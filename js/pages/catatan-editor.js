@@ -8,6 +8,7 @@
   let folderName = "";
   let visibility = "private";
   let pinned = false;
+  let cardColor = "default";
   let savedRange = null;
   let linkSelectedText = "";
   let userId = "guest";
@@ -135,7 +136,7 @@
       bodyHtml,
       bodyText,
       folderName,
-      pinned
+      cardColor
     };
   }
 
@@ -148,7 +149,7 @@
       bodyHtml: snapshot.bodyHtml,
       bodyText: snapshot.bodyText,
       folderName: snapshot.folderName || "",
-      pinned: Boolean(snapshot.pinned)
+      cardColor: snapshot.cardColor || "default"
     });
   }
 
@@ -217,6 +218,12 @@
         if (tagDirty || (noteId && selectedTags.size && lastSavedTagFingerprint === "[]")) {
           await saveTagsNow();
         }
+        if (noteId && pinned && window.NotesService?.setPinCatatan) {
+          try { await window.NotesService.setPinCatatan(noteId, true); } catch (error) { console.warn("[Catatan Pin Save]", error); }
+        }
+        if (noteId && cardColor !== "default" && window.NotesService?.setWarnaKartuCatatan) {
+          try { await window.NotesService.setWarnaKartuCatatan(noteId, cardColor); } catch (error) { console.warn("[Catatan Color Save]", error); }
+        }
         if (announce) showToast("Catatan tersimpan.");
         return saved;
       } catch (error) {
@@ -254,6 +261,47 @@
     if (state) state.textContent = pinned ? "Dipin" : "Tidak dipin";
   }
 
+  function renderCardColorState() {
+    const state = q("[data-info-color]");
+    if (state) state.textContent = window.CatatanManagement?.cardColorLabel?.(cardColor) || "Default";
+  }
+
+  async function changeCardColor() {
+    if (noteReadOnly) return;
+    const next = await window.CatatanManagement?.pickCardColor?.(cardColor, { title: reminderPreset ? "Warna Reminder" : "Warna Catatan" });
+    if (!next) return;
+    const previous = cardColor;
+    cardColor = next;
+    renderCardColorState();
+
+    if (reminderPreset && !noteId) {
+      const url = new URL(location.href);
+      url.searchParams.set("color", cardColor);
+      history.replaceState(history.state, "", `${url.pathname}${url.search}${url.hash}`);
+      showToast("Warna kartu Reminder dipilih.");
+      return;
+    }
+
+    if (!noteId) {
+      await saveBasicNoteNow();
+      if (!noteId) {
+        showToast("Warna akan diterapkan setelah catatan mulai ditulis.");
+        return;
+      }
+    }
+
+    try {
+      await window.NotesService.setWarnaKartuCatatan(noteId, cardColor);
+      showToast("Warna kartu diperbarui.");
+    } catch (error) {
+      cardColor = previous;
+      renderCardColorState();
+      console.error("[Catatan Editor Color]", error);
+      if (window.NotesService?.customizationSchemaBelumTerpasang?.(error)) showToast("Jalankan SQL 004G agar Warna Catatan aktif.");
+      else showToast(error?.message || "Warna catatan belum dapat diubah.");
+    }
+  }
+
   async function loadBasicNote() {
     if (!noteId || reminderPreset || !window.NotesService) return true;
 
@@ -277,7 +325,15 @@
       visibility = note.visibility === "family-read" ? "family-read" : "private";
       if (note.family_id) activeFamilyId = clean(note.family_id, activeFamilyId);
       folderName = clean(note.folder_name);
-      pinned = Boolean(note.pinned);
+      cardColor = window.CatatanManagement?.normalizeCardColor?.(note.card_color) || "default";
+      pinned = false;
+      try {
+        const preferences = await window.NotesService.ambilPreferensiCatatan([noteId]);
+        pinned = Boolean(preferences[noteId]?.pinned);
+      } catch (prefError) {
+        console.warn("[Catatan Editor Preference]", prefError);
+        pinned = Boolean(note.pinned);
+      }
       noteOwnerId = clean(note.created_by);
       noteReadOnly = Boolean(noteOwnerId && noteOwnerId !== userId && scope !== "family");
 
@@ -294,6 +350,7 @@
 
       resizeTitle();
       renderPinState();
+      renderCardColorState();
       await resolveMemberViewContext();
       applyContext();
       if (!(sourceContext === "member" && noteReadOnly)) renderVisibility();
@@ -844,14 +901,28 @@
     renderReminderDedicated();
   }
 
-  function togglePin() {
-    if (noteReadOnly) {
-      showToast("Hanya pembuat catatan yang dapat mengubah pin.");
-      return;
-    }
+  async function togglePin() {
+    if (noteReadOnly) return;
+    const previous = pinned;
     pinned = !pinned;
     renderPinState();
-    scheduleBasicAutosave(120);
+
+    if (!noteId) {
+      scheduleBasicAutosave(120);
+      showToast(pinned ? "Catatan akan dipin setelah tersimpan." : "Pin dilepas.");
+      return;
+    }
+
+    try {
+      await window.NotesService.setPinCatatan(noteId, pinned);
+      showToast(pinned ? (scope === "family" ? "Catatan dipin untuk kamu." : "Catatan dipin.") : "Pin dilepas.");
+    } catch (error) {
+      pinned = previous;
+      renderPinState();
+      console.error("[Catatan Editor Pin]", error);
+      if (window.NotesService?.customizationSchemaBelumTerpasang?.(error)) showToast("Jalankan SQL 004G agar Pin aktif.");
+      else showToast(error?.message || "Pin belum dapat diubah.");
+    }
   }
 
   function warningStorageKey() {
@@ -1286,6 +1357,11 @@
           togglePin();
           return;
         }
+        if (action === "color") {
+          setLayer("[data-info-layer]", false);
+          changeCardColor();
+          return;
+        }
         if (action === "visibility" && scope === "personal") {
           setLayer("[data-info-layer]", false);
           if (editorMode === "edit") openSheet("[data-visibility-layer]", true);
@@ -1311,7 +1387,6 @@
         }
         const names = {
           folder: "Pemilihan Folder",
-          color: "Warna Catatan",
           reminder: "Reminder",
           related: "Catatan Terkait"
         };
@@ -1506,6 +1581,7 @@
       memberSourceId = "";
     }
     reminderPreset = clean(params.get("type")).toLowerCase() === "reminder";
+    cardColor = window.CatatanManagement?.normalizeCardColor?.(params.get("color")) || "default";
     if (!["family", "personal"].includes(scope)) scope = "personal";
     if (scope === "family") visibility = "family-read";
 
@@ -1525,6 +1601,7 @@
 
     setupEditor();
     applyContext();
+    renderCardColorState();
     renderReminder();
 
     if (window.AUTH_READY) {

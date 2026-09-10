@@ -4,6 +4,8 @@
   const q = selector => document.querySelector(selector);
   let activeMenu = null;
   let confirmResolve = null;
+  let colorResolve = null;
+  let folderResolve = null;
   let themeObserver = null;
 
   function clean(value, fallback = "") {
@@ -279,6 +281,169 @@
     return confirmAction({ title, message, confirmLabel, tone: "archive", icon: "archive-outline" });
   }
 
+
+  const CARD_COLORS = [
+    { key: "default", label: "Default" },
+    { key: "sage", label: "Sage" },
+    { key: "sand", label: "Sand" },
+    { key: "sky", label: "Sky" },
+    { key: "rose", label: "Rose" },
+    { key: "lavender", label: "Lavender" }
+  ];
+
+  function normalizeCardColor(value) {
+    const key = String(value || "default").toLowerCase();
+    return CARD_COLORS.some(item => item.key === key) ? key : "default";
+  }
+
+  function cardColorLabel(value) {
+    const key = normalizeCardColor(value);
+    return CARD_COLORS.find(item => item.key === key)?.label || "Default";
+  }
+
+  function applyCardColor(card, color) {
+    if (!card) return;
+    card.dataset.cardColor = normalizeCardColor(color);
+  }
+
+  function sortPinnedFirst(notes = []) {
+    return [...(Array.isArray(notes) ? notes : [])].sort((a, b) => {
+      const pinDelta = Number(Boolean(b?._pinned)) - Number(Boolean(a?._pinned));
+      if (pinDelta) return pinDelta;
+      const bTime = Date.parse(b?.updated_at || b?.created_at || 0) || 0;
+      const aTime = Date.parse(a?.updated_at || a?.created_at || 0) || 0;
+      return bTime - aTime;
+    });
+  }
+
+  function ensureColorLayer() {
+    let layer = q("[data-catatan-color-layer]");
+    if (layer) return layer;
+    layer = document.createElement("div");
+    layer.className = "catatan-picker-layer";
+    layer.dataset.catatanColorLayer = "";
+    layer.hidden = true;
+    layer.innerHTML = `
+      <section class="catatan-picker-sheet" role="dialog" aria-modal="true" aria-labelledby="catatan-color-title">
+        <div class="catatan-picker-handle" aria-hidden="true"></div>
+        <div class="catatan-picker-header">
+          <div><small>Tampilan kartu</small><h2 id="catatan-color-title">Warna Catatan</h2></div>
+          <button type="button" data-catatan-color-close aria-label="Tutup"><ion-icon name="close-outline" aria-hidden="true"></ion-icon></button>
+        </div>
+        <p class="catatan-picker-help">Warna hanya diterapkan pada kartu catatan, bukan halaman editor.</p>
+        <div class="catatan-color-grid" data-catatan-color-grid></div>
+        <button class="catatan-picker-cancel" type="button" data-catatan-color-cancel>Batal</button>
+      </section>`;
+    document.body.appendChild(layer);
+
+    const finish = value => {
+      layer.hidden = true;
+      const resolver = colorResolve;
+      colorResolve = null;
+      resolver?.(value);
+    };
+    layer.querySelector("[data-catatan-color-close]")?.addEventListener("click", () => finish(null));
+    layer.querySelector("[data-catatan-color-cancel]")?.addEventListener("click", () => finish(null));
+    layer.addEventListener("click", event => { if (event.target === layer) finish(null); });
+    return layer;
+  }
+
+  function pickCardColor(current = "default", { title = "Warna Catatan" } = {}) {
+    const layer = ensureColorLayer();
+    if (colorResolve) colorResolve(null);
+    const heading = layer.querySelector("#catatan-color-title");
+    if (heading) heading.textContent = clean(title, "Warna Catatan");
+    const selected = normalizeCardColor(current);
+    const grid = layer.querySelector("[data-catatan-color-grid]");
+    if (grid) {
+      grid.textContent = "";
+      CARD_COLORS.forEach(item => {
+        const button = document.createElement("button");
+        button.type = "button";
+        button.className = "catatan-color-option";
+        button.dataset.color = item.key;
+        button.dataset.selected = String(item.key === selected);
+        button.innerHTML = `<span class="catatan-color-swatch" data-card-color="${item.key}" aria-hidden="true"></span><strong>${item.label}</strong><ion-icon name="${item.key === selected ? "checkmark-circle" : "ellipse-outline"}" aria-hidden="true"></ion-icon>`;
+        button.addEventListener("click", () => {
+          layer.hidden = true;
+          const resolver = colorResolve;
+          colorResolve = null;
+          resolver?.(item.key);
+        });
+        grid.appendChild(button);
+      });
+    }
+    layer.hidden = false;
+    requestAnimationFrame(() => grid?.querySelector('[data-selected="true"]')?.focus());
+    return new Promise(resolve => { colorResolve = resolve; });
+  }
+
+  function ensureFolderLayer() {
+    let layer = q("[data-catatan-folder-create-layer]");
+    if (layer) return layer;
+    layer = document.createElement("div");
+    layer.className = "catatan-picker-layer";
+    layer.dataset.catatanFolderCreateLayer = "";
+    layer.hidden = true;
+    layer.innerHTML = `
+      <section class="catatan-picker-sheet catatan-folder-create-sheet" role="dialog" aria-modal="true" aria-labelledby="catatan-folder-create-title">
+        <div class="catatan-picker-handle" aria-hidden="true"></div>
+        <div class="catatan-picker-header">
+          <div><small data-catatan-folder-context>Organisasi</small><h2 id="catatan-folder-create-title">Buat folder</h2></div>
+          <button type="button" data-catatan-folder-close aria-label="Tutup"><ion-icon name="close-outline" aria-hidden="true"></ion-icon></button>
+        </div>
+        <label class="catatan-folder-name-field">
+          <span>Nama folder</span>
+          <input type="text" maxlength="80" autocomplete="off" placeholder="Contoh: Rumah" data-catatan-folder-input>
+          <small data-catatan-folder-error hidden></small>
+        </label>
+        <div class="catatan-folder-create-actions">
+          <button class="is-secondary" type="button" data-catatan-folder-cancel>Batal</button>
+          <button class="is-primary" type="button" data-catatan-folder-submit>Buat folder</button>
+        </div>
+      </section>`;
+    document.body.appendChild(layer);
+
+    const input = layer.querySelector("[data-catatan-folder-input]");
+    const error = layer.querySelector("[data-catatan-folder-error]");
+    const finish = value => {
+      layer.hidden = true;
+      const resolver = folderResolve;
+      folderResolve = null;
+      resolver?.(value);
+    };
+    const submit = () => {
+      const value = clean(input?.value);
+      if (!value) {
+        if (error) { error.hidden = false; error.textContent = "Nama folder wajib diisi."; }
+        input?.focus();
+        return;
+      }
+      finish(value.slice(0, 80));
+    };
+    layer.querySelector("[data-catatan-folder-close]")?.addEventListener("click", () => finish(null));
+    layer.querySelector("[data-catatan-folder-cancel]")?.addEventListener("click", () => finish(null));
+    layer.querySelector("[data-catatan-folder-submit]")?.addEventListener("click", submit);
+    input?.addEventListener("input", () => { if (error) error.hidden = true; });
+    input?.addEventListener("keydown", event => { if (event.key === "Enter") { event.preventDefault(); submit(); } });
+    layer.addEventListener("click", event => { if (event.target === layer) finish(null); });
+    return layer;
+  }
+
+  function askFolderName({ context = "Catatan", initial = "" } = {}) {
+    const layer = ensureFolderLayer();
+    if (folderResolve) folderResolve(null);
+    const input = layer.querySelector("[data-catatan-folder-input]");
+    const contextEl = layer.querySelector("[data-catatan-folder-context]");
+    const error = layer.querySelector("[data-catatan-folder-error]");
+    if (contextEl) contextEl.textContent = clean(context, "Catatan");
+    if (input) input.value = clean(initial);
+    if (error) { error.hidden = true; error.textContent = ""; }
+    layer.hidden = false;
+    requestAnimationFrame(() => { input?.focus(); input?.select(); });
+    return new Promise(resolve => { folderResolve = resolve; });
+  }
+
   document.addEventListener("click", event => {
     if (!activeMenu) return;
     if (event.target.closest?.(".catatan-card-shell.is-menu-open")) return;
@@ -288,6 +453,12 @@
   window.CatatanManagement = {
     createEmptyState,
     renderTagSummary,
+    normalizeCardColor,
+    cardColorLabel,
+    applyCardColor,
+    sortPinnedFirst,
+    pickCardColor,
+    askFolderName,
     createCardShell,
     attachSelectionControl,
     setSelectionState,

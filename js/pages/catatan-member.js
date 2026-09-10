@@ -132,6 +132,7 @@
     button.type = "button";
     button.className = "catatan-note-card";
     button.dataset.noteId = clean(note?.id);
+    CatatanManagement.applyCardColor(button, note?.card_color || "default");
     const isChecklist = note?.note_type === "checklist";
     const title = clean(note?.title) || "Tanpa judul";
     const body = clean(note?.body_text) || (isChecklist ? "Checklist belum memiliki item." : "Catatan belum memiliki isi.");
@@ -152,7 +153,7 @@
     accessEl.textContent = "Keluarga dapat melihat · Hanya baca";
 
     button.append(type, titleEl);
-    if (note?.pinned) {
+    if (note?._pinned) {
       const pin = document.createElement("span");
       pin.className = "catatan-note-special";
       pin.textContent = "Dipin";
@@ -188,12 +189,19 @@
     try {
       const notes = await NotesService.ambilCatatanAnggota(familyId, memberId);
       try {
-        const tags = await NotesService.ambilTagMapCatatan(notes.map(note => note.id));
-        notes.forEach(note => { note._tags = tags[note.id] || []; });
+        const ids = notes.map(note => note.id);
+        const [tags, preferences] = await Promise.all([
+          NotesService.ambilTagMapCatatan(ids),
+          NotesService.ambilPreferensiCatatan(ids)
+        ]);
+        notes.forEach(note => {
+          note._tags = tags[note.id] || [];
+          note._pinned = Boolean(preferences[note.id]?.pinned);
+        });
       } catch (metaError) {
         console.warn("[Catatan Member Card Tags]", metaError);
       }
-      renderBackendNotes(notes);
+      renderBackendNotes(CatatanManagement.sortPinnedFirst(notes));
     } catch (error) {
       console.error("[Catatan Member Backend]", error);
       if (NotesService.folderSchemaBelumTerpasang?.(error)) showToast("Backend Folder belum aktif — jalankan SQL 004D di Supabase dulu.");

@@ -14,6 +14,7 @@
     "folder_id",
     "folder_name",
     "pinned",
+    "card_color",
     "created_at",
     "updated_at",
     "archived_at"
@@ -46,6 +47,11 @@
     return ["basic", "checklist", "reminder"].includes(type) ? type : "basic";
   }
 
+  function normalizeCardColor(value) {
+    const color = String(value || "default").toLowerCase();
+    return ["default", "sage", "sand", "sky", "rose", "lavender"].includes(color) ? color : "default";
+  }
+
   function normalizePayload(input = {}, forcedType = "basic") {
     const scope = normalizeScope(input.scope);
     const visibility = normalizeVisibility(input.visibility, scope);
@@ -66,7 +72,8 @@
       body_text: String(input.bodyText ?? input.body_text ?? "").trim().slice(0, 500000),
       folder_id: clean(input.folderId ?? input.folder_id) || null,
       folder_name: clean(input.folderName ?? input.folder_name, 80) || null,
-      pinned: Boolean(input.pinned)
+      pinned: Boolean(input.pinned),
+      card_color: normalizeCardColor(input.cardColor ?? input.card_color)
     };
   }
 
@@ -154,7 +161,6 @@
     query = applyTypeFilter(query, noteTypes);
 
     const { data, error } = await query
-      .order("pinned", { ascending: false })
       .order("updated_at", { ascending: false });
 
     if (error) throw error;
@@ -178,7 +184,6 @@
     query = applyTypeFilter(query, noteTypes);
 
     const { data, error } = await query
-      .order("pinned", { ascending: false })
       .order("updated_at", { ascending: false });
 
     if (error) throw error;
@@ -226,7 +231,6 @@
     query = applyTypeFilter(query, noteTypes);
 
     const { data, error } = await query
-      .order("pinned", { ascending: false })
       .order("updated_at", { ascending: false });
 
     if (error) throw error;
@@ -407,6 +411,57 @@
     return clean(data) || null;
   }
 
+  async function buatFolder(scope, familyId, name) {
+    const folderScope = normalizeScope(scope);
+    const folderName = clean(name, 80);
+    const fid = clean(familyId);
+    if (!folderName) throw new Error("Nama folder wajib diisi.");
+
+    const { data, error } = await client().rpc("notes_create_folder_v1", {
+      p_scope: folderScope,
+      p_family_id: folderScope === "family" ? (fid || null) : null,
+      p_name: folderName
+    });
+    if (error) throw error;
+    const row = Array.isArray(data) ? data[0] : data;
+    return { id: clean(row?.id), name: clean(row?.name, folderName) };
+  }
+
+  async function ambilPreferensiCatatan(noteIds = []) {
+    const ids = Array.from(new Set((Array.isArray(noteIds) ? noteIds : []).map(clean).filter(Boolean))).slice(0, 250);
+    if (!ids.length) return {};
+    const { data, error } = await client().rpc("notes_get_preferences_v1", { p_note_ids: ids });
+    if (error) throw error;
+    const map = {};
+    (data || []).forEach(row => {
+      const id = clean(row?.note_id);
+      if (id) map[id] = { pinned: Boolean(row?.pinned) };
+    });
+    return map;
+  }
+
+  async function setPinCatatan(noteId, pinned) {
+    const id = clean(noteId);
+    if (!id) throw new Error("Catatan belum tersimpan.");
+    const { data, error } = await client().rpc("notes_set_pin_v1", {
+      p_note_id: id,
+      p_pinned: Boolean(pinned)
+    });
+    if (error) throw error;
+    return Boolean(data);
+  }
+
+  async function setWarnaKartuCatatan(noteId, color) {
+    const id = clean(noteId);
+    if (!id) throw new Error("Catatan belum tersimpan.");
+    const { data, error } = await client().rpc("notes_set_card_color_v1", {
+      p_note_id: id,
+      p_color: normalizeCardColor(color)
+    });
+    if (error) throw error;
+    return normalizeCardColor(data);
+  }
+
   async function ambilFolderCatalog(scope, familyId = null) {
     const folderScope = normalizeScope(scope);
     const fid = clean(familyId);
@@ -524,7 +579,6 @@
 
     query = applyTypeFilter(query, noteTypes);
     const { data, error } = await query
-      .order("pinned", { ascending: false })
       .order("updated_at", { ascending: false });
 
     if (error) throw error;
@@ -645,6 +699,19 @@
       message.includes("notes_delete_archived_all_v1");
   }
 
+  function customizationSchemaBelumTerpasang(error) {
+    const code = String(error?.code || "").toUpperCase();
+    const message = String(error?.message || error?.details || error?.hint || "").toLowerCase();
+    return code === "PGRST202" ||
+      code === "PGRST204" ||
+      message.includes("notes_create_folder_v1") ||
+      message.includes("notes_get_preferences_v1") ||
+      message.includes("notes_set_pin_v1") ||
+      message.includes("notes_set_card_color_v1") ||
+      message.includes("catatan_note_preferences") ||
+      message.includes("card_color");
+  }
+
   function tagSchemaBelumTerpasang(error) {
     const code = String(error?.code || "").toUpperCase();
     const message = String(error?.message || error?.details || error?.hint || "").toLowerCase();
@@ -689,8 +756,12 @@
     ambilChecklistItems,
     syncChecklistItems,
     resolveFolder,
+    buatFolder,
     ambilFolderCatalog,
     ambilCatatanDalamFolder,
+    ambilPreferensiCatatan,
+    setPinCatatan,
+    setWarnaKartuCatatan,
     ambilTagMapCatatan,
     ambilHakHapusCatatan,
     bolehHapusCatatan,
@@ -708,6 +779,7 @@
     folderSchemaBelumTerpasang,
     managementSchemaBelumTerpasang,
     lifecycleSchemaBelumTerpasang,
+    customizationSchemaBelumTerpasang,
     ambilTagCatalog,
     buatTag,
     ambilTagCatatan,

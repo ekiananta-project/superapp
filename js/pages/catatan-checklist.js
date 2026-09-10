@@ -8,6 +8,7 @@
   let folderName = "";
   let visibility = "private";
   let pinned = false;
+  let cardColor = "default";
   let userId = "guest";
   let activeFamilyId = "";
   let noteId = "";
@@ -227,6 +228,39 @@
     q("[data-pin-switch]")?.classList.toggle("is-on", pinned);
     const state = q("[data-pin-state]");
     if (state) state.textContent = pinned ? "Dipin" : "Tidak dipin";
+  }
+
+  function renderCardColorState() {
+    const state = q("[data-info-color]");
+    if (state) state.textContent = window.CatatanManagement?.cardColorLabel?.(cardColor) || "Default";
+  }
+
+  async function changeCardColor() {
+    if (noteReadOnly) return;
+    const next = await window.CatatanManagement?.pickCardColor?.(cardColor, { title: "Warna Checklist" });
+    if (!next) return;
+    const previous = cardColor;
+    cardColor = next;
+    renderCardColorState();
+
+    if (!noteId) {
+      await saveChecklistNow();
+      if (!noteId) {
+        showToast("Warna akan diterapkan setelah checklist mulai diisi.");
+        return;
+      }
+    }
+
+    try {
+      await window.NotesService.setWarnaKartuCatatan(noteId, cardColor);
+      showToast("Warna kartu diperbarui.");
+    } catch (error) {
+      cardColor = previous;
+      renderCardColorState();
+      console.error("[Checklist Color]", error);
+      if (window.NotesService?.customizationSchemaBelumTerpasang?.(error)) showToast("Jalankan SQL 004G agar Warna Catatan aktif.");
+      else showToast(error?.message || "Warna checklist belum dapat diubah.");
+    }
   }
 
   function applyContext() {
@@ -832,7 +866,7 @@
       bodyHtml: "",
       bodyText: items.map(item => item.text).join("\n"),
       folderName,
-      pinned,
+      cardColor,
       items
     };
   }
@@ -844,7 +878,7 @@
       visibility: snapshot.visibility,
       title: snapshot.title,
       folderName: snapshot.folderName || "",
-      pinned: Boolean(snapshot.pinned),
+      cardColor: snapshot.cardColor || "default",
       items: snapshot.items.map(item => ({ text: item.text, completed: Boolean(item.completed) }))
     });
   }
@@ -928,6 +962,12 @@
 
         q("[data-catatan-checklist]")?.setAttribute("data-save-state", "saved");
         if (tagDirty || (noteId && selectedTags.size && lastSavedTagFingerprint === "[]")) await saveTagsNow();
+        if (noteId && pinned && window.NotesService?.setPinCatatan) {
+          try { await window.NotesService.setPinCatatan(noteId, true); } catch (error) { console.warn("[Checklist Pin Save]", error); }
+        }
+        if (noteId && cardColor !== "default" && window.NotesService?.setWarnaKartuCatatan) {
+          try { await window.NotesService.setWarnaKartuCatatan(noteId, cardColor); } catch (error) { console.warn("[Checklist Color Save]", error); }
+        }
         if (announce && !noteDirty) showToast("Checklist tersimpan.");
         return saved;
       } catch (error) {
@@ -981,7 +1021,15 @@
       visibility = note.visibility === "family-read" ? "family-read" : "private";
       if (note.family_id) activeFamilyId = clean(note.family_id, activeFamilyId);
       folderName = clean(note.folder_name);
-      pinned = Boolean(note.pinned);
+      cardColor = window.CatatanManagement?.normalizeCardColor?.(note.card_color) || "default";
+      pinned = false;
+      try {
+        const preferences = await window.NotesService.ambilPreferensiCatatan([noteId]);
+        pinned = Boolean(preferences[noteId]?.pinned);
+      } catch (prefError) {
+        console.warn("[Checklist Preference]", prefError);
+        pinned = Boolean(note.pinned);
+      }
       noteOwnerId = clean(note.created_by);
       noteReadOnly = Boolean(noteOwnerId && noteOwnerId !== userId && scope !== "family");
 
@@ -996,6 +1044,7 @@
       resizeTitle();
       await resolveMemberViewContext();
       applyContext();
+      renderCardColorState();
       setMode(noteReadOnly ? "view" : "edit", false);
       await refreshDeletePermission();
       lastSavedFingerprint = checklistFingerprint();
@@ -1054,11 +1103,28 @@
     }
   }
 
-  function togglePin() {
+  async function togglePin() {
     if (noteReadOnly) return;
+    const previous = pinned;
     pinned = !pinned;
     renderPinState();
-    scheduleChecklistAutosave(120);
+
+    if (!noteId) {
+      scheduleChecklistAutosave(120);
+      showToast(pinned ? "Checklist akan dipin setelah tersimpan." : "Pin dilepas.");
+      return;
+    }
+
+    try {
+      await window.NotesService.setPinCatatan(noteId, pinned);
+      showToast(pinned ? (scope === "family" ? "Checklist dipin untuk kamu." : "Checklist dipin.") : "Pin dilepas.");
+    } catch (error) {
+      pinned = previous;
+      renderPinState();
+      console.error("[Checklist Pin]", error);
+      if (window.NotesService?.customizationSchemaBelumTerpasang?.(error)) showToast("Jalankan SQL 004G agar Pin aktif.");
+      else showToast(error?.message || "Pin belum dapat diubah.");
+    }
   }
 
   function setupSheets() {
@@ -1120,6 +1186,11 @@
           togglePin();
           return;
         }
+        if (action === "color") {
+          setLayer("[data-info-layer]", false);
+          changeCardColor();
+          return;
+        }
         if (action === "visibility" && scope === "personal") {
           setLayer("[data-info-layer]", false);
           if (editorMode === "edit") openSheet("[data-visibility-layer]");
@@ -1143,7 +1214,6 @@
         }
         const names = {
           folder: "Pemilihan Folder",
-          color: "Warna Catatan",
           related: "Catatan Terkait"
         };
         showToast(`${names[action] || "Fitur"} akan aktif pada tahap backend berikutnya.`);

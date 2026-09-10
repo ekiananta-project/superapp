@@ -96,6 +96,49 @@
     }
   }
 
+  async function togglePinNote(note) {
+    try {
+      const next = !Boolean(note?._pinned);
+      await NotesService.setPinCatatan(note.id, next);
+      note._pinned = next;
+      showToast(next ? "Catatan dipin untuk kamu." : "Pin dilepas.");
+      await loadBackendNotes();
+    } catch (error) {
+      console.error("[Catatan Family Pin]", error);
+      if (NotesService.customizationSchemaBelumTerpasang?.(error)) showToast("Jalankan SQL 004G agar Pin aktif.");
+      else showToast(error?.message || "Pin belum dapat diubah.");
+    }
+  }
+
+  async function changeCardColor(note) {
+    const color = await CatatanManagement.pickCardColor(note?.card_color || "default");
+    if (!color) return;
+    try {
+      await NotesService.setWarnaKartuCatatan(note.id, color);
+      note.card_color = color;
+      showToast("Warna kartu keluarga diperbarui.");
+      await loadBackendNotes();
+    } catch (error) {
+      console.error("[Catatan Family Color]", error);
+      if (NotesService.customizationSchemaBelumTerpasang?.(error)) showToast("Jalankan SQL 004G agar Warna Catatan aktif.");
+      else showToast(error?.message || "Warna catatan belum dapat diubah.");
+    }
+  }
+
+  async function createFolder() {
+    const name = await CatatanManagement.askFolderName({ context: "Catatan Keluarga" });
+    if (!name) return;
+    try {
+      await NotesService.buatFolder("family", familyId, name);
+      showToast(`Folder “${name}” dibuat untuk keluarga.`);
+      await loadBackendFolders();
+    } catch (error) {
+      console.error("[Catatan Family Folder Create]", error);
+      if (NotesService.customizationSchemaBelumTerpasang?.(error)) showToast("Jalankan SQL 004G agar Tambah Folder aktif.");
+      else showToast(error?.message || "Folder keluarga belum dapat dibuat.");
+    }
+  }
+
   async function confirmDeleteFolder(folder) {
     const count = Number(folder?.deleteCount ?? folder?.noteCount ?? 0);
     const ok = await CatatanManagement.confirmDanger({
@@ -132,6 +175,7 @@
     button.type = "button";
     button.className = "catatan-note-card";
     button.dataset.noteId = clean(note?.id);
+    CatatanManagement.applyCardColor(button, note?.card_color || "default");
     const isChecklist = note?.note_type === "checklist";
     const title = clean(note?.title) || "Tanpa judul";
     const body = clean(note?.body_text) || (isChecklist ? "Checklist belum memiliki item." : "Catatan belum memiliki isi.");
@@ -154,7 +198,7 @@
     accessEl.textContent = access;
 
     button.append(type, titleEl);
-    if (note?.pinned) {
+    if (note?._pinned) {
       const pin = document.createElement("span");
       pin.className = "catatan-note-special";
       pin.textContent = "Dipin";
@@ -172,12 +216,24 @@
     });
     button.dataset.previewItem = "";
 
-    const actions = note?._canArchive ? [{
+    const actions = [
+      {
+        label: note?._pinned ? "Lepas pin" : "Pin catatan",
+        icon: note?._pinned ? "pin" : "pin-outline",
+        onSelect: () => togglePinNote(note)
+      },
+      {
+        label: "Ganti warna",
+        icon: "color-palette-outline",
+        onSelect: () => changeCardColor(note)
+      }
+    ];
+    if (note?._canArchive) actions.push({
       label: "Arsipkan",
       icon: "archive-outline",
       tone: "archive",
       onSelect: () => confirmArchiveNote(note)
-    }] : [];
+    });
     const shell = CatatanManagement.createCardShell(button, {
       actions,
       menuLabel: `Menu ${title}`
@@ -325,20 +381,23 @@
       const notes = await NotesService.ambilCatatanKeluarga(familyId);
       const ids = notes.map(note => note.id);
       try {
-        const [tags, capabilities] = await Promise.all([
+        const [tags, capabilities, preferences] = await Promise.all([
           NotesService.ambilTagMapCatatan(ids),
-          NotesService.ambilHakLifecycleCatatan(ids)
+          NotesService.ambilHakLifecycleCatatan(ids),
+          NotesService.ambilPreferensiCatatan(ids)
         ]);
         notes.forEach(note => {
           note._tags = tags[note.id] || [];
           note._canArchive = Boolean(capabilities[note.id]?.canArchive);
+          note._pinned = Boolean(preferences[note.id]?.pinned);
         });
       } catch (metaError) {
-        if (NotesService.lifecycleSchemaBelumTerpasang?.(metaError)) showToast("Jalankan SQL 004F agar Arsip & multi-select aktif.");
+        if (NotesService.customizationSchemaBelumTerpasang?.(metaError)) showToast("Jalankan SQL 004G agar Pin & Warna Catatan aktif.");
+        else if (NotesService.lifecycleSchemaBelumTerpasang?.(metaError)) showToast("Jalankan SQL 004F agar Arsip & multi-select aktif.");
         else if (NotesService.managementSchemaBelumTerpasang?.(metaError)) showToast("Jalankan SQL 004E agar tag kartu aktif.");
         else console.warn("[Catatan Family Card Metadata]", metaError);
       }
-      renderBackendNotes(notes);
+      renderBackendNotes(CatatanManagement.sortPinnedFirst(notes));
     } catch (error) {
       console.error("[Catatan Family Backend]", error);
       if (NotesService.folderSchemaBelumTerpasang?.(error)) showToast("Backend Folder belum aktif — jalankan SQL 004D di Supabase dulu.");
@@ -359,7 +418,7 @@
   }
 
   function setupInteractions() {
-    q("[data-add-folder]")?.addEventListener("click", () => showToast("Tambah Folder khusus akan aktif pada tahap berikutnya."));
+    q("[data-add-folder]")?.addEventListener("click", createFolder);
     q("#catatan-family-search")?.addEventListener("input", filterPreview);
     q("[data-create-note]")?.addEventListener("click", openCreateSheet);
     q("[data-create-close]")?.addEventListener("click", closeCreateSheet);

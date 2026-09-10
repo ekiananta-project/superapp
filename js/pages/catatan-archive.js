@@ -40,14 +40,13 @@
   function applyContext() {
     const personal = scope === "personal";
     const backHref = personal ? "catatan-pribadi.html" : "catatan-keluarga.html";
-    const label = personal ? "Catatan Pribadi" : "Catatan Keluarga";
     const title = personal ? "Arsip Pribadi" : "Arsip Keluarga";
     const description = personal
       ? "Catatan Pribadi yang diarsipkan tetap aman dan dapat dipulihkan."
       : "Catatan Keluarga yang diarsipkan tetap terlihat bagi anggota, tetapi lifecycle hanya dikelola pembuat atau Family Owner.";
 
     q("[data-archive-back]")?.setAttribute("href", backHref);
-    q("[data-archive-back-label]") && (q("[data-archive-back-label]").textContent = label);
+    q("[data-archive-back]")?.setAttribute("aria-label", personal ? "Kembali ke Catatan Pribadi" : "Kembali ke Catatan Keluarga");
     q("[data-archive-title]") && (q("[data-archive-title]").textContent = title);
     q("[data-archive-description]") && (q("[data-archive-description]").textContent = description);
     q("[data-archive-home]")?.setAttribute("href", backHref);
@@ -136,6 +135,7 @@
     const card = document.createElement("article");
     card.className = "catatan-note-card catatan-archive-card";
     card.dataset.noteId = clean(note?.id);
+    CatatanManagement.applyCardColor(card, note?.card_color || "default");
     const isChecklist = note?.note_type === "checklist";
     const title = clean(note?.title, "Tanpa judul");
     const body = clean(note?.body_text) || (isChecklist ? "Checklist belum memiliki item." : "Catatan belum memiliki isi.");

@@ -1,4 +1,4 @@
-const CACHE_NAME = "ruangkitha-v2.0.0a34-catatan-archive-bulk-1";
+const CACHE_NAME = "ruangkitha-v2.0.0a35-catatan-folder-pin-color-1";
 const OFFLINE_URL = "./offline.html";
 
 const APP_FILES = [
