@@ -521,7 +521,7 @@ html[data-theme="dark"] .catatan-bulk-bar .is-secondary {
   background: color-mix(in srgb, var(--color-primary, #159447) 9%, var(--color-surface, #fff));
 }
 
-/* RuangKitha v2.0.0a35 — folder create + per-user pin + card color */
+/* RuangKitha v2.0.0a36 — folder create + per-user pin + card color */
 
 /* Empty folder should not push the Catatan section below the first viewport. */
 .catatan-rich-empty[data-empty-kind="folders"] {
@@ -775,4 +775,35 @@ html[data-theme="dark"] .catatan-folder-create-actions .is-secondary {
   .catatan-rich-empty[data-empty-kind="folders"] { margin-block: -10px -10px; }
   .catatan-color-grid { grid-template-columns: 1fr 1fr; }
   .catatan-picker-sheet { padding-inline: 16px; }
+}
+
+
+/* RuangKitha v2.0.0a36 — Pin + Arsip theme hotfix */
+.catatan-note-pin-indicator {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  z-index: 2;
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--color-primary, #159447) 12%, var(--color-surface, #fff));
+  color: var(--color-primary, #159447);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--color-primary, #159447) 18%, transparent);
+  pointer-events: none;
+}
+.catatan-note-pin-indicator ion-icon { font-size: 16px; transform: rotate(-8deg); }
+.catatan-card-shell.has-overflow > .catatan-note-card .catatan-note-pin-indicator { right: 49px; }
+html[data-theme="dark"] .catatan-note-pin-indicator {
+  background: color-mix(in srgb, var(--color-primary, #159447) 18%, var(--color-surface, #212422));
+}
+html[data-theme="dark"] .catatan-archive-area,
+html[data-theme="dark"] .catatan-archive-area .catatan-area-main {
+  background: var(--color-background, #0b0d0c) !important;
+  color: var(--color-text, #f4f6f4);
+}
+html[data-theme="dark"] .catatan-archive-area .catatan-standard-header {
+  background: color-mix(in srgb, var(--color-background, #0b0d0c) 94%, transparent) !important;
 }

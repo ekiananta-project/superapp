@@ -106,7 +106,7 @@
       await NotesService.setPinCatatan(note.id, next);
       note._pinned = next;
       showToast(next ? "Catatan dipin." : "Pin dilepas.");
-      await loadBackendNotes();
+      renderBackendNotes(CatatanManagement.sortPinnedFirst(Array.from(notesById.values())));
     } catch (error) {
       console.error("[Catatan Personal Pin]", error);
       if (NotesService.customizationSchemaBelumTerpasang?.(error)) showToast("Jalankan SQL 004G agar Pin aktif.");
@@ -199,10 +199,12 @@
 
     button.append(type, titleEl);
     if (note?._pinned) {
-      const pin = document.createElement("span");
-      pin.className = "catatan-note-special";
-      pin.textContent = "Dipin";
-      button.appendChild(pin);
+      button.appendChild(CatatanManagement.createPinIndicator?.() || (() => {
+        const pin = document.createElement("span");
+        pin.className = "catatan-note-pin-indicator";
+        pin.innerHTML = '<ion-icon name="pin" aria-hidden="true"></ion-icon>';
+        return pin;
+      })());
     }
     button.appendChild(previewEl);
     const tagSummary = CatatanManagement.renderTagSummary(tags);

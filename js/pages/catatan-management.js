@@ -76,6 +76,16 @@
     return root;
   }
 
+  function createPinIndicator(label = "Catatan dipin") {
+    const pin = document.createElement("span");
+    pin.className = "catatan-note-pin-indicator";
+    pin.setAttribute("role", "img");
+    pin.setAttribute("aria-label", clean(label, "Catatan dipin"));
+    pin.title = clean(label, "Catatan dipin");
+    pin.innerHTML = '<ion-icon name="pin" aria-hidden="true"></ion-icon>';
+    return pin;
+  }
+
   function renderTagSummary(tags = []) {
     const values = Array.from(new Set((Array.isArray(tags) ? tags : []).map(clean).filter(Boolean)));
     if (!values.length) return null;
@@ -453,6 +463,7 @@
   window.CatatanManagement = {
     createEmptyState,
     renderTagSummary,
+    createPinIndicator,
     normalizeCardColor,
     cardColorLabel,
     applyCardColor,

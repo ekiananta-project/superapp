@@ -427,13 +427,24 @@
     return { id: clean(row?.id), name: clean(row?.name, folderName) };
   }
 
+  function rpcFunctionMissing(error, functionName = "") {
+    const code = String(error?.code || "").toUpperCase();
+    const message = String(error?.message || error?.details || error?.hint || "").toLowerCase();
+    return code === "PGRST202" || (functionName && message.includes(String(functionName).toLowerCase()));
+  }
+
   async function ambilPreferensiCatatan(noteIds = []) {
     const ids = Array.from(new Set((Array.isArray(noteIds) ? noteIds : []).map(clean).filter(Boolean))).slice(0, 250);
     if (!ids.length) return {};
-    const { data, error } = await client().rpc("notes_get_preferences_v1", { p_note_ids: ids });
-    if (error) throw error;
+
+    let result = await client().rpc("notes_get_preferences_v2", { p_note_ids: ids });
+    if (result.error && rpcFunctionMissing(result.error, "notes_get_preferences_v2")) {
+      result = await client().rpc("notes_get_preferences_v1", { p_note_ids: ids });
+    }
+    if (result.error) throw result.error;
+
     const map = {};
-    (data || []).forEach(row => {
+    (result.data || []).forEach(row => {
       const id = clean(row?.note_id);
       if (id) map[id] = { pinned: Boolean(row?.pinned) };
     });
@@ -443,12 +454,19 @@
   async function setPinCatatan(noteId, pinned) {
     const id = clean(noteId);
     if (!id) throw new Error("Catatan belum tersimpan.");
-    const { data, error } = await client().rpc("notes_set_pin_v1", {
+
+    let result = await client().rpc("notes_set_pin_v2", {
       p_note_id: id,
       p_pinned: Boolean(pinned)
     });
-    if (error) throw error;
-    return Boolean(data);
+    if (result.error && rpcFunctionMissing(result.error, "notes_set_pin_v2")) {
+      result = await client().rpc("notes_set_pin_v1", {
+        p_note_id: id,
+        p_pinned: Boolean(pinned)
+      });
+    }
+    if (result.error) throw result.error;
+    return Boolean(result.data);
   }
 
   async function setWarnaKartuCatatan(noteId, color) {
@@ -706,7 +724,9 @@
       code === "PGRST204" ||
       message.includes("notes_create_folder_v1") ||
       message.includes("notes_get_preferences_v1") ||
+      message.includes("notes_get_preferences_v2") ||
       message.includes("notes_set_pin_v1") ||
+      message.includes("notes_set_pin_v2") ||
       message.includes("notes_set_card_color_v1") ||
       message.includes("catatan_note_preferences") ||
       message.includes("card_color");

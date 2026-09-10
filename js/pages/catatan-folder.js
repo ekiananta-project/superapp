@@ -12,6 +12,7 @@
   let userId = "";
   let familyId = "";
   let noteCount = 0;
+  let renderedNotes = [];
 
   function clean(value, fallback = "") {
     const text = String(value ?? "").trim().replace(/\s+/g, " ");
@@ -106,7 +107,7 @@
       await NotesService.setPinCatatan(note.id, next);
       note._pinned = next;
       showToast(next ? "Catatan dipin." : "Pin dilepas.");
-      await loadNotes();
+      renderNotes(CatatanManagement.sortPinnedFirst(renderedNotes));
     } catch (error) {
       console.error("[Catatan Folder Pin]", error);
       if (NotesService.customizationSchemaBelumTerpasang?.(error)) showToast("Jalankan SQL 004G agar Pin aktif.");
@@ -164,10 +165,12 @@
 
     button.append(type, titleEl);
     if (note?._pinned) {
-      const pin = document.createElement("span");
-      pin.className = "catatan-note-special";
-      pin.textContent = "Dipin";
-      button.appendChild(pin);
+      button.appendChild(CatatanManagement.createPinIndicator?.() || (() => {
+        const pin = document.createElement("span");
+        pin.className = "catatan-note-pin-indicator";
+        pin.innerHTML = '<ion-icon name="pin" aria-hidden="true"></ion-icon>';
+        return pin;
+      })());
     }
     button.appendChild(previewEl);
     const tagSummary = CatatanManagement.renderTagSummary(tags);
@@ -219,8 +222,9 @@
     const grid = q("[data-folder-note-grid]");
     if (!grid) return;
     grid.textContent = "";
-    noteCount = notes.length;
-    notes.forEach(note => {
+    renderedNotes = Array.isArray(notes) ? notes : [];
+    noteCount = renderedNotes.length;
+    renderedNotes.forEach(note => {
       const shell = noteCard(note);
       shell.dataset.folderNote = "";
       grid.appendChild(shell);

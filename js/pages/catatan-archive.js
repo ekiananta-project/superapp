@@ -7,6 +7,7 @@
   let scope = "personal";
   let userId = "";
   let familyId = "";
+  let source = "";
   let archiveNotes = [];
 
   function clean(value, fallback = "") {
@@ -39,17 +40,20 @@
 
   function applyContext() {
     const personal = scope === "personal";
-    const backHref = personal ? "catatan-pribadi.html" : "catatan-keluarga.html";
+    const scopeHref = personal ? "catatan-pribadi.html" : "catatan-keluarga.html";
+    const backHref = source === "home" ? "catatan.html" : scopeHref;
     const title = personal ? "Arsip Pribadi" : "Arsip Keluarga";
     const description = personal
       ? "Catatan Pribadi yang diarsipkan tetap aman dan dapat dipulihkan."
       : "Catatan Keluarga yang diarsipkan tetap terlihat bagi anggota, tetapi lifecycle hanya dikelola pembuat atau Family Owner.";
 
     q("[data-archive-back]")?.setAttribute("href", backHref);
-    q("[data-archive-back]")?.setAttribute("aria-label", personal ? "Kembali ke Catatan Pribadi" : "Kembali ke Catatan Keluarga");
+    q("[data-archive-back]")?.setAttribute("aria-label", source === "home"
+      ? "Kembali ke Catatan"
+      : (personal ? "Kembali ke Catatan Pribadi" : "Kembali ke Catatan Keluarga"));
     q("[data-archive-title]") && (q("[data-archive-title]").textContent = title);
     q("[data-archive-description]") && (q("[data-archive-description]").textContent = description);
-    q("[data-archive-home]")?.setAttribute("href", backHref);
+    q("[data-archive-home]")?.setAttribute("href", "catatan.html");
     q("[data-archive-nav]")?.setAttribute("href", `catatan-arsip.html?scope=${scope}`);
     q("[data-archive-create]")?.setAttribute("href", `catatan-editor.html?scope=${scope}`);
     const search = q("#catatan-archive-search");
@@ -276,6 +280,7 @@
   async function init() {
     const params = new URLSearchParams(location.search);
     scope = clean(params.get("scope")).toLowerCase() === "family" ? "family" : "personal";
+    source = clean(params.get("from")).toLowerCase() === "home" ? "home" : "";
     applyContext();
     setupInteractions();
 
