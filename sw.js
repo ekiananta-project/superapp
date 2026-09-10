@@ -1,4 +1,4 @@
-const CACHE_NAME = "ruangkitha-v2.0.0a32-catatan-collab-folder-tag-1";
+const CACHE_NAME = "ruangkitha-v2.0.0a33-catatan-delete-card-empty-1";
 const OFFLINE_URL = "./offline.html";
 
 const APP_FILES = [
@@ -67,6 +67,7 @@ const APP_FILES = [
   "./css/pages/catatan-area.css",
   "./css/pages/catatan-editor.css",
   "./css/pages/catatan-checklist.css",
+  "./css/pages/catatan-management.css",
   "./js/pages/catatan-home.js",
   "./js/pages/catatan-family.js",
   "./js/pages/catatan-personal.js",
@@ -74,6 +75,7 @@ const APP_FILES = [
   "./js/pages/catatan-folder.js",
   "./js/pages/catatan-editor.js",
   "./js/pages/catatan-checklist.js",
+  "./js/pages/catatan-management.js",
   "./finance.html",
   "./kalender.html",
   "./profil.html",
@@ -83,6 +85,10 @@ const APP_FILES = [
   "./js/pages/superapp-home.js",
   "./js/pages/superapp-home-lottie.js",
   "./assets/lottie/today-family.json",
+  "./assets/lottie/catatan-empty-notes-light.lottie",
+  "./assets/lottie/catatan-empty-notes-dark.lottie",
+  "./assets/lottie/catatan-empty-folders-light.lottie",
+  "./assets/lottie/catatan-empty-folders-dark.lottie",
   "./js/pages/superapp-calendar.js",
   "./js/pages/superapp-profile-shell.js",
   "./js/app.js",

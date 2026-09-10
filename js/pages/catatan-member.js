@@ -8,6 +8,7 @@
   let memberName = "Anggota";
   let activeMemberId = "";
   let backendNoteCount = null;
+  let backendFolderCount = null;
 
   function clean(value, fallback = "") {
     const text = String(value ?? "").trim().replace(/\s+/g, " ");
@@ -43,53 +44,52 @@
     createScope = null;
   }
 
-  function filterPreview() {
-    const input = q("#catatan-member-search");
-    const needle = clean(input?.value).toLocaleLowerCase("id-ID");
-    const items = qa("[data-preview-item]");
-    let visibleItems = 0;
-
-    items.forEach(item => {
-      const haystack = clean(item.dataset.searchText).toLocaleLowerCase("id-ID");
-      const visible = !needle || haystack.includes(needle);
-      item.hidden = !visible;
-      if (visible) visibleItems += 1;
-    });
-
-    const empty = q("[data-search-empty]");
-    if (empty) empty.hidden = !needle || visibleItems > 0;
-    const backendEmpty = q("[data-backend-notes-empty]");
-    if (backendEmpty && backendNoteCount !== null) {
-      backendEmpty.hidden = backendNoteCount !== 0 || Boolean(needle);
-    }
-  }
-
-  function ensureBackendEmpty() {
-    let empty = q("[data-backend-notes-empty]");
+  function ensureEmpty(kind) {
+    const selector = kind === "folders" ? "[data-backend-folders-empty]" : "[data-backend-notes-empty]";
+    let empty = q(selector);
     if (empty) return empty;
-    const section = q(".catatan-notes-section");
-    if (!section) return null;
-    empty = document.createElement("div");
-    empty.className = "catatan-area-empty";
-    empty.dataset.backendNotesEmpty = "";
-    empty.innerHTML = '<ion-icon name="eye-outline" aria-hidden="true"></ion-icon><strong>Belum ada catatan yang dibagikan</strong><span>Catatan pribadi anggota akan tampil di sini saat visibilitasnya diubah menjadi Keluarga dapat melihat.</span>';
+    const grid = kind === "folders" ? q("[data-member-folder-grid]") : q("[data-member-note-grid]");
+    const section = grid?.closest(".catatan-area-section");
+    if (!section || !window.CatatanManagement) return null;
+    empty = CatatanManagement.createEmptyState(kind, kind === "folders" ? {
+      title: "Belum ada folder yang dibagikan",
+      message: `Folder milik ${memberName} akan tampil jika berisi catatan yang dibagikan ke keluarga.`
+    } : {
+      title: "Belum ada catatan yang dibagikan",
+      message: `Catatan pribadi ${memberName} akan tampil saat visibilitasnya menjadi Keluarga dapat melihat.`
+    });
+    if (kind === "folders") empty.dataset.backendFoldersEmpty = "";
+    else empty.dataset.backendNotesEmpty = "";
     empty.hidden = true;
     section.appendChild(empty);
     return empty;
+  }
+
+  function filterPreview() {
+    const needle = clean(q("#catatan-member-search")?.value).toLocaleLowerCase("id-ID");
+    let visibleItems = 0;
+    qa("[data-preview-item]").forEach(item => {
+      const visible = !needle || clean(item.dataset.searchText).toLocaleLowerCase("id-ID").includes(needle);
+      item.hidden = !visible;
+      if (visible) visibleItems += 1;
+    });
+    const searchEmpty = q("[data-search-empty]");
+    if (searchEmpty) searchEmpty.hidden = !needle || visibleItems > 0;
+    const noteEmpty = q("[data-backend-notes-empty]");
+    if (noteEmpty && backendNoteCount !== null) noteEmpty.hidden = backendNoteCount !== 0 || Boolean(needle);
+    const folderEmpty = q("[data-backend-folders-empty]");
+    if (folderEmpty && backendFolderCount !== null) folderEmpty.hidden = backendFolderCount !== 0 || Boolean(needle);
   }
 
   function folderCard(folder) {
     const button = document.createElement("button");
     button.type = "button";
     button.className = "catatan-folder-card";
-    button.dataset.previewItem = "";
     button.dataset.folderName = clean(folder?.name);
     button.dataset.searchText = clean(`${folder?.name || ""} folder catatan anggota`);
-
     const icon = document.createElement("span");
     icon.className = "catatan-folder-icon";
     icon.innerHTML = '<ion-icon name="folder-outline" aria-hidden="true"></ion-icon>';
-
     const copy = document.createElement("span");
     copy.className = "catatan-folder-copy";
     const strong = document.createElement("strong");
@@ -98,25 +98,29 @@
     small.textContent = `${Number(folder?.noteCount || 0)} catatan`;
     copy.append(strong, small);
     button.append(icon, copy);
-
     button.addEventListener("click", () => {
       if (!activeMemberId || !folder?.name) return;
       location.href = `catatan-folder.html?scope=member&member=${encodeURIComponent(activeMemberId)}&folder=${encodeURIComponent(folder.name)}`;
     });
-    return button;
+    button.dataset.previewItem = "";
+    return CatatanManagement.createCardShell(button);
   }
 
-  function renderBackendFolders(folders) {
+  function renderBackendFolders(folders = []) {
     const grid = q("[data-member-folder-grid]");
     if (!grid) return;
     grid.textContent = "";
-    (folders || []).forEach(folder => grid.appendChild(folderCard(folder)));
+    backendFolderCount = folders.length;
+    folders.forEach(folder => grid.appendChild(folderCard(folder)));
+    const empty = ensureEmpty("folders");
+    if (empty) empty.hidden = folders.length !== 0;
+    filterPreview();
   }
 
   async function loadBackendFolders(familyId, memberId) {
     if (!window.NotesService?.ambilFolderAnggota) return;
     try {
-      const folders = await window.NotesService.ambilFolderAnggota(familyId, memberId);
+      const folders = await NotesService.ambilFolderAnggota(familyId, memberId);
       renderBackendFolders(folders);
     } catch (error) {
       console.warn("[Catatan Member Folder Backend]", error);
@@ -127,26 +131,22 @@
     const button = document.createElement("button");
     button.type = "button";
     button.className = "catatan-note-card";
-    button.dataset.previewItem = "";
     button.dataset.noteId = clean(note?.id);
-
     const isChecklist = note?.note_type === "checklist";
     const title = clean(note?.title) || "Tanpa judul";
     const body = clean(note?.body_text) || (isChecklist ? "Checklist belum memiliki item." : "Catatan belum memiliki isi.");
     const preview = body.length > 180 ? `${body.slice(0, 177)}...` : body;
-    button.dataset.searchText = clean(`${title} ${body} ${note?.folder_name || ""} keluarga dapat melihat hanya baca`);
+    const tags = Array.isArray(note?._tags) ? note._tags : [];
+    button.dataset.searchText = clean(`${title} ${body} ${note?.folder_name || ""} keluarga dapat melihat hanya baca ${tags.join(" ")}`);
 
     const type = document.createElement("span");
     type.className = "catatan-note-type";
     type.innerHTML = `<ion-icon name="${isChecklist ? "checkbox-outline" : "document-text-outline"}" aria-hidden="true"></ion-icon>`;
-
     const titleEl = document.createElement("strong");
     titleEl.textContent = title;
-
     const previewEl = document.createElement("span");
     previewEl.className = "catatan-note-preview";
     previewEl.textContent = preview;
-
     const accessEl = document.createElement("small");
     accessEl.className = "catatan-note-access";
     accessEl.textContent = "Keluarga dapat melihat · Hanya baca";
@@ -158,41 +158,47 @@
       pin.textContent = "Dipin";
       button.appendChild(pin);
     }
-    button.append(previewEl, accessEl);
+    button.appendChild(previewEl);
+    const tagSummary = CatatanManagement.renderTagSummary(tags);
+    if (tagSummary) button.appendChild(tagSummary);
+    button.appendChild(accessEl);
     button.addEventListener("click", () => {
       const member = encodeURIComponent(activeMemberId);
       location.href = isChecklist
         ? `catatan-checklist.html?scope=personal&id=${encodeURIComponent(note.id)}&from=member&member=${member}`
         : `catatan-editor.html?scope=personal&id=${encodeURIComponent(note.id)}&from=member&member=${member}`;
     });
-    return button;
+    button.dataset.previewItem = "";
+    return CatatanManagement.createCardShell(button);
   }
 
-  function renderBackendNotes(notes) {
+  function renderBackendNotes(notes = []) {
     const grid = q("[data-member-note-grid]");
     if (!grid) return;
     grid.textContent = "";
-    backendNoteCount = Array.isArray(notes) ? notes.length : 0;
-    (notes || []).forEach(note => grid.appendChild(noteCard(note)));
-    const empty = ensureBackendEmpty();
-    if (empty) empty.hidden = Boolean(notes?.length);
+    backendNoteCount = notes.length;
+    notes.forEach(note => grid.appendChild(noteCard(note)));
+    const empty = ensureEmpty("notes");
+    if (empty) empty.hidden = notes.length !== 0;
     filterPreview();
   }
 
   async function loadBackendNotes(familyId, memberId) {
     if (!window.NotesService?.ambilCatatanAnggota) return;
     try {
-      const notes = await window.NotesService.ambilCatatanAnggota(familyId, memberId);
+      const notes = await NotesService.ambilCatatanAnggota(familyId, memberId);
+      try {
+        const tags = await NotesService.ambilTagMapCatatan(notes.map(note => note.id));
+        notes.forEach(note => { note._tags = tags[note.id] || []; });
+      } catch (metaError) {
+        console.warn("[Catatan Member Card Tags]", metaError);
+      }
       renderBackendNotes(notes);
     } catch (error) {
       console.error("[Catatan Member Backend]", error);
-      if (window.NotesService.folderSchemaBelumTerpasang?.(error)) {
-        showToast("Backend Folder belum aktif — jalankan SQL 004D di Supabase dulu.");
-      } else if (window.NotesService.schemaBelumTerpasang?.(error)) {
-        showToast("Backend Catatan belum aktif — jalankan SQL 004A di Supabase dulu.");
-      } else {
-        showToast(error?.message || "Catatan anggota belum dapat dimuat.");
-      }
+      if (NotesService.folderSchemaBelumTerpasang?.(error)) showToast("Backend Folder belum aktif — jalankan SQL 004D di Supabase dulu.");
+      else if (NotesService.schemaBelumTerpasang?.(error)) showToast("Backend Catatan belum aktif — jalankan SQL 004A di Supabase dulu.");
+      else showToast(error?.message || "Catatan anggota belum dapat dimuat.");
     }
   }
 
@@ -213,54 +219,27 @@
   }
 
   function setupInteractions() {
-    qa("[data-preview-item]").forEach(item => {
-      item.addEventListener("click", () => {
-        if (item.classList.contains("catatan-folder-card")) {
-          const folder = clean(item.dataset.folderName || item.querySelector("strong")?.textContent);
-          if (folder && activeMemberId) {
-            location.href = `catatan-folder.html?scope=member&member=${encodeURIComponent(activeMemberId)}&folder=${encodeURIComponent(folder)}`;
-            return;
-          }
-        }
-        showToast(`Catatan ${memberName} dibuka dalam mode hanya baca.`);
-      });
-    });
-
     q("#catatan-member-search")?.addEventListener("input", filterPreview);
     q("[data-create-note]")?.addEventListener("click", openCreateSheet);
     q("[data-create-close]")?.addEventListener("click", closeCreateSheet);
     q("[data-create-layer]")?.addEventListener("click", event => {
       if (event.target === event.currentTarget) closeCreateSheet();
     });
-
     qa("[data-create-scope]").forEach(button => {
       button.addEventListener("click", () => {
         createScope = button.dataset.createScope;
         setCreateStep("type");
       });
     });
-
     qa("[data-create-type]").forEach(button => {
       button.addEventListener("click", () => {
-        const scopeLabel = createScope === "family" ? "Catatan Keluarga" : "Catatan Pribadi";
         const type = button.dataset.createType || "Catatan";
         closeCreateSheet();
-        if (type === "Catatan Biasa") {
-          location.href = `catatan-editor.html?scope=${encodeURIComponent(createScope || "personal")}`;
-          return;
-        }
-        if (type === "Checklist") {
-          location.href = `catatan-checklist.html?scope=${encodeURIComponent(createScope || "personal")}`;
-          return;
-        }
-        if (type === "Reminder") {
-          location.href = `catatan-editor.html?scope=${encodeURIComponent(createScope || "personal")}&type=reminder`;
-          return;
-        }
-        showToast(`${type} di ${scopeLabel} akan aktif pada tahap berikutnya.`);
+        if (type === "Catatan Biasa") location.href = `catatan-editor.html?scope=${encodeURIComponent(createScope || "personal")}`;
+        else if (type === "Checklist") location.href = `catatan-checklist.html?scope=${encodeURIComponent(createScope || "personal")}`;
+        else if (type === "Reminder") location.href = `catatan-editor.html?scope=${encodeURIComponent(createScope || "personal")}&type=reminder`;
       });
     });
-
     qa("[data-nav-placeholder]").forEach(button => {
       button.addEventListener("click", () => showToast(`${button.dataset.navPlaceholder} akan aktif bersama data Catatan.`));
     });
@@ -269,41 +248,21 @@
   async function init() {
     activeMemberId = clean(new URLSearchParams(location.search).get("member"));
     setupInteractions();
-
     if (window.AUTH_READY) {
       const allowed = await window.AUTH_READY;
       if (allowed === false) return;
     }
-
     try {
       const memberId = activeMemberId;
-      const [user, family] = await Promise.all([
-        AuthService.ambilUserAktif(),
-        AuthRouter.ambilFamilyAktif()
-      ]);
+      const [user, family] = await Promise.all([AuthService.ambilUserAktif(), AuthRouter.ambilFamilyAktif()]);
       if (!user || !family) return;
-
-      if (!memberId) {
-        location.replace("catatan.html");
-        return;
-      }
-      if (memberId === user.id) {
-        location.replace("catatan-pribadi.html");
-        return;
-      }
-
+      if (!memberId) return location.replace("catatan.html");
+      if (memberId === user.id) return location.replace("catatan-pribadi.html");
       const members = await FamilyService.ambilAnggotaKeluarga(family.id);
       const member = (members || []).find(item => item?.user_id === memberId);
-      if (!member) {
-        location.replace("catatan.html");
-        return;
-      }
-
+      if (!member) return location.replace("catatan.html");
       applyMemberName(member?.profile?.display_name);
-      await Promise.all([
-        loadBackendNotes(family.id, memberId),
-        loadBackendFolders(family.id, memberId)
-      ]);
+      await Promise.all([loadBackendNotes(family.id, memberId), loadBackendFolders(family.id, memberId)]);
     } catch (error) {
       console.error("[Catatan Member]", error);
       showToast("Ruang catatan anggota tidak dapat dimuat.");

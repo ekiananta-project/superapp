@@ -13,6 +13,8 @@
   let noteId = "";
   let noteOwnerId = "";
   let noteReadOnly = false;
+  let noteDeleteAllowed = false;
+  let noteDeleting = false;
   let sourceContext = "";
   let memberSourceId = "";
   let memberViewName = "Anggota";
@@ -150,6 +152,59 @@
     if (infoButton) infoButton.hidden = noteReadOnly;
   }
 
+  function renderDeleteAction() {
+    const row = q("[data-delete-row]");
+    if (!row) return;
+    row.hidden = !noteId || !noteDeleteAllowed || noteReadOnly;
+  }
+
+  async function refreshDeletePermission() {
+    noteDeleteAllowed = false;
+    if (!noteId || noteReadOnly || !window.NotesService?.bolehHapusCatatan) {
+      renderDeleteAction();
+      return;
+    }
+    try {
+      noteDeleteAllowed = await window.NotesService.bolehHapusCatatan(noteId);
+    } catch (error) {
+      console.warn("[Checklist Delete Permission]", error);
+      noteDeleteAllowed = noteOwnerId === userId;
+    }
+    renderDeleteAction();
+  }
+
+  async function deleteCurrentNote() {
+    if (!noteId || !noteDeleteAllowed || noteReadOnly || noteDeleting) return;
+    const title = clean(q("[data-note-title]")?.value, "Tanpa judul");
+    setLayer("[data-info-layer]", false);
+    const ok = await window.CatatanManagement?.confirmDanger?.({
+      title: `Hapus “${title}”?`,
+      message: scope === "family"
+        ? "Checklist Keluarga ini akan dihapus permanen untuk seluruh anggota."
+        : "Checklist ini akan dihapus permanen dan tidak dapat dipulihkan dari Arsip.",
+      confirmLabel: "Hapus checklist"
+    });
+    if (!ok) return;
+
+    noteDeleting = true;
+    clearTimeout(autosaveTimer);
+    autosaveTimer = null;
+    noteDirty = false;
+    tagDirty = false;
+    saveAgain = false;
+    tagSaveAgain = false;
+    try {
+      if (currentSavePromise) await currentSavePromise;
+      if (currentTagSavePromise) await currentTagSavePromise;
+      await window.NotesService.hapusCatatan(noteId);
+      location.replace(editorBackUrl());
+    } catch (error) {
+      noteDeleting = false;
+      console.error("[Checklist Delete]", error);
+      showToast(error?.message || "Checklist belum dapat dihapus.");
+    }
+  }
+
   function renderVisibility() {
     const privateMode = visibility === "private";
     const label = privateMode ? "Hanya Saya" : "Keluarga dapat melihat";
@@ -237,6 +292,7 @@
       if (infoFolder) infoFolder.textContent = "Tanpa folder";
     }
 
+    renderDeleteAction();
     renderPinState();
     renderMetadataTags();
     renderReminder();
@@ -391,7 +447,7 @@
   }
 
   async function saveTagsNow({ announce = false } = {}) {
-    if (noteReadOnly || !noteId || !tagBackendReady || !window.NotesService?.syncTagCatatan) return [];
+    if (noteReadOnly || noteDeleting || !noteId || !tagBackendReady || !window.NotesService?.syncTagCatatan) return [];
     const currentFingerprint = tagFingerprint();
     if (!tagDirty && currentFingerprint === lastSavedTagFingerprint) return Array.from(selectedTags);
 
@@ -822,7 +878,7 @@
     clearTimeout(autosaveTimer);
     autosaveTimer = null;
 
-    if (!checklistBackendReady || noteReadOnly || hydratingNote) return null;
+    if (!checklistBackendReady || noteReadOnly || hydratingNote || noteDeleting) return null;
     if (saveRunning) {
       saveAgain = true;
       if (currentSavePromise) await currentSavePromise;
@@ -851,6 +907,8 @@
         const saved = await window.NotesService.simpanChecklist(snapshot);
         noteId = clean(saved?.id, noteId);
         noteOwnerId = clean(saved?.created_by, userId);
+        noteDeleteAllowed = Boolean(noteId && noteOwnerId === userId);
+        renderDeleteAction();
         updateNoteUrl();
 
         const savedItems = await window.NotesService.syncChecklistItems(noteId, snapshot.items);
@@ -894,7 +952,7 @@
   }
 
   function scheduleChecklistAutosave(delay = 700) {
-    if (!checklistBackendReady || noteReadOnly || hydratingNote) return;
+    if (!checklistBackendReady || noteReadOnly || hydratingNote || noteDeleting) return;
     noteDirty = true;
     clearTimeout(autosaveTimer);
     autosaveTimer = setTimeout(() => saveChecklistNow(), delay);
@@ -938,6 +996,7 @@
       await resolveMemberViewContext();
       applyContext();
       setMode(noteReadOnly ? "view" : "edit", false);
+      await refreshDeletePermission();
       lastSavedFingerprint = checklistFingerprint();
       noteDirty = false;
       return true;
@@ -1052,6 +1111,10 @@
       button.addEventListener("click", () => {
         if (noteReadOnly) return;
         const action = button.dataset.infoAction;
+        if (action === "delete") {
+          deleteCurrentNote();
+          return;
+        }
         if (action === "pin") {
           togglePin();
           return;
@@ -1104,6 +1167,18 @@
     if (!hidden) setLayer("[data-sensitive-layer]", true);
   }
 
+  function setupKeyboardOffset() {
+    const viewport = window.visualViewport;
+    if (!viewport) return;
+    const update = () => {
+      const keyboard = Math.max(0, window.innerHeight - viewport.height - viewport.offsetTop);
+      document.documentElement.style.setProperty("--catatan-keyboard-offset", `${keyboard}px`);
+    };
+    viewport.addEventListener("resize", update);
+    viewport.addEventListener("scroll", update);
+    update();
+  }
+
   function setupChecklist() {
     seedChecklist();
     q("[data-add-item]")?.addEventListener("click", () => addItem(true));
@@ -1121,7 +1196,7 @@
     window.addEventListener("pagehide", () => { saveChecklistNow(); });
 
     q("[data-editor-back]")?.addEventListener("click", async event => {
-      if (!checklistBackendReady || noteReadOnly || (!noteDirty && !autosaveTimer && !tagDirty && !tagSaveRunning)) return;
+      if (noteDeleting || !checklistBackendReady || noteReadOnly || (!noteDirty && !autosaveTimer && !tagDirty && !tagSaveRunning)) return;
       event.preventDefault();
       const href = event.currentTarget.href;
       await saveChecklistNow();
@@ -1131,6 +1206,7 @@
 
     setupSheets();
     setupSensitiveNotice();
+    setupKeyboardOffset();
     setMode("edit", false);
   }
 

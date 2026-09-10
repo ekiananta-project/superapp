@@ -33,6 +33,8 @@
   let activeFamilyId = "";
   let noteOwnerId = "";
   let noteReadOnly = false;
+  let noteDeleteAllowed = false;
+  let noteDeleting = false;
   let sourceContext = "";
   let memberSourceId = "";
   let memberViewName = "";
@@ -178,7 +180,7 @@
     clearTimeout(autosaveTimer);
     autosaveTimer = null;
 
-    if (!basicBackendMode() || noteReadOnly || hydratingNote) return null;
+    if (!basicBackendMode() || noteReadOnly || hydratingNote || noteDeleting) return null;
     if (saveRunning) {
       saveAgain = true;
       if (currentSavePromise) await currentSavePromise;
@@ -207,6 +209,8 @@
         const saved = await window.NotesService.simpanBasic(snapshot);
         noteId = clean(saved?.id, noteId);
         noteOwnerId = clean(saved?.created_by, userId);
+        noteDeleteAllowed = Boolean(noteId && noteOwnerId === userId);
+        renderDeleteAction();
         updateNoteUrl();
         lastSavedFingerprint = fingerprint;
         q("[data-catatan-editor]")?.setAttribute("data-save-state", "saved");
@@ -238,7 +242,7 @@
   }
 
   function scheduleBasicAutosave(delay = 700) {
-    if (!basicBackendMode() || noteReadOnly || hydratingNote) return;
+    if (!basicBackendMode() || noteReadOnly || hydratingNote || noteDeleting) return;
     noteDirty = true;
     clearTimeout(autosaveTimer);
     autosaveTimer = setTimeout(() => saveBasicNoteNow(), delay);
@@ -294,6 +298,7 @@
       applyContext();
       if (!(sourceContext === "member" && noteReadOnly)) renderVisibility();
       setMode(noteReadOnly ? "view" : "edit", false);
+      await refreshDeletePermission();
       lastSavedFingerprint = noteFingerprint();
       noteDirty = false;
       return true;
@@ -304,6 +309,59 @@
       return false;
     } finally {
       hydratingNote = false;
+    }
+  }
+
+  function renderDeleteAction() {
+    const row = q("[data-delete-row]");
+    if (!row) return;
+    row.hidden = !noteId || !noteDeleteAllowed || noteReadOnly || reminderPreset;
+  }
+
+  async function refreshDeletePermission() {
+    noteDeleteAllowed = false;
+    if (!noteId || noteReadOnly || reminderPreset || !window.NotesService?.bolehHapusCatatan) {
+      renderDeleteAction();
+      return;
+    }
+    try {
+      noteDeleteAllowed = await window.NotesService.bolehHapusCatatan(noteId);
+    } catch (error) {
+      console.warn("[Catatan Delete Permission]", error);
+      noteDeleteAllowed = noteOwnerId === userId;
+    }
+    renderDeleteAction();
+  }
+
+  async function deleteCurrentNote() {
+    if (!noteId || !noteDeleteAllowed || noteReadOnly || reminderPreset || noteDeleting) return;
+    const title = clean(q("[data-note-title]")?.value, "Tanpa judul");
+    setLayer("[data-info-layer]", false);
+    const ok = await window.CatatanManagement?.confirmDanger?.({
+      title: `Hapus “${title}”?`,
+      message: scope === "family"
+        ? "Catatan Keluarga ini akan dihapus permanen untuk seluruh anggota."
+        : "Catatan ini akan dihapus permanen dan tidak dapat dipulihkan dari Arsip.",
+      confirmLabel: "Hapus catatan"
+    });
+    if (!ok) return;
+
+    noteDeleting = true;
+    clearTimeout(autosaveTimer);
+    autosaveTimer = null;
+    noteDirty = false;
+    tagDirty = false;
+    saveAgain = false;
+    tagSaveAgain = false;
+    try {
+      if (currentSavePromise) await currentSavePromise;
+      if (currentTagSavePromise) await currentTagSavePromise;
+      await window.NotesService.hapusCatatan(noteId);
+      location.replace(editorBackUrl());
+    } catch (error) {
+      noteDeleting = false;
+      console.error("[Catatan Delete]", error);
+      showToast(error?.message || "Catatan belum dapat dihapus.");
     }
   }
 
@@ -551,6 +609,7 @@
       memberReadContext.textContent = `Area Pribadi · Milik ${memberViewName || "anggota"}`;
     }
     applyMemberReadOnlyHeaderFlow(memberReadOnly);
+    renderDeleteAction();
 
     const areaLabel = q("[data-area-label]");
     const areaChip = q("[data-area-chip]");
@@ -872,7 +931,7 @@
   }
 
   async function saveTagsNow({ announce = false } = {}) {
-    if (reminderPreset || noteReadOnly || !noteId || !tagBackendReady || !window.NotesService?.syncTagCatatan) return [];
+    if (reminderPreset || noteReadOnly || noteDeleting || !noteId || !tagBackendReady || !window.NotesService?.syncTagCatatan) return [];
 
     const currentFingerprint = tagFingerprint();
     if (!tagDirty && currentFingerprint === lastSavedTagFingerprint) return Array.from(selectedTags);
@@ -1218,6 +1277,10 @@
     qa("[data-info-action]").forEach(button => {
       button.addEventListener("click", () => {
         const action = button.dataset.infoAction;
+        if (action === "delete") {
+          deleteCurrentNote();
+          return;
+        }
         if (action === "pin") {
           togglePin();
           return;
@@ -1414,7 +1477,7 @@
     });
     window.addEventListener("pagehide", () => { saveBasicNoteNow(); });
     q("[data-editor-back]")?.addEventListener("click", async event => {
-      if (!basicBackendMode() || noteReadOnly || (!noteDirty && !autosaveTimer && !tagDirty && !tagSaveRunning)) return;
+      if (noteDeleting || !basicBackendMode() || noteReadOnly || (!noteDirty && !autosaveTimer && !tagDirty && !tagSaveRunning)) return;
       event.preventDefault();
       const href = event.currentTarget.href;
       await saveBasicNoteNow();

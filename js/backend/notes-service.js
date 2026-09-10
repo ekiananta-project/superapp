@@ -321,7 +321,7 @@
   async function ambilFolderCatalog(scope, familyId = null) {
     const folderScope = normalizeScope(scope);
     const fid = clean(familyId);
-    const { data, error } = await client().rpc("notes_list_folders_v1", {
+    const { data, error } = await client().rpc("notes_list_folders_v2", {
       p_scope: folderScope,
       p_family_id: folderScope === "family" ? (fid || null) : null
     });
@@ -329,8 +329,71 @@
     return (data || []).map(row => ({
       id: clean(row?.id),
       name: clean(row?.name),
-      noteCount: Number(row?.note_count || 0)
+      noteCount: Number(row?.note_count || 0),
+      deleteCount: Number(row?.delete_count ?? row?.note_count ?? 0),
+      canDelete: Boolean(row?.can_delete)
     })).filter(row => row.name);
+  }
+
+  async function ambilTagMapCatatan(noteIds = []) {
+    const ids = Array.from(new Set((Array.isArray(noteIds) ? noteIds : []).map(clean).filter(Boolean))).slice(0, 250);
+    if (!ids.length) return {};
+    const { data, error } = await client().rpc("notes_get_tags_for_notes_v1", {
+      p_note_ids: ids
+    });
+    if (error) throw error;
+    const map = {};
+    (data || []).forEach(row => {
+      const id = clean(row?.note_id);
+      const name = normalizeTagName(row?.name);
+      if (!id || !name) return;
+      if (!map[id]) map[id] = [];
+      if (!map[id].includes(name)) map[id].push(name);
+    });
+    Object.values(map).forEach(values => values.sort());
+    return map;
+  }
+
+  async function ambilHakHapusCatatan(noteIds = []) {
+    const ids = Array.from(new Set((Array.isArray(noteIds) ? noteIds : []).map(clean).filter(Boolean))).slice(0, 250);
+    if (!ids.length) return {};
+    const { data, error } = await client().rpc("notes_get_delete_capabilities_v1", {
+      p_note_ids: ids
+    });
+    if (error) throw error;
+    const map = {};
+    (data || []).forEach(row => {
+      const id = clean(row?.note_id);
+      if (id) map[id] = Boolean(row?.can_delete);
+    });
+    return map;
+  }
+
+  async function bolehHapusCatatan(noteId) {
+    const id = clean(noteId);
+    if (!id) return false;
+    const map = await ambilHakHapusCatatan([id]);
+    return Boolean(map[id]);
+  }
+
+  async function hapusCatatan(noteId) {
+    const id = clean(noteId);
+    if (!id) throw new Error("Catatan tidak ditemukan.");
+    const { data, error } = await client().rpc("notes_delete_note_v1", {
+      p_note_id: id
+    });
+    if (error) throw error;
+    return Boolean(data);
+  }
+
+  async function hapusFolder(folderId) {
+    const id = clean(folderId);
+    if (!id) throw new Error("Folder tidak ditemukan.");
+    const { data, error } = await client().rpc("notes_delete_folder_v1", {
+      p_folder_id: id
+    });
+    if (error) throw error;
+    return Number(data || 0);
   }
 
   async function ambilCatatanDalamFolder({
@@ -386,6 +449,8 @@
       code === "PGRST204" ||
       message.includes("notes_resolve_folder_v1") ||
       message.includes("notes_list_folders_v1") ||
+      message.includes("notes_list_folders_v2") ||
+      message.includes("notes_delete_folder_v1") ||
       message.includes("catatan_folders") ||
       message.includes("folder_id");
   }
@@ -466,6 +531,17 @@
     return Array.from(new Set((data || []).map(item => normalizeTagName(item?.name)).filter(Boolean))).sort();
   }
 
+  function managementSchemaBelumTerpasang(error) {
+    const code = String(error?.code || "").toUpperCase();
+    const message = String(error?.message || error?.details || error?.hint || "").toLowerCase();
+    return code === "PGRST202" ||
+      message.includes("notes_list_folders_v2") ||
+      message.includes("notes_get_tags_for_notes_v1") ||
+      message.includes("notes_get_delete_capabilities_v1") ||
+      message.includes("notes_delete_note_v1") ||
+      message.includes("notes_delete_folder_v1");
+  }
+
   function tagSchemaBelumTerpasang(error) {
     const code = String(error?.code || "").toUpperCase();
     const message = String(error?.message || error?.details || error?.hint || "").toLowerCase();
@@ -512,7 +588,13 @@
     resolveFolder,
     ambilFolderCatalog,
     ambilCatatanDalamFolder,
+    ambilTagMapCatatan,
+    ambilHakHapusCatatan,
+    bolehHapusCatatan,
+    hapusCatatan,
+    hapusFolder,
     folderSchemaBelumTerpasang,
+    managementSchemaBelumTerpasang,
     arsipkan,
     ambilTagCatalog,
     buatTag,
