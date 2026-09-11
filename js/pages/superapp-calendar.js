@@ -1,4 +1,4 @@
-// RuangKitha v2.0.0a44c — Calendar instant shell + SWR cache + request coalescing.
+// RuangKitha v2.0.0a45 — Calendar instant shell + projected-event SWR.
 (() => {
   "use strict";
 

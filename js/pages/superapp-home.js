@@ -188,6 +188,30 @@
     return (items || []).filter(item => item.status !== "paid");
   }
 
+  function calendarGridRange(date = new Date()) {
+    const first = new Date(date.getFullYear(), date.getMonth(), 1, 12);
+    const start = new Date(first);
+    start.setDate(first.getDate() - first.getDay());
+    const end = new Date(start);
+    end.setDate(start.getDate() + 41);
+    return { start: todayISO(start), end: todayISO(end) };
+  }
+
+  function prefetchCurrentCalendarMonth(familyId) {
+    if (!familyId || !window.RuangKithaCalendarEvents?.loadRange) return;
+    const run = () => {
+      const range = calendarGridRange(new Date());
+      window.RuangKithaCalendarEvents.loadRange({
+        familyId,
+        start: range.start,
+        end: range.end,
+        forceFresh: true
+      }).catch(error => console.debug?.("[Calendar prefetch]", error));
+    };
+    if ("requestIdleCallback" in window) window.requestIdleCallback(run, { timeout: 1800 });
+    else setTimeout(run, 700);
+  }
+
   function renderReminders(items) {
     reminderSummary = items || [];
     q(".today-card")?.classList.toggle("is-empty", reminderSummary.length === 0);
@@ -296,6 +320,10 @@
         console.warn("[Superapp Home reminder]", reminderResult.reason);
         renderReminders([]);
       }
+
+      // Warm the exact Calendar grid range after Home is usable. This is intentionally
+      // idle/background work and never blocks the Home card.
+      prefetchCurrentCalendarMonth(family.id);
     } catch (error) {
       console.error("[Superapp Home]", error);
       renderReminders([]);

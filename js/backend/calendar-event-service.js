@@ -1,8 +1,8 @@
-// RuangKitha v2.0.0a44c — Calendar fast-open cache + request coalescing.
+// RuangKitha v2.0.0a45 — Calendar Event Projection V2 + fast cache.
 (() => {
   "use strict";
 
-  const CACHE_VERSION = "a44c-v1";
+  const CACHE_VERSION = "a45-projection-v1";
   const CACHE_PREFIX = "ruangkitha:calendar-range:";
   const inflight = new Map();
 
@@ -131,11 +131,25 @@
     if (inflight.has(requestKey)) return inflight.get(requestKey);
 
     const request = (async () => {
-      const { data, error } = await client().rpc("calendar_events_for_range_v3", {
+      let { data, error } = await client().rpc("calendar_events_for_range_v4", {
         p_family_id: familyId,
         p_start: rangeStart,
         p_end: rangeEnd
       });
+
+      // Deployment-safe fallback only when 005D has not reached PostgREST yet.
+      // Runtime/database errors from v4 are intentionally surfaced instead of hidden.
+      const missingV4 = error && (
+        error.code === "PGRST202" ||
+        /calendar_events_for_range_v4/i.test(String(error.message || "")) && /not find|does not exist|schema cache/i.test(String(error.message || ""))
+      );
+      if (missingV4) {
+        ({ data, error } = await client().rpc("calendar_events_for_range_v3", {
+          p_family_id: familyId,
+          p_start: rangeStart,
+          p_end: rangeEnd
+        }));
+      }
       if (error) throw error;
       const items = sortItems(data || []);
       saveRange({ viewerId: resolvedViewerId, familyId, start: rangeStart, end: rangeEnd, items });

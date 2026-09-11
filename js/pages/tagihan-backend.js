@@ -70,6 +70,11 @@
   }
 
   function currentMonthDate() {
+    try {
+      const raw = new URL(location.href).searchParams.get("month") || "";
+      const match = /^(\d{4})-(\d{2})(?:-\d{2})?$/.exec(raw);
+      if (match) return `${match[1]}-${match[2]}-01`;
+    } catch {}
     const now = new Date();
     return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-01`;
   }
@@ -237,6 +242,7 @@
     const isPartial = item.status !== "paid" && paid > 0;
     article.className = `bill-card ${state.className}`.trim();
     article.dataset.billPeriodId = item.period_id;
+    article.dataset.billId = item.bill_id;
 
     const categoryText = item.parent_name
       ? `${item.parent_name} · ${item.account_name}`
@@ -309,7 +315,7 @@
     try {
       bills = await FinanceService.ambilTagihanRingkas({
         familyId: family.id,
-        today: todayISO()
+        today: currentMonthDate()
       });
       renderSummary();
       renderList();

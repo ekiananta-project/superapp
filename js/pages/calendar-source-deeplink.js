@@ -1,15 +1,25 @@
-// RuangKitha v2.0.0a44 — focus the Finance object opened from Kalender.
+// RuangKitha v2.0.0a45 — focus Finance bill opened from projected Calendar events.
 (() => {
   "use strict";
-  const periodId = new URL(location.href).searchParams.get("period");
-  if (!periodId) return;
+  const params = new URL(location.href).searchParams;
+  const periodId = params.get("period") || "";
+  const billId = params.get("bill") || "";
+  if (!periodId && !billId) return;
   let done = false;
   let timer = null;
 
+  function safeSelector(value) {
+    return window.CSS?.escape ? CSS.escape(value) : String(value || "").replace(/[^a-zA-Z0-9_-]/g, "");
+  }
+
   function focusTarget() {
     if (done) return true;
-    const escaped = window.CSS?.escape ? CSS.escape(periodId) : periodId.replace(/[^a-zA-Z0-9_-]/g, "");
-    const target = document.querySelector(`[data-bill-period-id="${escaped}"]`) || document.querySelector(`[data-bill-edit="${escaped}"]`)?.closest("article, .bill-card");
+    const period = safeSelector(periodId);
+    const bill = safeSelector(billId);
+    const target =
+      (period ? document.querySelector(`[data-bill-period-id="${period}"]`) : null) ||
+      (bill ? document.querySelector(`[data-bill-id="${bill}"]`) : null) ||
+      (period ? document.querySelector(`[data-bill-edit="${period}"]`)?.closest("article, .bill-card") : null);
     if (!target) return false;
     done = true;
     clearInterval(timer);
@@ -21,7 +31,7 @@
 
   document.addEventListener("DOMContentLoaded", () => {
     if (focusTarget()) return;
-    timer = setInterval(focusTarget, 250);
+    timer = setInterval(focusTarget, 200);
     setTimeout(() => clearInterval(timer), 10000);
   }, { once: true });
 })();
