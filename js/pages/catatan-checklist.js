@@ -1,4 +1,4 @@
-// RuangKitha v2.0.0a43 — Checklist + Relation Graph integration
+// RuangKitha v2.0.0a45a — Checklist Dedicated Reminder Cleanup
 (() => {
   "use strict";
 
@@ -459,42 +459,18 @@
   }
 
   function openReminderSheet() {
-    if (noteReadOnly || editorMode !== "edit") {
-      showToast("Masuk ke Edit catatan untuk mengubah reminder.");
-      return;
-    }
-    const dateInput = q("[data-reminder-date]");
-    const timeInput = q("[data-reminder-time]");
-    if (dateInput) {
-      dateInput.min = localDateString();
-      dateInput.value = reminderDate;
-    }
-    if (timeInput) timeInput.value = reminderTime;
-    openSheet("[data-reminder-layer]");
+    // a45a: Checklist tidak memiliki jadwal sendiri. Gunakan Catatan Reminder + Relasi Catatan.
+    showToast("Untuk membuat pengingat, buat Catatan Reminder lalu hubungkan ke checklist ini.");
   }
 
   function saveReminder() {
-    if (noteReadOnly) return;
-    const date = clean(q("[data-reminder-date]")?.value);
-    const time = clean(q("[data-reminder-time]")?.value);
-    if (!date || !time) {
-      showToast("Pilih tanggal dan waktu reminder dulu.");
-      return;
-    }
-    reminderDate = date;
-    reminderTime = time;
-    renderReminder();
-    setLayer("[data-reminder-layer]", false);
-    showToast("Reminder disimpan di checklist. Backend Reminder menyusul di tahap berikutnya.");
+    showToast("Jadwal hanya tersedia pada Catatan Reminder.");
   }
 
   function removeReminder() {
-    if (noteReadOnly) return;
     reminderDate = "";
     reminderTime = "";
     renderReminder();
-    setLayer("[data-reminder-layer]", false);
-    showToast("Reminder dihapus dari checklist.");
   }
 
   function warningStorageKey() {

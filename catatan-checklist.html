@@ -71,10 +71,6 @@
         <ion-icon name="folder-outline" aria-hidden="true"></ion-icon>
         <span data-folder-label>Folder</span>
       </button>
-      <button class="catatan-context-chip is-reminder" type="button" data-reminder-chip hidden>
-        <ion-icon name="notifications-outline" aria-hidden="true"></ion-icon>
-        <span data-reminder-chip-label>Atur reminder</span>
-      </button>
       <span class="catatan-context-tags" data-tag-chips></span>
       <button class="catatan-context-chip is-add-tag" type="button" data-tag-add>
         <ion-icon name="add-circle-outline" aria-hidden="true"></ion-icon>
@@ -151,11 +147,6 @@
           <span><strong>Visibilitas</strong><small data-info-visibility>Hanya Saya</small></span>
           <ion-icon name="chevron-forward-outline"></ion-icon>
         </button>
-        <button type="button" data-info-action="reminder">
-          <span class="catatan-info-icon"><ion-icon name="notifications-outline"></ion-icon></span>
-          <span><strong>Reminder</strong><small data-info-reminder>Belum diatur</small></span>
-          <ion-icon name="chevron-forward-outline"></ion-icon>
-        </button>
         <button type="button" data-info-action="related">
           <span class="catatan-info-icon"><ion-icon name="git-network-outline"></ion-icon></span>
           <span><strong>Relasi Catatan</strong><small>Belum ada relasi</small></span>
@@ -193,31 +184,6 @@
           <span><strong>Keluarga dapat melihat</strong><small>Anggota keluarga dapat melihat, tetapi tidak dapat mengubah checklist.</small></span>
           <ion-icon data-visibility-check="family_read" name="ellipse-outline"></ion-icon>
         </button>
-      </div>
-    </section>
-  </div>
-
-  <div class="catatan-sheet-layer" data-reminder-layer hidden>
-    <section class="catatan-sheet catatan-editor-sheet catatan-reminder-sheet" role="dialog" aria-modal="true" aria-labelledby="checklist-reminder-title">
-      <div class="catatan-sheet-handle" aria-hidden="true"></div>
-      <div class="catatan-sheet-header">
-        <div><small>Pengingat</small><h2 id="checklist-reminder-title">Atur Reminder</h2></div>
-        <button class="catatan-sheet-close" type="button" data-reminder-close aria-label="Tutup"><ion-icon name="close-outline"></ion-icon></button>
-      </div>
-      <p class="catatan-reminder-hint">Pilih tanggal dan waktu pengingat untuk catatan ini.</p>
-      <div class="catatan-reminder-fields">
-        <label>
-          <span>Tanggal</span>
-          <input type="date" data-reminder-date aria-label="Tanggal reminder">
-        </label>
-        <label>
-          <span>Waktu</span>
-          <input type="time" data-reminder-time aria-label="Waktu reminder">
-        </label>
-      </div>
-      <div class="catatan-reminder-actions">
-        <button class="is-danger" type="button" data-reminder-remove hidden>Hapus reminder</button>
-        <button class="is-primary" type="button" data-reminder-save>Simpan</button>
       </div>
     </section>
   </div>

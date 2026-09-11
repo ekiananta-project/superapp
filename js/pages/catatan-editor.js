@@ -1708,6 +1708,11 @@
   }
 
   function openReminderSheet() {
+    // a45a: schedule hanya milik note_type=reminder. Catatan Biasa tidak boleh berubah tipe lewat Info.
+    if (!reminderPreset) {
+      showToast("Untuk membuat pengingat, buat Catatan Reminder lalu hubungkan lewat Relasi Catatan.");
+      return;
+    }
     if (editorMode !== "edit") {
       showToast("Masuk ke Edit catatan untuk mengubah reminder.");
       return;
@@ -1725,6 +1730,10 @@
   }
 
   async function saveReminder() {
+    if (!reminderPreset) {
+      showToast("Jadwal hanya tersedia pada Catatan Reminder.");
+      return;
+    }
     const date = clean(q("[data-reminder-date]")?.value);
     const time = clean(q("[data-reminder-time]")?.value);
     if (!date || !time) {
@@ -1734,7 +1743,6 @@
     reminderDate = date;
     reminderTime = time;
     reminderRecurrence = normalizeReminderRecurrence(q("[data-reminder-recurrence]")?.value);
-    reminderPreset = true;
     renderReminder();
     setLayer("[data-reminder-layer]", false);
     scheduleBasicAutosave(0);
@@ -1742,6 +1750,7 @@
   }
 
   async function removeReminder() {
+    if (!reminderPreset) return;
     reminderDate = "";
     reminderTime = "";
     reminderRecurrence = "none";
