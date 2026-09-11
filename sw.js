@@ -1,4 +1,4 @@
-const CACHE_NAME = "ruangkitha-v2.0.0a42a-catatan-folder-picker-hotfix";
+const CACHE_NAME = "ruangkitha-v2.0.0a42b-catatan-folder-card-action-hotfix";
 const OFFLINE_URL = "./offline.html";
 
 const APP_FILES = [

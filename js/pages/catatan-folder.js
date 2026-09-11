@@ -140,6 +140,58 @@
     }
   }
 
+  function invalidateMoveOutCaches() {
+    const perf = window.CatatanPerformance;
+    if (!perf?.remove || !userId) return;
+
+    perf.remove("folder-notes", {
+      userId,
+      familyId,
+      scope,
+      memberId,
+      folderName
+    });
+
+    if (scope === "family") {
+      perf.remove("family-notes", { userId, familyId });
+      perf.remove("family-folders", { userId, familyId });
+    } else if (scope === "personal") {
+      perf.remove("personal-notes", { userId });
+      perf.remove("personal-folders", { userId });
+    }
+  }
+
+  async function removeNoteFromFolder(note) {
+    if (scope === "member") return;
+    if (!window.NotesService?.pindahkanCatatanKeFolder) {
+      showToast("Pemindahan folder belum siap.");
+      return;
+    }
+
+    try {
+      await NotesService.pindahkanCatatanKeFolder(note, { folderName: "", folderId: null });
+
+      const next = renderedNotes.filter(item => clean(item?.id) !== clean(note?.id));
+      notesFingerprint = "";
+      renderNotes(next);
+
+      invalidateMoveOutCaches();
+      window.CatatanPerformance?.write?.("folder-notes", {
+        userId,
+        familyId,
+        scope,
+        memberId,
+        folderName
+      }, next);
+
+      showToast("Catatan dikeluarkan dari folder.");
+    } catch (error) {
+      console.error("[Catatan Folder Remove]", error);
+      if (NotesService.folderSchemaBelumTerpasang?.(error)) showToast("Backend Folder belum aktif — jalankan SQL 004D di Supabase dulu.");
+      else showToast(error?.message || "Catatan belum dapat dikeluarkan dari folder.");
+    }
+  }
+
   function noteCard(note) {
     const isChecklist = note?.note_type === "checklist";
     const isReminder = note?.note_type === "reminder";
@@ -213,6 +265,11 @@
           label: "Ganti warna",
           icon: "color-palette-outline",
           onSelect: () => changeCardColor(note)
+        },
+        {
+          label: "Keluarkan dari folder",
+          icon: "folder-open-outline",
+          onSelect: () => removeNoteFromFolder(note)
         }
       );
       if (note?._canArchive) actions.push({

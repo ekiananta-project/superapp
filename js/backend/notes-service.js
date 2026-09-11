@@ -126,6 +126,37 @@
     return simpanByType(input, "checklist");
   }
 
+  async function pindahkanCatatanKeFolder(note = {}, { folderName = "", folderId = null } = {}) {
+    const id = clean(note?.id);
+    if (!id) throw new Error("Catatan tidak ditemukan.");
+
+    const input = {
+      id,
+      familyId: note?.family_id,
+      scope: note?.scope,
+      visibility: note?.visibility,
+      title: note?.title,
+      bodyHtml: note?.body_html,
+      bodyText: note?.body_text,
+      folderId: clean(folderId) || null,
+      folderName: clean(folderName, 80),
+      pinned: Boolean(note?.pinned),
+      cardColor: note?.card_color
+    };
+
+    const type = normalizeNoteType(note?.note_type);
+    if (type === "reminder") {
+      return simpanReminder({
+        ...input,
+        reminderAt: note?.reminder_at,
+        reminderTimezone: note?.reminder_timezone,
+        reminderRecurrence: note?.reminder_recurrence
+      });
+    }
+    if (type === "checklist") return simpanChecklist(input);
+    return simpanBasic(input);
+  }
+
 
   function normalizeReminderRecurrence(value) {
     const recurrence = String(value || "none").toLowerCase();
@@ -903,6 +934,7 @@
     simpanBasic,
     simpanChecklist,
     simpanReminder,
+    pindahkanCatatanKeFolder,
     ambilCatatan,
     ambilCatatanPersonal,
     ambilCatatanAnggota,
