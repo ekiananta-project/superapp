@@ -1,4 +1,4 @@
-// RuangKitha v2.0.0a42b — Info Folder Picker hotfix
+// RuangKitha v2.0.0a42c — Info Folder Picker hotfix
 (() => {
   "use strict";
 
@@ -726,6 +726,24 @@
     setTimeout(() => (availableTags.length ? search : newInput)?.focus(), 80);
   }
 
+  async function openTagManagerFromPicker() {
+    if (noteReadOnly || editorMode !== "edit" || !window.CatatanManagement?.openTagManager) return;
+    await window.CatatanManagement.openTagManager({
+      scope,
+      familyId: activeFamilyId || null,
+      context: scope === "family" ? "Tag Keluarga" : "Tag Pribadi",
+      notify: showToast,
+      onChanged: async () => {
+        await loadTagCatalog({ silent: false });
+        if (noteId) await loadSelectedTags();
+        else selectedTags = new Set(Array.from(selectedTags).filter(tag => availableTags.includes(tag)));
+        draftTags = new Set(Array.from(draftTags).filter(tag => availableTags.includes(tag)));
+        renderMetadataTags();
+        renderTagPicker();
+      }
+    });
+  }
+
   function closeTagSheet(apply = false) {
     if (apply && !noteReadOnly) {
       const next = new Set(draftTags);
@@ -1238,6 +1256,7 @@
     q("[data-tag-search]")?.addEventListener("input", renderTagPicker);
     q("[data-tag-new-input]")?.addEventListener("input", renderTagPicker);
     q("[data-tag-create]")?.addEventListener("click", createTagFromSearch);
+    q("[data-tag-manage]")?.addEventListener("click", openTagManagerFromPicker);
     q("[data-tag-new-input]")?.addEventListener("keydown", event => {
       if (event.key === "Enter" && normalizeTag(event.currentTarget.value)) {
         event.preventDefault();

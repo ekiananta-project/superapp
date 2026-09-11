@@ -785,6 +785,41 @@
       .slice(0, 36);
   }
 
+  async function ambilKelolaTagCatalog(scope, familyId = null) {
+    const tagScope = normalizeTagScope(scope);
+    const fid = clean(familyId);
+    const { data, error } = await client().rpc("notes_list_tag_management_v1", {
+      p_scope: tagScope,
+      p_family_id: tagScope === "family" ? (fid || null) : null
+    });
+    if (error) throw error;
+    return (data || []).map(row => ({
+      id: clean(row?.id),
+      name: normalizeTagName(row?.name),
+      usageCount: Math.max(0, Number(row?.usage_count || 0)),
+      canManage: Boolean(row?.can_manage)
+    })).filter(row => row.id && row.name);
+  }
+
+  async function hapusTagCatalog(tagId) {
+    const id = clean(tagId);
+    if (!id) throw new Error("Tag tidak ditemukan.");
+    const { data, error } = await client().rpc("notes_delete_tag_v1", { p_tag_id: id });
+    if (error) throw error;
+    return Math.max(0, Number(data || 0));
+  }
+
+  async function hapusTagTidakTerpakai(scope, familyId = null) {
+    const tagScope = normalizeTagScope(scope);
+    const fid = clean(familyId);
+    const { data, error } = await client().rpc("notes_delete_unused_tags_v1", {
+      p_scope: tagScope,
+      p_family_id: tagScope === "family" ? (fid || null) : null
+    });
+    if (error) throw error;
+    return Math.max(0, Number(data || 0));
+  }
+
   async function ambilTagCatalog(scope, familyId = null) {
     const tagScope = normalizeTagScope(scope);
     const fid = clean(familyId);
@@ -893,6 +928,9 @@
       message.includes("notes_create_tag_v1") ||
       message.includes("notes_get_note_tags_v1") ||
       message.includes("notes_sync_note_tags_v1") ||
+      message.includes("notes_list_tag_management_v1") ||
+      message.includes("notes_delete_tag_v1") ||
+      message.includes("notes_delete_unused_tags_v1") ||
       message.includes("catatan_tags") ||
       message.includes("catatan_note_tags");
   }
@@ -978,6 +1016,9 @@
     lifecycleSchemaBelumTerpasang,
     customizationSchemaBelumTerpasang,
     ambilTagCatalog,
+    ambilKelolaTagCatalog,
+    hapusTagCatalog,
+    hapusTagTidakTerpakai,
     buatTag,
     ambilTagCatatan,
     syncTagCatatan,

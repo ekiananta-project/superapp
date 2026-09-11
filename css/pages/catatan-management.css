@@ -944,3 +944,118 @@ html[data-catatan-existing-note="true"] [data-catatan-editor][aria-busy="true"] 
 html[data-catatan-existing-note="true"] [data-catatan-checklist][aria-busy="true"] .catatan-editor-main {
   visibility: hidden;
 }
+
+/* RuangKitha v2.0.0a42c — usage-aware Tag manager */
+.catatan-tag-manager-sheet {
+  display: flex;
+  flex-direction: column;
+  max-height: min(88dvh, 760px);
+  overflow: hidden;
+}
+.catatan-tag-manager-toolbar { flex: 0 0 auto; margin: 2px 0 12px; }
+.catatan-tag-manager-toolbar > button {
+  appearance: none;
+  display: grid;
+  grid-template-columns: auto 1fr;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  min-height: 60px;
+  padding: 10px 14px;
+  border: 1px dashed color-mix(in srgb, var(--color-primary, #159447) 35%, var(--color-border, #e0e4e1));
+  border-radius: 16px;
+  background: color-mix(in srgb, var(--color-primary, #159447) 4%, var(--color-surface, #fff));
+  color: var(--color-primary, #159447);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+.catatan-tag-manager-toolbar > button:disabled { opacity: .48; cursor: default; }
+.catatan-tag-manager-toolbar ion-icon { font-size: 22px; }
+.catatan-tag-manager-toolbar span { display: grid; gap: 2px; }
+.catatan-tag-manager-toolbar strong { font-size: 11px; }
+.catatan-tag-manager-toolbar small { color: var(--color-text-soft, #6f7b73); font-size: 9px; font-weight: 500; }
+.catatan-tag-manager-list {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: 0 2px 10px;
+  scrollbar-gutter: stable;
+}
+.catatan-tag-manager-group + .catatan-tag-manager-group { margin-top: 14px; }
+.catatan-tag-manager-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-height: 34px;
+  padding: 0 4px;
+  color: var(--color-text-soft, #6f7b73);
+  text-transform: uppercase;
+  letter-spacing: .04em;
+}
+.catatan-tag-manager-heading strong { font-size: 9.5px; }
+.catatan-tag-manager-heading span {
+  min-width: 27px;
+  height: 27px;
+  display: grid;
+  place-items: center;
+  border-radius: 999px;
+  background: var(--color-surface-soft, #eef1ef);
+  font-size: 9px;
+  font-weight: 700;
+}
+.catatan-tag-manager-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 12px;
+  min-height: 62px;
+  margin-top: 8px;
+  padding: 10px 12px 10px 15px;
+  border: 1px solid var(--color-border, #e0e4e1);
+  border-radius: 16px;
+  background: var(--color-surface, #fff);
+}
+.catatan-tag-manager-row > span { min-width: 0; display: grid; gap: 3px; }
+.catatan-tag-manager-row strong { overflow: hidden; color: var(--color-text, #18201b); font-size: 11px; text-overflow: ellipsis; white-space: nowrap; }
+.catatan-tag-manager-row small { color: var(--color-text-soft, #6f7b73); font-size: 9px; }
+.catatan-tag-manager-delete {
+  appearance: none;
+  display: grid;
+  place-items: center;
+  width: 38px;
+  height: 38px;
+  padding: 0;
+  border: 0;
+  border-radius: 12px;
+  background: color-mix(in srgb, #c34242 8%, var(--color-surface, #fff));
+  color: #c34242;
+  cursor: pointer;
+}
+.catatan-tag-manager-delete ion-icon { font-size: 19px; }
+.catatan-tag-manager-lock { margin-right: 9px; color: var(--color-text-soft, #6f7b73); font-size: 18px; }
+.catatan-tag-manager-empty { margin: 18px auto; color: var(--color-text-soft, #6f7b73); font-size: 10px; line-height: 1.5; text-align: center; }
+.catatan-tag-manager-empty.is-inline { margin: 8px 4px; text-align: left; }
+.catatan-tag-manager-loading { display: grid; gap: 8px; padding: 12px 0; }
+.catatan-tag-manager-loading span { height: 58px; border-radius: 16px; background: var(--color-surface-soft, #eef1ef); animation: catatan-tag-manager-pulse 1s ease-in-out infinite alternate; }
+@keyframes catatan-tag-manager-pulse { from { opacity: .48; } to { opacity: .9; } }
+html[data-theme="dark"] .catatan-tag-manager-row { background: var(--color-surface, #212422); }
+
+.catatan-tag-manage-entry {
+  appearance: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 32px;
+  margin: 2px 0 4px;
+  padding: 0 4px;
+  border: 0;
+  background: transparent;
+  color: var(--color-primary, #159447);
+  font: inherit;
+  font-size: 10px;
+  font-weight: 700;
+  cursor: pointer;
+}
+.catatan-tag-manage-entry ion-icon { font-size: 17px; }

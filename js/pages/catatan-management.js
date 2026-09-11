@@ -1,4 +1,4 @@
-// RuangKitha v2.0.0a42b — Info Folder Picker hotfix
+// RuangKitha v2.0.0a42c — Info Folder Picker hotfix
 (() => {
   "use strict";
 
@@ -8,6 +8,7 @@
   let colorResolve = null;
   let folderResolve = null;
   let folderPickerResolve = null;
+  let tagManagerState = null;
   let themeObserver = null;
 
   function clean(value, fallback = "") {
@@ -560,6 +561,210 @@
     return new Promise(resolve => { folderPickerResolve = resolve; });
   }
 
+  function ensureTagManagerLayer() {
+    let layer = q("[data-catatan-tag-manager-layer]");
+    if (layer) return layer;
+    layer = document.createElement("div");
+    layer.className = "catatan-picker-layer";
+    layer.dataset.catatanTagManagerLayer = "";
+    layer.hidden = true;
+    layer.innerHTML = `
+      <section class="catatan-picker-sheet catatan-tag-manager-sheet" role="dialog" aria-modal="true" aria-labelledby="catatan-tag-manager-title">
+        <div class="catatan-picker-handle" aria-hidden="true"></div>
+        <div class="catatan-picker-header">
+          <div><small data-catatan-tag-manager-context>Organisasi</small><h2 id="catatan-tag-manager-title">Kelola tag</h2></div>
+          <button type="button" data-catatan-tag-manager-close aria-label="Tutup"><ion-icon name="close-outline" aria-hidden="true"></ion-icon></button>
+        </div>
+        <p class="catatan-picker-help" data-catatan-tag-manager-help>Rapikan katalog tag tanpa menghapus isi catatan.</p>
+        <div class="catatan-tag-manager-toolbar">
+          <button type="button" data-catatan-tag-cleanup disabled>
+            <ion-icon name="sparkles-outline" aria-hidden="true"></ion-icon>
+            <span><strong>Hapus tag tidak terpakai</strong><small data-catatan-tag-cleanup-copy>Tidak ada tag yang perlu dibersihkan</small></span>
+          </button>
+        </div>
+        <div class="catatan-tag-manager-list" data-catatan-tag-manager-list></div>
+        <button class="catatan-picker-cancel" type="button" data-catatan-tag-manager-done>Selesai</button>
+      </section>`;
+    document.body.appendChild(layer);
+
+    const close = () => {
+      layer.hidden = true;
+      tagManagerState = null;
+    };
+    layer.querySelector("[data-catatan-tag-manager-close]")?.addEventListener("click", close);
+    layer.querySelector("[data-catatan-tag-manager-done]")?.addEventListener("click", close);
+    layer.addEventListener("click", event => { if (event.target === layer) close(); });
+    layer.querySelector("[data-catatan-tag-cleanup]")?.addEventListener("click", async () => {
+      const state = tagManagerState;
+      if (!state || state.busy) return;
+      const unused = state.items.filter(item => item.usageCount === 0);
+      if (!unused.length || !unused.some(item => item.canManage)) return;
+      const ok = await confirmDanger({
+        title: `Hapus ${unused.length} tag tidak terpakai?`,
+        message: "Tag yang tidak dipakai catatan mana pun akan dihapus dari katalog. Isi catatan tidak berubah.",
+        confirmLabel: "Hapus tag"
+      });
+      if (!ok) return;
+      state.busy = true;
+      try {
+        const count = await window.NotesService.hapusTagTidakTerpakai(state.scope, state.familyId || null);
+        state.notify?.(count ? `${count} tag tidak terpakai dihapus.` : "Tidak ada tag yang perlu dihapus.");
+        await refreshTagManager();
+        await state.onChanged?.();
+      } catch (error) {
+        console.error("[Catatan Tag Cleanup]", error);
+        state.notify?.(error?.message || "Tag belum dapat dibersihkan.");
+      } finally {
+        if (tagManagerState) tagManagerState.busy = false;
+      }
+    });
+    return layer;
+  }
+
+  async function refreshTagManager() {
+    const state = tagManagerState;
+    if (!state) return;
+    const layer = ensureTagManagerLayer();
+    const list = layer.querySelector("[data-catatan-tag-manager-list]");
+    if (!list) return;
+    list.innerHTML = '<div class="catatan-tag-manager-loading"><span></span><span></span><span></span></div>';
+
+    try {
+      state.items = await window.NotesService.ambilKelolaTagCatalog(state.scope, state.familyId || null);
+    } catch (error) {
+      console.error("[Catatan Tag Manager Load]", error);
+      list.textContent = "";
+      const empty = document.createElement("p");
+      empty.className = "catatan-tag-manager-empty";
+      empty.textContent = window.NotesService?.tagSchemaBelumTerpasang?.(error)
+        ? "Jalankan SQL 004K agar Kelola tag aktif."
+        : (error?.message || "Katalog tag belum dapat dimuat.");
+      list.appendChild(empty);
+      return;
+    }
+
+    list.textContent = "";
+    const used = state.items.filter(item => item.usageCount > 0);
+    const unused = state.items.filter(item => item.usageCount === 0);
+    const canManage = state.items.some(item => item.canManage);
+    const help = layer.querySelector("[data-catatan-tag-manager-help]");
+    if (help) {
+      help.textContent = state.scope === "family" && state.items.length && !canManage
+        ? "Kamu dapat melihat pemakaian Tag Keluarga. Hanya Family Owner yang dapat menghapus tag dari katalog bersama."
+        : "Rapikan katalog tag tanpa menghapus isi catatan.";
+    }
+
+    const cleanup = layer.querySelector("[data-catatan-tag-cleanup]");
+    const cleanupCopy = layer.querySelector("[data-catatan-tag-cleanup-copy]");
+    if (cleanup) cleanup.disabled = unused.length === 0 || !canManage;
+    if (cleanupCopy) cleanupCopy.textContent = unused.length
+      ? `${unused.length} tag · 0 catatan`
+      : "Tidak ada tag yang perlu dibersihkan";
+
+    const section = (label, items) => {
+      const group = document.createElement("section");
+      group.className = "catatan-tag-manager-group";
+      const title = document.createElement("div");
+      title.className = "catatan-tag-manager-heading";
+      const strong = document.createElement("strong");
+      strong.textContent = label;
+      const count = document.createElement("span");
+      count.textContent = String(items.length);
+      title.append(strong, count);
+      group.appendChild(title);
+
+      if (!items.length) {
+        const empty = document.createElement("p");
+        empty.className = "catatan-tag-manager-empty is-inline";
+        empty.textContent = label === "Tidak terpakai" ? "Semua tag sedang dipakai." : "Belum ada tag yang dipakai.";
+        group.appendChild(empty);
+      }
+
+      items.forEach(item => {
+        const row = document.createElement("div");
+        row.className = "catatan-tag-manager-row";
+        const copy = document.createElement("span");
+        const name = document.createElement("strong");
+        name.textContent = `#${item.name}`;
+        const usage = document.createElement("small");
+        usage.textContent = item.usageCount === 0 ? "Tidak terpakai" : `${item.usageCount} catatan`;
+        copy.append(name, usage);
+        row.appendChild(copy);
+
+        if (item.canManage) {
+          const del = document.createElement("button");
+          del.type = "button";
+          del.className = "catatan-tag-manager-delete";
+          del.setAttribute("aria-label", `Hapus tag ${item.name}`);
+          del.innerHTML = '<ion-icon name="trash-outline" aria-hidden="true"></ion-icon>';
+          del.addEventListener("click", async () => {
+            if (!tagManagerState || tagManagerState.busy) return;
+            const usedCopy = item.usageCount > 0
+              ? `#${item.name} dipakai di ${item.usageCount} catatan. Tag akan dilepas dari semua catatan tersebut, tetapi isi catatan tetap aman.`
+              : `#${item.name} tidak dipakai catatan mana pun dan akan dihapus dari katalog.`;
+            const ok = await confirmDanger({
+              title: `Hapus #${item.name}?`,
+              message: usedCopy,
+              confirmLabel: "Hapus tag"
+            });
+            if (!ok || !tagManagerState) return;
+            tagManagerState.busy = true;
+            try {
+              const usageCount = await window.NotesService.hapusTagCatalog(item.id);
+              tagManagerState.notify?.(usageCount ? `#${item.name} dilepas dari ${usageCount} catatan.` : `#${item.name} dihapus.`);
+              await refreshTagManager();
+              await tagManagerState?.onChanged?.();
+            } catch (error) {
+              console.error("[Catatan Tag Delete]", error);
+              tagManagerState?.notify?.(error?.message || "Tag belum dapat dihapus.");
+            } finally {
+              if (tagManagerState) tagManagerState.busy = false;
+            }
+          });
+          row.appendChild(del);
+        } else {
+          const lock = document.createElement("ion-icon");
+          lock.className = "catatan-tag-manager-lock";
+          lock.setAttribute("name", "lock-closed-outline");
+          lock.setAttribute("aria-label", "Hanya Family Owner yang dapat menghapus tag ini");
+          row.appendChild(lock);
+        }
+        group.appendChild(row);
+      });
+      list.appendChild(group);
+    };
+
+    section("Dipakai", used);
+    section("Tidak terpakai", unused);
+
+    if (!state.items.length) {
+      const empty = document.createElement("p");
+      empty.className = "catatan-tag-manager-empty";
+      empty.textContent = "Belum ada tag di katalog ini.";
+      list.appendChild(empty);
+    }
+  }
+
+  async function openTagManager({ scope = "personal", familyId = null, context = "Catatan Pribadi", onChanged = null, notify = null } = {}) {
+    if (!window.NotesService?.ambilKelolaTagCatalog) {
+      notify?.("Kelola tag belum siap — jalankan SQL 004K terlebih dahulu.");
+      return;
+    }
+    const layer = ensureTagManagerLayer();
+    const contextEl = layer.querySelector("[data-catatan-tag-manager-context]");
+    if (contextEl) contextEl.textContent = clean(context, "Organisasi");
+    tagManagerState = {
+      scope: scope === "family" ? "family" : "personal",
+      familyId: clean(familyId),
+      items: [],
+      busy: false,
+      onChanged,
+      notify
+    };
+    layer.hidden = false;
+    await refreshTagManager();
+  }
+
   document.addEventListener("click", event => {
     if (!activeMenu) return;
     if (event.target.closest?.(".catatan-card-shell.is-menu-open")) return;
@@ -577,6 +782,7 @@
     pickCardColor,
     askFolderName,
     pickFolder,
+    openTagManager,
     createCardShell,
     attachSelectionControl,
     setSelectionState,

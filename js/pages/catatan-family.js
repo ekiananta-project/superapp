@@ -130,6 +130,56 @@
     }
   }
 
+  function invalidateMoveIntoFolderCaches(folderName = "") {
+    const perf = window.CatatanPerformance;
+    if (!perf?.remove || !userId) return;
+    perf.remove("family-notes", { userId, familyId });
+    perf.remove("family-folders", { userId, familyId });
+    if (folderName) {
+      perf.remove("folder-notes", {
+        userId,
+        familyId,
+        scope: "family",
+        memberId: "",
+        folderName
+      });
+    }
+  }
+
+  async function moveNoteIntoFolder(note) {
+    if (!window.NotesService?.pindahkanCatatanKeFolder || !window.CatatanManagement?.pickFolder) {
+      showToast("Pemindahan folder belum siap.");
+      return;
+    }
+    try {
+      const folders = await NotesService.ambilFolderCatalog("family", familyId);
+      let choice = await CatatanManagement.pickFolder(folders, { currentName: "", context: "Catatan Keluarga" });
+      if (!choice) return;
+      if (choice.create) {
+        const name = await CatatanManagement.askFolderName({ context: "Catatan Keluarga" });
+        if (!name) return;
+        const created = await NotesService.buatFolder("family", familyId, name);
+        choice = { id: created?.id || null, name: created?.name || name };
+      }
+      const targetName = clean(choice?.name);
+      if (!targetName) return;
+      await NotesService.pindahkanCatatanKeFolder(note, { folderName: targetName, folderId: choice?.id || null });
+
+      notesById.delete(clean(note?.id));
+      notesFingerprint = "";
+      const next = CatatanManagement.sortPinnedFirst(Array.from(notesById.values()));
+      renderBackendNotes(next);
+      invalidateMoveIntoFolderCaches(targetName);
+      window.CatatanPerformance?.write?.("family-notes", { userId, familyId }, next);
+      loadBackendFolders().catch(() => {});
+      showToast(`Catatan dipindahkan ke folder “${targetName}”.`);
+    } catch (error) {
+      console.error("[Catatan Family Move Folder]", error);
+      if (NotesService.folderSchemaBelumTerpasang?.(error)) showToast("Backend Folder belum aktif — jalankan SQL 004D di Supabase dulu.");
+      else showToast(error?.message || "Catatan belum dapat dipindahkan ke folder.");
+    }
+  }
+
   async function createFolder() {
     const name = await CatatanManagement.askFolderName({ context: "Catatan Keluarga" });
     if (!name) return;
@@ -234,6 +284,11 @@
         label: "Ganti warna",
         icon: "color-palette-outline",
         onSelect: () => changeCardColor(note)
+      },
+      {
+        label: "Masukkan ke folder",
+        icon: "folder-outline",
+        onSelect: () => moveNoteIntoFolder(note)
       }
     ];
     if (note?._canArchive) actions.push({
