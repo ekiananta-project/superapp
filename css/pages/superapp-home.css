@@ -613,3 +613,15 @@ html[data-theme="dark"] .global-quick-nav a.is-active { color: #63d290; }
 .today-agenda-copy small { display:block; overflow:hidden; margin-top:2px; color:var(--color-text-secondary,#7b817d); font-size:9.5px; line-height:1.35; text-overflow:ellipsis; white-space:nowrap; }
 .today-agenda-chevron { color:var(--color-text-secondary,#7b817d); font-size:16px; }
 html[data-theme="dark"] .today-agenda-card { background:rgba(32,36,33,.80); }
+
+/* v2.0.0a46 — contextual Notification Health + compact Hari Ini overflow. */
+.notification-health-banner { display:grid; grid-template-columns:40px minmax(0,1fr) auto; align-items:center; gap:10px; margin:-4px 0 18px; padding:11px 12px; border:1px solid color-mix(in srgb,#d88a12 26%,var(--color-border,#e0e4e1)); border-radius:16px; background:color-mix(in srgb,#d88a12 6%,var(--color-surface,#fff)); }
+.notification-health-banner[hidden] { display:none!important; }
+.notification-health-banner-icon { display:grid; place-items:center; width:40px; height:40px; border-radius:13px; background:rgba(216,138,18,.12); color:#c47d11; }
+.notification-health-banner-copy { min-width:0; }
+.notification-health-banner-copy strong { display:block; font-size:10.5px; line-height:1.3; }
+.notification-health-banner-copy p { margin:3px 0 0; color:var(--color-text-secondary,#737a76); font-size:8.8px; line-height:1.4; }
+.notification-health-banner button { appearance:none; flex:0 0 auto; padding:7px 9px; border:0; border-radius:999px; background:var(--color-primary,#159447); color:#fff; font:700 8.5px/1 Manrope,system-ui,sans-serif; cursor:pointer; }
+.today-more-agenda { appearance:none; display:flex; width:100%; align-items:center; justify-content:space-between; gap:8px; padding:8px 3px 2px; border:0; background:transparent; color:var(--color-primary,#159447); font:700 9.5px/1.3 Manrope,system-ui,sans-serif; cursor:pointer; }
+.today-more-agenda ion-icon { font-size:15px; }
+@media (max-width:360px){ .notification-health-banner{grid-template-columns:36px minmax(0,1fr)} .notification-health-banner-icon{width:36px;height:36px}.notification-health-banner button{grid-column:2;justify-self:start} }

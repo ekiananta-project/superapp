@@ -580,6 +580,24 @@
       );
       markCalendarDirty();
       await loadBills();
+      if (window.RuangKithaNotifications) {
+        const warnKey = `ruangkitha:notification-health-warned:bill:${editingItem?.bill_id || name}:${dueDate}`;
+        let alreadyWarned = false;
+        try { alreadyWarned = sessionStorage.getItem(warnKey) === "1"; } catch {}
+        if (!alreadyWarned) {
+          setTimeout(async () => {
+            try {
+              const health = await window.RuangKithaNotifications.getHealth();
+              if (health?.state !== "active" || !health?.verified) {
+                show(health?.state === "active"
+                  ? "Tagihan tersimpan. Notifikasi perangkat aktif tetapi belum dites — cek Kalender > Notifikasi."
+                  : "Tagihan tersimpan. Notifikasi perangkat belum aktif — cek Kalender > Notifikasi.", "info");
+                try { sessionStorage.setItem(warnKey, "1"); } catch {}
+              }
+            } catch {}
+          }, 900);
+        }
+      }
     } catch (error) {
       console.error("[Bill Save]", error);
       show(error?.message || "Tagihan gagal disimpan.", "error");

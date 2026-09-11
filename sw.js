@@ -1,4 +1,4 @@
-const CACHE_NAME = "ruangkitha-v2.0.0a45a-catatan-dedicated-reminder-cleanup";
+const CACHE_NAME = "ruangkitha-v2.0.0a46-notification-calendar-delivery-v1";
 const OFFLINE_URL = "./offline.html";
 
 const APP_FILES = [
@@ -87,6 +87,12 @@ const APP_FILES = [
   "./js/pages/catatan-reminder-runtime.js",
   "./finance.html",
   "./kalender.html",
+  "./notifikasi.html",
+  "./css/pages/notifications.css",
+  "./js/backend/notification-service.js",
+  "./js/pages/notification-health.js",
+  "./js/pages/notification-badge.js",
+  "./js/pages/notifications.js",
   "./profil.html",
   "./css/pages/superapp-home.css",
   "./css/pages/superapp-shell.css",
@@ -253,9 +259,34 @@ self.addEventListener("fetch", event => {
 });
 
 
-// a40: system notification yang dipicu saat Catatan/PWA aktif dapat membuka
-// Reminder tujuan melalui service worker notification surface. Ini bukan
-// background scheduler; due-check tetap dilakukan client ketika app aktif.
+// v2.0.0a46: background Web Push payload from the centralized Notification Scheduler.
+self.addEventListener("push", event => {
+  let payload = {};
+  try { payload = event.data?.json?.() || {}; } catch {
+    try { payload = { body: event.data?.text?.() || "" }; } catch {}
+  }
+  const title = String(payload.title || "Pengingat RuangKitha");
+  const notificationId = String(payload.notificationId || "");
+  let target = String(payload.url || "kalender.html");
+  try {
+    const url = new URL(target, self.location.origin);
+    if (notificationId) url.searchParams.set("rk_notification", notificationId);
+    target = url.href;
+  } catch { target = new URL("kalender.html", self.location.origin).href; }
+
+  const options = {
+    body: String(payload.body || "Ada agenda yang perlu diperhatikan."),
+    tag: String(payload.tag || `ruangkitha-${notificationId || Date.now()}`),
+    renotify: false,
+    icon: "./icons/icon-192.png",
+    badge: "./icons/favicon-32.png",
+    data: { url: target, notificationId }
+  };
+  event.waitUntil(self.registration.showNotification(title, options));
+});
+
+// Notification clicks always deep-link to the original Calendar source.
+// v2.0.0a46 background scheduling is handled by the centralized server dispatcher.
 self.addEventListener("notificationclick", event => {
   event.notification?.close();
   const target = event.notification?.data?.url;

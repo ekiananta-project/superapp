@@ -257,6 +257,15 @@
       if (item.href) row.addEventListener("click", () => window.RuangKithaCalendarEvents.open(item));
       root.appendChild(row);
     });
+
+    if (reminderSummary.length > 3) {
+      const more = document.createElement("button");
+      more.type = "button";
+      more.className = "today-more-agenda";
+      more.innerHTML = `<span>+${reminderSummary.length - 3} agenda lainnya</span><ion-icon name="chevron-forward-outline" aria-hidden="true"></ion-icon>`;
+      more.addEventListener("click", () => { location.href = `kalender.html?date=${encodeURIComponent(todayISO())}`; });
+      root.appendChild(more);
+    }
   }
 
   function showToast(text) {

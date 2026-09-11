@@ -43,7 +43,7 @@
   if ("serviceWorker" in navigator) {
     window.addEventListener("load", async () => {
       try {
-        const registration = await navigator.serviceWorker.register("./sw.js?v=20260911-v200a45a", {
+        const registration = await navigator.serviceWorker.register("./sw.js?v=20260911-v200a46", {
           scope: "./"
         });
 
@@ -83,6 +83,31 @@
     sessionStorage.setItem(key, String(now));
     location.reload();
   });
+
+
+  async function markOpenedNotificationRead() {
+    const params = new URLSearchParams(location.search);
+    const id = params.get("rk_notification");
+    if (!id || !/^[0-9a-f-]{36}$/i.test(id)) return;
+    try {
+      // Supabase is loaded before pwa.js on RuangKitha app pages.
+      if (window.AUTH_READY) {
+        const allowed = await window.AUTH_READY;
+        if (allowed === false) return;
+      }
+      if (!window.supabaseClient) return;
+      await window.supabaseClient.rpc("notification_mark_read_v1", { p_notification_id: id });
+      params.delete("rk_notification");
+      const clean = `${location.pathname}${params.toString() ? `?${params}` : ""}${location.hash}`;
+      history.replaceState(history.state, "", clean);
+      window.dispatchEvent(new CustomEvent("ruangkitha:notification-read"));
+    } catch (error) {
+      console.debug?.("[Notification open marker]", error);
+    }
+  }
+
+  if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", markOpenedNotificationRead, { once: true });
+  else markOpenedNotificationRead();
 
 
   function setupDoubleBackExit() {
