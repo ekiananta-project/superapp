@@ -1,4 +1,4 @@
-const CACHE_NAME = "ruangkitha-v2.0.0a44b-calendar-private-reminder";
+const CACHE_NAME = "ruangkitha-v2.0.0a44c-calendar-fast-open-swr";
 const OFFLINE_URL = "./offline.html";
 
 const APP_FILES = [
