@@ -1,4 +1,4 @@
-// RuangKitha v2.0.0a43 — Relation Map / Mind-map Graph
+// RuangKitha v2.0.0a43a — Relation Map Free-Room Pan UX Hotfix
 (() => {
   "use strict";
 
@@ -17,6 +17,10 @@
   let graph = null;
   let scale = 0.78;
   let initializedMapScroll = false;
+  let mapCanvasPadX = 0;
+  let mapCanvasPadY = 0;
+  let mapPanState = null;
+  let suppressMapClickUntil = 0;
   let toastTimer = null;
   let focusId = "";
   const expanded = new Set();
@@ -124,6 +128,60 @@
       setScale(window.innerWidth < 520 ? .72 : .86);
       centerMapOnFocus();
     });
+    setupMapPanning();
+  }
+
+  function setupMapPanning() {
+    const viewport = q("[data-relation-map-viewport]");
+    if (!viewport || viewport.dataset.freeRoomReady === "true") return;
+    viewport.dataset.freeRoomReady = "true";
+
+    const endPan = event => {
+      if (!mapPanState || (event?.pointerId != null && event.pointerId !== mapPanState.pointerId)) return;
+      const wasDragging = mapPanState.dragging;
+      try {
+        if (viewport.hasPointerCapture?.(mapPanState.pointerId)) viewport.releasePointerCapture(mapPanState.pointerId);
+      } catch {}
+      mapPanState = null;
+      viewport.classList.remove("is-panning");
+      if (wasDragging) suppressMapClickUntil = performance.now() + 220;
+    };
+
+    viewport.addEventListener("pointerdown", event => {
+      if (!event.isPrimary || event.button !== 0) return;
+      mapPanState = {
+        pointerId: event.pointerId,
+        startX: event.clientX,
+        startY: event.clientY,
+        startLeft: viewport.scrollLeft,
+        startTop: viewport.scrollTop,
+        dragging: false
+      };
+      try { viewport.setPointerCapture?.(event.pointerId); } catch {}
+    });
+
+    viewport.addEventListener("pointermove", event => {
+      if (!mapPanState || event.pointerId !== mapPanState.pointerId) return;
+      const dx = event.clientX - mapPanState.startX;
+      const dy = event.clientY - mapPanState.startY;
+      if (!mapPanState.dragging && Math.hypot(dx, dy) < 6) return;
+      mapPanState.dragging = true;
+      viewport.classList.add("is-panning");
+      event.preventDefault();
+      viewport.scrollLeft = mapPanState.startLeft - dx;
+      viewport.scrollTop = mapPanState.startTop - dy;
+    }, { passive: false });
+
+    viewport.addEventListener("pointerup", endPan);
+    viewport.addEventListener("pointercancel", endPan);
+    viewport.addEventListener("lostpointercapture", endPan);
+    viewport.addEventListener("click", event => {
+      if (performance.now() < suppressMapClickUntil) {
+        event.preventDefault();
+        event.stopPropagation();
+        event.stopImmediatePropagation?.();
+      }
+    }, true);
   }
 
   async function openRenameDialog() {
@@ -480,17 +538,27 @@
   function updateCanvasSize() {
     const canvas = q("[data-relation-map-canvas]");
     const stage = q("[data-relation-map-stage]");
-    if (!canvas || !stage) return;
+    const viewport = q("[data-relation-map-viewport]");
+    if (!canvas || !stage || !viewport) return;
+
+    // a43a: give the graph breathing room on every side so the map behaves
+    // like a small free-room canvas instead of a tightly clipped scroll area.
+    mapCanvasPadX = Math.max(280, Math.round(viewport.clientWidth * .72));
+    mapCanvasPadY = Math.max(250, Math.round(viewport.clientHeight * .52));
+
+    stage.style.left = `${mapCanvasPadX}px`;
+    stage.style.top = `${mapCanvasPadY}px`;
     stage.style.transform = `scale(${scale})`;
-    canvas.style.width = `${STAGE_W * scale}px`;
-    canvas.style.height = `${STAGE_H * scale}px`;
+    canvas.style.width = `${STAGE_W * scale + mapCanvasPadX * 2}px`;
+    canvas.style.height = `${STAGE_H * scale + mapCanvasPadY * 2}px`;
   }
 
   function centerMapOnFocus() {
     const viewport = q("[data-relation-map-viewport]");
     if (!viewport) return;
-    const centerX = CENTER.x * scale;
-    const centerY = CENTER.y * scale;
+    updateCanvasSize();
+    const centerX = mapCanvasPadX + CENTER.x * scale;
+    const centerY = mapCanvasPadY + CENTER.y * scale;
     viewport.scrollTo({
       left: Math.max(0, centerX - viewport.clientWidth / 2),
       top: Math.max(0, centerY - viewport.clientHeight / 2),
@@ -549,6 +617,11 @@
       q("[data-relation-page]")?.setAttribute("aria-busy", "false");
     }
   }
+
+  window.addEventListener("resize", () => {
+    if (!relationId || !graph) return;
+    updateCanvasSize();
+  }, { passive: true });
 
   document.addEventListener("DOMContentLoaded", init, { once: true });
 })();

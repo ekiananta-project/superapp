@@ -1,4 +1,4 @@
-const CACHE_NAME = "ruangkitha-v2.0.0a43-catatan-relation-graph-v1";
+const CACHE_NAME = "ruangkitha-v2.0.0a43a-catatan-relation-free-room-pan-hotfix";
 const OFFLINE_URL = "./offline.html";
 
 const APP_FILES = [

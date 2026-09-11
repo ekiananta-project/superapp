@@ -177,10 +177,15 @@
   overflow: auto;
   overscroll-behavior: contain;
   scrollbar-width: none;
-  touch-action: pan-x pan-y;
+  touch-action: none;
+  cursor: grab;
+  user-select: none;
+  -webkit-user-select: none;
 }
+.relation-map-viewport.is-panning { cursor: grabbing; }
+.relation-map-viewport.is-panning * { cursor: grabbing !important; }
 .relation-map-viewport::-webkit-scrollbar { display: none; }
-.relation-map-canvas { position: relative; }
+.relation-map-canvas { position: relative; min-width: 100%; min-height: 100%; }
 .relation-map-stage {
   position: absolute;
   left: 0;
