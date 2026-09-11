@@ -1,4 +1,4 @@
-// RuangKitha v2.0.0a42d — Bulk Folder + Protected Internal Links
+// RuangKitha v2.0.0a42f — Private Link Palette Lottie Patch
 (() => {
   "use strict";
 
@@ -1022,6 +1022,22 @@
     return window.CatatanRelated?.hrefFor?.(note) || "";
   }
 
+  function currentThemeName() {
+    return document.documentElement.getAttribute("data-theme") === "dark" ? "dark" : "light";
+  }
+
+  function privateLinkLottieSrc(theme = currentThemeName()) {
+    return theme === "dark"
+      ? "assets/lottie/catatan-private-lock-dark.lottie"
+      : "assets/lottie/catatan-private-lock-light.lottie";
+  }
+
+  function syncPrivateLinkLottie(player) {
+    if (!player) return;
+    const nextSrc = privateLinkLottieSrc();
+    if (player.getAttribute("src") !== nextSrc) player.setAttribute("src", nextSrc);
+  }
+
   function internalTargetId(anchor) {
     if (!anchor?.hasAttribute?.("data-rk-internal-link")) return "";
     try {
@@ -1044,7 +1060,7 @@
       <section class="catatan-private-link-dialog" role="dialog" aria-modal="true" aria-labelledby="catatan-private-link-title" aria-describedby="catatan-private-link-copy">
         <div class="catatan-private-link-visual" aria-hidden="true">
           <dotlottie-player
-            src="assets/lottie/catatan-private-lock.lottie"
+            src="assets/lottie/catatan-private-lock-light.lottie"
             background="transparent"
             speed="1"
             loop
@@ -1054,6 +1070,10 @@
         <p id="catatan-private-link-copy">Pemilik catatan membatasi akses hanya untuk dirinya, jadi kamu belum bisa membuka catatan ini.</p>
         <button class="catatan-private-link-ok" type="button" data-private-link-ok>Oke</button>
       </section>`;
+
+    const player = layer.querySelector("dotlottie-player");
+    const themeObserver = new MutationObserver(() => syncPrivateLinkLottie(player));
+    themeObserver.observe(document.documentElement, { attributes: true, attributeFilter: ["data-theme"] });
 
     const close = () => {
       if (layer.hidden) return;
@@ -1088,6 +1108,7 @@
     document.documentElement.classList.add("catatan-modal-open");
 
     const player = layer.querySelector("dotlottie-player");
+    syncPrivateLinkLottie(player);
     const reduceMotion = window.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches;
     if (reduceMotion) {
       player?.removeAttribute("loop");

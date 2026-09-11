@@ -1,4 +1,4 @@
-const CACHE_NAME = "ruangkitha-v2.0.0a42e-catatan-inline-private-target-hotfix";
+const CACHE_NAME = "ruangkitha-v2.0.0a42f-catatan-private-lottie-palette-patch";
 const OFFLINE_URL = "./offline.html";
 
 const APP_FILES = [
@@ -96,6 +96,8 @@ const APP_FILES = [
   "./assets/lottie/catatan-empty-folders-light.lottie",
   "./assets/lottie/catatan-empty-folders-dark.lottie",
   "./assets/lottie/catatan-private-lock.lottie",
+  "./assets/lottie/catatan-private-lock-light.lottie",
+  "./assets/lottie/catatan-private-lock-dark.lottie",
   "./js/pages/superapp-calendar.js",
   "./js/pages/superapp-profile-shell.js",
   "./js/app.js",
