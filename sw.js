@@ -1,4 +1,4 @@
-const CACHE_NAME = "ruangkitha-v2.0.0a46a-notification-edge-sender-hotfix";
+const CACHE_NAME = "ruangkitha-v2.0.0a46b-notification-device-id-hotfix";
 const OFFLINE_URL = "./offline.html";
 
 const APP_FILES = [

@@ -1,4 +1,4 @@
-// RuangKitha v2.0.0a46a — Calendar-centered Notification foundation + readable Edge Function errors.
+// RuangKitha v2.0.0a46b — Stable notification device-id handshake + readable Edge Function errors.
 (() => {
   "use strict";
 
@@ -184,9 +184,16 @@
     if (!supported() || Notification.permission !== "granted") return getHealth({ refreshDevice: false });
     const subscription = await currentSubscription();
     if (!subscription) return getHealth({ refreshDevice: false });
-    try { await registerSubscription(subscription); }
+
+    let registeredDeviceId = null;
+    try { registeredDeviceId = await registerSubscription(subscription); }
     catch (error) { console.debug?.("[Notification heartbeat]", error); }
-    return getHealth();
+
+    const health = await getHealth();
+    return {
+      ...health,
+      deviceId: clean(health?.device?.id || registeredDeviceId) || null
+    };
   }
 
   async function activate() {
@@ -249,7 +256,19 @@
     if (health.state !== "active" || !health.subscription?.endpoint) {
       throw new Error("Aktifkan notifikasi pada perangkat ini terlebih dahulu.");
     }
-    return await invokeEdge({ mode: "test", endpoint: health.subscription.endpoint });
+
+    // Use the stable UUID returned by notification_register_device_v1.
+    // Endpoint URLs are provider-owned strings and are not used as the primary
+    // cross-runtime identity for the test handshake anymore.
+    let deviceId = clean(health.deviceId || health?.device?.id);
+    if (!deviceId) deviceId = clean(await registerSubscription(health.subscription));
+    if (!deviceId) throw new Error("ID perangkat belum tersimpan. Aktifkan ulang notifikasi lalu coba lagi.");
+
+    return await invokeEdge({
+      mode: "test",
+      deviceId,
+      endpoint: health.subscription.endpoint // compatibility fallback for older server versions
+    });
   }
 
   async function confirmTestSeen() {
