@@ -1,4 +1,4 @@
-const CACHE_NAME = "ruangkitha-v2.0.0a43d-catatan-relation-card-meta-hotfix";
+const CACHE_NAME = "ruangkitha-v2.0.0a44-calendar-events-holidays";
 const OFFLINE_URL = "./offline.html";
 
 const APP_FILES = [
@@ -90,6 +90,7 @@ const APP_FILES = [
   "./profil.html",
   "./css/pages/superapp-home.css",
   "./css/pages/superapp-shell.css",
+  "./css/pages/calendar.css",
   "./css/pages/finance-container.css",
   "./js/pages/superapp-home.js",
   "./js/pages/superapp-home-lottie.js",
@@ -102,6 +103,8 @@ const APP_FILES = [
   "./assets/lottie/catatan-private-lock-light.lottie",
   "./assets/lottie/catatan-private-lock-dark.lottie",
   "./js/pages/superapp-calendar.js",
+  "./js/backend/calendar-event-service.js",
+  "./js/pages/calendar-source-deeplink.js",
   "./js/pages/superapp-profile-shell.js",
   "./js/app.js",
   "./js/backend/auth-guard.js",

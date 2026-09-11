@@ -7,27 +7,33 @@
   <script src="js/theme.js"></script><title>Kalender · RuangKitha</title>
   <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="css/style.css"><link rel="stylesheet" href="css/theme.css"><link rel="stylesheet" href="css/pages/superapp-shell.css?v=20260909-v200a8">
+  <link rel="stylesheet" href="css/style.css"><link rel="stylesheet" href="css/theme.css"><link rel="stylesheet" href="css/pages/superapp-shell.css?v=20260909-v200a8"><link rel="stylesheet" href="css/pages/calendar.css?v=20260911-v200a44">
   <style id="ruangkitha-auth-cloak">html[data-auth-guard] body{visibility:hidden!important}</style>
 </head>
 <body>
-<div class="aplikasi superapp-shell">
+<div class="aplikasi superapp-shell superapp-global-nav-page">
   <header class="superapp-shell-header">
     <a class="superapp-shell-back" href="index.html" aria-label="Kembali ke RuangKitha"><ion-icon name="arrow-back-outline"></ion-icon></a>
     <h1>Kalender</h1><span class="superapp-shell-action is-placeholder"></span>
   </header>
   <main>
-    <section class="shell-card">
-      <div class="shell-intro"><h2>Kalender Keluarga</h2><p>Cek tanggal dengan cepat. Agenda dan tanggal merah akan kita hubungkan pada pengembangan berikutnya.</p></div>
+    <section class="shell-card calendar-shell-card">
+      <div class="calendar-intro-row">
+        <div class="shell-intro"><h2>Kalender Keluarga</h2><p>Lihat agenda dari semua modul pada tanggal yang kamu pilih.</p></div>
+        <button class="calendar-today-button" type="button" data-calendar-today>Hari ini</button>
+      </div>
       <div class="calendar-toolbar"><button type="button" data-calendar-prev aria-label="Bulan sebelumnya"><ion-icon name="chevron-back-outline"></ion-icon></button><h2 data-calendar-title></h2><button type="button" data-calendar-next aria-label="Bulan berikutnya"><ion-icon name="chevron-forward-outline"></ion-icon></button></div>
       <div class="calendar-weekdays" aria-hidden="true"><span>Min</span><span>Sen</span><span>Sel</span><span>Rab</span><span>Kam</span><span>Jum</span><span>Sab</span></div>
-      <div class="calendar-grid" data-calendar-grid></div>
-      <p class="calendar-note">Versi container ini menyediakan kalender dasar dulu. Integrasi tanggal merah, agenda, dokumen, maintenance, dan pengingat lintas modul akan ditambahkan setelah fondasi RuangKitha stabil.</p>
+      <div class="calendar-grid" data-calendar-grid aria-live="polite"></div>
+      <section class="calendar-agenda" aria-labelledby="calendar-agenda-title">
+        <div class="calendar-agenda-head"><div><small>Agenda tanggal terpilih</small><h3 id="calendar-agenda-title" data-agenda-title>Memuat...</h3></div><span class="calendar-agenda-count" data-agenda-count>...</span></div>
+        <div class="calendar-agenda-list" data-agenda-list><div class="calendar-agenda-empty"><span><ion-icon name="hourglass-outline"></ion-icon></span><div><strong>Memuat agenda</strong><p>Menghubungkan Kalender dengan modul RuangKitha.</p></div></div></div>
+      </section>
     </section>
   </main>
   <nav class="global-quick-nav" aria-label="Akses cepat RuangKitha"><a class="is-active" href="kalender.html" aria-current="page"><ion-icon name="calendar-clear-outline"></ion-icon><span>Kalender</span></a><a href="keluarga.html"><ion-icon name="people-outline"></ion-icon><span>Keluarga</span></a><a href="profil.html"><ion-icon name="person-outline"></ion-icon><span>Profil</span></a></nav>
 </div>
 <script type="module" src="https://unpkg.com/ionicons@8.0.13/dist/ionicons/ionicons.esm.js"></script><script nomodule src="https://unpkg.com/ionicons@8.0.13/dist/ionicons/ionicons.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script src="js/backend/supabase.js"></script><script src="js/backend/auth-service.js"></script><script src="js/backend/auth-router.js?v=20260909-v200a8"></script><script src="js/backend/auth-guard.js?v=20260909-v200a8"></script>
-<script src="js/pages/superapp-calendar.js?v=20260909-v200a"></script><script src="js/pwa.js?v=20260909-v200a8"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script src="js/backend/supabase.js"></script><script src="js/backend/auth-service.js"></script><script src="js/backend/family-service.js?v=20260908-10"></script><script src="js/backend/auth-router.js?v=20260909-v200a8"></script><script src="js/backend/auth-guard.js?v=20260909-v200a8"></script>
+<script src="js/backend/calendar-event-service.js?v=20260911-v200a44"></script><script src="js/pages/superapp-calendar.js?v=20260911-v200a44"></script><script src="js/pwa.js?v=20260911-v200a44"></script>
 </body></html>

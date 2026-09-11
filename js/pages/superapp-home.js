@@ -6,6 +6,7 @@
   const PAGE_SIZE = 1000;
   const MAX_ROWS = 20000;
   let reminderSummary = [];
+  let activeFamilyId = "";
   let toastTimer = null;
 
   const q = selector => document.querySelector(selector);
@@ -171,30 +172,20 @@
     }
   }
 
-  function dueState(item) {
-    if (item.status === "paid") return "paid";
-    const due = String(item.due_on || "");
-    const today = todayISO();
-    if (due && due < today) return "overdue";
-    if (due === today) return "today";
-    return "pending";
+  function iconForEvent(item) {
+    return item?.icon || ({ finance: "receipt-outline", notes: "alarm-outline", calendar: "calendar-clear-outline" }[item?.module] || "notifications-outline");
   }
 
-  async function loadFinanceReminders(familyId) {
-    const bills = await FinanceService.ambilTagihanRingkas({ familyId, today: todayISO() });
-    const pending = (bills || []).filter(item => item.status !== "paid");
-    const overdue = pending.filter(item => dueState(item) === "overdue");
-    const dueToday = pending.filter(item => dueState(item) === "today");
+  function eventMeta(item) {
+    const time = window.RuangKithaCalendarEvents?.eventTimeLabel?.(item) || "";
+    const source = window.RuangKithaCalendarEvents?.moduleLabel?.(item?.module) || "RuangKitha";
+    return [time, item?.subtitle, source].filter(Boolean).join(" · ");
+  }
 
-    const rows = [];
-    if (overdue.length) {
-      rows.push({ icon: "alert-circle-outline", tone: "danger", title: `${overdue.length} tagihan terlambat`, meta: "Keuangan · perlu perhatian" });
-    } else if (dueToday.length) {
-      rows.push({ icon: "receipt-outline", tone: "warning", title: `${dueToday.length} tagihan jatuh tempo hari ini`, meta: "Keuangan" });
-    } else if (pending.length) {
-      rows.push({ icon: "receipt-outline", tone: "warning", title: `${pending.length} tagihan perlu dibayar`, meta: "Keuangan" });
-    }
-    return rows;
+  async function loadTodayEvents(familyId) {
+    const today = todayISO();
+    const items = await window.RuangKithaCalendarEvents.loadRange({ familyId, start: today, end: today });
+    return (items || []).filter(item => item.status !== "paid");
   }
 
   function renderReminders(items) {
@@ -204,31 +195,42 @@
     if (!root) return;
     root.replaceChildren();
 
+    const caption = q("[data-today-caption]");
     if (!reminderSummary.length) {
       const empty = document.createElement("p");
       empty.className = "today-empty";
-      empty.textContent = "Belum ada pengingat penting dari modul yang aktif.";
+      empty.textContent = "Belum ada agenda penting dari modul yang aktif.";
       root.appendChild(empty);
-      const caption = q("[data-today-caption]");
       if (caption) caption.textContent = "Semua aman untuk saat ini";
       return;
     }
 
+    if (caption) caption.textContent = `${reminderSummary.length} agenda hari ini`;
     reminderSummary.slice(0, 3).forEach(item => {
-      const row = document.createElement("div");
-      row.className = "today-item";
+      const row = document.createElement(item.href ? "button" : "div");
+      if (item.href) row.type = "button";
+      row.className = `today-item today-agenda-card is-${item.tone || item.module || "calendar"}`;
+
       const icon = document.createElement("span");
-      icon.className = `today-item-icon${item.tone ? ` is-${item.tone}` : ""}`;
+      icon.className = "today-item-icon";
       const ion = document.createElement("ion-icon");
-      ion.setAttribute("name", item.icon || "notifications-outline");
+      ion.setAttribute("name", iconForEvent(item));
       icon.appendChild(ion);
+
       const copy = document.createElement("span");
+      copy.className = "today-agenda-copy";
       const title = document.createElement("strong");
       title.textContent = item.title;
       const meta = document.createElement("small");
-      meta.textContent = item.meta || "RuangKitha";
+      meta.textContent = eventMeta(item) || "Agenda RuangKitha";
       copy.append(title, meta);
       row.append(icon, copy);
+
+      const chevron = document.createElement("ion-icon");
+      chevron.className = "today-agenda-chevron";
+      chevron.setAttribute("name", item.href ? "chevron-forward-outline" : "ellipse-outline");
+      row.appendChild(chevron);
+      if (item.href) row.addEventListener("click", () => window.RuangKithaCalendarEvents.open(item));
       root.appendChild(row);
     });
   }
@@ -244,11 +246,10 @@
 
   function setupInteractions() {
     document.querySelectorAll("[data-coming-soon]").forEach(button => {
-      button.addEventListener("click", () => showToast(`Modul ${button.dataset.comingSoon} akan dibangun setelah fondasi RuangKitha stabil.`));
+      button.addEventListener("click", () => showToast(`Modul ${button.dataset.comingSoon} akan dibangun setelah fondasi Superapp stabil.`));
     });
     q("[data-reminder-all]")?.addEventListener("click", () => {
-      if (reminderSummary.length) showToast("Saat ini pengingat aktif berasal dari Keuangan. Pengingat lintas modul akan bertambah otomatis saat modul baru aktif.");
-      else showToast("Belum ada pengingat penting untuk ditampilkan.");
+      location.href = `kalender.html?date=${encodeURIComponent(todayISO())}`;
     });
   }
 
@@ -278,24 +279,25 @@
       const family = families.find(item => item.id === pref.familyAktif) || families[0];
       saveActiveFamily(family.id);
 
+      activeFamilyId = family.id;
       const [cashflowResult, reminderResult] = await Promise.allSettled([
         loadCashflow(family.id),
-        loadFinanceReminders(family.id)
+        loadTodayEvents(family.id)
       ]);
 
       if (cashflowResult.status === "fulfilled") renderCashflow(cashflowResult.value);
       else {
-        console.warn("[RuangKitha Home cashflow]", cashflowResult.reason);
+        console.warn("[Superapp Home cashflow]", cashflowResult.reason);
         renderCashflow({ net: 0 });
       }
 
       if (reminderResult.status === "fulfilled") renderReminders(reminderResult.value);
       else {
-        console.warn("[RuangKitha Home reminder]", reminderResult.reason);
+        console.warn("[Superapp Home reminder]", reminderResult.reason);
         renderReminders([]);
       }
     } catch (error) {
-      console.error("[RuangKitha Home]", error);
+      console.error("[Superapp Home]", error);
       renderReminders([]);
       renderCashflow({ net: 0 });
     } finally {

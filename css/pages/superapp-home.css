@@ -594,3 +594,22 @@ html[data-theme="dark"] .global-quick-nav a.is-active { color: #63d290; }
   .family-module-card { padding: 14px; }
   .finance-preview > strong { font-size: 24px; }
 }
+
+/* v2.0.0a44 — Hari Ini uses the same actionable agenda model as Kalender. */
+.today-card:not(.is-empty) .today-card-body { grid-template-columns:1fr; }
+.today-card:not(.is-empty) .today-lottie-wrap { display:none; }
+.today-card:not(.is-empty) .today-list { gap:8px; }
+.today-agenda-card {
+  appearance:none; width:100%; display:grid; grid-template-columns:36px minmax(0,1fr) 18px; align-items:center; gap:9px;
+  padding:8px 9px; border:1px solid color-mix(in srgb,var(--color-border,#e0e4e1) 82%,transparent); border-radius:14px;
+  background:color-mix(in srgb,var(--color-surface,#fff) 88%,transparent); color:var(--color-text,#171a18); text-align:left; font:inherit; cursor:pointer;
+}
+.today-agenda-card:active { transform:scale(.994); }
+.today-agenda-card .today-item-icon { width:36px; height:36px; border-radius:12px; }
+.today-agenda-card.is-notes .today-item-icon { background:rgba(216,138,18,.13); color:#d88a12; }
+.today-agenda-card.is-holiday .today-item-icon, .today-agenda-card.is-calendar .today-item-icon { background:rgba(220,85,112,.11); color:#d84d69; }
+.today-agenda-copy { min-width:0; }
+.today-agenda-copy strong { display:block; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-size:12px; }
+.today-agenda-copy small { display:block; overflow:hidden; margin-top:2px; color:var(--color-text-secondary,#7b817d); font-size:9.5px; line-height:1.35; text-overflow:ellipsis; white-space:nowrap; }
+.today-agenda-chevron { color:var(--color-text-secondary,#7b817d); font-size:16px; }
+html[data-theme="dark"] .today-agenda-card { background:rgba(32,36,33,.80); }
