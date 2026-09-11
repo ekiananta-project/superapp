@@ -1,4 +1,4 @@
-const CACHE_NAME = "ruangkitha-v2.0.0a46-notification-calendar-delivery-v1";
+const CACHE_NAME = "ruangkitha-v2.0.0a46a-notification-edge-sender-hotfix";
 const OFFLINE_URL = "./offline.html";
 
 const APP_FILES = [

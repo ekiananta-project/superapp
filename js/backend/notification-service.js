@@ -1,4 +1,4 @@
-// RuangKitha v2.0.0a46 — Calendar-centered Notification foundation.
+// RuangKitha v2.0.0a46a — Calendar-centered Notification foundation + readable Edge Function errors.
 (() => {
   "use strict";
 
@@ -139,11 +139,27 @@
     };
   }
 
+  async function edgeErrorMessage(error, fallback = "Edge Function gagal dipanggil.") {
+    try {
+      const response = error?.context;
+      if (response && typeof response.clone === "function") {
+        const data = await response.clone().json();
+        const message = clean(data?.message);
+        if (message) return message;
+      }
+    } catch {}
+    return clean(error?.message) || fallback;
+  }
+
+  async function invokeEdge(body) {
+    const { data, error } = await client().functions.invoke(EDGE_FUNCTION, { body });
+    if (error) throw new Error(await edgeErrorMessage(error));
+    if (data?.ok === false) throw new Error(clean(data?.message) || "Server push menolak permintaan.");
+    return data;
+  }
+
   async function edgeConfig() {
-    const { data, error } = await client().functions.invoke(EDGE_FUNCTION, {
-      body: { mode: "config" }
-    });
-    if (error) throw error;
+    const data = await invokeEdge({ mode: "config" });
     const key = clean(data?.publicKey);
     if (!key) throw new Error("VAPID public key belum dikonfigurasi pada server push.");
     return { publicKey: key };
@@ -233,12 +249,7 @@
     if (health.state !== "active" || !health.subscription?.endpoint) {
       throw new Error("Aktifkan notifikasi pada perangkat ini terlebih dahulu.");
     }
-    const { data, error } = await client().functions.invoke(EDGE_FUNCTION, {
-      body: { mode: "test", endpoint: health.subscription.endpoint }
-    });
-    if (error) throw error;
-    if (!data?.ok) throw new Error(data?.message || "Notifikasi percobaan belum dapat dikirim.");
-    return data;
+    return await invokeEdge({ mode: "test", endpoint: health.subscription.endpoint });
   }
 
   async function confirmTestSeen() {
