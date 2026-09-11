@@ -1101,3 +1101,22 @@ html[data-theme="dark"] .catatan-tag-manager-row { background: var(--color-surfa
   .catatan-bulk-actions button { gap: 4px; padding-inline: 7px; }
   .catatan-bulk-actions ion-icon { display: none; }
 }
+
+/* v2.0.0a43 — relation-map entry in Catatan area headers */
+.catatan-relation-entry {
+  justify-self: end;
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  border: 1px solid var(--color-border, #e0e4e1);
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--color-surface, #fff) 92%, transparent);
+  color: var(--color-primary, #159447);
+  text-decoration: none;
+  box-shadow: 0 8px 24px rgba(15, 35, 23, .06);
+}
+.catatan-relation-entry ion-icon { font-size: 22px; }
+.catatan-relation-entry:active {
+  background: color-mix(in srgb, var(--color-primary, #159447) 9%, var(--color-surface, #fff));
+}

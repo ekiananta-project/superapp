@@ -1,4 +1,4 @@
-// RuangKitha v2.0.0a42f — Private Link Palette Lottie Patch
+// RuangKitha v2.0.0a43 — Relation Graph + Protected Internal Links
 (() => {
   "use strict";
 
@@ -117,6 +117,9 @@
       }
 
       const link = tag === "A" ? safeHref(node.getAttribute("href")) : null;
+      const relationId = tag === "A" && /^[0-9a-f-]{32,36}$/i.test(String(node.dataset?.rkRelationId || ""))
+        ? String(node.dataset.rkRelationId)
+        : "";
       const background = tag === "SPAN" ? String(node.style?.backgroundColor || "").trim() : "";
       const textColor = tag === "SPAN" && textColors.has(node.dataset?.textColor || "") ? node.dataset.textColor : "";
       const fontToken = tag === "SPAN" && fontTokens.has(node.dataset?.fontToken || "") ? node.dataset.fontToken : "";
@@ -130,6 +133,7 @@
         node.setAttribute("href", link.href);
         if (link.internalNote) {
           node.setAttribute("data-rk-internal-link", "note");
+          if (relationId) node.setAttribute("data-rk-relation-id", relationId);
         } else {
           node.setAttribute("target", "_blank");
           node.setAttribute("rel", "noopener noreferrer");
@@ -1048,6 +1052,12 @@
     }
   }
 
+  function internalRelationId(anchor) {
+    if (!anchor?.hasAttribute?.("data-rk-internal-link")) return "";
+    const value = clean(anchor.getAttribute("data-rk-relation-id"));
+    return /^[0-9a-f-]{32,36}$/i.test(value) ? value : "";
+  }
+
   function ensurePrivateLinkLayer() {
     let layer = q("[data-private-link-layer]");
     if (layer) return layer;
@@ -1175,15 +1185,15 @@
     }
   }
 
-  function hasAnotherInlineLinkTo(targetId, exceptAnchor = null) {
+  function hasAnotherInlineLinkTo(targetId, exceptAnchor = null, relationId = "") {
     if (!targetId) return false;
     return qa('[data-note-content] a[data-rk-internal-link="note"]').some(anchor => {
-      if (anchor === exceptAnchor) return false;
-      return internalTargetId(anchor) === targetId;
+      if (anchor === exceptAnchor || internalTargetId(anchor) !== targetId) return false;
+      return relationId ? internalRelationId(anchor) === relationId : true;
     });
   }
 
-  function insertAnchorAtSavedRange({ href, label = "", internal = false } = {}) {
+  function insertAnchorAtSavedRange({ href, label = "", internal = false, relationId = "" } = {}) {
     if (!href || editorMode !== "edit") return false;
     restoreSelection();
     const editor = q("[data-note-content]");
@@ -1199,7 +1209,10 @@
     const anchor = document.createElement("a");
     anchor.href = href;
     anchor.textContent = visibleText;
-    if (internal) anchor.dataset.rkInternalLink = "note";
+    if (internal) {
+      anchor.dataset.rkInternalLink = "note";
+      if (/^[0-9a-f-]{32,36}$/i.test(clean(relationId))) anchor.dataset.rkRelationId = clean(relationId);
+    }
     else {
       anchor.target = "_blank";
       anchor.rel = "noopener noreferrer";
@@ -2285,7 +2298,7 @@
         }
         const names = {
           reminder: "Reminder",
-          related: "Catatan Terkait"
+          related: "Relasi Catatan"
         };
         showToast(`${names[action] || "Fitur"} akan aktif bersama backend Catatan.`);
       });
@@ -2425,13 +2438,14 @@
           }
           setLayer("[data-link-choice-layer]", false);
           window.CatatanRelated?.openSingle?.({
-            onSelect: note => {
+            onSelect: (note, meta = {}) => {
               const href = internalLinkHref(note);
               if (!href) {
                 showToast("Tujuan catatan belum dapat dibuka.");
                 return;
               }
-              insertAnchorAtSavedRange({ href, label: linkSelectedText, internal: true });
+              const inserted = insertAnchorAtSavedRange({ href, label: linkSelectedText, internal: true, relationId: meta.relationId || "" });
+              if (!inserted && meta.relationId) window.CatatanRelated?.unlinkTarget?.(note?.id, meta.relationId);
             }
           });
           return;
@@ -2492,12 +2506,14 @@
         }
         if (action === "remove") {
           const oldTargetId = internalTargetId(anchor);
+          const oldRelationId = internalRelationId(anchor);
           anchor.replaceWith(document.createTextNode(anchor.textContent || ""));
           setLayer("[data-link-action-layer]", false);
           activeLinkAnchor = null;
           scheduleBasicAutosave(120);
-          if (oldTargetId && !hasAnotherInlineLinkTo(oldTargetId)) {
-            window.CatatanRelated?.unlinkTarget?.(oldTargetId);
+          if (oldTargetId && !hasAnotherInlineLinkTo(oldTargetId, null, oldRelationId)) {
+            const keepLegacy = hasAnotherInlineLinkTo(oldTargetId);
+            window.CatatanRelated?.unlinkTarget?.(oldTargetId, oldRelationId, keepLegacy);
           }
           showToast("Tautan dihapus. Teks tetap dipertahankan.");
           return;
@@ -2509,19 +2525,27 @@
           if (internal) {
             const changingAnchor = anchor;
             const oldTargetId = internalTargetId(changingAnchor);
+            const oldRelationId = internalRelationId(changingAnchor);
             window.CatatanRelated?.openSingle?.({
               currentTargetId: oldTargetId,
-              onSelect: note => {
+              onSelect: (note, meta = {}) => {
                 const href = internalLinkHref(note);
-                if (!href || !document.contains(changingAnchor)) return;
+                if (!href || !document.contains(changingAnchor)) {
+                  if (meta.relationId) window.CatatanRelated?.unlinkTarget?.(note?.id, meta.relationId);
+                  return;
+                }
                 const newTargetId = clean(note?.id);
                 changingAnchor.href = href;
                 changingAnchor.dataset.rkInternalLink = "note";
+                if (meta.relationId) changingAnchor.dataset.rkRelationId = meta.relationId;
+                else changingAnchor.removeAttribute("data-rk-relation-id");
                 changingAnchor.removeAttribute("target");
                 changingAnchor.removeAttribute("rel");
                 scheduleBasicAutosave(120);
-                if (oldTargetId && oldTargetId !== newTargetId && !hasAnotherInlineLinkTo(oldTargetId, changingAnchor)) {
-                  window.CatatanRelated?.unlinkTarget?.(oldTargetId);
+                if (oldTargetId && (oldTargetId !== newTargetId || oldRelationId !== clean(meta.relationId))
+                    && !hasAnotherInlineLinkTo(oldTargetId, changingAnchor, oldRelationId)) {
+                  const keepLegacy = hasAnotherInlineLinkTo(oldTargetId, changingAnchor);
+                  window.CatatanRelated?.unlinkTarget?.(oldTargetId, oldRelationId, keepLegacy);
                 }
                 activeLinkAnchor = null;
                 showToast("Tujuan catatan diperbarui.");
@@ -2659,6 +2683,18 @@
         ensureSaved: async () => {
           await saveBasicNoteNow();
           return noteId;
+        },
+        onLegacyGrouped: (targetId, relationId) => {
+          const rid = clean(relationId);
+          if (!targetId || !rid) return;
+          let changed = false;
+          qa('[data-note-content] a[data-rk-internal-link="note"]').forEach(anchor => {
+            if (internalTargetId(anchor) === targetId && !internalRelationId(anchor)) {
+              anchor.dataset.rkRelationId = rid;
+              changed = true;
+            }
+          });
+          if (changed) scheduleBasicAutosave(120);
         },
         showToast
       });

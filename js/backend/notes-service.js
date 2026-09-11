@@ -557,6 +557,154 @@
       message.includes("catatan_note_relations");
   }
 
+  function normalizeRelationGroupRow(row = {}) {
+    return {
+      id: clean(row?.relation_id ?? row?.id),
+      name: clean(row?.relation_name ?? row?.name, 120) || "Relasi tanpa nama",
+      scope: String((row?.relation_scope ?? row?.scope) || "personal").toLowerCase() === "family" ? "family" : "personal",
+      family_id: clean(row?.family_id) || null,
+      node_count: Math.max(0, Number(row?.node_count) || 0),
+      can_manage: row?.can_manage === undefined ? true : Boolean(row?.can_manage),
+      updated_at: row?.updated_at || null
+    };
+  }
+
+  async function ambilRelasiUntukCatatan(noteId) {
+    const id = clean(noteId);
+    if (!id) return [];
+    const { data, error } = await client().rpc("notes_list_note_relation_groups_v1", { p_note_id: id });
+    if (error) throw error;
+    return (data || []).map(normalizeRelationGroupRow).filter(row => row.id);
+  }
+
+  async function ambilDaftarRelasi(scope = "personal", familyId = null) {
+    const relationScope = normalizeScope(scope);
+    const { data, error } = await client().rpc("notes_list_relation_groups_v1", {
+      p_scope: relationScope,
+      p_family_id: relationScope === "family" ? (clean(familyId) || null) : null
+    });
+    if (error) throw error;
+    return (data || []).map(normalizeRelationGroupRow).filter(row => row.id);
+  }
+
+  async function ambilOpsiRelasiPasangan(sourceNoteId, targetNoteId) {
+    const source = clean(sourceNoteId);
+    const target = clean(targetNoteId);
+    if (!source || !target) return { scopes: [], relations: [] };
+    const { data, error } = await client().rpc("notes_relation_pair_options_v1", {
+      p_source_note_id: source,
+      p_target_note_id: target
+    });
+    if (error) throw error;
+    const rows = data || [];
+    const scopes = [];
+    const scopeMap = new Map();
+    const relations = [];
+    rows.forEach(row => {
+      const scopeName = String(row?.relation_scope || "personal").toLowerCase() === "family" ? "family" : "personal";
+      if (!scopeMap.has(scopeName)) {
+        const item = { scope: scopeName, family_id: clean(row?.family_id) || null };
+        scopeMap.set(scopeName, item);
+        scopes.push(item);
+      }
+      if (clean(row?.relation_id)) relations.push(normalizeRelationGroupRow(row));
+    });
+    return { scopes, relations };
+  }
+
+  async function simpanEdgeRelasi(sourceNoteId, targetNoteId, choice = {}) {
+    const source = clean(sourceNoteId);
+    const target = clean(targetNoteId);
+    if (!source || !target) throw new Error("Pasangan catatan belum lengkap.");
+    const { data, error } = await client().rpc("notes_add_relation_edge_v1", {
+      p_source_note_id: source,
+      p_target_note_id: target,
+      p_relation_id: clean(choice?.relationId ?? choice?.relation_id) || null,
+      p_relation_name: clean(choice?.name, 120) || null,
+      p_relation_scope: String(choice?.scope || "personal").toLowerCase() === "family" ? "family" : "personal"
+    });
+    if (error) throw error;
+    return clean(data);
+  }
+
+  async function hapusEdgeRelasiPasangan(sourceNoteId, targetNoteId, relationId = null) {
+    const source = clean(sourceNoteId);
+    const target = clean(targetNoteId);
+    if (!source || !target) return 0;
+    const { data, error } = await client().rpc("notes_remove_relation_edges_between_v1", {
+      p_source_note_id: source,
+      p_target_note_id: target,
+      p_relation_id: clean(relationId) || null
+    });
+    if (error) throw error;
+    return Number(data || 0);
+  }
+
+  async function ambilGraphRelasi(relationId) {
+    const id = clean(relationId);
+    if (!id) return null;
+    const { data, error } = await client().rpc("notes_get_relation_graph_v1", { p_relation_id: id });
+    if (error) throw error;
+    const raw = data || {};
+    const relation = raw.relation || {};
+    const nodes = Array.isArray(raw.nodes) ? raw.nodes.map(normalizeRelatedRow).filter(row => row.id) : [];
+    const edges = Array.isArray(raw.edges) ? raw.edges.map(edge => ({ a: clean(edge?.a), b: clean(edge?.b) })).filter(edge => edge.a && edge.b) : [];
+    return {
+      relation: {
+        id: clean(relation?.id),
+        name: clean(relation?.name, 120) || "Relasi Catatan",
+        scope: String(relation?.scope || "personal").toLowerCase() === "family" ? "family" : "personal",
+        family_id: clean(relation?.family_id) || null,
+        can_manage: Boolean(relation?.can_manage),
+        can_admin: relation?.can_admin === undefined ? Boolean(relation?.can_manage) : Boolean(relation?.can_admin),
+        updated_at: relation?.updated_at || null
+      },
+      nodes,
+      edges
+    };
+  }
+
+  async function gantiNamaRelasi(relationId, name) {
+    const id = clean(relationId);
+    const nextName = clean(name, 120);
+    if (!id || !nextName) throw new Error("Nama relasi belum lengkap.");
+    const { data, error } = await client().rpc("notes_rename_relation_v1", { p_relation_id: id, p_name: nextName });
+    if (error) throw error;
+    return clean(data, 120) || nextName;
+  }
+
+  async function hapusRelasi(relationId) {
+    const id = clean(relationId);
+    if (!id) return false;
+    const { data, error } = await client().rpc("notes_delete_relation_v1", { p_relation_id: id });
+    if (error) throw error;
+    return Boolean(data);
+  }
+
+  async function keluarkanCatatanDariRelasi(relationId, noteId) {
+    const relation = clean(relationId);
+    const note = clean(noteId);
+    if (!relation || !note) return false;
+    const { data, error } = await client().rpc("notes_remove_relation_member_v1", {
+      p_relation_id: relation,
+      p_note_id: note
+    });
+    if (error) throw error;
+    return Boolean(data);
+  }
+
+  function relationGraphSchemaBelumTerpasang(error) {
+    const code = String(error?.code || "").toUpperCase();
+    const message = String(error?.message || error?.details || error?.hint || "").toLowerCase();
+    return code === "PGRST202" ||
+      message.includes("notes_list_note_relation_groups_v1") ||
+      message.includes("notes_list_relation_groups_v1") ||
+      message.includes("notes_relation_pair_options_v1") ||
+      message.includes("notes_add_relation_edge_v1") ||
+      message.includes("notes_get_relation_graph_v1") ||
+      message.includes("catatan_relation_groups");
+  }
+
   function normalizeChecklistItem(item = {}, index = 0) {
     return {
       id: clean(item?.id),
@@ -1069,6 +1217,16 @@
     ambilKandidatCatatanTerkait,
     syncCatatanTerkait,
     relatedSchemaBelumTerpasang,
+    ambilRelasiUntukCatatan,
+    ambilDaftarRelasi,
+    ambilOpsiRelasiPasangan,
+    simpanEdgeRelasi,
+    hapusEdgeRelasiPasangan,
+    ambilGraphRelasi,
+    gantiNamaRelasi,
+    hapusRelasi,
+    keluarkanCatatanDariRelasi,
+    relationGraphSchemaBelumTerpasang,
     hapusFolder,
     folderSchemaBelumTerpasang,
     managementSchemaBelumTerpasang,

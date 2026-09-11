@@ -1,4 +1,4 @@
-const CACHE_NAME = "ruangkitha-v2.0.0a42f-catatan-private-lottie-palette-patch";
+const CACHE_NAME = "ruangkitha-v2.0.0a43-catatan-relation-graph-v1";
 const OFFLINE_URL = "./offline.html";
 
 const APP_FILES = [
@@ -64,12 +64,14 @@ const APP_FILES = [
   "./catatan-editor.html",
   "./catatan-checklist.html",
   "./catatan-arsip.html",
+  "./catatan-relasi.html",
   "./css/pages/catatan-home.css",
   "./css/pages/catatan-area.css",
   "./css/pages/catatan-editor.css",
   "./css/pages/catatan-checklist.css",
   "./css/pages/catatan-management.css",
   "./css/pages/catatan-stabilization.css",
+  "./css/pages/catatan-relasi.css",
   "./js/pages/catatan-home.js",
   "./js/pages/catatan-family.js",
   "./js/pages/catatan-personal.js",
@@ -80,6 +82,7 @@ const APP_FILES = [
   "./js/pages/catatan-management.js",
   "./js/pages/catatan-performance.js",
   "./js/pages/catatan-related.js",
+  "./js/pages/catatan-relasi.js",
   "./js/pages/catatan-archive.js",
   "./js/pages/catatan-reminder-runtime.js",
   "./finance.html",

@@ -1946,3 +1946,253 @@ html[data-theme="dark"] .catatan-private-link-visual {
   .catatan-private-link-dialog,
   .catatan-private-link-layer { scroll-behavior: auto; }
 }
+
+/* =========================================================
+   v2.0.0a43 — Named Relation Graph sheets
+   ========================================================= */
+.catatan-relation-list-sheet,
+.catatan-relation-assign-sheet {
+  max-height: min(78dvh, 690px);
+}
+.catatan-relation-list-intro,
+.catatan-relation-assign-copy {
+  margin: 2px 4px 14px;
+  color: var(--color-text-soft, #6f7b73);
+  font-size: 12.5px;
+  line-height: 1.55;
+}
+.catatan-relation-list {
+  display: grid;
+  gap: 8px;
+  max-height: min(42dvh, 360px);
+  overflow: auto;
+  overscroll-behavior: contain;
+}
+.catatan-relation-list-row {
+  display: grid;
+  grid-template-columns: 42px minmax(0, 1fr) 18px;
+  align-items: center;
+  gap: 11px;
+  min-height: 68px;
+  padding: 10px 12px;
+  border: 1px solid var(--color-border, #e0e4e1);
+  border-radius: 18px;
+  background: var(--color-surface, #fff);
+  color: inherit;
+  text-decoration: none;
+}
+.catatan-relation-list-row:active {
+  background: color-mix(in srgb, var(--color-primary, #159447) 7%, var(--color-surface, #fff));
+}
+.catatan-relation-list-icon,
+.catatan-relation-choice-icon {
+  display: grid;
+  place-items: center;
+  width: 42px;
+  height: 42px;
+  border-radius: 13px;
+  background: color-mix(in srgb, var(--color-primary, #159447) 10%, var(--color-surface, #fff));
+  color: var(--color-primary, #159447);
+}
+.catatan-relation-list-icon ion-icon,
+.catatan-relation-choice-icon ion-icon { font-size: 21px; }
+.catatan-relation-list-copy,
+.catatan-relation-choice > span:nth-child(2) { min-width: 0; }
+.catatan-relation-list-copy strong,
+.catatan-relation-choice strong,
+.catatan-relation-legacy-row strong {
+  display: block;
+  overflow: hidden;
+  color: var(--color-text, #18201b);
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 1.3;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.catatan-relation-list-copy small,
+.catatan-relation-choice small,
+.catatan-relation-legacy-row small {
+  display: block;
+  margin-top: 4px;
+  overflow: hidden;
+  color: var(--color-text-soft, #6f7b73);
+  font-size: 10.5px;
+  line-height: 1.35;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.catatan-relation-list-row > ion-icon { color: var(--color-text-muted, #879089); }
+.catatan-relation-list-empty {
+  padding: 28px 16px 20px;
+  text-align: center;
+}
+.catatan-relation-list-empty > span {
+  display: grid;
+  place-items: center;
+  width: 54px;
+  height: 54px;
+  margin: 0 auto 10px;
+  border-radius: 17px;
+  background: color-mix(in srgb, var(--color-primary, #159447) 9%, var(--color-surface, #fff));
+  color: var(--color-primary, #159447);
+}
+.catatan-relation-list-empty > span ion-icon { font-size: 26px; }
+.catatan-relation-list-empty strong { color: var(--color-text, #18201b); font-size: 14px; }
+.catatan-relation-list-empty p {
+  max-width: 310px;
+  margin: 7px auto 0;
+  color: var(--color-text-soft, #6f7b73);
+  font-size: 11px;
+  line-height: 1.55;
+}
+.catatan-relation-legacy {
+  margin-top: 18px;
+  padding-top: 15px;
+  border-top: 1px solid var(--color-border, #e0e4e1);
+}
+.catatan-relation-legacy-heading {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  margin: 0 4px 8px;
+}
+.catatan-relation-legacy-heading strong {
+  color: var(--color-text-soft, #6f7b73);
+  font-size: 10px;
+  letter-spacing: .04em;
+  text-transform: uppercase;
+}
+.catatan-relation-legacy-heading small { color: var(--color-text-muted, #879089); font-size: 9.5px; }
+.catatan-relation-legacy-row {
+  width: 100%;
+  display: grid;
+  grid-template-columns: 38px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 4px;
+  border: 0;
+  background: transparent;
+  text-align: left;
+}
+.catatan-relation-legacy-row em {
+  color: var(--color-primary, #159447);
+  font-size: 10.5px;
+  font-style: normal;
+  font-weight: 700;
+}
+
+.catatan-relation-existing {
+  display: grid;
+  gap: 7px;
+  max-height: min(30dvh, 260px);
+  overflow: auto;
+}
+.catatan-relation-existing-heading {
+  padding: 0 4px 3px;
+  color: var(--color-text-soft, #6f7b73);
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: .04em;
+}
+.catatan-relation-choice {
+  width: 100%;
+  display: grid;
+  grid-template-columns: 38px minmax(0, 1fr) 22px;
+  align-items: center;
+  gap: 10px;
+  min-height: 60px;
+  padding: 8px 10px;
+  border: 1px solid var(--color-border, #e0e4e1);
+  border-radius: 16px;
+  background: var(--color-surface, #fff);
+  text-align: left;
+}
+.catatan-relation-choice .catatan-relation-choice-icon { width: 38px; height: 38px; border-radius: 12px; }
+.catatan-relation-choice > ion-icon { color: var(--color-text-muted, #879089); font-size: 21px; }
+.catatan-relation-choice.is-selected {
+  border-color: color-mix(in srgb, var(--color-primary, #159447) 70%, var(--color-border, #e0e4e1));
+  background: color-mix(in srgb, var(--color-primary, #159447) 6%, var(--color-surface, #fff));
+}
+.catatan-relation-choice.is-selected > ion-icon { color: var(--color-primary, #159447); }
+.catatan-relation-create-toggle {
+  width: 100%;
+  display: grid;
+  grid-template-columns: 34px minmax(0, 1fr) 18px;
+  align-items: center;
+  gap: 10px;
+  margin-top: 10px;
+  padding: 12px 10px;
+  border: 1px dashed color-mix(in srgb, var(--color-primary, #159447) 35%, var(--color-border, #e0e4e1));
+  border-radius: 16px;
+  background: color-mix(in srgb, var(--color-primary, #159447) 3%, var(--color-surface, #fff));
+  color: var(--color-primary, #159447);
+  text-align: left;
+}
+.catatan-relation-create-toggle > ion-icon:first-child { font-size: 23px; }
+.catatan-relation-create-toggle > ion-icon:last-child { color: var(--color-text-muted, #879089); }
+.catatan-relation-create-toggle strong { display: block; color: var(--color-text, #18201b); font-size: 12px; }
+.catatan-relation-create-toggle small { display: block; margin-top: 2px; color: var(--color-text-soft, #6f7b73); font-size: 9.5px; }
+.catatan-relation-create-fields {
+  display: grid;
+  gap: 12px;
+  margin-top: 12px;
+  padding: 13px;
+  border-radius: 17px;
+  background: color-mix(in srgb, var(--color-primary, #159447) 5%, var(--color-surface, #fff));
+}
+.catatan-relation-create-fields[hidden] { display: none !important; }
+.catatan-relation-create-fields label,
+.catatan-relation-scope-wrap { display: grid; gap: 7px; }
+.catatan-relation-create-fields label > span,
+.catatan-relation-scope-wrap > span {
+  color: var(--color-text-soft, #6f7b73);
+  font-size: 10px;
+  font-weight: 700;
+}
+.catatan-relation-create-fields input {
+  width: 100%;
+  min-height: 46px;
+  padding: 0 13px;
+  border: 1px solid var(--color-border, #e0e4e1);
+  border-radius: 14px;
+  outline: none;
+  background: var(--color-surface, #fff);
+  color: var(--color-text, #18201b);
+  font: inherit;
+  font-size: 12px;
+}
+.catatan-relation-create-fields input:focus { border-color: var(--color-primary, #159447); }
+.catatan-relation-scope-options {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+.catatan-relation-scope-options button {
+  min-height: 42px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  border: 1px solid var(--color-border, #e0e4e1);
+  border-radius: 13px;
+  background: var(--color-surface, #fff);
+  color: var(--color-text-soft, #6f7b73);
+  font-size: 11px;
+  font-weight: 700;
+}
+.catatan-relation-scope-options button.is-selected {
+  border-color: var(--color-primary, #159447);
+  background: color-mix(in srgb, var(--color-primary, #159447) 9%, var(--color-surface, #fff));
+  color: var(--color-primary, #159447);
+}
+.catatan-relation-list-layer.is-loading .catatan-relation-list,
+.catatan-relation-list-layer.is-loading .catatan-relation-legacy { opacity: .45; pointer-events: none; }
+
+html[data-theme="dark"] .catatan-relation-list-row,
+html[data-theme="dark"] .catatan-relation-choice,
+html[data-theme="dark"] .catatan-relation-create-fields input,
+html[data-theme="dark"] .catatan-relation-scope-options button {
+  background: var(--color-surface, #212422);
+}

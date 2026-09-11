@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="id" data-auth-guard="family">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#0B0D0C">
+  <meta name="application-name" content="RuangKitha">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="RuangKitha">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="robots" content="noindex,nofollow,noarchive">
+  <meta name="referrer" content="strict-origin-when-cross-origin">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32.png">
+  <link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png">
+  <link rel="apple-touch-icon" sizes="180x180" href="icons/apple-touch-icon.png">
+  <script src="js/theme.js"></script>
+  <title>Relasi Catatan · RuangKitha</title>
+
+  <link rel="preconnect" href="https://eipviruaffujxsfpupki.supabase.co" crossorigin>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/theme.css">
+  <link rel="stylesheet" href="css/pages/catatan-relasi.css?v=20260911-v200a43">
+  <style id="ruangkitha-auth-cloak">html[data-auth-guard] body{visibility:hidden!important}</style>
+</head>
+<body>
+<div class="aplikasi catatan-relation-page" data-relation-page aria-busy="true">
+  <header class="relation-page-header">
+    <button class="relation-back" type="button" data-relation-back aria-label="Kembali">
+      <ion-icon name="arrow-back-outline" aria-hidden="true"></ion-icon>
+    </button>
+    <div class="relation-header-copy">
+      <small data-relation-kicker>Peta Catatan</small>
+      <h1 data-relation-heading>Relasi Catatan</h1>
+    </div>
+    <button class="relation-header-menu" type="button" data-relation-menu aria-label="Kelola relasi" hidden>
+      <ion-icon name="ellipsis-horizontal" aria-hidden="true"></ion-icon>
+    </button>
+  </header>
+
+  <main class="relation-main">
+    <section class="relation-list-view" data-relation-list-view>
+      <div class="relation-hero">
+        <span class="relation-hero-icon"><ion-icon name="git-network-outline" aria-hidden="true"></ion-icon></span>
+        <div>
+          <h2 data-relation-list-title>Relasi Pribadi</h2>
+          <p data-relation-list-copy>Kumpulan peta hubungan antarcatatan milikmu.</p>
+        </div>
+      </div>
+      <div class="relation-list" data-relation-list></div>
+      <div class="relation-empty" data-relation-empty hidden>
+        <span><ion-icon name="git-network-outline" aria-hidden="true"></ion-icon></span>
+        <strong>Belum ada peta relasi</strong>
+        <p>Buat tautan antar Catatan RuangKitha. Saat menautkan, beri nama relasi agar hubungan muncul di sini.</p>
+      </div>
+    </section>
+
+    <section class="relation-graph-view" data-relation-graph-view hidden>
+      <div class="relation-graph-meta">
+        <span class="relation-scope-chip" data-relation-scope-chip>Relasi Pribadi</span>
+        <span data-relation-node-count>0 catatan</span>
+      </div>
+
+      <div class="relation-map-shell" data-relation-map-shell>
+        <div class="relation-map-toolbar" aria-label="Kontrol peta">
+          <button type="button" data-zoom-out aria-label="Perkecil"><ion-icon name="remove-outline"></ion-icon></button>
+          <button type="button" data-zoom-reset aria-label="Atur ulang zoom"><ion-icon name="scan-outline"></ion-icon></button>
+          <button type="button" data-zoom-in aria-label="Perbesar"><ion-icon name="add-outline"></ion-icon></button>
+        </div>
+        <div class="relation-map-viewport" data-relation-map-viewport>
+          <div class="relation-map-canvas" data-relation-map-canvas>
+            <div class="relation-map-stage" data-relation-map-stage>
+              <svg class="relation-map-lines" data-relation-map-lines viewBox="0 0 1200 860" preserveAspectRatio="none" aria-hidden="true"></svg>
+              <div class="relation-map-nodes" data-relation-map-nodes></div>
+            </div>
+          </div>
+        </div>
+        <div class="relation-map-hint" data-relation-map-hint>Ketuk node untuk membuka catatan. Ketuk <strong>+N</strong> untuk membuka cabangnya.</div>
+      </div>
+
+      <section class="relation-isolated" data-relation-isolated hidden>
+        <div class="relation-section-heading">
+          <div><strong>Belum terhubung</strong><small>Catatan sudah masuk relasi tetapi belum punya garis hubungan.</small></div>
+          <span data-relation-isolated-count>0</span>
+        </div>
+        <div class="relation-isolated-list" data-relation-isolated-list></div>
+      </section>
+    </section>
+  </main>
+
+  <div class="relation-toast" data-relation-toast role="status" hidden></div>
+
+  <div class="relation-modal-layer" data-relation-manage-layer hidden>
+    <section class="relation-manage-dialog" role="dialog" aria-modal="true" aria-labelledby="relation-manage-title">
+      <div class="relation-manage-head">
+        <div><small>Relasi Catatan</small><h2 id="relation-manage-title">Kelola relasi</h2></div>
+        <button type="button" data-relation-manage-close aria-label="Tutup"><ion-icon name="close-outline"></ion-icon></button>
+      </div>
+      <button type="button" data-relation-rename><ion-icon name="create-outline"></ion-icon><span><strong>Ganti nama</strong><small>Ubah nama peta tanpa mengubah catatan.</small></span></button>
+      <button class="is-danger" type="button" data-relation-delete><ion-icon name="trash-outline"></ion-icon><span><strong>Hapus relasi</strong><small>Catatan tidak ikut terhapus.</small></span></button>
+    </section>
+  </div>
+
+  <div class="relation-modal-layer" data-relation-name-layer hidden>
+    <section class="relation-name-dialog" role="dialog" aria-modal="true" aria-labelledby="relation-name-title">
+      <h2 id="relation-name-title">Ganti nama relasi</h2>
+      <label><span>Nama relasi</span><input type="text" maxlength="120" data-relation-name-input></label>
+      <div><button class="is-secondary" type="button" data-relation-name-cancel>Batal</button><button class="is-primary" type="button" data-relation-name-save>Simpan</button></div>
+    </section>
+  </div>
+</div>
+
+<script type="module" src="https://unpkg.com/ionicons@8.0.13/dist/ionicons/ionicons.esm.js"></script>
+<script nomodule src="https://unpkg.com/ionicons@8.0.13/dist/ionicons/ionicons.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="js/backend/supabase.js"></script>
+<script src="js/backend/auth-service.js"></script>
+<script src="js/backend/family-service.js?v=20260908-10"></script>
+<script src="js/backend/auth-router.js?v=20260909-v200a8"></script>
+<script src="js/backend/auth-guard.js?v=20260909-v200a8"></script>
+<script src="js/backend/notes-service.js?v=20260911-v200a43"></script>
+<script src="js/pages/catatan-relasi.js?v=20260911-v200a43"></script>
+<script src="js/pwa.js?v=20260911-v200a43"></script>
+</body>
+</html>

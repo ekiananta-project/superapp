@@ -1,4 +1,4 @@
-// RuangKitha v2.0.0a42c — Info Folder Picker hotfix
+// RuangKitha v2.0.0a43 — Checklist + Relation Graph integration
 (() => {
   "use strict";
 
@@ -1336,7 +1336,7 @@
           return;
         }
         const names = {
-          related: "Catatan Terkait"
+          related: "Relasi Catatan"
         };
         showToast(`${names[action] || "Fitur"} akan aktif pada tahap backend berikutnya.`);
       });
