@@ -77,19 +77,32 @@
 .relation-hero p { margin: 5px 0 0; color: var(--color-text-soft, #6f7b73); font-size: 11.5px; line-height: 1.5; }
 .relation-list { display: grid; gap: 10px; margin-top: 18px; }
 .relation-list-card {
+  position: relative;
   width: 100%;
   display: grid;
-  grid-template-columns: 44px minmax(0, 1fr) 18px;
-  align-items: center;
-  gap: 12px;
-  min-height: 76px;
-  padding: 12px 14px;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: stretch;
   border: 1px solid var(--color-border, #e0e4e1);
   border-radius: 20px;
   background: var(--color-surface, #fff);
   color: inherit;
+}
+.relation-card-main {
+  min-width: 0;
+  min-height: 76px;
+  display: grid;
+  grid-template-columns: 44px minmax(0, 1fr) 18px;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 10px 12px 14px;
+  border: 0;
+  border-radius: 20px;
+  background: transparent;
+  color: inherit;
   text-align: left;
 }
+.relation-card-main:active { background: color-mix(in srgb, var(--color-primary, #159447) 5%, transparent); }
+.relation-card-copy { min-width: 0; }
 .relation-list-card .relation-card-icon {
   width: 44px;
   height: 44px;
@@ -102,7 +115,60 @@
 .relation-list-card .relation-card-icon ion-icon { font-size: 22px; }
 .relation-list-card strong { display: block; overflow: hidden; font-size: 14px; text-overflow: ellipsis; white-space: nowrap; }
 .relation-list-card small { display: block; margin-top: 4px; color: var(--color-text-soft, #6f7b73); font-size: 10.5px; }
-.relation-list-card > ion-icon { color: var(--color-text-muted, #879089); }
+.relation-card-main > ion-icon { color: var(--color-text-muted, #879089); }
+.relation-card-actions {
+  position: relative;
+  display: grid;
+  align-items: center;
+  padding-right: 8px;
+}
+.relation-card-more {
+  width: 38px;
+  height: 38px;
+  display: grid;
+  place-items: center;
+  border: 0;
+  border-radius: 12px;
+  background: transparent;
+  color: var(--color-text, #18201b);
+}
+.relation-card-more:active,
+.relation-card-more[aria-expanded="true"] {
+  background: var(--color-surface-soft, #eef1ef);
+}
+.relation-card-more ion-icon { font-size: 20px; }
+.relation-card-menu {
+  position: absolute;
+  z-index: 40;
+  top: calc(50% + 22px);
+  right: 8px;
+  min-width: 154px;
+  padding: 6px;
+  border: 1px solid var(--color-border, #e0e4e1);
+  border-radius: 14px;
+  background: var(--color-surface, #fff);
+  box-shadow: 0 16px 34px rgba(0, 0, 0, .16);
+}
+.relation-card-menu[hidden] { display: none !important; }
+.relation-card-menu button {
+  width: 100%;
+  min-height: 40px;
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 0 10px;
+  border: 0;
+  border-radius: 10px;
+  background: transparent;
+  color: var(--color-text, #18201b);
+  font: inherit;
+  font-size: 11px;
+  font-weight: 700;
+  text-align: left;
+}
+.relation-card-menu button:active { background: var(--color-surface-soft, #eef1ef); }
+.relation-card-menu button.is-danger,
+.relation-card-menu button.is-danger ion-icon { color: #c94343; }
 .relation-empty { padding: 56px 22px; text-align: center; }
 .relation-empty > span {
   width: 66px;
@@ -220,18 +286,18 @@
 }
 .relation-node-wrap {
   position: absolute;
-  width: 174px;
-  min-height: 72px;
+  width: 194px;
+  min-height: 80px;
   transform: translate(-50%, -50%);
 }
 .relation-node {
   width: 100%;
-  min-height: 72px;
+  min-height: 80px;
   display: grid;
   grid-template-columns: 36px minmax(0, 1fr);
   align-items: center;
   gap: 9px;
-  padding: 10px 12px;
+  padding: 11px 12px;
   border: 1px solid var(--color-border, #e0e4e1);
   border-radius: 19px;
   background: var(--color-surface, #fff);
@@ -261,15 +327,16 @@
   text-overflow: ellipsis;
   white-space: nowrap;
 }
+.relation-node > span:last-child { min-width: 0; }
 .relation-node small {
   display: block;
   margin-top: 3px;
-  overflow: hidden;
   color: var(--color-text-soft, #6f7b73);
   font-size: 8.8px;
-  line-height: 1.3;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  line-height: 1.35;
+  white-space: normal;
+  overflow-wrap: normal;
+  word-break: normal;
 }
 .relation-branch-button {
   position: absolute;
@@ -494,3 +561,5 @@ html[data-theme="dark"] .relation-map-shell {
   .relation-map-toolbar button { width: 40px; height: 40px; }
   .relation-edge-hit { stroke-width: 30; }
 }
+
+/* v2.0.0a43d — relation card overflow delete + readable node metadata */

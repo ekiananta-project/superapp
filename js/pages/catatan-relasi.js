@@ -1,4 +1,4 @@
-// RuangKitha v2.0.0a43c — Touch Map + Relation Integrity Hotfix
+// RuangKitha v2.0.0a43d — Relation Card Delete + Node Meta Polish
 (() => {
   "use strict";
 
@@ -137,6 +137,12 @@
     q("[data-zoom-reset]")?.addEventListener("click", () => {
       setScale(window.innerWidth < 520 ? .72 : .86);
       centerMapOnGraph();
+    });
+    document.addEventListener("click", event => {
+      if (!event.target?.closest?.(".relation-card-actions")) closeRelationCardMenus();
+    });
+    document.addEventListener("keydown", event => {
+      if (event.key === "Escape") closeRelationCardMenus();
     });
     setupMapPanning();
   }
@@ -406,6 +412,36 @@
     }
   }
 
+  function closeRelationCardMenus(except = null) {
+    document.querySelectorAll(".relation-card-menu:not([hidden])").forEach(menu => {
+      if (menu !== except) menu.hidden = true;
+    });
+  }
+
+  async function deleteRelationFromList(group, card) {
+    if (!group?.id || !group?.can_admin) return;
+    closeRelationCardMenus();
+    const ok = window.confirm(`Hapus relasi “${group.name}”?\n\nCatatan tidak ikut terhapus. Semua tautan inline yang dibuat untuk relasi ini akan dilepas dan teksnya tetap dipertahankan.`);
+    if (!ok) return;
+
+    const moreButton = card?.querySelector?.(".relation-card-more");
+    if (moreButton) moreButton.disabled = true;
+    try {
+      await NotesService.hapusRelasi(group.id);
+      card?.remove?.();
+      const list = q("[data-relation-list]");
+      const empty = q("[data-relation-empty]");
+      if (empty && list) empty.hidden = list.children.length > 0;
+      showToast("Relasi dihapus. Teks tautan dikembalikan menjadi teks biasa.");
+    } catch (error) {
+      console.error("[Relation List Delete]", error);
+      if (NotesService.relationGraphSchemaBelumTerpasang?.(error)) showToast("Jalankan SQL 004N agar penghapusan relasi membersihkan tautan inline.");
+      else showToast(error?.message || "Relasi belum dapat dihapus.");
+    } finally {
+      if (moreButton?.isConnected) moreButton.disabled = false;
+    }
+  }
+
   async function loadList() {
     q("[data-relation-list-view]").hidden = false;
     q("[data-relation-graph-view]").hidden = true;
@@ -430,17 +466,56 @@
     }
 
     groups.forEach(group => {
-      const button = document.createElement("button");
-      button.type = "button";
-      button.className = "relation-list-card";
-      button.innerHTML = `
+      const card = document.createElement("article");
+      card.className = "relation-list-card";
+
+      const openButton = document.createElement("button");
+      openButton.type = "button";
+      openButton.className = "relation-card-main";
+      openButton.innerHTML = `
         <span class="relation-card-icon"><ion-icon name="git-network-outline" aria-hidden="true"></ion-icon></span>
-        <span><strong>${escapeHtml(group.name)}</strong><small>${group.node_count} catatan · ${escapeHtml(scopeLabel(group.scope))}</small></span>
+        <span class="relation-card-copy"><strong>${escapeHtml(group.name)}</strong><small>${group.node_count} catatan · ${escapeHtml(scopeLabel(group.scope))}</small></span>
         <ion-icon name="chevron-forward-outline" aria-hidden="true"></ion-icon>`;
-      button.addEventListener("click", () => {
+      openButton.addEventListener("click", () => {
         location.href = `catatan-relasi.html?id=${encodeURIComponent(group.id)}&scope=${group.scope}`;
       });
-      list.appendChild(button);
+      card.appendChild(openButton);
+
+      if (group.can_admin) {
+        const actions = document.createElement("div");
+        actions.className = "relation-card-actions";
+        const more = document.createElement("button");
+        more.type = "button";
+        more.className = "relation-card-more";
+        more.setAttribute("aria-label", `Kelola relasi ${group.name}`);
+        more.setAttribute("aria-haspopup", "menu");
+        more.setAttribute("aria-expanded", "false");
+        more.innerHTML = '<ion-icon name="ellipsis-horizontal" aria-hidden="true"></ion-icon>';
+
+        const menu = document.createElement("div");
+        menu.className = "relation-card-menu";
+        menu.setAttribute("role", "menu");
+        menu.hidden = true;
+        menu.innerHTML = `<button type="button" class="is-danger" role="menuitem"><ion-icon name="trash-outline" aria-hidden="true"></ion-icon><span>Hapus relasi</span></button>`;
+
+        more.addEventListener("click", event => {
+          event.preventDefault();
+          event.stopPropagation();
+          const willOpen = menu.hidden;
+          closeRelationCardMenus(menu);
+          menu.hidden = !willOpen;
+          more.setAttribute("aria-expanded", willOpen ? "true" : "false");
+        });
+        menu.querySelector("button")?.addEventListener("click", event => {
+          event.preventDefault();
+          event.stopPropagation();
+          deleteRelationFromList(group, card);
+        });
+        actions.append(more, menu);
+        card.appendChild(actions);
+      }
+
+      list.appendChild(card);
     });
     empty.hidden = groups.length > 0;
   }

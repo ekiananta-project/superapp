@@ -1,4 +1,4 @@
-const CACHE_NAME = "ruangkitha-v2.0.0a43c-relation-touch-integrity";
+const CACHE_NAME = "ruangkitha-v2.0.0a43d-catatan-relation-card-meta-hotfix";
 const OFFLINE_URL = "./offline.html";
 
 const APP_FILES = [

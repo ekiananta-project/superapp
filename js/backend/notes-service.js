@@ -558,13 +558,15 @@
   }
 
   function normalizeRelationGroupRow(row = {}) {
+    const normalizedScope = String((row?.relation_scope ?? row?.scope) || "personal").toLowerCase() === "family" ? "family" : "personal";
     return {
       id: clean(row?.relation_id ?? row?.id),
       name: clean(row?.relation_name ?? row?.name, 120) || "Relasi tanpa nama",
-      scope: String((row?.relation_scope ?? row?.scope) || "personal").toLowerCase() === "family" ? "family" : "personal",
+      scope: normalizedScope,
       family_id: clean(row?.family_id) || null,
       node_count: Math.max(0, Number(row?.node_count) || 0),
-      can_manage: row?.can_manage === undefined ? true : Boolean(row?.can_manage),
+      can_manage: row?.can_manage === undefined ? normalizedScope === "personal" : Boolean(row?.can_manage),
+      can_admin: row?.can_admin === undefined ? normalizedScope === "personal" : Boolean(row?.can_admin),
       updated_at: row?.updated_at || null
     };
   }
@@ -579,12 +581,16 @@
 
   async function ambilDaftarRelasi(scope = "personal", familyId = null) {
     const relationScope = normalizeScope(scope);
-    const { data, error } = await client().rpc("notes_list_relation_groups_v1", {
+    const args = {
       p_scope: relationScope,
       p_family_id: relationScope === "family" ? (clean(familyId) || null) : null
-    });
-    if (error) throw error;
-    return (data || []).map(normalizeRelationGroupRow).filter(row => row.id);
+    };
+    let result = await client().rpc("notes_list_relation_groups_v2", args);
+    if (result.error && rpcFunctionMissing(result.error, "notes_list_relation_groups_v2")) {
+      result = await client().rpc("notes_list_relation_groups_v1", args);
+    }
+    if (result.error) throw result.error;
+    return (result.data || []).map(normalizeRelationGroupRow).filter(row => row.id);
   }
 
   async function ambilOpsiRelasiPasangan(sourceNoteId, targetNoteId) {
