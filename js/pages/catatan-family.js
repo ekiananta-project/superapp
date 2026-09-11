@@ -214,12 +214,8 @@
     }
   }
 
-  function toggleSelected(id, canSelect = true) {
-    if (!selectionMode || !id) return;
-    if (!canSelect) {
-      showToast("Hanya pembuat catatan atau Family Owner yang dapat mengarsipkannya.");
-      return;
-    }
+  function toggleSelected(id) {
+    if (!selectionMode || !id || !notesById.has(id)) return;
     if (selectedIds.has(id)) selectedIds.delete(id);
     else selectedIds.add(id);
     renderSelectionUI();
@@ -267,7 +263,7 @@
     if (tagSummary) button.appendChild(tagSummary);
     button.appendChild(accessEl);
     button.addEventListener("click", () => {
-      if (selectionMode) return toggleSelected(note.id, Boolean(note?._canArchive));
+      if (selectionMode) return toggleSelected(note.id);
       location.href = isChecklist
         ? `catatan-checklist.html?scope=family&id=${encodeURIComponent(note.id)}`
         : `catatan-editor.html?scope=family&id=${encodeURIComponent(note.id)}${isReminder ? "&type=reminder" : ""}`;
@@ -302,9 +298,9 @@
       menuLabel: `Menu ${title}`
     });
     CatatanManagement.attachSelectionControl(shell, {
-      selectable: Boolean(note?._canArchive),
-      label: note?._canArchive ? `Pilih ${title}` : `${title} tidak dapat diarsipkan oleh akun ini`,
-      onToggle: () => toggleSelected(note.id, Boolean(note?._canArchive))
+      selectable: true,
+      label: `Pilih ${title}`,
+      onToggle: () => toggleSelected(note.id)
     });
     return shell;
   }
@@ -351,7 +347,7 @@
     backendNoteCount = notes.length;
     notesById = new Map(notes.map(note => [clean(note.id), note]));
     for (const id of Array.from(selectedIds)) {
-      if (!notesById.get(id)?._canArchive) selectedIds.delete(id);
+      if (!notesById.has(id)) selectedIds.delete(id);
     }
     notes.forEach(note => grid.appendChild(noteCard(note)));
     const empty = ensureEmpty("notes");
@@ -384,8 +380,9 @@
       .filter(Boolean);
   }
 
-  function manageableCount() {
-    return Array.from(notesById.values()).filter(note => note?._canArchive).length;
+  function allSelectedCanArchive() {
+    if (!selectedIds.size) return false;
+    return Array.from(selectedIds).every(id => Boolean(notesById.get(id)?._canArchive));
   }
 
   function renderSelectionUI() {
@@ -396,11 +393,12 @@
     const countLabel = q("[data-selection-count]");
     const bulk = q("[data-bulk-bar]");
     const bulkCount = q("[data-bulk-count]");
+    const bulkFolder = q("[data-bulk-folder]");
     const bulkArchive = q("[data-bulk-archive]");
 
     if (toggle) {
       toggle.textContent = selectionMode ? "Selesai" : "Pilih";
-      toggle.disabled = !selectionMode && manageableCount() === 0;
+      toggle.disabled = !selectionMode && notesById.size === 0;
     }
     if (selectAll) selectAll.hidden = !selectionMode;
     if (countLabel) {
@@ -409,7 +407,14 @@
     }
     if (bulk) bulk.hidden = !selectionMode;
     if (bulkCount) bulkCount.textContent = `${selectedIds.size} dipilih`;
-    if (bulkArchive) bulkArchive.disabled = selectedIds.size === 0;
+    if (bulkFolder) bulkFolder.disabled = selectedIds.size === 0;
+    if (bulkArchive) {
+      const canArchiveAll = allSelectedCanArchive();
+      bulkArchive.disabled = !canArchiveAll;
+      bulkArchive.title = selectedIds.size && !canArchiveAll
+        ? "Sebagian catatan hanya dapat diarsipkan oleh pembuat atau Family Owner."
+        : "";
+    }
 
     const visibleIds = visibleSelectableIds();
     if (selectAll && selectionMode) {
@@ -430,9 +435,65 @@
     renderSelectionUI();
   }
 
+  async function moveSelectedIntoFolder() {
+    const notes = Array.from(selectedIds)
+      .map(id => notesById.get(id))
+      .filter(Boolean);
+    if (!notes.length) return;
+    if (!window.NotesService?.pindahkanBanyakCatatanKeFolder || !window.CatatanManagement?.pickFolder) {
+      showToast("Pemindahan folder belum siap.");
+      return;
+    }
+
+    try {
+      const folders = await NotesService.ambilFolderCatalog("family", familyId);
+      let choice = await CatatanManagement.pickFolder(folders, { currentName: "", context: "Catatan Keluarga" });
+      if (!choice) return;
+
+      if (choice.create) {
+        const name = await CatatanManagement.askFolderName({ context: "Catatan Keluarga" });
+        if (!name) return;
+        const created = await NotesService.buatFolder("family", familyId, name);
+        choice = { id: created?.id || null, name: created?.name || name };
+      }
+
+      const targetName = clean(choice?.name);
+      if (!targetName) return;
+
+      const movedIds = await NotesService.pindahkanBanyakCatatanKeFolder(notes, {
+        folderName: targetName,
+        folderId: choice?.id || null
+      });
+      if (!movedIds.length) {
+        showToast("Catatan terpilih belum dapat dipindahkan.");
+        return;
+      }
+
+      movedIds.forEach(id => notesById.delete(clean(id)));
+      notesFingerprint = "";
+      setSelectionMode(false);
+      const next = CatatanManagement.sortPinnedFirst(Array.from(notesById.values()));
+      renderBackendNotes(next);
+      invalidateMoveIntoFolderCaches(targetName);
+      window.CatatanPerformance?.write?.("family-notes", { userId, familyId }, next);
+      loadBackendFolders().catch(() => {});
+
+      const count = movedIds.length;
+      showToast(`${count} catatan keluarga dipindahkan ke folder “${targetName}”.`);
+    } catch (error) {
+      console.error("[Catatan Family Bulk Move Folder]", error);
+      if (NotesService.folderSchemaBelumTerpasang?.(error)) showToast("Backend Folder belum aktif — jalankan SQL 004D di Supabase dulu.");
+      else showToast(error?.message || "Catatan terpilih belum dapat dipindahkan ke folder.");
+    }
+  }
+
   async function archiveSelected() {
-    const ids = Array.from(selectedIds).filter(id => notesById.get(id)?._canArchive);
+    const ids = Array.from(selectedIds).filter(id => notesById.has(id));
     if (!ids.length) return;
+    if (!ids.every(id => notesById.get(id)?._canArchive)) {
+      showToast("Sebagian catatan hanya dapat diarsipkan oleh pembuat atau Family Owner.");
+      return;
+    }
     const ok = await CatatanManagement.confirmArchive({
       title: `Arsipkan ${ids.length} catatan keluarga?`,
       message: "Catatan yang dipilih akan dipindahkan ke Arsip untuk seluruh keluarga dan dapat dipulihkan nanti.",
@@ -506,6 +567,7 @@
     });
     q("[data-toggle-selection]")?.addEventListener("click", () => setSelectionMode(!selectionMode));
     q("[data-bulk-cancel]")?.addEventListener("click", () => setSelectionMode(false));
+    q("[data-bulk-folder]")?.addEventListener("click", moveSelectedIntoFolder);
     q("[data-bulk-archive]")?.addEventListener("click", archiveSelected);
     q("[data-select-all]")?.addEventListener("click", () => {
       const ids = visibleSelectableIds();

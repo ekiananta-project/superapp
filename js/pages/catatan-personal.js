@@ -184,6 +184,58 @@
     }
   }
 
+  async function moveSelectedIntoFolder() {
+    const notes = Array.from(selectedIds)
+      .map(id => notesById.get(id))
+      .filter(Boolean);
+    if (!notes.length) return;
+    if (!window.NotesService?.pindahkanBanyakCatatanKeFolder || !window.CatatanManagement?.pickFolder) {
+      showToast("Pemindahan folder belum siap.");
+      return;
+    }
+
+    try {
+      const folders = await NotesService.ambilFolderCatalog("personal", null);
+      let choice = await CatatanManagement.pickFolder(folders, { currentName: "", context: "Catatan Pribadi" });
+      if (!choice) return;
+
+      if (choice.create) {
+        const name = await CatatanManagement.askFolderName({ context: "Catatan Pribadi" });
+        if (!name) return;
+        const created = await NotesService.buatFolder("personal", null, name);
+        choice = { id: created?.id || null, name: created?.name || name };
+      }
+
+      const targetName = clean(choice?.name);
+      if (!targetName) return;
+
+      const movedIds = await NotesService.pindahkanBanyakCatatanKeFolder(notes, {
+        folderName: targetName,
+        folderId: choice?.id || null
+      });
+      if (!movedIds.length) {
+        showToast("Catatan terpilih belum dapat dipindahkan.");
+        return;
+      }
+
+      movedIds.forEach(id => notesById.delete(clean(id)));
+      notesFingerprint = "";
+      setSelectionMode(false);
+      const next = CatatanManagement.sortPinnedFirst(Array.from(notesById.values()));
+      renderBackendNotes(next);
+      invalidateMoveIntoFolderCaches(targetName);
+      window.CatatanPerformance?.write?.("personal-notes", { userId }, next);
+      loadBackendFolders().catch(() => {});
+
+      const count = movedIds.length;
+      showToast(`${count} catatan dipindahkan ke folder “${targetName}”.`);
+    } catch (error) {
+      console.error("[Catatan Personal Bulk Move Folder]", error);
+      if (NotesService.folderSchemaBelumTerpasang?.(error)) showToast("Backend Folder belum aktif — jalankan SQL 004D di Supabase dulu.");
+      else showToast(error?.message || "Catatan terpilih belum dapat dipindahkan ke folder.");
+    }
+  }
+
   async function createFolder() {
     const name = await CatatanManagement.askFolderName({ context: "Catatan Pribadi" });
     if (!name) return;
@@ -389,6 +441,7 @@
     const countLabel = q("[data-selection-count]");
     const bulk = q("[data-bulk-bar]");
     const bulkCount = q("[data-bulk-count]");
+    const bulkFolder = q("[data-bulk-folder]");
     const bulkArchive = q("[data-bulk-archive]");
 
     if (toggle) {
@@ -402,6 +455,7 @@
     }
     if (bulk) bulk.hidden = !selectionMode;
     if (bulkCount) bulkCount.textContent = `${selectedIds.size} dipilih`;
+    if (bulkFolder) bulkFolder.disabled = selectedIds.size === 0;
     if (bulkArchive) bulkArchive.disabled = selectedIds.size === 0;
 
     const visibleIds = visibleSelectableIds();
@@ -496,6 +550,7 @@
     });
     q("[data-toggle-selection]")?.addEventListener("click", () => setSelectionMode(!selectionMode));
     q("[data-bulk-cancel]")?.addEventListener("click", () => setSelectionMode(false));
+    q("[data-bulk-folder]")?.addEventListener("click", moveSelectedIntoFolder);
     q("[data-bulk-archive]")?.addEventListener("click", archiveSelected);
     q("[data-select-all]")?.addEventListener("click", () => {
       const ids = visibleSelectableIds();

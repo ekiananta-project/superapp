@@ -1,4 +1,4 @@
-// RuangKitha v2.0.0a42c — Info Folder Picker hotfix
+// RuangKitha v2.0.0a42d — Bulk Folder + Protected Internal Links
 (() => {
   "use strict";
 
@@ -14,6 +14,8 @@
   let linkSelectedText = "";
   let highlightTypingMode = false;
   let activeLinkAnchor = null;
+  let privateLinkReturnFocus = null;
+  let privateLinkChecking = false;
   let userId = "guest";
   let toastTimer = null;
   let editorMode = "edit";
@@ -1027,6 +1029,128 @@
       return clean(url.searchParams.get("id"));
     } catch {
       return "";
+    }
+  }
+
+  function ensurePrivateLinkLayer() {
+    let layer = q("[data-private-link-layer]");
+    if (layer) return layer;
+
+    layer = document.createElement("div");
+    layer.className = "catatan-private-link-layer";
+    layer.dataset.privateLinkLayer = "";
+    layer.hidden = true;
+    layer.innerHTML = `
+      <section class="catatan-private-link-dialog" role="dialog" aria-modal="true" aria-labelledby="catatan-private-link-title" aria-describedby="catatan-private-link-copy">
+        <div class="catatan-private-link-visual" aria-hidden="true">
+          <dotlottie-player
+            src="assets/lottie/catatan-private-lock.lottie"
+            background="transparent"
+            speed="1"
+            loop
+            autoplay></dotlottie-player>
+        </div>
+        <h2 id="catatan-private-link-title">Catatan ini bersifat pribadi</h2>
+        <p id="catatan-private-link-copy">Pemilik catatan membatasi akses hanya untuk dirinya, jadi kamu belum bisa membuka catatan ini.</p>
+        <button class="catatan-private-link-ok" type="button" data-private-link-ok>Oke</button>
+      </section>`;
+
+    const close = () => {
+      if (layer.hidden) return;
+      layer.hidden = true;
+      document.documentElement.classList.remove("catatan-modal-open");
+      const focus = privateLinkReturnFocus;
+      privateLinkReturnFocus = null;
+      if (focus?.isConnected && typeof focus.focus === "function") {
+        requestAnimationFrame(() => focus.focus({ preventScroll: true }));
+      }
+    };
+
+    layer.querySelector("[data-private-link-ok]")?.addEventListener("click", close);
+    layer.addEventListener("click", event => {
+      if (event.target === layer) close();
+    });
+    document.addEventListener("keydown", event => {
+      if (event.key === "Escape" && !layer.hidden) {
+        event.preventDefault();
+        close();
+      }
+    });
+
+    document.body.appendChild(layer);
+    return layer;
+  }
+
+  function showPrivateLinkNotice(anchor = null) {
+    const layer = ensurePrivateLinkLayer();
+    privateLinkReturnFocus = anchor instanceof HTMLElement ? anchor : document.activeElement;
+    layer.hidden = false;
+    document.documentElement.classList.add("catatan-modal-open");
+
+    const player = layer.querySelector("dotlottie-player");
+    const reduceMotion = window.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches;
+    if (reduceMotion) {
+      player?.removeAttribute("loop");
+      player?.removeAttribute("autoplay");
+    } else {
+      player?.setAttribute("loop", "");
+      player?.setAttribute("autoplay", "");
+      try { player?.play?.(); } catch {}
+    }
+
+    requestAnimationFrame(() => layer.querySelector("[data-private-link-ok]")?.focus());
+  }
+
+  async function openInternalNoteLink(anchor) {
+    if (!anchor || privateLinkChecking) return false;
+    const href = anchor.getAttribute("href") || "";
+    const targetId = internalTargetId(anchor);
+    if (!href || !targetId) return false;
+
+    privateLinkChecking = true;
+    anchor.setAttribute("aria-busy", "true");
+    try {
+      let status = "denied";
+
+      if (window.NotesService?.cekAksesTautanCatatan && noteId) {
+        try {
+          status = await window.NotesService.cekAksesTautanCatatan(noteId, targetId);
+        } catch (error) {
+          if (!window.NotesService?.linkAccessSchemaBelumTerpasang?.(error)) throw error;
+
+          // Compatibility fallback while 004L is being deployed: RLS remains
+          // the authority. A target hidden by RLS is treated as private and
+          // the reader stays on the source note.
+          const target = await window.NotesService.ambilCatatan(targetId);
+          status = target ? "allowed" : "private";
+        }
+      } else if (window.NotesService?.ambilCatatan) {
+        const target = await window.NotesService.ambilCatatan(targetId);
+        status = target ? "allowed" : "private";
+      }
+
+      if (status === "allowed") {
+        location.href = href;
+        return true;
+      }
+      if (status === "private") {
+        showPrivateLinkNotice(anchor);
+        return false;
+      }
+      if (status === "archived") {
+        showToast("Catatan tujuan sedang berada di Arsip.");
+        return false;
+      }
+
+      showToast("Catatan tujuan tidak tersedia atau aksesnya sudah berubah.");
+      return false;
+    } catch (error) {
+      console.warn("[Catatan Internal Link Access]", error);
+      showToast("Tautan belum dapat diperiksa. Coba lagi sebentar.");
+      return false;
+    } finally {
+      privateLinkChecking = false;
+      anchor.removeAttribute("aria-busy");
     }
   }
 
@@ -2175,6 +2299,19 @@
 
       const anchor = event.target.closest?.("a");
       if (!anchor) return;
+
+      if (anchor.hasAttribute("data-rk-internal-link")) {
+        event.preventDefault();
+        event.stopPropagation();
+        if (editorMode === "edit") {
+          saveSelection();
+          openLinkAction(anchor);
+        } else {
+          openInternalNoteLink(anchor);
+        }
+        return;
+      }
+
       if (editorMode === "edit") {
         event.preventDefault();
         saveSelection();
@@ -2318,16 +2455,17 @@
     });
 
     qa("[data-link-action]").forEach(button => {
-      button.addEventListener("click", () => {
+      button.addEventListener("click", async () => {
         const action = button.dataset.linkAction;
         const anchor = activeLinkAnchor;
         if (!anchor) return;
         if (action === "open") {
           const href = anchor.getAttribute("href");
+          const internal = anchor.hasAttribute("data-rk-internal-link");
           setLayer("[data-link-action-layer]", false);
           activeLinkAnchor = null;
           if (!href) return;
-          if (anchor.hasAttribute("data-rk-internal-link")) location.href = href;
+          if (internal) await openInternalNoteLink(anchor);
           else window.open(href, "_blank", "noopener,noreferrer");
           return;
         }

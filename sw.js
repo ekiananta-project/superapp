@@ -1,4 +1,4 @@
-const CACHE_NAME = "ruangkitha-v2.0.0a42c-catatan-tag-management-folder-action";
+const CACHE_NAME = "ruangkitha-v2.0.0a42d-catatan-bulk-folder-protected-links";
 const OFFLINE_URL = "./offline.html";
 
 const APP_FILES = [
@@ -95,6 +95,7 @@ const APP_FILES = [
   "./assets/lottie/catatan-empty-notes-dark.lottie",
   "./assets/lottie/catatan-empty-folders-light.lottie",
   "./assets/lottie/catatan-empty-folders-dark.lottie",
+  "./assets/lottie/catatan-private-lock.lottie",
   "./js/pages/superapp-calendar.js",
   "./js/pages/superapp-profile-shell.js",
   "./js/app.js",

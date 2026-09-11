@@ -440,16 +440,36 @@ html[data-theme="dark"] .catatan-tag-sheet .catatan-tag-actions {
   font-weight: 700;
   cursor: pointer;
 }
+.catatan-bulk-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 7px;
+  min-width: 0;
+}
+.catatan-bulk-actions button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+.catatan-bulk-actions ion-icon { font-size: 17px; }
 .catatan-bulk-bar .is-secondary {
   border: 1px solid var(--color-border, #e0e4e1);
   background: var(--color-surface, #fff);
   color: var(--color-text, #18201b);
+}
+.catatan-bulk-bar .is-folder {
+  border: 1px solid color-mix(in srgb, var(--color-primary, #159447) 28%, var(--color-border, #e0e4e1));
+  background: color-mix(in srgb, var(--color-primary, #159447) 6%, var(--color-surface, #fff));
+  color: var(--color-primary, #159447);
 }
 .catatan-bulk-bar .is-archive {
   border: 0;
   background: var(--color-primary, #159447);
   color: #fff;
 }
+.catatan-bulk-bar .is-folder:disabled,
 .catatan-bulk-bar .is-archive:disabled { opacity: .45; cursor: default; }
 
 .catatan-archive-main { padding-bottom: 112px; }
@@ -500,6 +520,9 @@ html[data-theme="dark"] .catatan-bulk-bar,
 html[data-theme="dark"] .catatan-bulk-bar .is-secondary {
   background: var(--color-surface, #212422);
 }
+html[data-theme="dark"] .catatan-bulk-bar .is-folder {
+  background: color-mix(in srgb, var(--color-primary, #159447) 14%, var(--color-surface, #212422));
+}
 
 @media (max-width: 540px) {
   .catatan-note-heading-actions { gap: 6px; }
@@ -509,7 +532,13 @@ html[data-theme="dark"] .catatan-bulk-bar .is-secondary {
   .catatan-bulk-bar {
     bottom: calc(72px + env(safe-area-inset-bottom));
     width: calc(100% - 24px);
+    gap: 7px;
+    padding-inline: 9px;
   }
+  .catatan-bulk-bar button { padding-inline: 10px; }
+  .catatan-bulk-actions { gap: 5px; }
+  .catatan-bulk-actions button { padding-inline: 9px; }
+  .catatan-bulk-actions ion-icon { font-size: 16px; }
   .catatan-archive-intro { align-items: flex-start; }
 }
 
@@ -1059,3 +1088,16 @@ html[data-theme="dark"] .catatan-tag-manager-row { background: var(--color-surfa
   cursor: pointer;
 }
 .catatan-tag-manage-entry ion-icon { font-size: 17px; }
+
+
+@media (max-width: 360px) {
+  .catatan-bulk-bar {
+    width: calc(100% - 16px);
+    padding-inline: 7px;
+    gap: 5px;
+  }
+  .catatan-bulk-bar button { min-height: 38px; padding-inline: 8px; }
+  .catatan-bulk-actions { gap: 4px; }
+  .catatan-bulk-actions button { gap: 4px; padding-inline: 7px; }
+  .catatan-bulk-actions ion-icon { display: none; }
+}

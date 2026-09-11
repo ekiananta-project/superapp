@@ -158,6 +158,39 @@
   }
 
 
+  async function pindahkanBanyakCatatanKeFolder(notes = [], { folderName = "", folderId = null } = {}) {
+    const list = (Array.isArray(notes) ? notes : [])
+      .filter(note => clean(note?.id))
+      .slice(0, 250);
+    if (!list.length) return [];
+
+    const ids = Array.from(new Set(list.map(note => clean(note?.id)).filter(Boolean)));
+    if (!ids.length) return [];
+
+    const folder = clean(folderName, 80);
+    const scope = normalizeScope(list[0]?.scope);
+    const familyId = clean(list[0]?.family_id);
+    let targetFolderId = clean(folderId) || null;
+
+    if (folder && !targetFolderId) {
+      targetFolderId = await resolveFolder(scope, familyId || null, folder);
+    }
+
+    const { data, error } = await client()
+      .from("notes")
+      .update({
+        folder_id: folder ? targetFolderId : null,
+        folder_name: folder || null
+      })
+      .in("id", ids)
+      .is("archived_at", null)
+      .select("id");
+
+    if (error) throw error;
+    return Array.from(new Set((data || []).map(row => clean(row?.id)).filter(Boolean)));
+  }
+
+
   function normalizeReminderRecurrence(value) {
     const recurrence = String(value || "none").toLowerCase();
     return ["none", "daily", "weekly", "monthly", "yearly"].includes(recurrence) ? recurrence : "none";
@@ -230,6 +263,23 @@
 
     if (error) throw error;
     return data || null;
+  }
+
+  async function cekAksesTautanCatatan(sourceNoteId, targetNoteId) {
+    const sourceId = clean(sourceNoteId);
+    const targetId = clean(targetNoteId);
+    if (!sourceId || !targetId) return "missing";
+
+    const { data, error } = await client().rpc("notes_check_internal_link_access_v1", {
+      p_source_note_id: sourceId,
+      p_target_note_id: targetId
+    });
+    if (error) throw error;
+
+    const status = clean(data).toLowerCase();
+    return ["allowed", "private", "archived", "missing", "denied"].includes(status)
+      ? status
+      : "denied";
   }
 
   function applyTypeFilter(query, noteTypes = ACTIVE_NOTE_TYPES) {
@@ -959,6 +1009,13 @@
       message.includes("reminder_recurrence");
   }
 
+  function linkAccessSchemaBelumTerpasang(error) {
+    const code = String(error?.code || "").toUpperCase();
+    const message = String(error?.message || error?.details || error?.hint || "").toLowerCase();
+    return code === "PGRST202" ||
+      message.includes("notes_check_internal_link_access_v1");
+  }
+
   function schemaBelumTerpasang(error) {
     const code = String(error?.code || "").toUpperCase();
     const message = String(error?.message || error?.details || "").toLowerCase();
@@ -973,7 +1030,9 @@
     simpanChecklist,
     simpanReminder,
     pindahkanCatatanKeFolder,
+    pindahkanBanyakCatatanKeFolder,
     ambilCatatan,
+    cekAksesTautanCatatan,
     ambilCatatanPersonal,
     ambilCatatanAnggota,
     ambilFolderAnggota,
@@ -1025,6 +1084,7 @@
     tagSchemaBelumTerpasang,
     checklistSchemaBelumTerpasang,
     reminderSchemaBelumTerpasang,
+    linkAccessSchemaBelumTerpasang,
     schemaBelumTerpasang
   };
 })();
