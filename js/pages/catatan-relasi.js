@@ -1,4 +1,4 @@
-// RuangKitha v2.0.0a43a — Relation Map Free-Room Pan UX Hotfix
+// RuangKitha v2.0.0a43b — Adaptive Relation Graph Layout UX Hotfix
 (() => {
   "use strict";
 
@@ -21,6 +21,7 @@
   let mapCanvasPadY = 0;
   let mapPanState = null;
   let suppressMapClickUntil = 0;
+  let lastLayoutBounds = null;
   let toastTimer = null;
   let focusId = "";
   const expanded = new Set();
@@ -126,7 +127,7 @@
     q("[data-zoom-out]")?.addEventListener("click", () => setScale(scale - .12));
     q("[data-zoom-reset]")?.addEventListener("click", () => {
       setScale(window.innerWidth < 520 ? .72 : .86);
-      centerMapOnFocus();
+      centerMapOnGraph();
     });
     setupMapPanning();
   }
@@ -273,12 +274,27 @@
     empty.hidden = groups.length > 0;
   }
 
+  function uniqueEdges(nodes, edges) {
+    const valid = new Set(nodes.map(node => node.id));
+    const seen = new Set();
+    const cleanEdges = [];
+    (edges || []).forEach(edge => {
+      const a = clean(edge?.a);
+      const b = clean(edge?.b);
+      if (!a || !b || a === b || !valid.has(a) || !valid.has(b)) return;
+      const key = a < b ? `${a}::${b}` : `${b}::${a}`;
+      if (seen.has(key)) return;
+      seen.add(key);
+      cleanEdges.push({ ...edge, a, b });
+    });
+    return cleanEdges;
+  }
+
   function adjacencyMap(nodes, edges) {
     const map = new Map(nodes.map(node => [node.id, new Set()]));
-    edges.forEach(edge => {
-      if (!map.has(edge.a) || !map.has(edge.b)) return;
-      map.get(edge.a).add(edge.b);
-      map.get(edge.b).add(edge.a);
+    uniqueEdges(nodes, edges).forEach(edge => {
+      map.get(edge.a)?.add(edge.b);
+      map.get(edge.b)?.add(edge.a);
     });
     return map;
   }
@@ -345,16 +361,92 @@
     return visible;
   }
 
-  function layoutPositions(visibleIds, adjacency) {
-    const positions = new Map();
-    if (!visibleIds.size) return positions;
-    positions.set(focusId, { ...CENTER, angle: -Math.PI / 2, depth: 0 });
+  function componentEdgeCount(component, adjacency) {
+    const ids = new Set(component);
+    let degreeTotal = 0;
+    component.forEach(id => {
+      (adjacency.get(id) || []).forEach(next => {
+        if (ids.has(next)) degreeTotal += 1;
+      });
+    });
+    return degreeTotal / 2;
+  }
 
-    const visited = new Set([focusId]);
-    const queue = [{ id: focusId, depth: 0, angle: -Math.PI / 2, sector: Math.PI * 2 }];
+  function cycleOrder(component, adjacency) {
+    if (component.length < 3) return null;
+    const ids = new Set(component);
+    if (componentEdgeCount(component, adjacency) !== component.length) return null;
+    if (!component.every(id => Array.from(adjacency.get(id) || []).filter(next => ids.has(next)).length === 2)) return null;
+
+    const start = component.includes(focusId) ? focusId : component[0];
+    const order = [start];
+    let previous = "";
+    let current = start;
+    while (order.length < component.length) {
+      const candidates = Array.from(adjacency.get(current) || [])
+        .filter(next => ids.has(next) && next !== previous)
+        .sort();
+      let next = candidates.find(id => id !== start && !order.includes(id));
+      if (!next) next = candidates.find(id => !order.includes(id));
+      if (!next) return null;
+      order.push(next);
+      previous = current;
+      current = next;
+    }
+    return order;
+  }
+
+  function layoutCycle(component, adjacency, center, positions) {
+    const order = cycleOrder(component, adjacency);
+    if (!order) return false;
+    const count = order.length;
+    const radius = Math.min(350, Math.max(205, 150 + count * 24));
+    order.forEach((id, index) => {
+      const angle = -Math.PI / 2 + index * Math.PI * 2 / count;
+      positions.set(id, {
+        x: center.x + Math.cos(angle) * radius,
+        y: center.y + Math.sin(angle) * radius,
+        angle,
+        depth: 0,
+        layout: "cycle"
+      });
+    });
+    return true;
+  }
+
+  function chooseComponentRoot(component, adjacency) {
+    return component.slice().sort((a, b) => {
+      const degreeDiff = (adjacency.get(b)?.size || 0) - (adjacency.get(a)?.size || 0);
+      if (degreeDiff) return degreeDiff;
+      if (a === focusId) return -1;
+      if (b === focusId) return 1;
+      return String(a).localeCompare(String(b));
+    })[0];
+  }
+
+  function layoutMindMap(component, adjacency, center, positions) {
+    if (!component.length) return;
+    if (component.length === 1) {
+      positions.set(component[0], { ...center, angle: -Math.PI / 2, depth: 0, layout: "single" });
+      return;
+    }
+    if (component.length === 2) {
+      positions.set(component[0], { x: center.x, y: center.y - 125, angle: -Math.PI / 2, depth: 0, layout: "pair" });
+      positions.set(component[1], { x: center.x, y: center.y + 125, angle: Math.PI / 2, depth: 1, layout: "pair" });
+      return;
+    }
+
+    const root = chooseComponentRoot(component, adjacency);
+    const allowed = new Set(component);
+    positions.set(root, { ...center, angle: -Math.PI / 2, depth: 0, layout: "mindmap" });
+    const visited = new Set([root]);
+    const queue = [{ id: root, depth: 0, angle: -Math.PI / 2, sector: Math.PI * 2 }];
+
     while (queue.length) {
       const current = queue.shift();
-      const children = Array.from(adjacency.get(current.id) || []).filter(id => visibleIds.has(id) && !visited.has(id));
+      const children = Array.from(adjacency.get(current.id) || [])
+        .filter(id => allowed.has(id) && !visited.has(id))
+        .sort((a, b) => (adjacency.get(b)?.size || 0) - (adjacency.get(a)?.size || 0));
       const count = children.length;
       children.forEach((child, index) => {
         visited.add(child);
@@ -362,63 +454,151 @@
         let angle;
         let sector;
         if (current.depth === 0) {
-          angle = -Math.PI / 2 + (index * Math.PI * 2 / Math.max(1, count));
-          sector = Math.min(Math.PI * .72, Math.PI * 2 / Math.max(1, count));
+          angle = -Math.PI / 2 + index * Math.PI * 2 / Math.max(1, count);
+          sector = Math.min(Math.PI * .78, Math.PI * 2 / Math.max(1, count));
         } else {
-          sector = Math.max(.38, current.sector * .72);
+          sector = Math.max(.42, current.sector * .68);
           const span = sector * Math.max(0, count - 1);
           angle = current.angle - span / 2 + index * sector;
         }
-        const radius = current.depth === 0
-          ? Math.min(320, Math.max(200, count * 30))
-          : Math.min(390, 180 * depth);
-        const x = CENTER.x + Math.cos(angle) * radius;
-        const y = CENTER.y + Math.sin(angle) * radius;
-        positions.set(child, { x, y, angle, depth });
+        const radius = depth === 1 ? Math.min(305, Math.max(220, count * 42)) : Math.min(405, 175 * depth);
+        positions.set(child, {
+          x: center.x + Math.cos(angle) * radius,
+          y: center.y + Math.sin(angle) * radius,
+          angle,
+          depth,
+          layout: "mindmap"
+        });
         queue.push({ id: child, depth, angle, sector });
       });
     }
 
-    // Disconnected components remain separate mini-branches instead of being
-    // forced into the focus tree. One visible root per component acts as its
-    // anchor; tapping +N progressively unfolds that component too.
-    const remaining = new Set(Array.from(visibleIds).filter(id => !visited.has(id)));
-    const slots = [
-      { x: 190, y: 160 }, { x: 1010, y: 160 }, { x: 190, y: 700 }, { x: 1010, y: 700 },
-      { x: 600, y: 120 }, { x: 600, y: 740 }
-    ];
-    let componentIndex = 0;
-    while (remaining.size) {
-      const rootId = remaining.values().next().value;
-      const localCenter = slots[componentIndex % slots.length];
-      componentIndex += 1;
-      positions.set(rootId, { ...localCenter, angle: -Math.PI / 2, depth: 0 });
-      remaining.delete(rootId);
-      visited.add(rootId);
+    // A component may contain a secondary cycle/cross-link. Any node not
+    // reached above is placed around the outer ring rather than stacked.
+    const leftovers = component.filter(id => !positions.has(id));
+    leftovers.forEach((id, index) => {
+      const angle = -Math.PI / 2 + index * Math.PI * 2 / Math.max(1, leftovers.length);
+      positions.set(id, {
+        x: center.x + Math.cos(angle) * 330,
+        y: center.y + Math.sin(angle) * 330,
+        angle,
+        depth: 2,
+        layout: "outer"
+      });
+    });
+  }
 
-      const localQueue = [{ id: rootId, depth: 0, angle: -Math.PI / 2, sector: Math.PI * 2 }];
-      while (localQueue.length) {
-        const current = localQueue.shift();
-        const children = Array.from(adjacency.get(current.id) || []).filter(id => remaining.has(id));
-        const count = children.length;
-        children.forEach((child, index) => {
-          remaining.delete(child);
-          visited.add(child);
-          const depth = current.depth + 1;
-          const sector = current.depth === 0
-            ? Math.min(Math.PI * .65, Math.PI * 2 / Math.max(1, count))
-            : Math.max(.42, current.sector * .7);
-          const span = sector * Math.max(0, count - 1);
-          const angle = current.depth === 0
-            ? (-Math.PI / 2 + index * Math.PI * 2 / Math.max(1, count))
-            : (current.angle - span / 2 + index * sector);
-          const radius = Math.min(235, 125 * depth);
-          const x = Math.max(95, Math.min(STAGE_W - 95, localCenter.x + Math.cos(angle) * radius));
-          const y = Math.max(75, Math.min(STAGE_H - 75, localCenter.y + Math.sin(angle) * radius));
-          positions.set(child, { x, y, angle, depth });
-          localQueue.push({ id: child, depth, angle, sector });
-        });
+  function relaxPositions(component, adjacency, positions, center) {
+    if (component.length < 3 || component.length > 18) return;
+    const ids = component.filter(id => positions.has(id));
+    const idealEdge = 235;
+    const minX = 105;
+    const maxX = STAGE_W - 105;
+    const minY = 78;
+    const maxY = STAGE_H - 78;
+
+    // A short deterministic relaxation pass improves mixed graphs without
+    // turning the map into a constantly moving physics simulation.
+    for (let iteration = 0; iteration < 18; iteration += 1) {
+      const force = new Map(ids.map(id => [id, { x: 0, y: 0 }]));
+      for (let i = 0; i < ids.length; i += 1) {
+        for (let j = i + 1; j < ids.length; j += 1) {
+          const a = positions.get(ids[i]);
+          const b = positions.get(ids[j]);
+          let dx = b.x - a.x;
+          let dy = b.y - a.y;
+          let distance = Math.hypot(dx, dy) || 1;
+          const target = 205;
+          if (distance < target) {
+            const push = (target - distance) * .055;
+            dx /= distance;
+            dy /= distance;
+            force.get(ids[i]).x -= dx * push;
+            force.get(ids[i]).y -= dy * push;
+            force.get(ids[j]).x += dx * push;
+            force.get(ids[j]).y += dy * push;
+          }
+        }
       }
+      ids.forEach(id => {
+        const from = positions.get(id);
+        (adjacency.get(id) || []).forEach(next => {
+          if (!force.has(next) || String(id) > String(next)) return;
+          const to = positions.get(next);
+          let dx = to.x - from.x;
+          let dy = to.y - from.y;
+          let distance = Math.hypot(dx, dy) || 1;
+          const pull = (distance - idealEdge) * .012;
+          dx /= distance;
+          dy /= distance;
+          force.get(id).x += dx * pull;
+          force.get(id).y += dy * pull;
+          force.get(next).x -= dx * pull;
+          force.get(next).y -= dy * pull;
+        });
+      });
+      ids.forEach(id => {
+        const pos = positions.get(id);
+        const delta = force.get(id);
+        pos.x = Math.max(minX, Math.min(maxX, pos.x + delta.x));
+        pos.y = Math.max(minY, Math.min(maxY, pos.y + delta.y));
+      });
+    }
+
+    // Preserve the visual center of this component after relaxation.
+    const xs = ids.map(id => positions.get(id).x);
+    const ys = ids.map(id => positions.get(id).y);
+    const cx = (Math.min(...xs) + Math.max(...xs)) / 2;
+    const cy = (Math.min(...ys) + Math.max(...ys)) / 2;
+    const shiftX = center.x - cx;
+    const shiftY = center.y - cy;
+    ids.forEach(id => {
+      const pos = positions.get(id);
+      pos.x = Math.max(minX, Math.min(maxX, pos.x + shiftX));
+      pos.y = Math.max(minY, Math.min(maxY, pos.y + shiftY));
+    });
+  }
+
+  function layoutPositions(visibleIds, adjacency) {
+    const positions = new Map();
+    if (!visibleIds.size) {
+      lastLayoutBounds = null;
+      return positions;
+    }
+
+    const components = connectedComponents(Array.from(visibleIds), adjacency)
+      .sort((a, b) => {
+        if (a.includes(focusId)) return -1;
+        if (b.includes(focusId)) return 1;
+        return b.length - a.length;
+      });
+    const slots = [
+      CENTER,
+      { x: 250, y: 220 }, { x: 950, y: 220 },
+      { x: 250, y: 660 }, { x: 950, y: 660 },
+      { x: 600, y: 175 }, { x: 600, y: 690 }
+    ];
+
+    components.forEach((component, index) => {
+      const center = slots[index % slots.length];
+      const cycle = layoutCycle(component, adjacency, center, positions);
+      if (!cycle) {
+        layoutMindMap(component, adjacency, center, positions);
+        const edges = componentEdgeCount(component, adjacency);
+        if (edges >= component.length) relaxPositions(component, adjacency, positions, center);
+      }
+    });
+
+    const placed = Array.from(positions.values());
+    if (placed.length) {
+      lastLayoutBounds = {
+        minX: Math.min(...placed.map(pos => pos.x)),
+        maxX: Math.max(...placed.map(pos => pos.x)),
+        minY: Math.min(...placed.map(pos => pos.y)),
+        maxY: Math.max(...placed.map(pos => pos.y))
+      };
+    } else {
+      lastLayoutBounds = null;
     }
     return positions;
   }
@@ -438,7 +618,7 @@
   function renderGraph() {
     if (!graph) return;
     const nodes = graph.nodes || [];
-    const edges = graph.edges || [];
+    const edges = uniqueEdges(nodes, graph.edges || []);
     const nodesById = new Map(nodes.map(node => [node.id, node]));
     const adjacency = adjacencyMap(nodes, edges);
     const isolated = nodes.filter(node => (adjacency.get(node.id)?.size || 0) === 0);
@@ -480,7 +660,13 @@
       button.innerHTML = `
         <span class="relation-node-icon"><ion-icon name="${noteIcon(note)}" aria-hidden="true"></ion-icon></span>
         <span><strong>${escapeHtml(clean(note.title, "Tanpa judul"))}</strong><small>${escapeHtml(noteMeta(note))}</small></span>`;
-      button.addEventListener("click", () => openNote(note));
+      button.addEventListener("click", event => {
+        if (performance.now() < suppressMapClickUntil) {
+          event.preventDefault();
+          return;
+        }
+        openNote(note);
+      });
       wrap.appendChild(button);
 
       if (hiddenCount > 0) {
@@ -524,7 +710,7 @@
     updateCanvasSize();
     if (!initializedMapScroll) {
       initializedMapScroll = true;
-      requestAnimationFrame(centerMapOnFocus);
+      requestAnimationFrame(centerMapOnGraph);
     }
   }
 
@@ -553,12 +739,18 @@
     canvas.style.height = `${STAGE_H * scale + mapCanvasPadY * 2}px`;
   }
 
-  function centerMapOnFocus() {
+  function centerMapOnGraph() {
     const viewport = q("[data-relation-map-viewport]");
     if (!viewport) return;
     updateCanvasSize();
-    const centerX = mapCanvasPadX + CENTER.x * scale;
-    const centerY = mapCanvasPadY + CENTER.y * scale;
+    const graphCenterX = lastLayoutBounds
+      ? (lastLayoutBounds.minX + lastLayoutBounds.maxX) / 2
+      : CENTER.x;
+    const graphCenterY = lastLayoutBounds
+      ? (lastLayoutBounds.minY + lastLayoutBounds.maxY) / 2
+      : CENTER.y;
+    const centerX = mapCanvasPadX + graphCenterX * scale;
+    const centerY = mapCanvasPadY + graphCenterY * scale;
     viewport.scrollTo({
       left: Math.max(0, centerX - viewport.clientWidth / 2),
       top: Math.max(0, centerY - viewport.clientHeight / 2),

@@ -200,7 +200,7 @@
 .relation-map-line {
   fill: none;
   stroke: color-mix(in srgb, var(--color-primary, #159447) 46%, var(--color-border, #d7ded9));
-  stroke-width: 2.2;
+  stroke-width: 2.15;
   vector-effect: non-scaling-stroke;
 }
 .relation-node-wrap {
@@ -278,6 +278,7 @@
   border-top: 1px solid var(--color-border, #e0e4e1);
   color: var(--color-text-soft, #6f7b73);
   font-size: 9.5px;
+  line-height: 1.45;
   text-align: center;
 }
 .relation-isolated {
@@ -398,4 +399,11 @@ html[data-theme="dark"] .relation-map-shell {
 @media (min-width: 740px) {
   .relation-main { padding-left: 32px; padding-right: 32px; }
   .relation-map-viewport { height: min(70dvh, 720px); }
+}
+
+/* a43b: stable adaptive graph layout. Nodes are positioned once per render;
+   cycle components use a true ring so loop edges no longer stack vertically. */
+.relation-node-wrap { transition: left .18s ease, top .18s ease; }
+@media (prefers-reduced-motion: reduce) {
+  .relation-node-wrap { transition: none; }
 }
