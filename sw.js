@@ -1,4 +1,4 @@
-const CACHE_NAME = "ruangkitha-v2.0.0a42d-catatan-bulk-folder-protected-links";
+const CACHE_NAME = "ruangkitha-v2.0.0a42e-catatan-inline-private-target-hotfix";
 const OFFLINE_URL = "./offline.html";
 
 const APP_FILES = [

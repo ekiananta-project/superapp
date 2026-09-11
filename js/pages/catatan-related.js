@@ -176,12 +176,6 @@
     }
 
 
-    function candidateSafeForInline(note, ctx) {
-      const sourceShared = ctx.scope === "family" || (ctx.scope === "personal" && ctx.visibility === "family-read");
-      if (!sourceShared) return true;
-      return note.scope === "family" || (note.scope === "personal" && note.visibility === "family-read");
-    }
-
     function candidateMap() {
       const byId = new Map(candidates.map(note => [note.id, note]));
       related.forEach(note => { if (!byId.has(note.id)) byId.set(note.id, note); });
@@ -321,8 +315,11 @@
       try {
         related = await window.NotesService.ambilCatatanTerkait(id);
         loaded = true;
-        candidates = (await window.NotesService.ambilKandidatCatatanTerkait(id, 250))
-          .filter(note => candidateSafeForInline(note, context()));
+        // Keep every note the current editor is allowed to read/select, including
+        // the owner's `Hanya Saya` notes. A family-visible source is allowed to
+        // point to a private target; readers without access are stopped at click
+        // time by the 004L access preflight and remain on the source note.
+        candidates = await window.NotesService.ambilKandidatCatatanTerkait(id, 250);
         const target = clean(currentTargetId);
         draft = target ? new Set([target]) : new Set();
         const actions = layer.querySelector("[data-related-actions]");
