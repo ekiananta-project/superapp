@@ -1,4 +1,4 @@
-/* RuangKitha v2.0.0a46d — Notification Center polish */
+/* RuangKitha v2.0.0a46e — Notification Center delivered-history polish */
 .notification-page main { display:grid; gap:14px; padding-bottom:30px; }
 .notification-page .shell-card { overflow:hidden; }
 
@@ -94,4 +94,19 @@ html[data-theme="dark"] .notification-item.is-unread { background:color-mix(in s
   .device-health-actions { flex-direction:column; align-items:stretch; }
   .notification-primary-button,.notification-secondary-button { width:100%; }
   .notification-item-side { min-width:20px; }
+}
+
+/* v2.0.0a46e — delivered history + source-specific accents + explicit open affordance */
+.notification-item.is-documents .notification-item-icon { background:rgba(138,92,246,.11); color:#8257e6; }
+.notification-item.is-maintenance .notification-item-icon { background:rgba(235,112,52,.11); color:#d9662e; }
+.notification-item.is-calendar .notification-item-icon { background:rgba(38,151,128,.11); color:#238f7b; }
+.notification-item.is-documents .notification-source-pill { background:rgba(138,92,246,.10); color:#7650cf; }
+.notification-item.is-maintenance .notification-source-pill { background:rgba(235,112,52,.10); color:#bf5728; }
+.notification-item.is-calendar .notification-source-pill { background:rgba(38,151,128,.10); color:#237d6d; }
+.notification-open-pill { display:inline-flex; align-items:center; justify-content:center; min-height:24px; padding:4px 8px; border-radius:999px; background:rgba(21,148,71,.10); color:var(--color-primary,#159447); font-size:8px; font-weight:800; line-height:1; }
+.notification-item.is-read .notification-open-pill { background:var(--color-surface-soft,#eef1ef); color:var(--color-text-secondary,#737a76); }
+.notification-item-side { min-width:48px; }
+@media (max-width:390px) {
+  .notification-item-side { min-width:42px; }
+  .notification-urgency { display:none; }
 }

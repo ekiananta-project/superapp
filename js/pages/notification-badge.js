@@ -1,4 +1,4 @@
-// RuangKitha v2.0.0a46 — notification unread badge for Calendar header.
+// RuangKitha v2.0.0a46e — delivered-push unread badge for Calendar header.
 (() => {
   "use strict";
   const badge = () => document.querySelector("[data-notification-badge]");

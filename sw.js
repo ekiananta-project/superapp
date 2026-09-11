@@ -1,4 +1,4 @@
-const CACHE_NAME = "ruangkitha-v2.0.0a46d-notification-ux-polish";
+const CACHE_NAME = "ruangkitha-v2.0.0a46e-notification-interaction-history";
 const OFFLINE_URL = "./offline.html";
 
 const APP_FILES = [
@@ -259,7 +259,7 @@ self.addEventListener("fetch", event => {
 });
 
 
-// v2.0.0a46: background Web Push payload from the centralized Notification Scheduler.
+// v2.0.0a46e: background Web Push with source deep-link + optional Buka action.
 self.addEventListener("push", event => {
   let payload = {};
   try { payload = event.data?.json?.() || {}; } catch {
@@ -281,15 +281,23 @@ self.addEventListener("push", event => {
     lang: "id-ID",
     icon: "./icons/icon-192.png",
     badge: "./icons/favicon-32.png",
-    data: { url: target, notificationId }
+    timestamp: payload.scheduledFor ? new Date(payload.scheduledFor).getTime() : Date.now(),
+    actions: [{ action: "open", title: String(payload.actionTitle || "Buka") }],
+    data: {
+      url: target,
+      notificationId,
+      sourceModule: String(payload.sourceModule || ""),
+      sourceType: String(payload.sourceType || "")
+    }
   };
   event.waitUntil(self.registration.showNotification(title, options));
 });
 
-// Notification clicks always deep-link to the original Calendar source.
-// v2.0.0a46 background scheduling is handled by the centralized server dispatcher.
+// Default tap and the optional “Buka” action both deep-link to the original source.
+// The rk_notification query marker lets the destination page sync read_at after auth.
 self.addEventListener("notificationclick", event => {
   event.notification?.close();
+  if (event.action && event.action !== "open") return;
   const target = event.notification?.data?.url;
   if (!target) return;
   event.waitUntil((async () => {

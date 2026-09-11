@@ -43,7 +43,7 @@
   if ("serviceWorker" in navigator) {
     window.addEventListener("load", async () => {
       try {
-        const registration = await navigator.serviceWorker.register("./sw.js?v=20260911-v200a46d", {
+        const registration = await navigator.serviceWorker.register("./sw.js?v=20260911-v200a46e", {
           scope: "./"
         });
 
@@ -85,6 +85,19 @@
   });
 
 
+  function announceNotificationRead(notificationId) {
+    const payload = { type: "read-change", notificationId, source: "push-open", at: Date.now() };
+    window.dispatchEvent(new CustomEvent("ruangkitha:notification-read", { detail: payload }));
+    try { localStorage.setItem("ruangkitha:notification-read-sync", JSON.stringify(payload)); } catch {}
+    try {
+      if ("BroadcastChannel" in window) {
+        const channel = new BroadcastChannel("ruangkitha-notifications");
+        channel.postMessage(payload);
+        channel.close();
+      }
+    } catch {}
+  }
+
   async function markOpenedNotificationRead() {
     const params = new URLSearchParams(location.search);
     const id = params.get("rk_notification");
@@ -96,11 +109,12 @@
         if (allowed === false) return;
       }
       if (!window.supabaseClient) return;
-      await window.supabaseClient.rpc("notification_mark_read_v1", { p_notification_id: id });
+      const { data, error } = await window.supabaseClient.rpc("notification_mark_read_v1", { p_notification_id: id });
+      if (error) throw error;
+      if (data) announceNotificationRead(id);
       params.delete("rk_notification");
       const clean = `${location.pathname}${params.toString() ? `?${params}` : ""}${location.hash}`;
       history.replaceState(history.state, "", clean);
-      window.dispatchEvent(new CustomEvent("ruangkitha:notification-read"));
     } catch (error) {
       console.debug?.("[Notification open marker]", error);
     }

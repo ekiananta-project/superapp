@@ -1,9 +1,38 @@
-// RuangKitha v2.0.0a46d — Stable device identity + browser-aware notification UX.
+// RuangKitha v2.0.0a46e — delivered history + cross-tab read sync + stable deep links.
 (() => {
   "use strict";
 
   const EDGE_FUNCTION = "notification-push";
   const SYNC_HOURS = 24 * 30;
+  const READ_SYNC_KEY = "ruangkitha:notification-read-sync";
+  const READ_SYNC_CHANNEL = "ruangkitha-notifications";
+  let syncChannel = null;
+
+  try {
+    if ("BroadcastChannel" in window) {
+      syncChannel = new BroadcastChannel(READ_SYNC_CHANNEL);
+      syncChannel.addEventListener("message", event => {
+        if (event?.data?.type === "read-change") {
+          window.dispatchEvent(new CustomEvent("ruangkitha:notification-read", { detail: event.data }));
+        }
+      });
+    }
+  } catch {}
+
+  window.addEventListener("storage", event => {
+    if (event.key === READ_SYNC_KEY && event.newValue) {
+      window.dispatchEvent(new CustomEvent("ruangkitha:notification-read", {
+        detail: { type: "read-change", source: "storage", value: event.newValue }
+      }));
+    }
+  });
+
+  function announceReadChange(detail = {}) {
+    const payload = { type: "read-change", at: Date.now(), ...detail };
+    window.dispatchEvent(new CustomEvent("ruangkitha:notification-read", { detail: payload }));
+    try { syncChannel?.postMessage(payload); } catch {}
+    try { localStorage.setItem(READ_SYNC_KEY, JSON.stringify(payload)); } catch {}
+  }
 
   function client() {
     if (!window.supabaseClient) throw new Error("Supabase belum tersedia.");
@@ -301,22 +330,37 @@
     return Number(data || 0);
   }
 
-  async function listInbox({ unreadOnly = false, limit = 100 } = {}) {
+  async function listInbox({ unreadOnly = false, deliveredOnly = true, limit = 100 } = {}) {
     let query = client()
       .from("notification_inbox")
       .select("id,event_key,event_date,scheduled_for,rule_key,title,body,source_module,source_type,source_href,read_at,push_sent_at,push_failed_at")
       .lte("scheduled_for", new Date().toISOString())
-      .order("scheduled_for", { ascending: false })
       .limit(Math.max(1, Math.min(Number(limit || 100), 200)));
+    if (deliveredOnly) {
+      query = query.not("push_sent_at", "is", null).order("push_sent_at", { ascending: false });
+    } else {
+      query = query.order("scheduled_for", { ascending: false });
+    }
     if (unreadOnly) query = query.is("read_at", null);
     const { data, error } = await query;
     if (error) throw error;
     return data || [];
   }
 
+  async function rpcWithFallback(primary, fallback, args = undefined) {
+    const first = await client().rpc(primary, args);
+    if (!first.error) return first.data;
+    const code = String(first.error?.code || "");
+    const message = String(first.error?.message || "");
+    const missing = code === "PGRST202" || /function .* does not exist|could not find the function/i.test(message);
+    if (!missing || !fallback) throw first.error;
+    const second = await client().rpc(fallback, args);
+    if (second.error) throw second.error;
+    return second.data;
+  }
+
   async function unreadCount() {
-    const { data, error } = await client().rpc("notification_unread_count_v1");
-    if (error) throw error;
+    const data = await rpcWithFallback("notification_unread_count_v2", "notification_unread_count_v1");
     return Number(data || 0);
   }
 
@@ -326,14 +370,13 @@
     const { data, error } = await client().rpc("notification_mark_read_v1", { p_notification_id: value });
     if (error) throw error;
     if (!data) return false;
-    window.dispatchEvent(new CustomEvent("ruangkitha:notification-read"));
+    announceReadChange({ notificationId: value, scope: "single" });
     return true;
   }
 
   async function markAllRead() {
-    const { data, error } = await client().rpc("notification_mark_all_read_v1");
-    if (error) throw error;
-    window.dispatchEvent(new CustomEvent("ruangkitha:notification-read"));
+    const data = await rpcWithFallback("notification_mark_all_read_v2", "notification_mark_all_read_v1");
+    announceReadChange({ scope: "all" });
     return Number(data || 0);
   }
 
@@ -389,6 +432,7 @@
     markAllRead,
     openItem,
     safeHref,
-    hasRelevantUpcoming
+    hasRelevantUpcoming,
+    announceReadChange
   };
 })();

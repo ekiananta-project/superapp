@@ -1,4 +1,4 @@
-// RuangKitha v2.0.0a46d — Notification Center UX polish + clearer reminder cards.
+// RuangKitha v2.0.0a46e — delivered push history + source-aware cards + read sync.
 (() => {
   "use strict";
 
@@ -34,35 +34,65 @@
     }).format(date).replace(".", ":");
   }
 
+  function moduleKey(row) {
+    const value = String(row?.source_module || "").trim().toLowerCase();
+    if (["documents", "document", "dokumen"].includes(value)) return "documents";
+    if (["maintenance", "perawatan"].includes(value)) return "maintenance";
+    if (["notes", "catatan"].includes(value)) return "notes";
+    if (["finance", "keuangan"].includes(value)) return "finance";
+    if (["calendar", "kalender"].includes(value)) return "calendar";
+    return "ruangkitha";
+  }
+
   function iconFor(row) {
-    if (row.source_module === "finance") return "wallet-outline";
-    if (row.source_module === "notes") return "alarm-outline";
-    if (row.source_module === "calendar") return "calendar-clear-outline";
+    const key = moduleKey(row);
+    if (key === "finance") return "wallet-outline";
+    if (key === "notes") return "alarm-outline";
+    if (key === "documents") return "document-text-outline";
+    if (key === "maintenance") return "construct-outline";
+    if (key === "calendar") return "calendar-clear-outline";
     return "notifications-outline";
   }
 
   function moduleLabel(row) {
-    if (row.source_module === "finance") return "Keuangan";
-    if (row.source_module === "notes") return "Catatan";
-    if (row.source_module === "calendar") return "Kalender";
+    const key = moduleKey(row);
+    if (key === "finance") return "Keuangan";
+    if (key === "notes") return "Catatan";
+    if (key === "documents") return "Dokumen";
+    if (key === "maintenance") return "Maintenance";
+    if (key === "calendar") return "Kalender";
     return "RuangKitha";
   }
 
+  function cleanSentence(value) {
+    return String(value ?? "").trim().replace(/[.!?]+$/, "");
+  }
+
   function presentation(row) {
-    const rule = String(row?.rule_key || "");
-    if (rule === "finance:h1") {
-      return { body: "Jatuh tempo besok.", urgency: "Besok" };
+    const key = moduleKey(row);
+    const rule = String(row?.rule_key || "").toLowerCase();
+    const type = String(row?.source_type || "").toLowerCase();
+    const raw = cleanSentence(row?.body);
+
+    if (key === "finance") {
+      if (rule === "finance:h1") return { body: "Jatuh tempo besok · Keuangan", urgency: "Besok" };
+      if (rule === "finance:h0") return { body: "Jatuh tempo hari ini · Keuangan", urgency: "Hari ini" };
+      return { body: `${raw || "Ada tagihan yang perlu diperhatikan"} · Keuangan`, urgency: "Tagihan" };
     }
-    if (rule === "finance:h0") {
-      return { body: "Jatuh tempo hari ini.", urgency: "Hari ini" };
+    if (key === "notes") {
+      if (rule.startsWith("notes:") || type === "reminder") return { body: "Waktunya sekarang · Catatan Reminder", urgency: "Sekarang" };
+      return { body: `${raw || "Ada catatan yang perlu diperhatikan"} · Catatan`, urgency: "Catatan" };
     }
-    if (rule === "notes:at" || row?.source_module === "notes") {
-      return { body: "Waktunya membuka reminder ini.", urgency: "Sekarang" };
+    if (key === "documents") {
+      return { body: `${raw || "Masa berlaku dokumen perlu diperiksa"} · Dokumen`, urgency: type.includes("expir") ? "Masa berlaku" : "Dokumen" };
     }
-    return {
-      body: String(row?.body || "Buka agenda terkait."),
-      urgency: "Pengingat"
-    };
+    if (key === "maintenance") {
+      return { body: `${raw || "Jadwal perawatan perlu diperhatikan"} · Maintenance`, urgency: "Perawatan" };
+    }
+    if (key === "calendar") {
+      return { body: `${raw || "Agenda dimulai"} · Kalender`, urgency: "Agenda" };
+    }
+    return { body: raw || "Ada agenda yang perlu diperhatikan · RuangKitha", urgency: "Pengingat" };
   }
 
   function setStatus(text, tone = "neutral") {
@@ -175,7 +205,8 @@
 
     let group = "";
     visible.forEach(row => {
-      const label = localDateLabel(row.scheduled_for);
+      const deliveredAt = row.push_sent_at || row.scheduled_for;
+      const label = localDateLabel(deliveredAt);
       if (label !== group) {
         group = label;
         const heading = document.createElement("h3");
@@ -187,8 +218,8 @@
       const view = presentation(row);
       const button = document.createElement("button");
       button.type = "button";
-      button.className = `notification-item is-${row.source_module || "calendar"}${row.read_at ? " is-read" : " is-unread"}`;
-      button.setAttribute("aria-label", `${row.title || "Pengingat"}, ${moduleLabel(row)}, ${timeLabel(row.scheduled_for)}`);
+      button.className = `notification-item is-${moduleKey(row)}${row.read_at ? " is-read" : " is-unread"}`;
+      button.setAttribute("aria-label", `${row.title || "Pengingat"}, ${moduleLabel(row)}, terkirim ${timeLabel(deliveredAt)}`);
 
       const icon = document.createElement("span");
       icon.className = "notification-item-icon";
@@ -207,7 +238,7 @@
 
       const time = document.createElement("small");
       time.className = "notification-time";
-      time.textContent = timeLabel(row.scheduled_for);
+      time.textContent = `Terkirim ${timeLabel(deliveredAt)}`;
       meta.appendChild(time);
 
       if (!row.read_at) {
@@ -228,7 +259,7 @@
 
       const side = document.createElement("span");
       side.className = "notification-item-side";
-      side.innerHTML = `<span class="notification-urgency">${view.urgency}</span><ion-icon class="notification-item-chevron" name="chevron-forward-outline"></ion-icon>`;
+      side.innerHTML = `<span class="notification-urgency">${view.urgency}</span><span class="notification-open-pill">Buka</span><ion-icon class="notification-item-chevron" name="chevron-forward-outline"></ion-icon>`;
 
       button.append(icon, copy, side);
       button.addEventListener("click", () => window.RuangKithaNotifications.openItem(row));
@@ -241,15 +272,17 @@
     if (!service) return;
     try {
       await service.syncInbox(24 * 30);
-      rows = await service.listInbox({ limit: 120 });
+      rows = await service.listInbox({ deliveredOnly: true, limit: 120 });
       renderList();
       const unread = rows.filter(row => !row.read_at).length;
       const markAll = q("[data-mark-all-read]");
       if (markAll) markAll.hidden = unread === 0;
       const summary = q("[data-notification-summary]");
-      if (summary) summary.textContent = unread
-        ? `${unread} pemberitahuan belum dibaca`
-        : (rows.length ? "Semua pemberitahuan sudah dibaca" : "Belum ada pemberitahuan");
+      if (summary) {
+        if (!rows.length) summary.textContent = "Belum ada push yang terkirim";
+        else if (unread) summary.textContent = `${rows.length} terkirim · ${unread} belum dibaca`;
+        else summary.textContent = `${rows.length} terkirim · semua sudah dibaca`;
+      }
     } catch (error) {
       console.error("[Notification inbox]", error);
       setStatus(error?.message || "Notifikasi belum dapat dimuat.", "error");
@@ -352,7 +385,7 @@
         renderList();
         q("[data-mark-all-read]").hidden = true;
         const summary = q("[data-notification-summary]");
-        if (summary) summary.textContent = "Semua pemberitahuan sudah dibaca";
+        if (summary) summary.textContent = rows.length ? `${rows.length} terkirim · semua sudah dibaca` : "Belum ada push yang terkirim";
       } catch (error) {
         setStatus(error?.message || "Belum dapat menandai semua sebagai dibaca.", "error");
       }
@@ -368,6 +401,12 @@
     try { await window.RuangKithaNotifications.heartbeat(); } catch {}
     await Promise.all([refreshHealth(), refreshInbox()]);
   }
+
+  let readRefreshTimer = null;
+  window.addEventListener("ruangkitha:notification-read", () => {
+    clearTimeout(readRefreshTimer);
+    readRefreshTimer = setTimeout(() => refreshInbox(), 120);
+  });
 
   document.addEventListener("visibilitychange", () => {
     if (!document.hidden) Promise.all([refreshHealth(), refreshInbox()]);
