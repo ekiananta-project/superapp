@@ -1,4 +1,4 @@
-// RuangKitha v2.0.0a46b — Stable notification device-id handshake + readable Edge Function errors.
+// RuangKitha v2.0.0a46d — Stable device identity + browser-aware notification UX.
 (() => {
   "use strict";
 
@@ -19,10 +19,16 @@
     catch { return "UTC"; }
   }
 
-  function browserInfo() {
+  async function isBraveBrowser() {
+    try { return Boolean(navigator.brave && await navigator.brave.isBrave()); }
+    catch { return false; }
+  }
+
+  async function browserInfo() {
     const ua = navigator.userAgent || "";
     let browser = "Browser";
-    if (/Edg\//.test(ua)) browser = "Edge";
+    if (await isBraveBrowser()) browser = "Brave";
+    else if (/Edg\//.test(ua)) browser = "Edge";
     else if (/OPR\//.test(ua)) browser = "Opera";
     else if (/Chrome\//.test(ua) && !/Edg\//.test(ua)) browser = "Chrome";
     else if (/Firefox\//.test(ua)) browser = "Firefox";
@@ -166,7 +172,7 @@
   }
 
   async function registerSubscription(subscription) {
-    const info = browserInfo();
+    const info = await browserInfo();
     const payload = subscriptionJSON(subscription);
     const { data, error } = await client().rpc("notification_register_device_v1", {
       p_subscription: payload,
@@ -227,10 +233,18 @@
     }
     if (!subscription) {
       const { publicKey } = await edgeConfig();
-      subscription = await reg.pushManager.subscribe({
-        userVisibleOnly: true,
-        applicationServerKey: base64ToBytes(publicKey)
-      });
+      try {
+        subscription = await reg.pushManager.subscribe({
+          userVisibleOnly: true,
+          applicationServerKey: base64ToBytes(publicKey)
+        });
+      } catch (error) {
+        const message = clean(error?.message);
+        if (await isBraveBrowser() && /push service error|registration failed/i.test(message)) {
+          throw new Error('Brave memerlukan “Use Google services for push messaging”. Aktifkan di brave://settings/privacy, buka ulang Brave, lalu coba lagi.');
+        }
+        throw error;
+      }
     }
     await registerSubscription(subscription);
     await syncInbox(SYNC_HOURS);

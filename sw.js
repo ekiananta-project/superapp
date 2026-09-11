@@ -1,4 +1,4 @@
-const CACHE_NAME = "ruangkitha-v2.0.0a46b-notification-device-id-hotfix";
+const CACHE_NAME = "ruangkitha-v2.0.0a46d-notification-ux-polish";
 const OFFLINE_URL = "./offline.html";
 
 const APP_FILES = [
@@ -278,6 +278,7 @@ self.addEventListener("push", event => {
     body: String(payload.body || "Ada agenda yang perlu diperhatikan."),
     tag: String(payload.tag || `ruangkitha-${notificationId || Date.now()}`),
     renotify: false,
+    lang: "id-ID",
     icon: "./icons/icon-192.png",
     badge: "./icons/favicon-32.png",
     data: { url: target, notificationId }

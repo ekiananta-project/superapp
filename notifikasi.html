@@ -17,7 +17,7 @@
   <link rel="stylesheet" href="css/style.css">
   <link rel="stylesheet" href="css/theme.css">
   <link rel="stylesheet" href="css/pages/superapp-shell.css?v=20260909-v200a8">
-  <link rel="stylesheet" href="css/pages/notifications.css?v=20260911-v200a46b">
+  <link rel="stylesheet" href="css/pages/notifications.css?v=20260911-v200a46d">
   <style id="ruangkitha-auth-cloak">html[data-auth-guard] body{visibility:hidden!important}</style>
 </head>
 <body>
@@ -34,7 +34,7 @@
         <span class="notification-intro-icon"><ion-icon name="calendar-clear-outline"></ion-icon></span>
         <div>
           <h2>Pengingat dari Kalender</h2>
-          <p>Semua pengingat waktu RuangKitha berasal dari agenda yang sama. Kalender dan Hari Ini tetap menjadi sumber utama; push membantu mengingatkan dari luar aplikasi.</p>
+          <p>Kalender menyimpan agendanya, Hari Ini merangkum yang perlu diperhatikan, dan push membantu mengetuk saat waktunya tiba.</p>
         </div>
       </div>
     </section>
@@ -45,6 +45,7 @@
         <div class="device-health-copy">
           <small>Perangkat ini</small>
           <h2 data-device-health-title>Memeriksa notifikasi…</h2>
+          <div class="device-health-meta" data-device-health-meta></div>
           <p data-device-health-body>Memastikan browser dan service worker siap menerima pengingat.</p>
         </div>
       </div>
@@ -58,7 +59,7 @@
       </div>
       <div class="device-help-copy" data-device-help-copy hidden>
         <strong>Jika notifikasi diblokir</strong>
-        <p>Buka pengaturan situs/aplikasi pada browser atau pengaturan notifikasi sistem, izinkan RuangKitha, lalu kembali ke halaman ini. Di iPhone/iPad, Web Push digunakan dari RuangKitha yang ditambahkan ke Layar Utama.</p>
+        <p>Android: pastikan izin notifikasi browser/RuangKitha aktif di pengaturan sistem. Brave juga perlu “Use Google services for push messaging”. iPhone/iPad: tambahkan RuangKitha ke Layar Utama lalu aktifkan dari ikon aplikasi.</p>
       </div>
       <div class="notification-page-status" data-notification-page-status hidden></div>
     </section>
@@ -100,8 +101,8 @@
 <script src="js/backend/family-service.js?v=20260908-10"></script>
 <script src="js/backend/auth-router.js?v=20260909-v200a8"></script>
 <script src="js/backend/auth-guard.js?v=20260909-v200a8"></script>
-<script src="js/backend/notification-service.js?v=20260911-v200a46b"></script>
-<script src="js/pages/notifications.js?v=20260911-v200a46b"></script>
-<script src="js/pwa.js?v=20260911-v200a46b"></script>
+<script src="js/backend/notification-service.js?v=20260911-v200a46d"></script>
+<script src="js/pages/notifications.js?v=20260911-v200a46d"></script>
+<script src="js/pwa.js?v=20260911-v200a46d"></script>
 </body>
 </html>
