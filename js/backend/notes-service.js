@@ -673,10 +673,24 @@
     return clean(data, 120) || nextName;
   }
 
+  async function putuskanRelasiAntarCatatan(relationId, noteAId, noteBId) {
+    const relation = clean(relationId);
+    const noteA = clean(noteAId);
+    const noteB = clean(noteBId);
+    if (!relation || !noteA || !noteB || noteA === noteB) return false;
+    const { data, error } = await client().rpc("notes_disconnect_relation_edge_v2", {
+      p_relation_id: relation,
+      p_note_a_id: noteA,
+      p_note_b_id: noteB
+    });
+    if (error) throw error;
+    return Boolean(data);
+  }
+
   async function hapusRelasi(relationId) {
     const id = clean(relationId);
     if (!id) return false;
-    const { data, error } = await client().rpc("notes_delete_relation_v1", { p_relation_id: id });
+    const { data, error } = await client().rpc("notes_delete_relation_v2", { p_relation_id: id });
     if (error) throw error;
     return Boolean(data);
   }
@@ -702,6 +716,8 @@
       message.includes("notes_relation_pair_options_v1") ||
       message.includes("notes_add_relation_edge_v1") ||
       message.includes("notes_get_relation_graph_v1") ||
+      message.includes("notes_disconnect_relation_edge_v2") ||
+      message.includes("notes_delete_relation_v2") ||
       message.includes("catatan_relation_groups");
   }
 
@@ -1222,6 +1238,7 @@
     ambilOpsiRelasiPasangan,
     simpanEdgeRelasi,
     hapusEdgeRelasiPasangan,
+    putuskanRelasiAntarCatatan,
     ambilGraphRelasi,
     gantiNamaRelasi,
     hapusRelasi,

@@ -1,4 +1,4 @@
-const CACHE_NAME = "ruangkitha-v2.0.0a43b-catatan-adaptive-relation-layout";
+const CACHE_NAME = "ruangkitha-v2.0.0a43c-relation-touch-integrity";
 const OFFLINE_URL = "./offline.html";
 
 const APP_FILES = [

@@ -183,6 +183,7 @@
   -webkit-user-select: none;
 }
 .relation-map-viewport.is-panning { cursor: grabbing; }
+.relation-map-viewport.is-pinching { cursor: zoom-in; }
 .relation-map-viewport.is-panning * { cursor: grabbing !important; }
 .relation-map-viewport::-webkit-scrollbar { display: none; }
 .relation-map-canvas { position: relative; min-width: 100%; min-height: 100%; }
@@ -196,12 +197,26 @@
 }
 .relation-map-lines,
 .relation-map-nodes { position: absolute; inset: 0; width: 100%; height: 100%; }
-.relation-map-lines { overflow: visible; pointer-events: none; }
+.relation-map-lines { overflow: visible; pointer-events: auto; }
 .relation-map-line {
   fill: none;
   stroke: color-mix(in srgb, var(--color-primary, #159447) 46%, var(--color-border, #d7ded9));
   stroke-width: 2.15;
   vector-effect: non-scaling-stroke;
+  pointer-events: none;
+}
+.relation-edge-hit {
+  fill: none;
+  stroke: transparent;
+  stroke-width: 24;
+  vector-effect: non-scaling-stroke;
+  pointer-events: stroke;
+  cursor: pointer;
+  touch-action: manipulation;
+}
+.relation-edge-hit:focus-visible {
+  stroke: color-mix(in srgb, var(--color-primary, #159447) 18%, transparent);
+  outline: none;
 }
 .relation-node-wrap {
   position: absolute;
@@ -406,4 +421,76 @@ html[data-theme="dark"] .relation-map-shell {
 .relation-node-wrap { transition: left .18s ease, top .18s ease; }
 @media (prefers-reduced-motion: reduce) {
   .relation-node-wrap { transition: none; }
+}
+
+
+/* v2.0.0a43c — touch-first graph gestures + relationship edge actions */
+.relation-edge-dialog {
+  width: min(100%, 392px);
+  padding: 18px;
+  border: 1px solid var(--color-border, #e0e4e1);
+  border-radius: 24px;
+  background: var(--color-surface, #fff);
+  color: var(--color-text, #18201b);
+  box-shadow: 0 28px 72px rgba(0,0,0,.24);
+}
+.relation-edge-pair {
+  display: grid;
+  grid-template-columns: minmax(0,1fr) 34px minmax(0,1fr);
+  align-items: center;
+  gap: 8px;
+  margin-top: 16px;
+}
+.relation-edge-pair span {
+  min-width: 0;
+  padding: 10px 11px;
+  border: 1px solid var(--color-border, #e0e4e1);
+  border-radius: 14px;
+  background: color-mix(in srgb, var(--color-primary, #159447) 6%, var(--color-surface, #fff));
+  font-size: 10.5px;
+  font-weight: 700;
+  line-height: 1.35;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.relation-edge-pair > ion-icon {
+  justify-self: center;
+  color: var(--color-primary, #159447);
+  font-size: 20px;
+}
+.relation-edge-dialog > p {
+  margin: 14px 2px 0;
+  color: var(--color-text-soft, #6f7b73);
+  font-size: 10.5px;
+  line-height: 1.55;
+}
+.relation-edge-actions {
+  display: grid;
+  grid-template-columns: .85fr 1.35fr;
+  gap: 9px;
+  margin-top: 16px;
+}
+.relation-edge-actions button {
+  min-height: 46px;
+  border-radius: 14px;
+  font: inherit;
+  font-size: 10.5px;
+  font-weight: 700;
+}
+.relation-edge-actions .is-secondary {
+  border: 1px solid var(--color-border, #e0e4e1);
+  background: transparent;
+  color: var(--color-text, #18201b);
+}
+.relation-edge-actions .is-danger {
+  border: 0;
+  background: #c94343;
+  color: #fff;
+}
+.relation-edge-actions button:disabled { opacity: .58; }
+
+@media (pointer: coarse) {
+  .relation-map-toolbar button { width: 40px; height: 40px; }
+  .relation-edge-hit { stroke-width: 30; }
 }

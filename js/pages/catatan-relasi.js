@@ -1,4 +1,4 @@
-// RuangKitha v2.0.0a43b — Adaptive Relation Graph Layout UX Hotfix
+// RuangKitha v2.0.0a43c — Touch Map + Relation Integrity Hotfix
 (() => {
   "use strict";
 
@@ -20,7 +20,10 @@
   let mapCanvasPadX = 0;
   let mapCanvasPadY = 0;
   let mapPanState = null;
+  let pinchState = null;
+  const activePointers = new Map();
   let suppressMapClickUntil = 0;
+  let selectedEdge = null;
   let lastLayoutBounds = null;
   let toastTimer = null;
   let focusId = "";
@@ -123,6 +126,12 @@
     q("[data-relation-name-layer]")?.addEventListener("click", event => {
       if (event.target === q("[data-relation-name-layer]")) closeRenameDialog();
     });
+    q("[data-relation-edge-cancel]")?.addEventListener("click", closeEdgeDialog);
+    q("[data-relation-edge-close]")?.addEventListener("click", closeEdgeDialog);
+    q("[data-relation-edge-disconnect]")?.addEventListener("click", disconnectSelectedEdge);
+    q("[data-relation-edge-layer]")?.addEventListener("click", event => {
+      if (event.target === q("[data-relation-edge-layer]")) closeEdgeDialog();
+    });
     q("[data-zoom-in]")?.addEventListener("click", () => setScale(scale + .12));
     q("[data-zoom-out]")?.addEventListener("click", () => setScale(scale - .12));
     q("[data-zoom-reset]")?.addEventListener("click", () => {
@@ -137,35 +146,112 @@
     if (!viewport || viewport.dataset.freeRoomReady === "true") return;
     viewport.dataset.freeRoomReady = "true";
 
-    const endPan = event => {
-      if (!mapPanState || (event?.pointerId != null && event.pointerId !== mapPanState.pointerId)) return;
-      const wasDragging = mapPanState.dragging;
-      try {
-        if (viewport.hasPointerCapture?.(mapPanState.pointerId)) viewport.releasePointerCapture(mapPanState.pointerId);
-      } catch {}
+    const interactiveTarget = target => Boolean(target?.closest?.(
+      ".relation-node, .relation-branch-button, .relation-map-toolbar, .relation-edge-hit, button, a, input, textarea, select"
+    ));
+
+    const point = event => ({ x: event.clientX, y: event.clientY });
+    const firstTwoPointers = () => Array.from(activePointers.entries()).slice(0, 2);
+
+    const beginPinch = () => {
+      if (activePointers.size < 2) return;
+      const pair = firstTwoPointers();
+      const a = pair[0][1];
+      const b = pair[1][1];
+      const distance = Math.max(1, Math.hypot(b.x - a.x, b.y - a.y));
+      const midClientX = (a.x + b.x) / 2;
+      const midClientY = (a.y + b.y) / 2;
+      const rect = viewport.getBoundingClientRect();
+      const localX = midClientX - rect.left;
+      const localY = midClientY - rect.top;
+      updateCanvasSize();
+      pinchState = {
+        ids: pair.map(([id]) => id),
+        startDistance: distance,
+        startScale: scale,
+        worldX: (viewport.scrollLeft + localX - mapCanvasPadX) / scale,
+        worldY: (viewport.scrollTop + localY - mapCanvasPadY) / scale
+      };
       mapPanState = null;
-      viewport.classList.remove("is-panning");
-      if (wasDragging) suppressMapClickUntil = performance.now() + 220;
+      viewport.classList.add("is-panning", "is-pinching");
+      pair.forEach(([id]) => { try { viewport.setPointerCapture?.(id); } catch {} });
+    };
+
+    const updatePinch = event => {
+      if (!pinchState || activePointers.size < 2) return false;
+      const pair = pinchState.ids.map(id => [id, activePointers.get(id)]).filter(([, value]) => value);
+      if (pair.length < 2) return false;
+      const a = pair[0][1];
+      const b = pair[1][1];
+      const distance = Math.max(1, Math.hypot(b.x - a.x, b.y - a.y));
+      const ratio = distance / pinchState.startDistance;
+      const nextScale = pinchState.startScale * ratio;
+      const midClientX = (a.x + b.x) / 2;
+      const midClientY = (a.y + b.y) / 2;
+      setScaleAtWorld(nextScale, midClientX, midClientY, pinchState.worldX, pinchState.worldY);
+      event?.preventDefault?.();
+      return true;
+    };
+
+    const finishPointer = event => {
+      const id = event?.pointerId;
+      if (id != null) activePointers.delete(id);
+
+      if (pinchState && (id == null || pinchState.ids.includes(id))) {
+        if (activePointers.size < 2) {
+          pinchState = null;
+          viewport.classList.remove("is-pinching", "is-panning");
+          suppressMapClickUntil = performance.now() + 260;
+        } else {
+          beginPinch();
+        }
+      }
+
+      if (mapPanState && (id == null || id === mapPanState.pointerId)) {
+        const wasDragging = mapPanState.dragging;
+        try {
+          if (viewport.hasPointerCapture?.(mapPanState.pointerId)) viewport.releasePointerCapture(mapPanState.pointerId);
+        } catch {}
+        mapPanState = null;
+        viewport.classList.remove("is-panning");
+        if (wasDragging) suppressMapClickUntil = performance.now() + 220;
+      }
     };
 
     viewport.addEventListener("pointerdown", event => {
-      if (!event.isPrimary || event.button !== 0) return;
+      if (event.pointerType === "mouse" && event.button !== 0) return;
+      activePointers.set(event.pointerId, point(event));
+
+      if (activePointers.size >= 2) {
+        beginPinch();
+        event.preventDefault();
+        return;
+      }
+
+      // A tap on a node / +N / edge must stay a real tap. Panning begins only
+      // from empty map space so mobile finger jitter no longer steals clicks.
+      if (interactiveTarget(event.target)) return;
+
       mapPanState = {
         pointerId: event.pointerId,
         startX: event.clientX,
         startY: event.clientY,
         startLeft: viewport.scrollLeft,
         startTop: viewport.scrollTop,
-        dragging: false
+        dragging: false,
+        pointerType: event.pointerType || "mouse"
       };
       try { viewport.setPointerCapture?.(event.pointerId); } catch {}
     });
 
     viewport.addEventListener("pointermove", event => {
+      if (activePointers.has(event.pointerId)) activePointers.set(event.pointerId, point(event));
+      if (pinchState && updatePinch(event)) return;
       if (!mapPanState || event.pointerId !== mapPanState.pointerId) return;
       const dx = event.clientX - mapPanState.startX;
       const dy = event.clientY - mapPanState.startY;
-      if (!mapPanState.dragging && Math.hypot(dx, dy) < 6) return;
+      const threshold = mapPanState.pointerType === "touch" ? 10 : 5;
+      if (!mapPanState.dragging && Math.hypot(dx, dy) < threshold) return;
       mapPanState.dragging = true;
       viewport.classList.add("is-panning");
       event.preventDefault();
@@ -173,9 +259,20 @@
       viewport.scrollTop = mapPanState.startTop - dy;
     }, { passive: false });
 
-    viewport.addEventListener("pointerup", endPan);
-    viewport.addEventListener("pointercancel", endPan);
-    viewport.addEventListener("lostpointercapture", endPan);
+    viewport.addEventListener("pointerup", finishPointer);
+    viewport.addEventListener("pointercancel", finishPointer);
+    viewport.addEventListener("lostpointercapture", event => {
+      if (activePointers.has(event.pointerId)) finishPointer(event);
+    });
+
+    // Trackpad pinch / Ctrl+wheel on desktop follows the cursor position.
+    viewport.addEventListener("wheel", event => {
+      if (!(event.ctrlKey || event.metaKey)) return;
+      event.preventDefault();
+      const factor = Math.exp(-event.deltaY * .0022);
+      setScaleAtPoint(scale * factor, event.clientX, event.clientY);
+    }, { passive: false });
+
     viewport.addEventListener("click", event => {
       if (performance.now() < suppressMapClickUntil) {
         event.preventDefault();
@@ -183,6 +280,36 @@
         event.stopImmediatePropagation?.();
       }
     }, true);
+  }
+
+  function clampScale(next) {
+    return Math.min(1.7, Math.max(.42, Number(next) || .78));
+  }
+
+  function setScaleAtWorld(next, clientX, clientY, worldX, worldY) {
+    const viewport = q("[data-relation-map-viewport]");
+    if (!viewport) return setScale(next);
+    const rect = viewport.getBoundingClientRect();
+    const localX = clientX - rect.left;
+    const localY = clientY - rect.top;
+    scale = clampScale(next);
+    const stage = q("[data-relation-map-stage]");
+    if (stage) stage.style.transform = `scale(${scale})`;
+    updateCanvasSize();
+    viewport.scrollLeft = Math.max(0, mapCanvasPadX + worldX * scale - localX);
+    viewport.scrollTop = Math.max(0, mapCanvasPadY + worldY * scale - localY);
+  }
+
+  function setScaleAtPoint(next, clientX, clientY) {
+    const viewport = q("[data-relation-map-viewport]");
+    if (!viewport) return setScale(next);
+    const rect = viewport.getBoundingClientRect();
+    const localX = clientX - rect.left;
+    const localY = clientY - rect.top;
+    updateCanvasSize();
+    const worldX = (viewport.scrollLeft + localX - mapCanvasPadX) / scale;
+    const worldY = (viewport.scrollTop + localY - mapCanvasPadY) / scale;
+    setScaleAtWorld(next, clientX, clientY, worldX, worldY);
   }
 
   async function openRenameDialog() {
@@ -224,14 +351,58 @@
   async function deleteCurrentRelation() {
     if (!graph?.relation?.can_admin) return;
     q("[data-relation-manage-layer]").hidden = true;
-    const ok = window.confirm(`Hapus relasi “${graph.relation.name}”?\n\nCatatan di dalamnya tidak akan ikut terhapus.`);
+    const ok = window.confirm(`Hapus relasi “${graph.relation.name}”?\n\nCatatan tidak ikut terhapus. Semua tautan inline yang dibuat untuk relasi ini akan dilepas dan teksnya tetap dipertahankan.`);
     if (!ok) return;
     try {
       await NotesService.hapusRelasi(graph.relation.id);
       location.replace(relationListHref(graph.relation.scope));
     } catch (error) {
       console.error("[Relation Delete]", error);
-      showToast(error?.message || "Relasi belum dapat dihapus.");
+      if (NotesService.relationGraphSchemaBelumTerpasang?.(error)) showToast("Jalankan SQL 004N agar penghapusan relasi membersihkan tautan inline.");
+      else showToast(error?.message || "Relasi belum dapat dihapus.");
+    }
+  }
+
+  function closeEdgeDialog() {
+    const layer = q("[data-relation-edge-layer]");
+    if (layer) layer.hidden = true;
+    selectedEdge = null;
+  }
+
+  function openEdgeDialog(edge, nodesById) {
+    if (!edge || !graph?.relation?.can_manage) return;
+    const a = nodesById.get(edge.a);
+    const b = nodesById.get(edge.b);
+    if (!a || !b) return;
+    selectedEdge = { a: edge.a, b: edge.b };
+    const layer = q("[data-relation-edge-layer]");
+    if (!layer) return;
+    q("[data-relation-edge-a]").textContent = clean(a.title, "Tanpa judul");
+    q("[data-relation-edge-b]").textContent = clean(b.title, "Tanpa judul");
+    layer.hidden = false;
+  }
+
+  async function disconnectSelectedEdge() {
+    if (!selectedEdge || !graph?.relation?.can_manage) return;
+    const button = q("[data-relation-edge-disconnect]");
+    if (button) button.disabled = true;
+    const edge = { ...selectedEdge };
+    try {
+      await NotesService.putuskanRelasiAntarCatatan(graph.relation.id, edge.a, edge.b);
+      graph.edges = (graph.edges || []).filter(item => !(
+        (item.a === edge.a && item.b === edge.b) || (item.a === edge.b && item.b === edge.a)
+      ));
+      closeEdgeDialog();
+      prepareProgressiveGraph(graph.nodes || [], graph.edges || []);
+      renderGraph();
+      requestAnimationFrame(centerMapOnGraph);
+      showToast("Hubungan diputus. Teks tautan dikembalikan menjadi teks biasa.");
+    } catch (error) {
+      console.error("[Relation Disconnect]", error);
+      if (NotesService.relationGraphSchemaBelumTerpasang?.(error)) showToast("Jalankan SQL 004N agar pemutusan hubungan aktif.");
+      else showToast(error?.message || "Hubungan belum dapat diputus.");
+    } finally {
+      if (button) button.disabled = false;
     }
   }
 
@@ -637,10 +808,33 @@
       const a = positions.get(edge.a);
       const b = positions.get(edge.b);
       if (!a || !b) return;
+      const d = curvedPath(a, b);
       const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
       path.setAttribute("class", "relation-map-line");
-      path.setAttribute("d", curvedPath(a, b));
+      path.setAttribute("d", d);
       lineLayer.appendChild(path);
+
+      if (graph.relation.can_manage) {
+        const hit = document.createElementNS("http://www.w3.org/2000/svg", "path");
+        const aNote = nodesById.get(edge.a);
+        const bNote = nodesById.get(edge.b);
+        hit.setAttribute("class", "relation-edge-hit");
+        hit.setAttribute("d", d);
+        hit.setAttribute("tabindex", "0");
+        hit.setAttribute("role", "button");
+        hit.setAttribute("aria-label", `Kelola hubungan ${clean(aNote?.title, "catatan")} dan ${clean(bNote?.title, "catatan")}`);
+        hit.addEventListener("click", event => {
+          if (performance.now() < suppressMapClickUntil) return;
+          event.stopPropagation();
+          openEdgeDialog(edge, nodesById);
+        });
+        hit.addEventListener("keydown", event => {
+          if (!["Enter", " "].includes(event.key)) return;
+          event.preventDefault();
+          openEdgeDialog(edge, nodesById);
+        });
+        lineLayer.appendChild(hit);
+      }
     });
 
     Array.from(visibleIds).forEach(id => {
@@ -676,13 +870,16 @@
         branch.textContent = `+${hiddenCount}`;
         branch.setAttribute("aria-label", `Tampilkan ${hiddenCount} cabang dari ${clean(note.title, "catatan ini")}`);
         branch.addEventListener("click", event => {
+          event.preventDefault();
           event.stopPropagation();
+          const before = hiddenCount;
           if (expanded.has(id)) expansionLimits.set(id, (expansionLimits.get(id) || 8) + 8);
           else {
             expanded.add(id);
             expansionLimits.set(id, 8);
           }
           renderGraph();
+          if (before > 0) showToast(`${Math.min(before, 8)} cabang ditampilkan.`);
         });
         wrap.appendChild(branch);
       }
@@ -715,7 +912,7 @@
   }
 
   function setScale(next) {
-    scale = Math.min(1.3, Math.max(.5, Number(next) || .78));
+    scale = clampScale(next);
     const stage = q("[data-relation-map-stage]");
     if (stage) stage.style.transform = `scale(${scale})`;
     updateCanvasSize();
