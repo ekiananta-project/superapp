@@ -1,6 +1,8 @@
 (() => {
   "use strict";
 
+  const CALENDAR_DIRTY_KEY = "ruangkitha:calendar:dirty";
+
   const notice = document.querySelector("[data-bill-notice]");
   const summary = document.querySelector("[data-bill-summary]");
   const summaryBadge = document.querySelector("[data-bill-summary-badge]");
@@ -18,6 +20,9 @@
   const nameInput = document.querySelector("[data-bill-name]");
   const amountInput = document.querySelector("[data-bill-amount]");
   const dueDateInput = document.querySelector("[data-bill-due-date]");
+  const durationSelect = document.querySelector("[data-bill-duration]");
+  const endMonthWrap = document.querySelector("[data-bill-end-month-wrap]");
+  const endMonthInput = document.querySelector("[data-bill-end-month]");
   const noteInput = document.querySelector("[data-bill-note]");
   const editInfo = document.querySelector("[data-bill-edit-info]");
   const historyInfo = document.querySelector("[data-bill-history-info]");
@@ -74,6 +79,43 @@
     return date
       ? date.toLocaleDateString("id-ID", { month: "long", year: "numeric" })
       : "bulan ini";
+  }
+
+  function markCalendarDirty() {
+    try { localStorage.setItem(CALENDAR_DIRTY_KEY, String(Date.now())); } catch {}
+  }
+
+  function monthFromDateISO(value) {
+    const match = /^(\d{4})-(\d{2})-\d{2}$/.exec(String(value || ""));
+    return match ? `${match[1]}-${match[2]}` : "";
+  }
+
+  function addMonthsToYYYYMM(value, delta) {
+    const match = /^(\d{4})-(\d{2})$/.exec(String(value || ""));
+    if (!match) return "";
+    const date = new Date(Number(match[1]), Number(match[2]) - 1 + Number(delta || 0), 1);
+    return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}`;
+  }
+
+  function syncDurationFields() {
+    const custom = durationSelect?.value === "custom";
+    if (endMonthWrap) endMonthWrap.hidden = !custom;
+    if (endMonthInput) endMonthInput.required = custom;
+  }
+
+  function selectedEndMonth(dueDate) {
+    const mode = String(durationSelect?.value || "unlimited");
+    if (mode === "unlimited") return null;
+    const startMonth = monthFromDateISO(dueDate);
+    if (!startMonth) return null;
+    if (mode === "custom") {
+      const value = String(endMonthInput?.value || "");
+      return value ? `${value}-01` : "";
+    }
+    const count = Number(mode);
+    if (!Number.isInteger(count) || count < 1) return null;
+    const end = addMonthsToYYYYMM(startMonth, count - 1);
+    return end ? `${end}-01` : null;
   }
 
   function todayISO() {
@@ -424,6 +466,9 @@
     if (nameInput) nameInput.value = item?.bill_name || "";
     if (amountInput) amountInput.value = item ? formatNumberInput(item.amount) : "";
     if (dueDateInput) dueDateInput.value = item?.due_on || "";
+    if (durationSelect) durationSelect.value = item?.ends_on_month ? "custom" : "unlimited";
+    if (endMonthInput) endMonthInput.value = item?.ends_on_month ? String(item.ends_on_month).slice(0, 7) : "";
+    syncDurationFields();
     if (noteInput) noteInput.value = item?.bill_note || "";
     if (deleteButton) deleteButton.hidden = !item;
     if (editInfo) editInfo.hidden = !item;
@@ -467,6 +512,7 @@
     const name = String(nameInput?.value || "").trim();
     const amount = Number(digits(amountInput?.value));
     const dueDate = String(dueDateInput?.value || "");
+    const endMonth = selectedEndMonth(dueDate);
     const note = String(noteInput?.value || "").trim();
 
     if (!name) {
@@ -490,6 +536,20 @@
       return;
     }
 
+    if (durationSelect?.value === "custom") {
+      if (!endMonth) {
+        show("Pilih bulan terakhir tagihan.", "error");
+        endMonthInput?.focus();
+        return;
+      }
+      const startMonth = `${monthFromDateISO(dueDate)}-01`;
+      if (endMonth < startMonth) {
+        show("Bulan terakhir tidak boleh sebelum bulan jatuh tempo pertama.", "error");
+        endMonthInput?.focus();
+        return;
+      }
+    }
+
     if (saveButton) saveButton.disabled = true;
     const wasEditing = Boolean(editingItem);
 
@@ -501,7 +561,8 @@
         name,
         amount,
         accountId: selectedCategoryId,
-        note
+        note,
+        endMonth
       });
       const editedPaidHistory = wasEditing && editingItem?.status === "paid";
       closeForm();
@@ -511,6 +572,7 @@
           : (wasEditing ? "Tagihan diperbarui." : "Tagihan ditambahkan."),
         "success"
       );
+      markCalendarDirty();
       await loadBills();
     } catch (error) {
       console.error("[Bill Save]", error);
@@ -546,6 +608,7 @@
       });
       closeForm();
       show("Tagihan dihentikan mulai periode ini.", "success");
+      markCalendarDirty();
       await loadBills();
     } catch (error) {
       console.error("[Bill Archive]", error);
@@ -681,6 +744,7 @@
         "success"
       );
       wallets = await (FinanceService.ambilSaldoDompetFresh || FinanceService.ambilSaldoDompet)(family.id);
+      markCalendarDirty();
       await loadBills();
     } catch (error) {
       console.error("[Bill Pay]", error);
@@ -744,6 +808,7 @@
     if (event.target === formLayer) closeForm();
   });
   form?.addEventListener("submit", saveBill);
+  durationSelect?.addEventListener("change", syncDurationFields);
   deleteButton?.addEventListener("click", archiveBill);
   amountInput?.addEventListener("input", () => {
     amountInput.value = formatNumberInput(amountInput.value);

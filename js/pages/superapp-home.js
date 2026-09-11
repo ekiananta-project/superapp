@@ -305,5 +305,21 @@
     }
   }
 
+  async function refreshTodayFromExternalChange() {
+    if (!activeFamilyId || document.hidden) return;
+    try { renderReminders(await loadTodayEvents(activeFamilyId)); }
+    catch (error) { console.warn("[Superapp Home Today refresh]", error); }
+  }
+
+  window.addEventListener("pageshow", event => {
+    if (event.persisted) refreshTodayFromExternalChange();
+  });
+  document.addEventListener("visibilitychange", () => {
+    if (!document.hidden) refreshTodayFromExternalChange();
+  });
+  window.addEventListener("storage", event => {
+    if (event.key === "ruangkitha:calendar:dirty") refreshTodayFromExternalChange();
+  });
+
   document.addEventListener("DOMContentLoaded", init, { once: true });
 })();

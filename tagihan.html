@@ -26,7 +26,7 @@
   <link rel="stylesheet" href="css/pages/finance-nav-v117f.css?v=20260909-e4">
   <link rel="stylesheet" href="css/pages/tagihan.css?v=20260908-4">
   <style id="ruangkitha-auth-cloak">html[data-auth-guard] body{visibility:hidden!important}</style>
-<link rel="stylesheet" href="css/pages/calendar.css?v=20260911-v200a44">
+<link rel="stylesheet" href="css/pages/calendar.css?v=20260911-v200a44a">
 </head>
 <body>
 <div class="aplikasi dengan-nav">
@@ -113,6 +113,25 @@
         <label for="billDueDate">Tanggal Jatuh Tempo</label>
         <input class="input" id="billDueDate" type="date" required data-bill-due-date>
         <small class="bill-field-help">Pilih tanggal langsung dari kalender. Untuk tagihan rutin, bulan berikutnya mengikuti tanggal yang sama; jika tanggal itu tidak ada, otomatis memakai hari terakhir bulan.</small>
+      </div>
+
+      <div class="grup-input">
+        <label for="billDuration">Durasi Tagihan</label>
+        <select class="pilih" id="billDuration" data-bill-duration>
+          <option value="unlimited">Tanpa batas</option>
+          <option value="1">1 bulan</option>
+          <option value="3">3 bulan</option>
+          <option value="6">6 bulan</option>
+          <option value="12">12 bulan</option>
+          <option value="custom">Tentukan bulan terakhir</option>
+        </select>
+        <small class="bill-field-help">Atur sampai kapan tagihan rutin dibuat. Riwayat pembayaran yang sudah ada tetap aman.</small>
+      </div>
+
+      <div class="grup-input" data-bill-end-month-wrap hidden>
+        <label for="billEndMonth">Bulan Terakhir</label>
+        <input class="input" id="billEndMonth" type="month" data-bill-end-month>
+        <small class="bill-field-help">Tagihan terakhir akan dibuat pada bulan ini.</small>
       </div>
 
       <div class="grup-input">
@@ -219,12 +238,12 @@
 <script src="js/backend/supabase.js"></script>
 <script src="js/backend/auth-service.js"></script>
 <script src="js/backend/family-service.js"></script>
-<script src="js/backend/finance-service.js?v=20260908-d4"></script>
+<script src="js/backend/finance-service.js?v=20260911-v200a44aa"></script>
 <script src="js/backend/finance-cache.js?v=20260908-d1"></script>
 <script src="js/backend/auth-router.js?v=20260909-v200a8"></script>
 <script src="js/backend/auth-guard.js?v=20260909-v200a8"></script>
-<script src="js/pages/tagihan-backend.js?v=20260908-d4"></script>
-<script src="js/pwa.js?v=20260911-v200a44"></script>
-<script src="js/pages/calendar-source-deeplink.js?v=20260911-v200a44"></script>
+<script src="js/pages/tagihan-backend.js?v=20260911-v200a44aa"></script>
+<script src="js/pwa.js?v=20260911-v200a44a"></script>
+<script src="js/pages/calendar-source-deeplink.js?v=20260911-v200a44a"></script>
 </body>
 </html>

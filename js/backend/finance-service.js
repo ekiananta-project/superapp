@@ -963,7 +963,7 @@
     if (!familyId) throw new Error("familyId wajib diisi.");
 
     const { data, error } = await client.rpc(
-      "finance_bill_list_overview",
+      "finance_bill_list_overview_v2",
       {
         p_family_id: familyId,
         p_today: today || null
@@ -1000,7 +1000,8 @@
     name,
     amount,
     accountId,
-    note = null
+    note = null,
+    endMonth = null
   } = {}) {
     if (!familyId) throw new Error("familyId wajib diisi.");
     if (!String(name || "").trim()) throw new Error("Nama tagihan wajib diisi.");
@@ -1027,8 +1028,18 @@
     }
 
     const effectiveMonth = `${match[1]}-${match[2]}-01`;
+    let normalizedEndMonth = null;
+    if (endMonth) {
+      const endMatch = /^(\d{4})-(\d{2})-01$/.exec(String(endMonth));
+      if (!endMatch) throw new Error("Bulan terakhir tagihan tidak valid.");
+      normalizedEndMonth = String(endMonth);
+      if (normalizedEndMonth < effectiveMonth) {
+        throw new Error("Bulan terakhir tidak boleh sebelum bulan jatuh tempo pertama.");
+      }
+    }
+
     const { data, error } = await client.rpc(
-      "finance_bill_save",
+      "finance_bill_save_v2",
       {
         p_family_id: familyId,
         p_bill_id: billId || null,
@@ -1037,7 +1048,8 @@
         p_amount: Math.round(nominal),
         p_due_day: day,
         p_account_id: accountId,
-        p_note: String(note || "").trim() || null
+        p_note: String(note || "").trim() || null,
+        p_ends_on_month: normalizedEndMonth
       }
     );
 

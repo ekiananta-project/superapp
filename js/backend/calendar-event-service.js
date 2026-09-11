@@ -1,4 +1,4 @@
-// RuangKitha v2.0.0a44 — shared calendar/event read layer.
+// RuangKitha v2.0.0a44a — shared calendar/event read layer.
 (() => {
   "use strict";
 
@@ -53,7 +53,7 @@
     if (!familyId) throw new Error("familyId wajib diisi.");
     const rangeStart = isoDate(start || new Date());
     const rangeEnd = isoDate(end || rangeStart);
-    const { data, error } = await client().rpc("calendar_events_for_range_v1", {
+    const { data, error } = await client().rpc("calendar_events_for_range_v2", {
       p_family_id: familyId,
       p_start: rangeStart,
       p_end: rangeEnd

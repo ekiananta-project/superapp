@@ -1,4 +1,4 @@
-const CACHE_NAME = "ruangkitha-v2.0.0a44-calendar-events-holidays";
+const CACHE_NAME = "ruangkitha-v2.0.0a44a-calendar-finance-lifecycle";
 const OFFLINE_URL = "./offline.html";
 
 const APP_FILES = [

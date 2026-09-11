@@ -1,4 +1,4 @@
-// RuangKitha v2.0.0a44 — Kalender lintas modul + tanggal merah.
+// RuangKitha v2.0.0a44a — Kalender lintas modul + tanggal merah.
 (() => {
   "use strict";
 
@@ -267,6 +267,21 @@
       renderError();
     }
   }
+
+  const refreshExternalChanges = () => {
+    if (!familyId || document.hidden) return;
+    loadMonth();
+  };
+
+  window.addEventListener("pageshow", event => {
+    if (event.persisted) refreshExternalChanges();
+  });
+  document.addEventListener("visibilitychange", () => {
+    if (!document.hidden) refreshExternalChanges();
+  });
+  window.addEventListener("storage", event => {
+    if (event.key === "ruangkitha:calendar:dirty") refreshExternalChanges();
+  });
 
   document.addEventListener("DOMContentLoaded", init, { once: true });
 })();
