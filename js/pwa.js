@@ -1,8 +1,8 @@
 (() => {
   "use strict";
 
-  const RK_DESIGN_SYSTEM_VERSION = "1.0.4";
-  const RK_BUILD_VERSION = "v2.0.0a48c";
+  const RK_DESIGN_SYSTEM_VERSION = "1.0.5";
+  const RK_BUILD_VERSION = "v2.0.0a48d";
 
   function appBaseUrl() {
     try {
@@ -68,6 +68,11 @@
     "catatan-relasi.html"
   ]);
 
+  const RK_CALENDAR_PAGES = new Set([
+    "kalender.html",
+    "notifikasi.html"
+  ]);
+
   function currentPageName() {
     try {
       const path = new URL(location.href).pathname.replace(/\/+$/, "");
@@ -110,6 +115,23 @@
           appBaseUrl()
         ).href;
         document.head.appendChild(catatan);
+      }
+      return;
+    }
+
+    if (RK_CALENDAR_PAGES.has(page)) {
+      document.documentElement.dataset.rkModule = "calendar";
+      document.documentElement.dataset.rkCalendarPage = page.replace(/\.html$/i, "");
+
+      if (!document.querySelector('link[data-ruangkitha-calendar]')) {
+        const calendar = document.createElement("link");
+        calendar.rel = "stylesheet";
+        calendar.dataset.ruangkithaCalendar = "1.0.0";
+        calendar.href = new URL(
+          `css/pages/ruangkitha-calendar-notification-v1.css?v=${RK_BUILD_VERSION}`,
+          appBaseUrl()
+        ).href;
+        document.head.appendChild(calendar);
       }
     }
   }
@@ -278,7 +300,7 @@
   if ("serviceWorker" in navigator) {
     window.addEventListener("load", async () => {
       try {
-        const registration = await navigator.serviceWorker.register("./sw.js?v=20260912-v200a48c", {
+        const registration = await navigator.serviceWorker.register("./sw.js?v=20260912-v200a48d", {
           scope: "./"
         });
 

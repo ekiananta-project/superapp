@@ -1,0 +1,727 @@
+/* ======================================================================
+   RuangKitha Calendar + Notification Design Layer v1.0.0
+   Patch: v2.0.0a48d
+
+   Visual migration only. Calendar Event Projection, notification delivery,
+   deep-links, device verification, read-state and scheduler logic are not
+   changed here.
+   ====================================================================== */
+
+html[data-rk-module="calendar"] {
+  --rk-calendar-finance: var(--rk-sage);
+  --rk-calendar-notes: var(--rk-teal);
+  --rk-calendar-human: var(--rk-peach);
+  --rk-calendar-neutral: var(--rk-beige);
+}
+
+/* ----------------------------------------------------------------------
+   Shared Calendar / Notification shell
+   ---------------------------------------------------------------------- */
+html[data-rk-module="calendar"] .superapp-shell-header {
+  margin-bottom: 16px;
+}
+
+html[data-rk-module="calendar"] .superapp-shell-header h1 {
+  font-weight: 700;
+  letter-spacing: -.025em;
+}
+
+html[data-rk-module="calendar"] .superapp-shell-back,
+html[data-rk-module="calendar"] .calendar-notification-link {
+  border-color: var(--rk-border) !important;
+  background: var(--rk-surface) !important;
+  color: var(--rk-primary) !important;
+  box-shadow: var(--rk-shadow-sm) !important;
+}
+
+html[data-rk-module="calendar"] .superapp-shell-back:active,
+html[data-rk-module="calendar"] .calendar-notification-link:active {
+  transform: scale(.97);
+}
+
+/* ----------------------------------------------------------------------
+   Calendar
+   ---------------------------------------------------------------------- */
+html[data-rk-module="calendar"][data-rk-calendar-page="kalender"] .calendar-shell-card {
+  position: relative;
+  overflow: hidden;
+  padding: 20px 18px 20px;
+  border: 1px solid var(--rk-border) !important;
+  border-radius: var(--rk-radius-xl) !important;
+  background: var(--rk-surface) !important;
+  box-shadow: var(--rk-shadow-sm) !important;
+}
+
+html[data-rk-module="calendar"][data-rk-calendar-page="kalender"] .calendar-shell-card::before {
+  content: "";
+  position: absolute;
+  inset: 0 0 auto 0;
+  height: 4px;
+  background: var(--rk-brand-gradient);
+  opacity: .88;
+}
+
+.calendar-intro-row {
+  gap: 14px !important;
+}
+
+.calendar-intro-row .shell-intro {
+  margin-bottom: 0;
+}
+
+.calendar-intro-row .shell-intro h2 {
+  margin-bottom: 5px;
+  color: var(--rk-text);
+  font-size: 19px;
+  letter-spacing: -.02em;
+}
+
+.calendar-intro-row .shell-intro p {
+  max-width: 265px;
+  color: var(--rk-text-secondary);
+  font-size: 11px;
+  line-height: 1.55;
+}
+
+.calendar-today-button {
+  min-height: 36px;
+  padding: 8px 13px !important;
+  border: 1px solid color-mix(in srgb, var(--rk-primary) 22%, var(--rk-border)) !important;
+  border-radius: var(--rk-radius-full) !important;
+  background: var(--rk-primary-soft) !important;
+  color: var(--rk-primary) !important;
+  font-size: 10px !important;
+  font-weight: 700 !important;
+  box-shadow: none !important;
+}
+
+.calendar-today-button:active {
+  transform: scale(.97);
+}
+
+.calendar-toolbar {
+  margin: 20px 0 12px !important;
+  padding: 4px 2px;
+}
+
+.calendar-toolbar h2 {
+  color: var(--rk-text);
+  font-size: 17px !important;
+  font-weight: 700;
+  letter-spacing: -.018em;
+}
+
+.calendar-toolbar button {
+  width: 38px !important;
+  height: 38px !important;
+  border: 1px solid var(--rk-border) !important;
+  border-radius: 13px !important;
+  background: var(--rk-surface-soft) !important;
+  color: var(--rk-primary) !important;
+  box-shadow: none !important;
+}
+
+.calendar-toolbar button:active {
+  transform: scale(.96);
+  background: var(--rk-primary-soft) !important;
+}
+
+.calendar-weekdays,
+.calendar-grid {
+  gap: 4px !important;
+}
+
+.calendar-weekdays span {
+  padding: 7px 0 8px;
+  color: var(--rk-text-soft) !important;
+  font-size: 9px !important;
+  font-weight: 700;
+  letter-spacing: .015em;
+}
+
+.calendar-day {
+  border-radius: 13px !important;
+  color: var(--rk-text) !important;
+  transition: background .14s ease, color .14s ease, box-shadow .14s ease, transform .12s ease;
+}
+
+.calendar-day:active {
+  transform: scale(.95);
+}
+
+.calendar-day.is-outside {
+  opacity: .28 !important;
+}
+
+.calendar-day.is-sunday:not(.is-selected),
+.calendar-day.is-holiday:not(.is-selected) {
+  color: var(--rk-danger) !important;
+}
+
+.calendar-day.is-today:not(.is-selected) {
+  background: var(--rk-primary-soft) !important;
+  color: var(--rk-primary) !important;
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--rk-primary) 22%, transparent) !important;
+  font-weight: 700;
+}
+
+.calendar-day.is-selected {
+  background: var(--rk-primary) !important;
+  color: var(--rk-on-primary) !important;
+  box-shadow: 0 8px 20px color-mix(in srgb, var(--rk-primary) 22%, transparent) !important;
+  font-weight: 800;
+}
+
+.calendar-day.is-selected .calendar-dot {
+  background: var(--rk-on-primary) !important;
+  opacity: .82;
+}
+
+.calendar-day-number {
+  font-weight: 600;
+}
+
+.calendar-dots {
+  gap: 2.5px !important;
+}
+
+.calendar-dot {
+  width: 4.5px !important;
+  height: 4.5px !important;
+  background: var(--rk-primary) !important;
+}
+
+.calendar-dot.is-finance { background: var(--rk-calendar-finance) !important; }
+.calendar-dot.is-notes { background: var(--rk-calendar-notes) !important; }
+.calendar-dot.is-calendar { background: var(--rk-calendar-human) !important; }
+.calendar-dot.is-holiday { background: var(--rk-danger) !important; }
+
+.calendar-agenda {
+  margin-top: 20px !important;
+  padding-top: 18px !important;
+  border-top: 1px solid var(--rk-border) !important;
+}
+
+.calendar-agenda-head {
+  margin-bottom: 12px !important;
+}
+
+.calendar-agenda-head small {
+  color: var(--rk-text-soft) !important;
+  font-size: 9px !important;
+  letter-spacing: .02em;
+}
+
+.calendar-agenda-head h3 {
+  color: var(--rk-text);
+  font-size: 16px !important;
+  letter-spacing: -.015em;
+}
+
+.calendar-agenda-count {
+  min-width: 32px;
+  padding: 6px 9px !important;
+  border: 1px solid var(--rk-border);
+  background: var(--rk-surface-soft) !important;
+  color: var(--rk-text-secondary) !important;
+  font-size: 9px !important;
+  text-align: center;
+}
+
+.calendar-agenda-list {
+  gap: 9px !important;
+}
+
+.calendar-agenda-card {
+  --rk-event-accent: var(--rk-primary);
+  position: relative;
+  overflow: hidden;
+  min-height: 68px;
+  padding: 11px 12px !important;
+  border: 1px solid var(--rk-border) !important;
+  border-radius: var(--rk-radius-lg) !important;
+  background: var(--rk-surface) !important;
+  color: var(--rk-text) !important;
+  box-shadow: none !important;
+}
+
+.calendar-agenda-card::before {
+  content: "";
+  position: absolute;
+  inset: 9px auto 9px 0;
+  width: 3px;
+  border-radius: 0 999px 999px 0;
+  background: var(--rk-event-accent);
+  opacity: .72;
+}
+
+.calendar-agenda-card.is-finance { --rk-event-accent: var(--rk-calendar-finance); }
+.calendar-agenda-card.is-notes { --rk-event-accent: var(--rk-calendar-notes); }
+.calendar-agenda-card.is-calendar { --rk-event-accent: var(--rk-calendar-human); }
+.calendar-agenda-card.is-holiday { --rk-event-accent: var(--rk-danger); }
+
+.calendar-agenda-card:active {
+  transform: scale(.992) !important;
+  background: var(--rk-surface-soft) !important;
+}
+
+.calendar-agenda-icon {
+  background: color-mix(in srgb, var(--rk-event-accent) 14%, var(--rk-surface)) !important;
+  color: var(--rk-event-accent) !important;
+}
+
+.calendar-agenda-card.is-notes .calendar-agenda-icon,
+.calendar-agenda-card.is-holiday .calendar-agenda-icon,
+.calendar-agenda-card.is-calendar .calendar-agenda-icon {
+  background: color-mix(in srgb, var(--rk-event-accent) 14%, var(--rk-surface)) !important;
+  color: var(--rk-event-accent) !important;
+}
+
+.calendar-agenda-source {
+  color: var(--rk-event-accent) !important;
+  font-size: 8px !important;
+  letter-spacing: .075em !important;
+}
+
+.calendar-agenda-copy strong {
+  color: var(--rk-text);
+  font-size: 12px !important;
+}
+
+.calendar-agenda-meta,
+.calendar-agenda-chevron {
+  color: var(--rk-text-secondary) !important;
+}
+
+.calendar-agenda-empty {
+  padding: 16px 13px !important;
+  border: 1px dashed color-mix(in srgb, var(--rk-primary) 24%, var(--rk-border));
+  border-radius: var(--rk-radius-lg) !important;
+  background: var(--rk-surface-soft) !important;
+  color: var(--rk-text-secondary) !important;
+}
+
+.calendar-agenda-empty > span {
+  background: var(--rk-primary-soft) !important;
+  color: var(--rk-primary) !important;
+}
+
+.calendar-agenda-empty strong {
+  color: var(--rk-text) !important;
+}
+
+.calendar-agenda-empty p {
+  color: var(--rk-text-secondary) !important;
+}
+
+.calendar-agenda-empty.is-error {
+  border-color: color-mix(in srgb, var(--rk-danger) 30%, var(--rk-border));
+}
+
+.calendar-agenda-empty.is-error > span {
+  background: var(--rk-danger-soft) !important;
+  color: var(--rk-danger) !important;
+}
+
+.calendar-deeplink-target {
+  outline: 2px solid var(--rk-primary) !important;
+  outline-offset: 3px !important;
+  box-shadow: 0 0 0 6px color-mix(in srgb, var(--rk-primary) 12%, transparent) !important;
+}
+
+.calendar-notification-link {
+  position: relative;
+  border-radius: 14px !important;
+}
+
+.calendar-notification-link [data-notification-badge] {
+  top: -5px !important;
+  right: -5px !important;
+  min-width: 17px !important;
+  height: 17px !important;
+  padding: 0 4px !important;
+  border: 2px solid var(--rk-surface) !important;
+  background: var(--rk-accent) !important;
+  color: var(--rk-on-accent) !important;
+  font-size: 7px !important;
+  line-height: 13px !important;
+}
+
+/* ----------------------------------------------------------------------
+   Notification Center
+   ---------------------------------------------------------------------- */
+html[data-rk-module="calendar"][data-rk-calendar-page="notifikasi"] .notification-page main {
+  gap: 12px !important;
+  padding-bottom: 34px !important;
+}
+
+html[data-rk-module="calendar"][data-rk-calendar-page="notifikasi"] .notification-page .shell-card {
+  border: 1px solid var(--rk-border) !important;
+  border-radius: var(--rk-radius-xl) !important;
+  background: var(--rk-surface) !important;
+  box-shadow: var(--rk-shadow-sm) !important;
+}
+
+.notification-intro-card {
+  position: relative;
+  padding: 17px !important;
+  background:
+    linear-gradient(135deg,
+      color-mix(in srgb, var(--rk-primary) 8%, var(--rk-surface)) 0%,
+      var(--rk-surface) 56%,
+      color-mix(in srgb, var(--rk-accent) 7%, var(--rk-surface)) 100%) !important;
+}
+
+.notification-intro-card::before {
+  content: "";
+  position: absolute;
+  inset: 0 0 auto 0;
+  height: 4px;
+  background: var(--rk-brand-gradient);
+  opacity: .88;
+}
+
+.notification-intro-icon,
+.device-health-icon {
+  width: 48px !important;
+  height: 48px !important;
+  border-radius: 16px !important;
+}
+
+.notification-intro-icon {
+  background: var(--rk-primary-soft) !important;
+  color: var(--rk-primary) !important;
+}
+
+.notification-intro-copy h2,
+.device-health-copy h2,
+.notification-inbox-head h2 {
+  color: var(--rk-text) !important;
+  letter-spacing: -.018em;
+}
+
+.notification-intro-copy p,
+.device-health-copy p,
+.notification-inbox-head p,
+.notification-empty p,
+.notification-safety-note,
+.notification-item-body,
+.notification-time,
+.notification-urgency {
+  color: var(--rk-text-secondary) !important;
+}
+
+.device-health-card,
+.notification-inbox-card {
+  padding: 17px !important;
+}
+
+.device-health-card[data-state="inactive"] .device-health-icon {
+  background: var(--rk-warning-soft) !important;
+  color: var(--rk-warning) !important;
+}
+
+.device-health-card[data-state="active"] .device-health-icon {
+  background: var(--rk-success-soft) !important;
+  color: var(--rk-success) !important;
+}
+
+.device-health-card[data-state="blocked"] .device-health-icon,
+.device-health-card[data-state="unsupported"] .device-health-icon {
+  background: var(--rk-danger-soft) !important;
+  color: var(--rk-danger) !important;
+}
+
+.device-health-copy small,
+.notification-inbox-head small,
+.notification-group-title {
+  color: var(--rk-text-soft) !important;
+}
+
+.device-health-chip {
+  border: 1px solid transparent;
+  background: var(--rk-surface-soft) !important;
+  color: var(--rk-text-secondary) !important;
+}
+
+.device-health-chip.is-device {
+  color: var(--rk-text) !important;
+}
+
+.device-health-chip.is-success {
+  background: var(--rk-success-soft) !important;
+  color: var(--rk-success) !important;
+}
+
+.device-health-chip.is-warning {
+  background: var(--rk-warning-soft) !important;
+  color: var(--rk-warning) !important;
+}
+
+.device-health-chip.is-danger {
+  background: var(--rk-danger-soft) !important;
+  color: var(--rk-danger) !important;
+}
+
+.notification-primary-button {
+  min-height: 42px !important;
+  border-radius: var(--rk-radius-md) !important;
+  background: var(--rk-primary) !important;
+  color: var(--rk-on-primary) !important;
+  box-shadow: 0 8px 20px color-mix(in srgb, var(--rk-primary) 17%, transparent);
+}
+
+.notification-secondary-button {
+  min-height: 42px !important;
+  border: 1px solid var(--rk-border) !important;
+  border-radius: var(--rk-radius-md) !important;
+  background: var(--rk-surface-soft) !important;
+  color: var(--rk-text) !important;
+}
+
+.notification-primary-button:active,
+.notification-secondary-button:active,
+.notification-mark-all:active,
+.notification-filter-row button:active {
+  transform: scale(.98);
+}
+
+.notification-link-button {
+  color: var(--rk-text-secondary) !important;
+}
+
+.device-help-copy,
+.notification-page-status {
+  border: 1px solid var(--rk-border);
+  background: var(--rk-surface-soft) !important;
+  color: var(--rk-text-secondary) !important;
+}
+
+.notification-page-status[data-tone="success"] {
+  border-color: color-mix(in srgb, var(--rk-success) 24%, var(--rk-border));
+  background: var(--rk-success-soft) !important;
+  color: var(--rk-success) !important;
+}
+
+.notification-page-status[data-tone="error"] {
+  border-color: color-mix(in srgb, var(--rk-danger) 24%, var(--rk-border));
+  background: var(--rk-danger-soft) !important;
+  color: var(--rk-danger) !important;
+}
+
+.notification-mark-all {
+  border: 1px solid color-mix(in srgb, var(--rk-primary) 18%, var(--rk-border)) !important;
+  background: var(--rk-primary-soft) !important;
+  color: var(--rk-primary) !important;
+}
+
+.notification-filter-row {
+  gap: 7px !important;
+  margin: 14px 0 9px !important;
+}
+
+.notification-filter-row button {
+  border: 1px solid transparent !important;
+  background: var(--rk-surface-soft) !important;
+  color: var(--rk-text-secondary) !important;
+}
+
+.notification-filter-row button.is-active {
+  border-color: color-mix(in srgb, var(--rk-primary) 18%, transparent) !important;
+  background: var(--rk-primary) !important;
+  color: var(--rk-on-primary) !important;
+  box-shadow: 0 7px 16px color-mix(in srgb, var(--rk-primary) 15%, transparent);
+}
+
+.notification-list {
+  gap: 9px !important;
+}
+
+.notification-item {
+  --rk-notification-accent: var(--rk-primary);
+  overflow: hidden;
+  min-height: 78px !important;
+  border: 1px solid var(--rk-border) !important;
+  border-radius: var(--rk-radius-lg) !important;
+  background: var(--rk-surface) !important;
+  color: var(--rk-text) !important;
+  box-shadow: none !important;
+}
+
+.notification-item::before {
+  content: "";
+  position: absolute;
+  inset: 10px auto 10px 0;
+  width: 3px;
+  border-radius: 0 999px 999px 0;
+  background: var(--rk-notification-accent);
+  opacity: .68;
+}
+
+.notification-item.is-finance { --rk-notification-accent: var(--rk-sage); }
+.notification-item.is-notes { --rk-notification-accent: var(--rk-teal); }
+.notification-item.is-calendar { --rk-notification-accent: var(--rk-peach); }
+.notification-item.is-documents { --rk-notification-accent: var(--rk-sage); }
+.notification-item.is-maintenance { --rk-notification-accent: var(--rk-teal); }
+
+.notification-item.is-unread {
+  border-color: color-mix(in srgb, var(--rk-notification-accent) 30%, var(--rk-border)) !important;
+  background: color-mix(in srgb, var(--rk-notification-accent) 4%, var(--rk-surface)) !important;
+}
+
+.notification-item.is-read {
+  opacity: .78;
+}
+
+.notification-item-icon {
+  background: color-mix(in srgb, var(--rk-notification-accent) 14%, var(--rk-surface)) !important;
+  color: var(--rk-notification-accent) !important;
+}
+
+.notification-item.is-notes .notification-item-icon,
+.notification-item.is-finance .notification-item-icon,
+.notification-item.is-documents .notification-item-icon,
+.notification-item.is-maintenance .notification-item-icon,
+.notification-item.is-calendar .notification-item-icon {
+  background: color-mix(in srgb, var(--rk-notification-accent) 14%, var(--rk-surface)) !important;
+  color: var(--rk-notification-accent) !important;
+}
+
+.notification-source-pill {
+  background: color-mix(in srgb, var(--rk-notification-accent) 11%, var(--rk-surface)) !important;
+  color: var(--rk-notification-accent) !important;
+}
+
+.notification-item.is-notes .notification-source-pill,
+.notification-item.is-finance .notification-source-pill,
+.notification-item.is-documents .notification-source-pill,
+.notification-item.is-maintenance .notification-source-pill,
+.notification-item.is-calendar .notification-source-pill {
+  background: color-mix(in srgb, var(--rk-notification-accent) 11%, var(--rk-surface)) !important;
+  color: var(--rk-notification-accent) !important;
+}
+
+.notification-new-pill {
+  background: var(--rk-primary-soft) !important;
+  color: var(--rk-primary) !important;
+}
+
+.notification-item-copy strong {
+  color: var(--rk-text) !important;
+}
+
+.notification-item.is-unread .notification-urgency {
+  color: var(--rk-notification-accent) !important;
+}
+
+.notification-item-chevron {
+  color: var(--rk-text-soft) !important;
+}
+
+.notification-open-pill {
+  border: 1px solid color-mix(in srgb, var(--rk-notification-accent) 18%, transparent);
+  background: color-mix(in srgb, var(--rk-notification-accent) 10%, var(--rk-surface)) !important;
+  color: var(--rk-notification-accent) !important;
+}
+
+.notification-item.is-read .notification-open-pill {
+  border-color: var(--rk-border);
+  background: var(--rk-surface-soft) !important;
+  color: var(--rk-text-secondary) !important;
+}
+
+.notification-empty {
+  border: 1px dashed color-mix(in srgb, var(--rk-primary) 24%, var(--rk-border));
+  border-radius: var(--rk-radius-lg) !important;
+  background: var(--rk-surface-soft) !important;
+}
+
+.notification-empty > span {
+  background: var(--rk-primary-soft) !important;
+  color: var(--rk-primary) !important;
+}
+
+.notification-empty strong {
+  color: var(--rk-text) !important;
+}
+
+.notification-safety-note {
+  margin-top: 2px;
+  padding: 12px 13px !important;
+  border: 1px solid var(--rk-border);
+  border-radius: var(--rk-radius-lg);
+  background: var(--rk-surface-soft);
+}
+
+.notification-safety-note ion-icon {
+  color: var(--rk-primary) !important;
+}
+
+/* ----------------------------------------------------------------------
+   Dark mode refinements: warm night surfaces, not neon black.
+   ---------------------------------------------------------------------- */
+html[data-theme="dark"][data-rk-module="calendar"] .calendar-toolbar button,
+html[data-theme="dark"][data-rk-module="calendar"] .calendar-agenda-card,
+html[data-theme="dark"][data-rk-module="calendar"] .notification-secondary-button,
+html[data-theme="dark"][data-rk-module="calendar"] .notification-item {
+  background: var(--rk-surface) !important;
+}
+
+html[data-theme="dark"][data-rk-module="calendar"] .calendar-day.is-today:not(.is-selected) {
+  background: color-mix(in srgb, var(--rk-primary) 18%, var(--rk-surface)) !important;
+}
+
+html[data-theme="dark"][data-rk-module="calendar"] .calendar-agenda-icon,
+html[data-theme="dark"][data-rk-module="calendar"] .notification-item-icon {
+  background: color-mix(in srgb, var(--rk-event-accent, var(--rk-notification-accent, var(--rk-primary))) 18%, var(--rk-surface)) !important;
+}
+
+html[data-theme="dark"][data-rk-module="calendar"] .notification-item.is-unread {
+  background: color-mix(in srgb, var(--rk-notification-accent) 7%, var(--rk-surface)) !important;
+}
+
+html[data-theme="dark"][data-rk-module="calendar"] .notification-intro-card {
+  background:
+    linear-gradient(135deg,
+      color-mix(in srgb, var(--rk-primary) 10%, var(--rk-surface)) 0%,
+      var(--rk-surface) 56%,
+      color-mix(in srgb, var(--rk-accent) 8%, var(--rk-surface)) 100%) !important;
+}
+
+/* Compact Android widths ------------------------------------------------ */
+@media (max-width: 390px) {
+  html[data-rk-module="calendar"][data-rk-calendar-page="kalender"] .calendar-shell-card {
+    padding-left: 15px;
+    padding-right: 15px;
+  }
+
+  .calendar-intro-row .shell-intro p {
+    max-width: 225px;
+  }
+
+  .calendar-agenda-card {
+    padding-left: 11px !important;
+  }
+
+  .notification-intro-card,
+  .device-health-card,
+  .notification-inbox-card {
+    padding: 15px !important;
+  }
+}
+
+@media (max-width: 360px) {
+  .calendar-intro-row {
+    align-items: flex-start;
+  }
+
+  .calendar-today-button {
+    min-height: 34px;
+    padding-inline: 10px !important;
+  }
+
+  .calendar-weekdays,
+  .calendar-grid {
+    gap: 3px !important;
+  }
+}
