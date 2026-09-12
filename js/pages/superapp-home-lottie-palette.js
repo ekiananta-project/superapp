@@ -14,12 +14,14 @@
       ink: "#465049"
     },
     dark: {
-      sage: "#7FA58E",
-      teal: "#6FA8A1",
-      peach: "#E7A18E",
-      beige: "#D8C8B4",
-      cream: "#F1EADF",
-      ink: "#D8C8B4"
+      /* Dark mode needs a little more chroma and luminance than the
+         general UI tokens because this artwork sits on a deep surface. */
+      sage: "#91BDA1",
+      teal: "#7FC4BB",
+      peach: "#F2A58E",
+      beige: "#E3CFB8",
+      cream: "#F7EEDF",
+      ink: "#60766A"
     }
   };
 
@@ -116,9 +118,19 @@
     const p = PALETTES[theme];
 
     if (s < .10) {
-      if (l < .24) return p.ink;
-      if (l > .88) return theme === "dark" ? mix(p.cream, p.beige, .28) : p.cream;
-      return p.beige;
+      if (l < .24) {
+        return theme === "dark"
+          ? mix(p.sage, p.ink, .32)
+          : p.ink;
+      }
+      if (l > .88) {
+        return theme === "dark"
+          ? mix(p.cream, p.beige, .12)
+          : p.cream;
+      }
+      return theme === "dark"
+        ? mix(p.beige, p.cream, .18)
+        : p.beige;
     }
 
     let base;
@@ -127,9 +139,9 @@
     else if (h >= 285 || h < 42) base = p.peach;
     else base = p.beige;
 
-    if (l < .28) return mix(base, p.ink, .42);
-    if (l > .78) return mix(base, p.cream, theme === "dark" ? .34 : .46);
-    if (l > .62) return mix(base, p.cream, .18);
+    if (l < .28) return mix(base, p.ink, theme === "dark" ? .24 : .42);
+    if (l > .78) return mix(base, p.cream, theme === "dark" ? .18 : .46);
+    if (l > .62) return mix(base, p.cream, theme === "dark" ? .10 : .18);
     return base;
   }
 
@@ -181,7 +193,7 @@
 
     host.querySelectorAll("svg image").forEach(image => {
       image.style.filter = theme === "dark"
-        ? "saturate(.62) sepia(.10) brightness(.88) contrast(.96)"
+        ? "saturate(.92) sepia(.06) brightness(1.05) contrast(1.02)"
         : "saturate(.72) sepia(.08) brightness(1.02) contrast(.96)";
     });
 

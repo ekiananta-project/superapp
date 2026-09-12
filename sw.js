@@ -1,4 +1,4 @@
-const CACHE_NAME = "ruangkitha-v2.0.0a48b2-today-palette-gesture-scope";
+const CACHE_NAME = "ruangkitha-v2.0.0a48b3-today-palette-gesture-scope";
 const OFFLINE_URL = "./offline.html";
 
 const APP_FILES = [
