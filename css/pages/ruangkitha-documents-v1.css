@@ -1,4 +1,4 @@
-/* RuangKitha v2.0.0a50a — Documents UX/IA V1 */
+/* RuangKitha v2.0.0a50a1 — Documents UX Polish V1 (on a50a foundation) */
 .dokumen-app{min-height:100dvh;background:var(--rk-bg,var(--warna-latar,#f7f4ee));padding-bottom:max(92px,env(safe-area-inset-bottom));}
 .dokumen-header{grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);}
 .dokumen-header h1{font-size:17px;margin:0;text-align:center;}
@@ -44,3 +44,119 @@ html[data-theme="dark"] .dokumen-vault-compact,html[data-theme="dark"] .dokumen-
 html[data-theme="dark"] .dokumen-segmented input:checked+span{background:#202620;box-shadow:none}
 
 @media (max-width:360px){.dokumen-tabs{grid-template-columns:1fr 1.28fr 1fr}.dokumen-tab{font-size:9px}.dokumen-vault-copy span{max-width:180px}.dokumen-fab{right:16px}}
+
+
+/* ------------------------------------------------------------------
+   a50a1 — Documents UX Polish V1
+   - standard RuangKitha module back button
+   - actionable Security Vault status
+   - custom searchable single-select document type picker
+   ------------------------------------------------------------------ */
+.dokumen-back{
+  min-height:42px;
+  padding:0 10px;
+  border:1px solid var(--rk-border,var(--color-border,#e0e4e1));
+  border-radius:999px;
+  background:var(--rk-surface-soft,var(--color-surface-soft,#eef1ef));
+  color:var(--rk-primary,var(--color-primary,#159447));
+  font-size:11.5px;
+  font-weight:700;
+  box-shadow:var(--rk-shadow-sm,var(--shadow-sm,0 5px 16px rgba(20,40,28,.05)));
+}
+.dokumen-back:focus-visible,
+.dokumen-vault-badge:focus-visible,
+.dokumen-type-trigger:focus-visible,
+.dokumen-type-option:focus-visible,
+.dokumen-type-custom:focus-visible{
+  outline:2px solid color-mix(in srgb,var(--rk-primary,#6f9984) 72%,transparent);
+  outline-offset:2px;
+}
+.dokumen-back:active{transform:scale(.98)}
+
+.dokumen-vault-badge{
+  border:0;
+  display:inline-flex;
+  align-items:center;
+  gap:3px;
+  text-decoration:none;
+  cursor:pointer;
+  transition:transform .16s ease,background .16s ease;
+}
+.dokumen-vault-badge ion-icon{font-size:12px;flex:0 0 auto}
+.dokumen-vault-badge:active{transform:scale(.97)}
+
+.dokumen-type-trigger{
+  width:100%;
+  min-height:46px;
+  box-sizing:border-box;
+  display:grid;
+  grid-template-columns:minmax(0,1fr) auto;
+  align-items:center;
+  gap:10px;
+  padding:0 13px;
+  border:1px solid var(--rk-border,var(--color-border,#e0e4e1));
+  border-radius:14px;
+  background:var(--rk-surface,var(--color-surface,#fff));
+  color:var(--rk-text,var(--color-text,#252a27));
+  font:inherit;
+  text-align:left;
+  cursor:pointer;
+}
+.dokumen-type-trigger>span{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:11px;font-weight:600}
+.dokumen-type-trigger>span.is-placeholder{color:var(--rk-text-tertiary,var(--warna-teks-sekunder,#8a918d));font-weight:500}
+.dokumen-type-trigger ion-icon{font-size:18px;color:var(--rk-text-secondary,var(--warna-teks-sekunder,#777e79))}
+
+.dokumen-type-picker-layer{z-index:2520}
+.dokumen-type-picker-sheet{padding-bottom:max(18px,env(safe-area-inset-bottom));max-height:min(82dvh,690px);overflow:hidden}
+.dokumen-type-picker-body{padding:2px 16px 16px;display:grid;gap:12px}
+.dokumen-type-search{
+  min-height:46px;
+  display:grid;
+  grid-template-columns:auto minmax(0,1fr);
+  align-items:center;
+  gap:9px;
+  padding:0 13px;
+  border:1px solid var(--rk-border,var(--color-border,#e0e4e1));
+  border-radius:14px;
+  background:var(--rk-surface-soft,var(--color-surface-soft,#eef1ef));
+}
+.dokumen-type-search ion-icon{font-size:18px;color:var(--rk-text-secondary,var(--warna-teks-sekunder,#777e79))}
+.dokumen-type-search input{width:100%;min-width:0;border:0;outline:0;background:transparent;color:var(--rk-text,var(--color-text,#252a27));font:inherit;font-size:11px}
+.dokumen-type-search input::placeholder{color:var(--rk-text-tertiary,var(--warna-teks-sekunder,#8b918d))}
+.dokumen-type-list{max-height:min(54dvh,470px);overflow:auto;overscroll-behavior:contain;padding:1px 2px 4px;scrollbar-width:thin;scrollbar-color:color-mix(in srgb,var(--rk-primary,#6f9984) 35%,transparent) transparent}
+.dokumen-type-group{display:grid;gap:4px;padding:4px 0 9px}
+.dokumen-type-group-title{margin:6px 8px 4px;font-size:8.5px;font-weight:800;letter-spacing:.075em;text-transform:uppercase;color:var(--rk-text-secondary,var(--warna-teks-sekunder,#777e79))}
+.dokumen-type-option,.dokumen-type-custom{
+  width:100%;
+  min-height:43px;
+  border:0;
+  border-radius:12px;
+  padding:9px 10px;
+  display:grid;
+  grid-template-columns:minmax(0,1fr) auto;
+  align-items:center;
+  gap:10px;
+  background:transparent;
+  color:var(--rk-text,var(--color-text,#252a27));
+  font:inherit;
+  font-size:10.5px;
+  font-weight:650;
+  text-align:left;
+  cursor:pointer;
+}
+.dokumen-type-option:hover,.dokumen-type-custom:hover{background:var(--rk-surface-soft,var(--color-surface-soft,#eef1ef))}
+.dokumen-type-option.is-selected{background:var(--rk-primary-soft,rgba(80,130,101,.10));color:var(--rk-primary,#557d68)}
+.dokumen-type-option ion-icon,.dokumen-type-custom ion-icon{font-size:17px;color:var(--rk-primary,#557d68)}
+.dokumen-type-custom{margin-top:4px;border:1px dashed color-mix(in srgb,var(--rk-primary,#557d68) 28%,var(--rk-border,#dfe4e0));background:color-mix(in srgb,var(--rk-primary,#557d68) 5%,transparent);color:var(--rk-primary,#557d68)}
+.dokumen-type-empty{margin:0;padding:20px 12px;text-align:center;font-size:9.5px;line-height:1.5;color:var(--rk-text-secondary,var(--warna-teks-sekunder,#777e79))}
+
+html[data-theme="dark"] .dokumen-back,
+html[data-theme="dark"] .dokumen-type-trigger,
+html[data-theme="dark"] .dokumen-type-search{background:var(--rk-surface,var(--warna-kartu,#181c19));border-color:rgba(223,232,226,.10)}
+html[data-theme="dark"] .dokumen-type-option:hover,
+html[data-theme="dark"] .dokumen-type-custom:hover{background:rgba(255,255,255,.055)}
+
+@media (max-width:350px){
+  .dokumen-back{padding:0 8px;font-size:10px;gap:3px}
+  .dokumen-back ion-icon{font-size:18px}
+}

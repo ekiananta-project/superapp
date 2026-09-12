@@ -26,7 +26,7 @@
   <link rel="stylesheet" href="css/theme.css">
   <link rel="stylesheet" href="css/ruangkitha-design-system-v1.css?v=v2.0.0a50a" data-ruangkitha-design-system="1.0.7">
   <link rel="stylesheet" href="css/ruangkitha-shell-v1.css?v=v2.0.0a50a" data-ruangkitha-shell="1.0.7">
-  <link rel="stylesheet" href="css/pages/ruangkitha-documents-v1.css?v=20260912-v200a50a">
+  <link rel="stylesheet" href="css/pages/ruangkitha-documents-v1.css?v=20260912-v200a50a1">
   <style id="ruangkitha-auth-cloak">html[data-auth-guard] body{visibility:hidden!important}</style>
 </head>
 <body>
@@ -47,7 +47,10 @@
         <strong>Security Vault</strong>
         <span data-doc-vault-copy>Lampiran aman hanya dibuka saat diperlukan.</span>
       </div>
-      <span class="dokumen-vault-badge" data-doc-vault-badge>Memuat</span>
+      <a class="dokumen-vault-badge" data-doc-vault-action data-state="loading" href="keamanan.html#perangkat-sesi" aria-label="Buka Perangkat dan Sesi">
+        <span data-doc-vault-badge>Memuat</span>
+        <ion-icon name="chevron-forward-outline" aria-hidden="true"></ion-icon>
+      </a>
     </section>
 
     <nav class="dokumen-tabs" aria-label="Area dokumen">
@@ -95,22 +98,12 @@
       </div>
 
       <div class="dokumen-field">
-        <label for="doc-type">Jenis dokumen</label>
-        <input id="doc-type" class="input" data-doc-type list="doc-type-options" maxlength="80" autocomplete="off" placeholder="Pilih atau tulis jenis dokumen" required>
-        <datalist id="doc-type-options">
-          <option value="KTP"></option>
-          <option value="Kartu Keluarga"></option>
-          <option value="SIM"></option>
-          <option value="Paspor"></option>
-          <option value="STNK"></option>
-          <option value="BPKB"></option>
-          <option value="Sertifikat"></option>
-          <option value="PBB"></option>
-          <option value="Ijazah"></option>
-          <option value="Kartu BPJS"></option>
-          <option value="Dokumen kesehatan"></option>
-          <option value="Lainnya"></option>
-        </datalist>
+        <label for="doc-type-trigger">Jenis dokumen</label>
+        <button id="doc-type-trigger" class="dokumen-type-trigger" type="button" data-doc-type-trigger aria-haspopup="dialog" aria-controls="doc-type-picker">
+          <span class="is-placeholder" data-doc-type-label>Pilih jenis dokumen</span>
+          <ion-icon name="chevron-forward-outline" aria-hidden="true"></ion-icon>
+        </button>
+        <input id="doc-type" data-doc-type type="hidden">
       </div>
 
       <fieldset class="dokumen-field dokumen-scope-field">
@@ -162,6 +155,27 @@
       <p class="dokumen-form-message" data-doc-form-message role="alert" hidden></p>
       <button class="tombol-utama dokumen-save" type="submit" data-doc-save>Simpan</button>
     </form>
+  </section>
+</div>
+
+<!-- Single-select document type picker. Custom types stay available without native browser dropdown UI. -->
+<div class="lapisan dokumen-type-picker-layer" data-doc-type-layer hidden>
+  <section id="doc-type-picker" class="bottom-sheet dokumen-type-picker-sheet" role="dialog" aria-modal="true" aria-labelledby="doc-type-picker-title">
+    <div class="sheet-handle"></div>
+    <div class="sheet-header dokumen-sheet-header">
+      <div>
+        <h2 id="doc-type-picker-title">Pilih jenis dokumen</h2>
+        <p class="sheet-subjudul">Pilih yang tersedia atau tulis jenis dokumenmu sendiri.</p>
+      </div>
+      <button class="tombol-ikon" type="button" data-doc-type-close aria-label="Tutup"><ion-icon name="close-outline"></ion-icon></button>
+    </div>
+    <div class="dokumen-type-picker-body">
+      <label class="dokumen-type-search" for="doc-type-search">
+        <ion-icon name="search-outline" aria-hidden="true"></ion-icon>
+        <input id="doc-type-search" data-doc-type-search type="search" maxlength="80" autocomplete="off" placeholder="Cari atau tulis jenis dokumen...">
+      </label>
+      <div class="dokumen-type-list" data-doc-type-list></div>
+    </div>
   </section>
 </div>
 
@@ -236,7 +250,7 @@
 <script src="js/security/ruangkitha-trusted-device.js?v=20260912-v200a49c"></script>
 <script src="js/security/ruangkitha-documents-crypto.js?v=20260912-v200a50a"></script>
 <script src="js/backend/documents-service.js?v=20260912-v200a50a"></script>
-<script src="js/pages/dokumen.js?v=20260912-v200a50a"></script>
+<script src="js/pages/dokumen.js?v=20260912-v200a50a1"></script>
 <script src="js/pwa.js?v=20260912-v200a49d"></script>
 </body>
 </html>

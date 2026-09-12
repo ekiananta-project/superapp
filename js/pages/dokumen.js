@@ -1,4 +1,4 @@
-/* RuangKitha v2.0.0a50a — Documents UX/IA V1 */
+/* RuangKitha v2.0.0a50a1 — Documents UX Polish V1 (on a50a foundation) */
 (() => {
   "use strict";
 
@@ -15,6 +15,7 @@
   const message = q("[data-doc-message]");
   const addButton = q("[data-doc-add]");
   const vaultCopy = q("[data-doc-vault-copy]");
+  const vaultAction = q("[data-doc-vault-action]");
   const vaultBadge = q("[data-doc-vault-badge]");
   const tabs = qa("[data-doc-view]");
 
@@ -24,6 +25,12 @@
   const formTitle = q("[data-doc-form-title]");
   const formName = q("[data-doc-name]");
   const formType = q("[data-doc-type]");
+  const typeTrigger = q("[data-doc-type-trigger]");
+  const typeLabel = q("[data-doc-type-label]");
+  const typeLayer = q("[data-doc-type-layer]");
+  const typeClose = q("[data-doc-type-close]");
+  const typeSearch = q("[data-doc-type-search]");
+  const typeList = q("[data-doc-type-list]");
   const scopeFamily = q("[data-doc-scope-family]");
   const scopePrivate = q("[data-doc-scope-private]");
   const expiryToggle = q("[data-doc-expiry-toggle]");
@@ -69,6 +76,15 @@
   let busy = false;
   let pendingUnlockAction = null;
 
+  const DOCUMENT_TYPE_GROUPS = [
+    { label: "Identitas", items: ["KTP", "Kartu Keluarga", "SIM", "Paspor"] },
+    { label: "Kendaraan", items: ["STNK", "BPKB"] },
+    { label: "Rumah & Properti", items: ["Sertifikat", "PBB"] },
+    { label: "Pendidikan", items: ["Ijazah", "Sertifikat pendidikan"] },
+    { label: "Kesehatan", items: ["Kartu kesehatan", "Dokumen kesehatan"] }
+  ];
+  const DOCUMENT_TYPES = DOCUMENT_TYPE_GROUPS.flatMap((group) => group.items);
+
   function ion(name) {
     const el = document.createElement("ion-icon");
     el.name = name;
@@ -89,7 +105,8 @@
 
   function setVaultBadge(text, state = "") {
     vaultBadge.textContent = text;
-    vaultBadge.dataset.state = state;
+    vaultAction.dataset.state = state;
+    vaultAction.setAttribute("aria-label", `${text}. Buka Perangkat dan Sesi`);
   }
 
   function setState(iconName, titleText, copyText, action = null) {
@@ -293,6 +310,107 @@
     await loadRecords();
   }
 
+  function normalizeTypeValue(value) {
+    return String(value || "").trim().replace(/\s+/g, " ").slice(0, 80);
+  }
+
+  function setTypeValue(value) {
+    const clean = normalizeTypeValue(value);
+    formType.value = clean;
+    typeLabel.textContent = clean || "Pilih jenis dokumen";
+    typeLabel.classList.toggle("is-placeholder", !clean);
+  }
+
+  function makeTypeButton(value) {
+    const button = document.createElement("button");
+    button.type = "button";
+    button.className = "dokumen-type-option";
+    if (normalizeTypeValue(formType.value).toLocaleLowerCase("id-ID") === value.toLocaleLowerCase("id-ID")) {
+      button.classList.add("is-selected");
+    }
+    const label = document.createElement("span");
+    label.textContent = value;
+    const marker = ion(button.classList.contains("is-selected") ? "checkmark-circle-outline" : "chevron-forward-outline");
+    button.append(label, marker);
+    button.addEventListener("click", () => {
+      setTypeValue(value);
+      closeTypePicker();
+      typeTrigger.focus();
+    });
+    return button;
+  }
+
+  function renderTypePicker() {
+    const query = normalizeTypeValue(typeSearch.value);
+    const needle = query.toLocaleLowerCase("id-ID");
+    typeList.replaceChildren();
+    let visibleCount = 0;
+
+    DOCUMENT_TYPE_GROUPS.forEach((group) => {
+      const items = needle
+        ? group.items.filter((item) => item.toLocaleLowerCase("id-ID").includes(needle))
+        : group.items;
+      if (!items.length) return;
+      visibleCount += items.length;
+      const section = document.createElement("section");
+      section.className = "dokumen-type-group";
+      const heading = document.createElement("h3");
+      heading.className = "dokumen-type-group-title";
+      heading.textContent = group.label;
+      section.appendChild(heading);
+      items.forEach((item) => section.appendChild(makeTypeButton(item)));
+      typeList.appendChild(section);
+    });
+
+    const exactMatch = DOCUMENT_TYPES.some((item) => item.toLocaleLowerCase("id-ID") === needle);
+    if (query && !exactMatch) {
+      const custom = document.createElement("button");
+      custom.type = "button";
+      custom.className = "dokumen-type-custom";
+      const label = document.createElement("span");
+      label.textContent = `Gunakan “${query}”`;
+      custom.append(label, ion("add-circle-outline"));
+      custom.addEventListener("click", () => {
+        setTypeValue(query);
+        closeTypePicker();
+        typeTrigger.focus();
+      });
+      typeList.appendChild(custom);
+    } else if (!query) {
+      const custom = document.createElement("button");
+      custom.type = "button";
+      custom.className = "dokumen-type-custom";
+      const label = document.createElement("span");
+      label.textContent = "Jenis lainnya…";
+      custom.append(label, ion("create-outline"));
+      custom.addEventListener("click", () => {
+        typeSearch.focus();
+        typeSearch.placeholder = "Tulis jenis dokumen...";
+      });
+      typeList.appendChild(custom);
+    }
+
+    if (!visibleCount && !query) {
+      const empty = document.createElement("p");
+      empty.className = "dokumen-type-empty";
+      empty.textContent = "Belum ada jenis dokumen bawaan.";
+      typeList.appendChild(empty);
+    }
+  }
+
+  function openTypePicker() {
+    typeSearch.value = "";
+    typeSearch.placeholder = "Cari atau tulis jenis dokumen...";
+    renderTypePicker();
+    typeLayer.hidden = false;
+    setTimeout(() => typeSearch.focus(), 70);
+  }
+
+  function closeTypePicker() {
+    typeLayer.hidden = true;
+    typeSearch.value = "";
+  }
+
   function setExpiryVisibility(enabled) {
     expiryToggle.checked = Boolean(enabled);
     expiryFields.hidden = !enabled;
@@ -320,7 +438,7 @@
 
     if (record) {
       formName.value = record.display_name || "";
-      formType.value = record.document_type || "";
+      setTypeValue(record.document_type || "");
       scopeFamily.checked = record.scope === "family";
       scopePrivate.checked = record.scope !== "family";
       const hasExpiry = Boolean(record.expires_on);
@@ -331,6 +449,7 @@
       }
     } else {
       const preferPrivate = currentView === "personal";
+      setTypeValue("");
       scopePrivate.checked = preferPrivate;
       scopeFamily.checked = !preferPrivate;
       setExpiryVisibility(false);
@@ -341,6 +460,7 @@
   }
 
   function closeForm() {
+    closeTypePicker();
     formLayer.hidden = true;
     setFormMessage("");
     resetFormFile();
@@ -562,6 +682,21 @@
   tabs.forEach((tab) => tab.addEventListener("click", () => switchView(tab.dataset.docView)));
   addButton.addEventListener("click", () => openForm());
 
+  typeTrigger.addEventListener("click", openTypePicker);
+  typeClose.addEventListener("click", closeTypePicker);
+  typeLayer.addEventListener("click", (event) => { if (event.target === typeLayer) closeTypePicker(); });
+  typeSearch.addEventListener("input", renderTypePicker);
+  typeSearch.addEventListener("keydown", (event) => {
+    if (event.key !== "Enter") return;
+    event.preventDefault();
+    const value = normalizeTypeValue(typeSearch.value);
+    if (!value) return;
+    const canonical = DOCUMENT_TYPES.find((item) => item.toLocaleLowerCase("id-ID") === value.toLocaleLowerCase("id-ID"));
+    setTypeValue(canonical || value);
+    closeTypePicker();
+    typeTrigger.focus();
+  });
+
   expiryToggle.addEventListener("change", () => setExpiryVisibility(expiryToggle.checked));
   formPickFile.addEventListener("click", () => formFile.click());
   formFile.addEventListener("change", () => {
@@ -575,6 +710,12 @@
     event.preventDefault();
     if (busy) return;
     const scope = scopeFamily.checked ? "family" : "private";
+    const documentType = normalizeTypeValue(formType.value);
+    if (!documentType) {
+      setFormMessage("Pilih atau tulis jenis dokumen.");
+      openTypePicker();
+      return;
+    }
     if (scope === "family" && !activeFamily?.id) {
       setFormMessage("Keluarga aktif belum tersedia.");
       return;
@@ -596,7 +737,7 @@
         familyId: scope === "family" ? activeFamily.id : null,
         scope,
         displayName: formName.value,
-        documentType: formType.value,
+        documentType,
         expiresOn,
         reminderDays: expiresOn ? (reminderInput.value || null) : null
       };
