@@ -692,11 +692,11 @@ body.security-sheet-open {
   padding:16px;
   box-shadow:0 10px 30px rgba(17,28,22,.05);
 }
-.security-activity-head{display:flex;align-items:flex-start;justify-content:space-between;gap:14px}
+.security-activity-head{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:start;gap:14px}
 .security-activity-head>div{min-width:0}
 .security-activity-head strong{display:block;font-size:14px;line-height:1.35}
 .security-activity-head small{display:block;margin-top:5px;color:var(--muted,#69766f);font-size:11.5px;line-height:1.55}
-.security-activity-refresh{flex:0 0 auto;padding-inline:13px;min-height:38px}
+.security-activity-refresh{width:auto;min-width:104px;max-width:140px;min-height:38px;margin:0;padding-inline:13px;align-self:start}
 .security-activity-status{margin:12px 0 0;padding:10px 12px;border-radius:14px;background:color-mix(in srgb,var(--danger,#b95a5a) 9%,transparent);color:var(--danger,#9f4444);font-size:12px;line-height:1.45}
 .security-activity-list{display:grid;gap:0;margin-top:10px}
 .security-activity-item{display:grid;grid-template-columns:38px minmax(0,1fr);gap:11px;padding:13px 0;border-top:1px solid color-mix(in srgb,var(--border,#dfe4e1) 74%,transparent)}
@@ -707,4 +707,7 @@ body.security-sheet-open {
 .security-activity-copy p{margin:3px 0 0;color:var(--muted,#69766f);font-size:11.5px;line-height:1.5;overflow-wrap:anywhere}
 .security-activity-copy time{display:block;margin-top:5px;color:var(--muted,#7b8780);font-size:10.5px}
 .security-activity-empty{padding:18px 6px 8px;text-align:center;color:var(--muted,#69766f);font-size:12px;line-height:1.5}
-@media (max-width:380px){.security-activity-head{display:grid}.security-activity-refresh{justify-self:start}}
+@media (max-width:430px){
+  .security-activity-head{grid-template-columns:minmax(0,1fr)}
+  .security-activity-refresh{width:100%;max-width:none;justify-self:stretch}
+}
