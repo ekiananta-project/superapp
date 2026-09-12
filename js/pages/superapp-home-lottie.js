@@ -7,10 +7,13 @@
   const reducedMotion = window.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches;
 
   async function start() {
-    if (!window.lottie?.loadAnimation) return;
+    if (!window.lottie?.loadAnimation) {
+      console.warn("[RuangKitha] Lottie runtime belum tersedia; fallback dipakai.");
+      return;
+    }
 
     try {
-      const response = await fetch("assets/lottie/today-family.json", { cache: "force-cache" });
+      const response = await fetch("assets/lottie/today-family.json?v=20260912-v200a49d2", { cache: "default" });
       if (!response.ok) throw new Error(`HTTP ${response.status}`);
       const animationData = await response.json();
 
