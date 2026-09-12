@@ -3,6 +3,50 @@
 
   let deferredPrompt = null;
 
+  let swRegistration = null;
+  let updatePromptShownFor = null;
+
+  function showUpdatePrompt(registration) {
+    const waiting = registration?.waiting;
+    if (!waiting || !navigator.serviceWorker.controller) return;
+    if (updatePromptShownFor === waiting.scriptURL) return;
+    updatePromptShownFor = waiting.scriptURL;
+
+    document.getElementById("ruangkitha-update-banner")?.remove();
+    const banner = document.createElement("div");
+    banner.id = "ruangkitha-update-banner";
+    banner.setAttribute("role", "status");
+    banner.setAttribute("aria-live", "polite");
+    banner.style.cssText = [
+      "position:fixed","left:50%","bottom:max(18px,env(safe-area-inset-bottom))","transform:translateX(-50%)",
+      "width:min(calc(100% - 28px),430px)","z-index:100000","box-sizing:border-box","padding:13px 14px",
+      "border-radius:18px","background:#1b201d","color:#f7faf8","box-shadow:0 16px 42px rgba(0,0,0,.38)",
+      "border:1px solid rgba(255,255,255,.09)","font-family:Manrope,system-ui,sans-serif","display:flex",
+      "align-items:center","gap:12px"
+    ].join(";");
+    banner.innerHTML = '<div style="min-width:0;flex:1"><strong style="display:block;font-size:13px">Versi baru RuangKitha tersedia</strong><small style="display:block;margin-top:3px;color:#aab7b0;font-size:11.5px;line-height:1.4">Muat ulang untuk memakai perbaikan terbaru.</small></div><button type="button" style="border:0;border-radius:999px;padding:10px 13px;background:#4ed880;color:#09200f;font:700 12px Manrope,system-ui,sans-serif;white-space:nowrap">Muat ulang</button>';
+    banner.querySelector("button")?.addEventListener("click", () => {
+      const button = banner.querySelector("button");
+      if (button) { button.disabled = true; button.textContent = "Memuat…"; }
+      waiting.postMessage({ type: "SKIP_WAITING" });
+    });
+    document.body.appendChild(banner);
+  }
+
+  function watchRegistration(registration) {
+    swRegistration = registration;
+    if (registration.waiting) showUpdatePrompt(registration);
+    registration.addEventListener("updatefound", () => {
+      const worker = registration.installing;
+      if (!worker) return;
+      worker.addEventListener("statechange", () => {
+        if (worker.state === "installed" && navigator.serviceWorker.controller) {
+          showUpdatePrompt(registration);
+        }
+      });
+    });
+  }
+
   function isStandalone() {
     return (
       window.matchMedia?.("(display-mode: standalone)")?.matches ||
@@ -43,9 +87,11 @@
   if ("serviceWorker" in navigator) {
     window.addEventListener("load", async () => {
       try {
-        const registration = await navigator.serviceWorker.register("./sw.js?v=20260911-v200a46f", {
+        const registration = await navigator.serviceWorker.register("./sw.js?v=20260912-v200a47", {
           scope: "./"
         });
+
+        watchRegistration(registration);
 
         // Cek versi baru tanpa mengganggu startup aplikasi.
         registration.update().catch(() => {});
@@ -73,8 +119,8 @@
     }
   });
 
-  // skipWaiting + clients.claim membuat SW baru bisa mengambil alih tab yang
-  // sedang terbuka. Reload hanya sekali ketika controller benar-benar berganti.
+  // Setelah user menerima prompt update, SW waiting menerima SKIP_WAITING.
+  // Reload hanya sekali ketika controller benar-benar berganti.
   navigator.serviceWorker?.addEventListener("controllerchange", () => {
     const key = "family_pwa_controller_reload";
     const now = Date.now();

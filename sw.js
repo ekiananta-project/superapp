@@ -1,4 +1,4 @@
-const CACHE_NAME = "ruangkitha-v2.0.0a46f-android-deeplink-confirm-ux";
+const CACHE_NAME = "ruangkitha-v2.0.0a47-calendar-notification-production-hardening";
 const OFFLINE_URL = "./offline.html";
 
 const APP_FILES = [
@@ -55,6 +55,7 @@ const APP_FILES = [
   "./icons/icon-192.png",
   "./icons/icon-192-v2.png",
   "./icons/icon-512-v2.png",
+  "./icons/notification-badge-96.png",
   "./index.html",
   "./catatan.html",
   "./catatan-keluarga.html",
@@ -72,6 +73,7 @@ const APP_FILES = [
   "./css/pages/catatan-management.css",
   "./css/pages/catatan-stabilization.css",
   "./css/pages/catatan-relasi.css",
+  "./css/pages/catatan-reminder-guard.css",
   "./js/pages/catatan-home.js",
   "./js/pages/catatan-family.js",
   "./js/pages/catatan-personal.js",
@@ -185,7 +187,11 @@ async function precacheFresh() {
 }
 
 self.addEventListener("install", event => {
-  event.waitUntil(precacheFresh().then(() => self.skipWaiting()));
+  event.waitUntil(precacheFresh());
+});
+
+self.addEventListener("message", event => {
+  if (event.data?.type === "SKIP_WAITING") self.skipWaiting();
 });
 
 self.addEventListener("activate", event => {
@@ -307,8 +313,9 @@ self.addEventListener("push", event => {
     tag: String(payload.tag || `ruangkitha-${notificationId || Date.now()}`),
     renotify: false,
     lang: "id-ID",
-    icon: "./icons/icon-192.png",
-    badge: "./icons/favicon-32.png",
+    icon: "./icons/icon-192-v2.png",
+    badge: "./icons/notification-badge-96.png",
+    actions: [{ action: "open", title: String(payload.actionTitle || "Buka") }],
     data: { url: target, notificationId }
   };
   event.waitUntil(self.registration.showNotification(title, options));
@@ -318,17 +325,24 @@ self.addEventListener("push", event => {
 // v2.0.0a46 background scheduling is handled by the centralized server dispatcher.
 self.addEventListener("notificationclick", event => {
   event.notification?.close();
+  if (event.action && event.action !== "open") return;
   const rawTarget = event.notification?.data?.url;
   if (!rawTarget) return;
   const target = resolveNotificationTarget(rawTarget);
   event.waitUntil((async () => {
+    const scopeUrl = new URL(self.registration.scope);
     const windows = await self.clients.matchAll({ type: "window", includeUncontrolled: true });
-    for (const client of windows) {
-      if ("focus" in client) {
-        await client.focus();
-        if ("navigate" in client) await client.navigate(target);
-        return;
-      }
+    const inScope = windows.filter(client => {
+      try {
+        const url = new URL(client.url);
+        return url.origin === scopeUrl.origin && url.pathname.startsWith(scopeUrl.pathname);
+      } catch { return false; }
+    });
+    const preferred = inScope.find(client => client.visibilityState === "visible") || inScope[0];
+    if (preferred) {
+      try { if ("navigate" in preferred) await preferred.navigate(target); } catch {}
+      try { if ("focus" in preferred) await preferred.focus(); } catch {}
+      return;
     }
     if (self.clients.openWindow) await self.clients.openWindow(target);
   })());

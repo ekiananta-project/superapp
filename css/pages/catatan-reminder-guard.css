@@ -1,0 +1,9 @@
+/* RuangKitha v2.0.0a47 — Reminder schedule guard */
+.catatan-reminder-preview{margin:14px 0 2px;padding:13px 14px;border-radius:16px;background:rgba(78,216,128,.08);border:1px solid rgba(78,216,128,.18);display:flex;gap:11px;align-items:flex-start}
+.catatan-reminder-preview ion-icon{font-size:21px;color:#4ed880;flex:0 0 auto;margin-top:1px}
+.catatan-reminder-preview strong{display:block;font-size:13px;line-height:1.35;color:var(--text-primary,#f4f7f5)}
+.catatan-reminder-preview small{display:block;margin-top:4px;font-size:12px;line-height:1.45;color:var(--text-secondary,#91a099)}
+.catatan-reminder-preview.is-warning{background:rgba(255,176,32,.08);border-color:rgba(255,176,32,.22)}
+.catatan-reminder-preview.is-warning ion-icon,.catatan-reminder-preview.is-warning strong{color:#f4b83f}
+.catatan-reminder-actions .is-primary:disabled{opacity:.45;cursor:not-allowed;filter:saturate(.55)}
+@media (prefers-color-scheme:light){.catatan-reminder-preview strong{color:#172019}.catatan-reminder-preview small{color:#647069}}

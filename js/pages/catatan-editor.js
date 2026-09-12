@@ -1467,6 +1467,64 @@
     })[normalizeReminderRecurrence(value)] || "Tidak berulang";
   }
 
+
+  function reminderDraftInfo() {
+    const date = clean(q("[data-reminder-date]")?.value);
+    const time = clean(q("[data-reminder-time]")?.value);
+    const recurrence = normalizeReminderRecurrence(q("[data-reminder-recurrence]")?.value);
+    if (!date || !time) return { date, time, recurrence, valid: false, reason: "empty", value: null };
+    const value = new Date(`${date}T${time}:00`);
+    if (Number.isNaN(value.getTime())) return { date, time, recurrence, valid: false, reason: "invalid", value: null };
+    if (value.getTime() <= Date.now()) return { date, time, recurrence, valid: false, reason: "past", value };
+    return { date, time, recurrence, valid: true, reason: "ok", value };
+  }
+
+  function reminderDraftLabel(value) {
+    const today = new Date(); today.setHours(0, 0, 0, 0);
+    const day = new Date(value); day.setHours(0, 0, 0, 0);
+    const diffDays = Math.round((day - today) / 86400000);
+    const clock = new Intl.DateTimeFormat("id-ID", { hour: "2-digit", minute: "2-digit" }).format(value).replace(".", ":");
+    if (diffDays === 0) return `Hari ini, ${clock}`;
+    if (diffDays === 1) return `Besok, ${clock}`;
+    return new Intl.DateTimeFormat("id-ID", { weekday: "short", day: "numeric", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" })
+      .format(value).replace(" pukul ", ", ");
+  }
+
+  function renderReminderDraftPreview() {
+    const box = q("[data-reminder-preview]");
+    const title = q("[data-reminder-preview-title]");
+    const copy = q("[data-reminder-preview-copy]");
+    const icon = q("[data-reminder-preview-icon]");
+    const save = q("[data-reminder-save]");
+    if (!box) return;
+    const info = reminderDraftInfo();
+    box.classList.toggle("is-warning", info.reason === "past" || info.reason === "invalid");
+    if (save) save.disabled = !info.valid;
+    if (info.reason === "empty") {
+      if (title) title.textContent = "Pilih tanggal dan waktu";
+      if (copy) copy.textContent = "RuangKitha akan menampilkan ringkasan jadwal sebelum disimpan.";
+      icon?.setAttribute("name", "time-outline");
+      return;
+    }
+    if (info.reason === "past") {
+      if (title) title.textContent = "Waktu ini sudah lewat";
+      if (copy) copy.textContent = "Pilih waktu setelah sekarang agar pengingat tidak terlewat.";
+      icon?.setAttribute("name", "alert-circle-outline");
+      return;
+    }
+    if (!info.valid) {
+      if (title) title.textContent = "Jadwal belum valid";
+      if (copy) copy.textContent = "Periksa lagi tanggal dan waktu pengingat.";
+      icon?.setAttribute("name", "alert-circle-outline");
+      return;
+    }
+    if (title) title.textContent = reminderDraftLabel(info.value);
+    if (copy) copy.textContent = info.recurrence === "none"
+      ? "Pengingat akan dikirim saat waktunya tiba."
+      : `${reminderRecurrenceLabel(info.recurrence)} · dimulai dari jadwal ini.`;
+    icon?.setAttribute("name", "checkmark-circle-outline");
+  }
+
   function reminderMemberName(member) {
     return clean(member?.profile?.display_name || member?.display_name, "Anggota");
   }
@@ -1739,6 +1797,7 @@
     if (timeInput) timeInput.value = reminderTime;
     const recurrence = q("[data-reminder-recurrence]");
     if (recurrence) recurrence.value = normalizeReminderRecurrence(reminderRecurrence);
+    renderReminderDraftPreview();
     openSheet("[data-reminder-layer]", true);
   }
 
@@ -1747,6 +1806,13 @@
     const time = clean(q("[data-reminder-time]")?.value);
     if (!date || !time) {
       showToast("Pilih tanggal dan waktu reminder dulu.");
+      renderReminderDraftPreview();
+      return;
+    }
+    const draft = reminderDraftInfo();
+    if (!draft.valid) {
+      renderReminderDraftPreview();
+      showToast(draft.reason === "past" ? "Waktu reminder harus setelah sekarang." : "Jadwal reminder belum valid.");
       return;
     }
     reminderDate = date;
@@ -2201,6 +2267,9 @@
     q("[data-reminder-close]")?.addEventListener("click", () => setLayer("[data-reminder-layer]", false));
     q("[data-reminder-chip]")?.addEventListener("click", openReminderSheet);
     q("[data-reminder-save]")?.addEventListener("click", saveReminder);
+    q("[data-reminder-date]")?.addEventListener("input", renderReminderDraftPreview);
+    q("[data-reminder-time]")?.addEventListener("input", renderReminderDraftPreview);
+    q("[data-reminder-recurrence]")?.addEventListener("change", renderReminderDraftPreview);
     q("[data-reminder-remove]")?.addEventListener("click", removeReminder);
     q("[data-reminder-schedule-card]")?.addEventListener("click", openReminderSheet);
     q("[data-reminder-tag-card]")?.addEventListener("click", openTagSheet);

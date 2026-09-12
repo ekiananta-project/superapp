@@ -30,6 +30,7 @@
   <link rel="stylesheet" href="css/pages/catatan-editor.css?v=20260911-v200a43">
   <style id="ruangkitha-auth-cloak">html[data-auth-guard] body{visibility:hidden!important}</style>
   <link rel="stylesheet" href="css/pages/catatan-management.css?v=20260911-v200a43">
+  <link rel="stylesheet" href="css/pages/catatan-reminder-guard.css?v=20260912-v200a47">
 </head>
 <body>
 <div class="aplikasi catatan-editor" data-catatan-editor aria-busy="true">
@@ -324,6 +325,10 @@
           <option value="yearly">Setiap tahun</option>
         </select>
       </label>
+      <div class="catatan-reminder-preview" data-reminder-preview role="status" aria-live="polite">
+        <ion-icon data-reminder-preview-icon name="time-outline" aria-hidden="true"></ion-icon>
+        <div><strong data-reminder-preview-title>Pilih tanggal dan waktu</strong><small data-reminder-preview-copy>RuangKitha akan menampilkan ringkasan jadwal sebelum disimpan.</small></div>
+      </div>
       <div class="catatan-reminder-actions">
         <button class="is-danger" type="button" data-reminder-remove hidden>Hapus jadwal</button>
         <button class="is-primary" type="button" data-reminder-save>Simpan</button>
@@ -463,8 +468,8 @@
 <script src="js/pages/catatan-performance.js?v=20260911-v200a43"></script>
 <script src="js/pages/catatan-related.js?v=20260911-v200a43"></script>
 <script src="js/backend/notification-service.js?v=20260911-v200a46e"></script>
-<script src="js/pages/catatan-editor.js?v=20260911-v200a46d"></script>
+<script src="js/pages/catatan-editor.js?v=20260912-v200a47"></script>
 <script src="js/pages/catatan-reminder-runtime.js?v=20260911-v200a46d"></script>
-<script src="js/pwa.js?v=20260911-v200a46e"></script>
+<script src="js/pwa.js?v=20260912-v200a47"></script>
 </body>
 </html>
