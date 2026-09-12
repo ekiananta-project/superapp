@@ -1,4 +1,4 @@
-/* RuangKitha v2.0.0a50b — Family Document Sharing / Key Distribution V1 */
+/* RuangKitha v2.0.0a50b1 — Family Document Sharing / Initial Flow + Modal Stack Hotfix */
 (() => {
   "use strict";
 
@@ -40,6 +40,9 @@
   const formPickFile = q("[data-doc-form-pick-file]");
   const formFile = q("[data-doc-form-file]");
   const formFileLabel = q("[data-doc-form-file-label]");
+  const createShareSection = q("[data-doc-create-share]");
+  const createShareList = q("[data-doc-create-share-list]");
+  const createShareMessage = q("[data-doc-create-share-message]");
   const formMessage = q("[data-doc-form-message]");
   const saveButton = q("[data-doc-save]");
 
@@ -80,6 +83,9 @@
   let formMode = "create";
   let editingId = null;
   let formAttachment = null;
+  let createShareCandidates = [];
+  let createShareSelected = new Set();
+  let createShareLoadSeq = 0;
   let busy = false;
   let pendingUnlockAction = null;
 
@@ -114,6 +120,12 @@
     shareMessage.textContent = text;
     shareMessage.hidden = !text;
     shareMessage.classList.toggle("is-error", Boolean(isError));
+  }
+
+  function setCreateShareMessage(text = "", isError = false) {
+    createShareMessage.textContent = text;
+    createShareMessage.hidden = !text;
+    createShareMessage.classList.toggle("is-error", Boolean(isError));
   }
 
   function setVaultBadge(text, state = "") {
@@ -424,6 +436,100 @@
     typeSearch.value = "";
   }
 
+  function createShareReady(member) {
+    return Number(member?.trusted_device_count || 0) > 0 && Boolean(member?.recovery_ready);
+  }
+
+  function createShareStatusText(member) {
+    const deviceCount = Number(member?.trusted_device_count || 0);
+    if (deviceCount < 1) return "Belum punya Trusted Device";
+    if (!member?.recovery_ready) return "Recovery Kit belum siap";
+    return `${deviceCount} Trusted Device siap`;
+  }
+
+  function renderCreateShareCandidates() {
+    createShareList.replaceChildren();
+    if (!createShareCandidates.length) {
+      const empty = document.createElement("div");
+      empty.className = "dokumen-share-empty";
+      empty.appendChild(ion("people-outline"));
+      const strong = document.createElement("strong");
+      strong.textContent = "Belum ada anggota lain";
+      const p = document.createElement("p");
+      p.textContent = "Lampiran tetap bisa disimpan untukmu sendiri. Akses dapat diatur nanti dari detail dokumen.";
+      empty.append(strong, p);
+      createShareList.appendChild(empty);
+      return;
+    }
+
+    createShareCandidates.forEach((member) => {
+      const row = document.createElement("div");
+      row.className = "dokumen-share-row";
+
+      const avatar = document.createElement("span");
+      avatar.className = "dokumen-share-avatar";
+      avatar.appendChild(ion("person-outline"));
+
+      const copy = document.createElement("div");
+      copy.className = "dokumen-share-row-copy";
+      const name = document.createElement("strong");
+      name.textContent = member.display_name || "Anggota keluarga";
+      const status = document.createElement("span");
+      status.textContent = createShareStatusText(member);
+      copy.append(name, status);
+
+      const action = document.createElement("button");
+      action.type = "button";
+      action.className = "dokumen-share-toggle";
+      const ready = createShareReady(member);
+      const selected = createShareSelected.has(member.user_id);
+      action.classList.toggle("is-selected", selected);
+      action.textContent = ready ? (selected ? "Dipilih" : "Pilih") : "Belum siap";
+      action.disabled = !ready;
+      action.setAttribute("aria-pressed", selected ? "true" : "false");
+      action.addEventListener("click", () => {
+        if (!ready) return;
+        if (createShareSelected.has(member.user_id)) createShareSelected.delete(member.user_id);
+        else createShareSelected.add(member.user_id);
+        renderCreateShareCandidates();
+      });
+
+      row.append(avatar, copy, action);
+      createShareList.appendChild(row);
+    });
+  }
+
+  async function loadCreateShareCandidates() {
+    const seq = ++createShareLoadSeq;
+    createShareList.replaceChildren(createAttachmentPlaceholder("hourglass-outline", "Memuat anggota keluarga", "RuangKitha sedang memeriksa Trusted Device yang siap menerima lampiran."));
+    setCreateShareMessage("");
+    try {
+      const members = await Service().listShareCandidates(activeFamily?.id || null);
+      if (seq !== createShareLoadSeq) return;
+      createShareCandidates = members;
+      renderCreateShareCandidates();
+    } catch (error) {
+      if (seq !== createShareLoadSeq) return;
+      createShareCandidates = [];
+      createShareList.replaceChildren(createAttachmentPlaceholder("alert-circle-outline", "Akses keluarga belum dapat dimuat", error?.message || "Dokumen tetap bisa disimpan. Atur akses lampiran nanti dari detail dokumen."));
+      setCreateShareMessage("Dokumen tetap dapat disimpan tanpa memilih penerima sekarang.", true);
+    }
+  }
+
+  function syncCreateShareVisibility() {
+    const shouldShow = formMode === "create" && Boolean(formAttachment) && Boolean(scopeFamily.checked) && Boolean(activeFamily?.id);
+    createShareSection.hidden = !shouldShow;
+    if (!shouldShow) {
+      createShareLoadSeq += 1;
+      createShareCandidates = [];
+      createShareSelected.clear();
+      createShareList.replaceChildren();
+      setCreateShareMessage("");
+      return;
+    }
+    loadCreateShareCandidates();
+  }
+
   function setExpiryVisibility(enabled) {
     expiryToggle.checked = Boolean(enabled);
     expiryFields.hidden = !enabled;
@@ -438,6 +544,12 @@
     formAttachment = null;
     formFile.value = "";
     formFileLabel.textContent = "Tambahkan foto atau file";
+    createShareLoadSeq += 1;
+    createShareCandidates = [];
+    createShareSelected.clear();
+    createShareSection.hidden = true;
+    createShareList.replaceChildren();
+    setCreateShareMessage("");
   }
 
   function openForm(record = null) {
@@ -841,10 +953,30 @@
       await loadRecords();
       if (currentRecord?.document_id === recordId) await refreshCurrentRecord();
       await refreshVaultStatus();
+      return uploaded;
     } catch (error) {
       setMessage(error?.message || "Dokumen sudah tersimpan, tetapi lampiran gagal ditambahkan.", true);
       await refreshVaultStatus();
+      return null;
     }
+  }
+
+  async function shareSelectedMembersAfterCreate(documentId, userIds) {
+    const ids = Array.from(new Set((userIds || []).filter(Boolean)));
+    if (!ids.length) return { shared: 0, failed: [] };
+    let shared = 0;
+    const failed = [];
+    for (let index = 0; index < ids.length; index += 1) {
+      const userId = ids[index];
+      setMessage(`Membagikan lampiran ke anggota keluarga ${index + 1} dari ${ids.length}…`);
+      try {
+        await Service().shareWithMember(documentId, userId);
+        shared += 1;
+      } catch (error) {
+        failed.push({ userId, message: error?.message || "Gagal membagikan lampiran." });
+      }
+    }
+    return { shared, failed };
   }
 
   tabs.forEach((tab) => tab.addEventListener("click", () => switchView(tab.dataset.docView)));
@@ -870,7 +1002,10 @@
   formFile.addEventListener("change", () => {
     formAttachment = formFile.files?.[0] || null;
     formFileLabel.textContent = formAttachment ? formAttachment.name : "Tambahkan foto atau file";
+    syncCreateShareVisibility();
   });
+  scopeFamily.addEventListener("change", syncCreateShareVisibility);
+  scopePrivate.addEventListener("change", syncCreateShareVisibility);
 
   formClose.addEventListener("click", closeForm);
   formLayer.addEventListener("click", (event) => { if (event.target === formLayer && !busy) closeForm(); });
@@ -895,6 +1030,9 @@
     }
 
     const selectedFile = formAttachment;
+    const selectedShareUserIds = formMode === "create" && scope === "family" && selectedFile
+      ? Array.from(createShareSelected)
+      : [];
     const wasCreate = formMode === "create";
     busy = true;
     saveButton.disabled = true;
@@ -923,8 +1061,22 @@
 
       if (selectedFile) {
         await runWithVault(
-          () => uploadToRecord(saved.document_id, selectedFile),
-          "Masukkan PIN untuk mengenkripsi dan menyimpan lampiran pilihanmu."
+          async () => {
+            const uploaded = await uploadToRecord(saved.document_id, selectedFile);
+            if (!uploaded) return;
+            if (selectedShareUserIds.length) {
+              const result = await shareSelectedMembersAfterCreate(saved.document_id, selectedShareUserIds);
+              if (result.failed.length) {
+                setMessage(`Lampiran aman tersimpan. ${result.shared} anggota berhasil diberi akses, ${result.failed.length} perlu dicoba lagi dari Kelola akses lampiran.`, true);
+              } else {
+                setMessage(`Lampiran aman tersimpan dan dibagikan ke ${result.shared} anggota keluarga.`);
+              }
+              await loadRecords();
+            }
+          },
+          selectedShareUserIds.length
+            ? "Masukkan PIN sekali untuk mengenkripsi lampiran dan membagikannya kepada anggota yang dipilih."
+            : "Masukkan PIN untuk mengenkripsi dan menyimpan lampiran pilihanmu."
         );
       }
     } catch (error) {

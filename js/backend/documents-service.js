@@ -1,8 +1,8 @@
-/* RuangKitha v2.0.0a50b — Family Document Sharing / Key Distribution Service V1 */
+/* RuangKitha v2.0.0a50b1 — Family Document Sharing / Initial Flow Service V1 */
 (function initRuangKithaDocumentsService(root) {
   "use strict";
 
-  const BUILD = "v2.0.0a50b";
+  const BUILD = "v2.0.0a50b1";
   const RECORD_BUILD = "v2.0.0a50a";
   const BUCKET = "ruangkitha-documents-v1";
   const LEGACY_BUILD = "v2.0.0a50";
@@ -439,6 +439,15 @@
   // ---------------------------------------------------------------------------
   // a50b Family Document Sharing / Key Distribution V1
   // ---------------------------------------------------------------------------
+  async function listShareCandidates(familyId) {
+    const client = clientOnly();
+    if (!familyId) throw new Error("Keluarga aktif diperlukan.");
+    const result = await rpc(client, "document_share_candidates_v1", {
+      p_family_id: familyId
+    });
+    return Array.isArray(result?.members) ? result.members : [];
+  }
+
   async function listShareTargets(documentId) {
     const client = clientOnly();
     const result = await rpc(client, "document_share_targets_v1", {
@@ -670,6 +679,7 @@
     downloadAttachment,
     downloadAttachmentToBrowser,
     deleteAttachment,
+    listShareCandidates,
     listShareTargets,
     sharePlan,
     shareWithMember,
