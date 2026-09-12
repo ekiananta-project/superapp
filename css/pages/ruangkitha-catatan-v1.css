@@ -1,0 +1,625 @@
+/* ======================================================================
+   RuangKitha Catatan Visual System v1.0
+   Patch: v2.0.0a48c — Catatan Design System Migration
+
+   Visual-only layer on top of Design System v1 / a48b3.
+   Catatan identity: muted teal + warm neutral, with sage and peach accents.
+   Note persistence, permissions, relation graph, tags, folders, reminders,
+   archive, Supabase calls and navigation logic are intentionally untouched.
+   ====================================================================== */
+
+html[data-rk-module="catatan"] {
+  --rk-catatan-primary: var(--rk-secondary);
+  --rk-catatan-secondary: var(--rk-primary);
+  --rk-catatan-warm: var(--rk-accent);
+  --rk-catatan-soft: color-mix(in srgb, var(--rk-secondary) 11%, var(--rk-surface));
+  --rk-catatan-soft-sage: color-mix(in srgb, var(--rk-primary) 9%, var(--rk-surface));
+  --rk-catatan-soft-peach: color-mix(in srgb, var(--rk-accent) 11%, var(--rk-surface));
+  --rk-catatan-border: color-mix(in srgb, var(--rk-secondary) 16%, var(--rk-border));
+
+  /* Let the locked Catatan styles inherit the new module personality. */
+  --color-primary: var(--rk-catatan-primary);
+  --color-secondary: var(--rk-catatan-secondary);
+}
+
+html[data-rk-module="catatan"] body {
+  background:
+    radial-gradient(circle at 50% -10%, color-mix(in srgb, var(--rk-secondary) 8%, transparent), transparent 34%),
+    var(--rk-outer-background);
+}
+
+html[data-rk-module="catatan"] .aplikasi {
+  background:
+    linear-gradient(180deg, color-mix(in srgb, var(--rk-secondary) 2.4%, var(--rk-background)) 0, var(--rk-background) 190px);
+  color: var(--rk-text);
+}
+
+/* Header / navigation ------------------------------------------------ */
+html[data-rk-module="catatan"] :where(.header-halaman, .catatan-editor-header, .relation-page-header) {
+  color: var(--rk-text);
+}
+
+html[data-rk-module="catatan"] :where(.header-halaman h1, .relation-header-copy h1) {
+  color: var(--rk-text) !important;
+  font-weight: 750 !important;
+  letter-spacing: -.024em;
+}
+
+html[data-rk-module="catatan"] :where(
+  .catatan-back-ruangkitha,
+  .catatan-editor-back,
+  .catatan-editor-menu,
+  .catatan-member-readonly-back,
+  .relation-back,
+  .relation-header-menu
+) {
+  border-color: var(--rk-catatan-border) !important;
+  background: var(--rk-surface) !important;
+  color: var(--rk-catatan-primary) !important;
+  box-shadow: var(--rk-shadow-sm) !important;
+}
+
+html[data-rk-module="catatan"] .catatan-editor-header {
+  background: color-mix(in srgb, var(--rk-background) 92%, transparent) !important;
+  backdrop-filter: blur(18px) saturate(1.05);
+  -webkit-backdrop-filter: blur(18px) saturate(1.05);
+}
+
+/* Home --------------------------------------------------------------- */
+html[data-rk-catatan-page="catatan"] .catatan-search-box,
+html[data-rk-module="catatan"] .catatan-search-box {
+  border-color: var(--rk-catatan-border) !important;
+  background: var(--rk-surface) !important;
+  box-shadow: var(--rk-shadow-sm) !important;
+}
+
+html[data-rk-module="catatan"] .catatan-search-box ion-icon {
+  color: var(--rk-catatan-primary) !important;
+}
+
+html[data-rk-module="catatan"] .catatan-search-box input {
+  color: var(--rk-text) !important;
+}
+
+html[data-rk-module="catatan"] .catatan-search-box input::placeholder {
+  color: var(--rk-text-soft) !important;
+}
+
+html[data-rk-catatan-page="catatan"] .catatan-primary-card {
+  border-color: var(--rk-catatan-border) !important;
+  background: var(--rk-surface) !important;
+  color: var(--rk-text) !important;
+  box-shadow: var(--rk-shadow-sm) !important;
+}
+
+html[data-rk-catatan-page="catatan"] .catatan-primary-card.is-family {
+  background:
+    linear-gradient(135deg, var(--rk-catatan-soft), var(--rk-surface) 74%) !important;
+}
+
+html[data-rk-catatan-page="catatan"] .catatan-primary-card.is-personal {
+  background:
+    linear-gradient(135deg, var(--rk-catatan-soft-peach), var(--rk-surface) 76%) !important;
+}
+
+html[data-rk-catatan-page="catatan"] .catatan-primary-card.is-family .catatan-card-icon {
+  background: var(--rk-secondary-soft) !important;
+  color: var(--rk-catatan-primary) !important;
+}
+
+html[data-rk-catatan-page="catatan"] .catatan-primary-card.is-personal .catatan-card-icon {
+  background: var(--rk-accent-soft) !important;
+  color: var(--rk-accent) !important;
+}
+
+html[data-rk-catatan-page="catatan"] .catatan-primary-card.is-family .catatan-card-copy small {
+  color: var(--rk-catatan-primary) !important;
+}
+
+html[data-rk-catatan-page="catatan"] .catatan-primary-card.is-personal .catatan-card-copy small {
+  color: var(--rk-accent) !important;
+}
+
+html[data-rk-module="catatan"] :where(.catatan-card-copy > span, .catatan-member-copy small, .catatan-section-heading p) {
+  color: var(--rk-text-secondary) !important;
+}
+
+html[data-rk-module="catatan"] .catatan-member-card {
+  border-color: var(--rk-catatan-border) !important;
+  background: var(--rk-surface) !important;
+  color: var(--rk-text) !important;
+  box-shadow: var(--rk-shadow-sm) !important;
+}
+
+html[data-rk-module="catatan"] .catatan-member-avatar {
+  background: var(--rk-secondary-soft) !important;
+  color: var(--rk-catatan-primary) !important;
+}
+
+/* Catatan floating bottom nav --------------------------------------- */
+html[data-rk-module="catatan"] .catatan-bottom-nav {
+  bottom: max(8px, env(safe-area-inset-bottom)) !important;
+  width: min(calc(100vw - 20px), 410px) !important;
+  min-height: 70px !important;
+  padding: 7px 10px !important;
+  border: 1px solid var(--rk-border) !important;
+  border-radius: 22px !important;
+  background: color-mix(in srgb, var(--rk-surface) 93%, transparent) !important;
+  box-shadow: var(--rk-shadow-float) !important;
+  backdrop-filter: blur(18px) saturate(1.06);
+  -webkit-backdrop-filter: blur(18px) saturate(1.06);
+}
+
+html[data-rk-module="catatan"] .catatan-nav-item {
+  min-height: 52px;
+  border-radius: 15px;
+  color: var(--rk-text-secondary) !important;
+}
+
+html[data-rk-module="catatan"] .catatan-nav-item.is-active {
+  background: var(--rk-secondary-soft) !important;
+  color: var(--rk-catatan-primary) !important;
+}
+
+html[data-rk-module="catatan"] .catatan-add-button {
+  border: 4px solid var(--rk-background) !important;
+  background: var(--rk-catatan-primary) !important;
+  color: var(--rk-on-secondary) !important;
+  box-shadow: 0 12px 28px color-mix(in srgb, var(--rk-catatan-primary) 28%, transparent) !important;
+}
+
+/* Area, folder, note list ------------------------------------------- */
+html[data-rk-module="catatan"] :where(
+  .catatan-folder-card,
+  .catatan-archive-card,
+  .catatan-folder-name-container,
+  .catatan-member-name-container
+) {
+  border-color: var(--rk-catatan-border) !important;
+  background: var(--rk-surface) !important;
+  color: var(--rk-text) !important;
+  box-shadow: var(--rk-shadow-sm) !important;
+}
+
+html[data-rk-module="catatan"] .catatan-folder-card {
+  background: linear-gradient(145deg, var(--rk-catatan-soft-sage), var(--rk-surface) 76%) !important;
+}
+
+html[data-rk-module="catatan"] .catatan-folder-card :where(ion-icon, .catatan-folder-picker-icon) {
+  color: var(--rk-primary) !important;
+}
+
+/* Preserve user-selected note tint backgrounds. Only normalize the frame. */
+html[data-rk-module="catatan"] .catatan-note-card {
+  border-color: color-mix(in srgb, var(--rk-catatan-primary) 13%, var(--rk-border)) !important;
+  color: var(--rk-text) !important;
+  box-shadow: var(--rk-shadow-sm) !important;
+}
+
+html[data-rk-module="catatan"] .catatan-note-card[data-card-color="default"] {
+  background: var(--rk-surface) !important;
+}
+
+html[data-rk-module="catatan"] .catatan-note-card[data-card-color="sage"] {
+  background: color-mix(in srgb, var(--rk-primary) 12%, var(--rk-surface)) !important;
+}
+
+html[data-rk-module="catatan"] .catatan-note-card[data-card-color="sand"] {
+  background: color-mix(in srgb, var(--rk-beige) 36%, var(--rk-surface)) !important;
+}
+
+html[data-rk-module="catatan"] .catatan-note-card[data-card-color="sky"] {
+  background: color-mix(in srgb, var(--rk-secondary) 13%, var(--rk-surface)) !important;
+}
+
+html[data-rk-module="catatan"] .catatan-note-card[data-card-color="rose"] {
+  background: color-mix(in srgb, var(--rk-accent) 13%, var(--rk-surface)) !important;
+}
+
+html[data-rk-module="catatan"] .catatan-note-card[data-card-color="lavender"] {
+  background: color-mix(in srgb, #A89AB8 12%, var(--rk-surface)) !important;
+}
+
+html[data-theme="dark"][data-rk-module="catatan"] .catatan-note-card[data-card-color="sage"] {
+  background: color-mix(in srgb, var(--rk-primary) 18%, var(--rk-surface)) !important;
+}
+html[data-theme="dark"][data-rk-module="catatan"] .catatan-note-card[data-card-color="sand"] {
+  background: color-mix(in srgb, var(--rk-beige) 15%, var(--rk-surface)) !important;
+}
+html[data-theme="dark"][data-rk-module="catatan"] .catatan-note-card[data-card-color="sky"] {
+  background: color-mix(in srgb, var(--rk-secondary) 18%, var(--rk-surface)) !important;
+}
+html[data-theme="dark"][data-rk-module="catatan"] .catatan-note-card[data-card-color="rose"] {
+  background: color-mix(in srgb, var(--rk-accent) 17%, var(--rk-surface)) !important;
+}
+html[data-theme="dark"][data-rk-module="catatan"] .catatan-note-card[data-card-color="lavender"] {
+  background: color-mix(in srgb, #A89AB8 16%, var(--rk-surface)) !important;
+}
+
+html[data-rk-module="catatan"] .catatan-card-overflow {
+  background: color-mix(in srgb, var(--rk-surface) 88%, transparent) !important;
+  color: var(--rk-text-soft) !important;
+}
+
+html[data-rk-module="catatan"] .catatan-card-menu,
+html[data-rk-module="catatan"] .catatan-related-card-menu,
+html[data-rk-module="catatan"] .relation-card-menu {
+  border-color: var(--rk-border) !important;
+  background: var(--rk-surface-raised) !important;
+  box-shadow: var(--rk-shadow-md) !important;
+}
+
+html[data-rk-module="catatan"] .catatan-note-tags-compact em {
+  background: var(--rk-secondary-soft) !important;
+  color: var(--rk-catatan-primary) !important;
+}
+
+/* Empty states + Lottie --------------------------------------------- */
+html[data-rk-module="catatan"] .catatan-rich-empty {
+  color: var(--rk-text-secondary) !important;
+}
+
+html[data-rk-module="catatan"] .catatan-rich-empty strong {
+  color: var(--rk-text) !important;
+}
+
+html[data-rk-module="catatan"] .catatan-rich-empty-visual {
+  border-radius: 24px;
+  background: radial-gradient(circle at 50% 50%, color-mix(in srgb, var(--rk-secondary) 6%, transparent), transparent 68%);
+}
+
+html[data-rk-module="catatan"] .catatan-rich-empty dotlottie-player,
+html[data-rk-module="catatan"] .catatan-private-link-visual dotlottie-player {
+  background: transparent !important;
+  filter: none !important;
+}
+
+html[data-rk-module="catatan"] .catatan-rich-empty-action {
+  background: var(--rk-catatan-primary) !important;
+  color: var(--rk-on-secondary) !important;
+  box-shadow: 0 8px 22px color-mix(in srgb, var(--rk-catatan-primary) 20%, transparent);
+}
+
+/* Sheets, modal, picker --------------------------------------------- */
+html[data-rk-module="catatan"] :where(
+  .catatan-sheet,
+  .catatan-picker-sheet,
+  .catatan-editor-sheet,
+  .catatan-confirm-dialog,
+  .catatan-sensitive-dialog,
+  .catatan-private-link-dialog,
+  .relation-manage-dialog,
+  .relation-edge-dialog,
+  .relation-confirm-dialog,
+  .relation-name-dialog
+) {
+  border-color: var(--rk-border) !important;
+  background: var(--rk-surface-raised) !important;
+  color: var(--rk-text) !important;
+  box-shadow: var(--rk-shadow-float) !important;
+}
+
+html[data-rk-module="catatan"] :where(
+  .catatan-sheet-layer,
+  .catatan-picker-layer,
+  .catatan-confirm-layer,
+  .catatan-sensitive-layer,
+  .catatan-private-link-layer,
+  .catatan-related-layer,
+  .catatan-relation-list-layer,
+  .relation-modal-layer
+) {
+  background: rgba(12, 17, 14, .46) !important;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+
+html[data-rk-module="catatan"] :where(.catatan-sheet-handle, .catatan-picker-handle) {
+  background: var(--rk-border-strong) !important;
+}
+
+html[data-rk-module="catatan"] .catatan-create-option,
+html[data-rk-module="catatan"] .catatan-folder-picker-option,
+html[data-rk-module="catatan"] .catatan-tag-option,
+html[data-rk-module="catatan"] .catatan-related-picker-row,
+html[data-rk-module="catatan"] .catatan-reminder-recipient-row {
+  border-color: var(--rk-border) !important;
+  background: var(--rk-surface) !important;
+  color: var(--rk-text) !important;
+}
+
+html[data-rk-module="catatan"] :where(.catatan-create-icon, .catatan-folder-picker-icon) {
+  background: var(--rk-secondary-soft) !important;
+  color: var(--rk-catatan-primary) !important;
+}
+
+html[data-rk-module="catatan"] :where(
+  .catatan-folder-picker-option.is-selected,
+  .catatan-tag-option.is-selected,
+  .catatan-related-picker-row.is-selected
+) {
+  border-color: color-mix(in srgb, var(--rk-catatan-primary) 55%, var(--rk-border)) !important;
+  background: var(--rk-catatan-soft) !important;
+}
+
+/* Editor ------------------------------------------------------------- */
+html[data-rk-module="catatan"] .catatan-editor {
+  background: var(--rk-background) !important;
+}
+
+html[data-rk-module="catatan"] .catatan-title-input,
+html[data-rk-module="catatan"] .catatan-content-editor {
+  color: var(--rk-text) !important;
+  caret-color: var(--rk-catatan-primary) !important;
+}
+
+html[data-rk-module="catatan"] .catatan-title-input::placeholder,
+html[data-rk-module="catatan"] .catatan-content-editor:empty::before {
+  color: color-mix(in srgb, var(--rk-text-soft) 70%, transparent) !important;
+}
+
+html[data-rk-module="catatan"] .catatan-context-chip {
+  border-color: var(--rk-border) !important;
+  background: var(--rk-surface) !important;
+  color: var(--rk-text-secondary) !important;
+}
+
+html[data-rk-module="catatan"] .catatan-context-chip.is-area,
+html[data-rk-module="catatan"] .catatan-context-chip.is-add-tag {
+  border-color: color-mix(in srgb, var(--rk-catatan-primary) 22%, var(--rk-border)) !important;
+  background: var(--rk-secondary-soft) !important;
+  color: var(--rk-catatan-primary) !important;
+}
+
+html[data-rk-module="catatan"] .catatan-context-chip.is-folder {
+  background: color-mix(in srgb, var(--rk-beige) 34%, var(--rk-surface)) !important;
+  color: var(--rk-warning) !important;
+}
+
+html[data-rk-module="catatan"] .catatan-editor-mode {
+  border-color: var(--rk-catatan-border) !important;
+  background: var(--rk-surface) !important;
+  color: var(--rk-text) !important;
+  box-shadow: var(--rk-shadow-sm) !important;
+}
+
+html[data-rk-module="catatan"] .catatan-editor-mode-main ion-icon,
+html[data-rk-module="catatan"] .catatan-editor-mode-main [data-mode-label] {
+  color: var(--rk-catatan-primary) !important;
+}
+
+html[data-rk-module="catatan"] .catatan-editor-toolbar {
+  border-color: var(--rk-border) !important;
+  background: color-mix(in srgb, var(--rk-surface) 94%, transparent) !important;
+  box-shadow: var(--rk-shadow-float) !important;
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+}
+
+html[data-rk-module="catatan"] .catatan-editor-toolbar button {
+  color: var(--rk-text-secondary) !important;
+}
+
+html[data-rk-module="catatan"] .catatan-editor-toolbar button.is-active {
+  background: var(--rk-secondary-soft) !important;
+  color: var(--rk-catatan-primary) !important;
+}
+
+/* Checklist ---------------------------------------------------------- */
+html[data-rk-module="catatan"] .catatan-checklist-board {
+  border-color: var(--rk-catatan-border) !important;
+  background: var(--rk-surface) !important;
+  box-shadow: var(--rk-shadow-sm) !important;
+}
+
+html[data-rk-module="catatan"] .catatan-checklist-progress-track {
+  background: var(--rk-surface-soft) !important;
+}
+
+html[data-rk-module="catatan"] .catatan-checklist-progress-track > span,
+html[data-rk-module="catatan"] .catatan-check-toggle.is-checked {
+  background: var(--rk-catatan-primary) !important;
+}
+
+html[data-rk-module="catatan"] .catatan-checklist-add {
+  border-color: color-mix(in srgb, var(--rk-catatan-primary) 24%, var(--rk-border)) !important;
+  background: var(--rk-catatan-soft) !important;
+  color: var(--rk-catatan-primary) !important;
+}
+
+/* Tags / related notes ---------------------------------------------- */
+html[data-rk-module="catatan"] :where(
+  .catatan-related-card,
+  .catatan-relation-list-row,
+  .catatan-tag-manager-row
+) {
+  border-color: var(--rk-catatan-border) !important;
+  background: var(--rk-surface) !important;
+  color: var(--rk-text) !important;
+  box-shadow: var(--rk-shadow-sm) !important;
+}
+
+html[data-rk-module="catatan"] :where(
+  .catatan-related-card-icon,
+  .catatan-relation-list-icon,
+  .catatan-related-picker-icon
+) {
+  background: var(--rk-secondary-soft) !important;
+  color: var(--rk-catatan-primary) !important;
+}
+
+html[data-rk-module="catatan"] .catatan-tag-create,
+html[data-rk-module="catatan"] .catatan-folder-picker-create,
+html[data-rk-module="catatan"] .catatan-tag-manage-entry {
+  border-color: color-mix(in srgb, var(--rk-catatan-primary) 30%, var(--rk-border)) !important;
+  background: var(--rk-catatan-soft) !important;
+  color: var(--rk-catatan-primary) !important;
+}
+
+/* Dedicated Reminder ------------------------------------------------ */
+html[data-rk-module="catatan"] :where(
+  .catatan-reminder-editor-card,
+  .catatan-reminder-family-prompt
+) {
+  border-color: color-mix(in srgb, var(--rk-accent) 22%, var(--rk-border)) !important;
+  background: linear-gradient(135deg, var(--rk-catatan-soft-peach), var(--rk-surface) 78%) !important;
+  color: var(--rk-text) !important;
+  box-shadow: var(--rk-shadow-sm) !important;
+}
+
+html[data-rk-module="catatan"] :where(
+  .catatan-reminder-editor-icon,
+  .catatan-reminder-family-prompt-icon
+) {
+  background: var(--rk-accent-soft) !important;
+  color: var(--rk-accent) !important;
+}
+
+html[data-rk-module="catatan"] .catatan-reminder-preview {
+  border-color: color-mix(in srgb, var(--rk-accent) 22%, var(--rk-border)) !important;
+  background: var(--rk-accent-soft) !important;
+  color: var(--rk-text) !important;
+}
+
+/* Archive / selection ------------------------------------------------ */
+html[data-rk-module="catatan"] .catatan-bulk-bar {
+  border-color: var(--rk-border) !important;
+  background: color-mix(in srgb, var(--rk-surface) 94%, transparent) !important;
+  box-shadow: var(--rk-shadow-float) !important;
+}
+
+html[data-rk-module="catatan"] .catatan-selection-count,
+html[data-rk-module="catatan"] .catatan-card-select.is-selected {
+  background: var(--rk-secondary-soft) !important;
+  color: var(--rk-catatan-primary) !important;
+}
+
+html[data-rk-module="catatan"] .catatan-archive-delete-all,
+html[data-rk-module="catatan"] .catatan-info-danger,
+html[data-rk-module="catatan"] .catatan-sensitive-actions .is-danger {
+  color: var(--rk-danger) !important;
+}
+
+/* Relation graph ----------------------------------------------------- */
+html[data-rk-catatan-page="catatan-relasi"] .relation-hero,
+html[data-rk-catatan-page="catatan-relasi"] .relation-list-card {
+  border-color: var(--rk-catatan-border) !important;
+  background: var(--rk-surface) !important;
+  color: var(--rk-text) !important;
+  box-shadow: var(--rk-shadow-sm) !important;
+}
+
+html[data-rk-catatan-page="catatan-relasi"] .relation-hero {
+  background: linear-gradient(135deg, var(--rk-catatan-soft), var(--rk-surface) 76%) !important;
+}
+
+html[data-rk-catatan-page="catatan-relasi"] :where(.relation-hero-icon, .relation-card-icon, .relation-empty > span) {
+  background: var(--rk-secondary-soft) !important;
+  color: var(--rk-catatan-primary) !important;
+}
+
+html[data-rk-catatan-page="catatan-relasi"] .relation-scope-chip {
+  background: var(--rk-secondary-soft) !important;
+  color: var(--rk-catatan-primary) !important;
+}
+
+html[data-rk-catatan-page="catatan-relasi"] .relation-map-shell {
+  border-color: var(--rk-catatan-border) !important;
+  background:
+    radial-gradient(circle at 50% 42%, color-mix(in srgb, var(--rk-secondary) 8%, transparent), transparent 40%),
+    var(--rk-surface) !important;
+  box-shadow: var(--rk-shadow-md) !important;
+}
+
+html[data-rk-catatan-page="catatan-relasi"] .relation-map-toolbar {
+  border-color: var(--rk-border) !important;
+  background: color-mix(in srgb, var(--rk-surface) 92%, transparent) !important;
+  box-shadow: var(--rk-shadow-sm) !important;
+}
+
+html[data-rk-catatan-page="catatan-relasi"] .relation-map-toolbar button {
+  color: var(--rk-catatan-primary) !important;
+}
+
+html[data-rk-catatan-page="catatan-relasi"] .relation-node {
+  border-color: color-mix(in srgb, var(--rk-catatan-primary) 25%, var(--rk-border)) !important;
+  background: var(--rk-surface-raised) !important;
+  color: var(--rk-text) !important;
+  box-shadow: var(--rk-shadow-sm) !important;
+}
+
+html[data-rk-catatan-page="catatan-relasi"] .relation-node-icon {
+  background: var(--rk-secondary-soft) !important;
+  color: var(--rk-catatan-primary) !important;
+}
+
+html[data-rk-catatan-page="catatan-relasi"] .relation-map-line {
+  stroke: color-mix(in srgb, var(--rk-catatan-primary) 62%, var(--rk-text-soft)) !important;
+}
+
+html[data-rk-catatan-page="catatan-relasi"] .relation-map-hint,
+html[data-rk-catatan-page="catatan-relasi"] .relation-graph-meta,
+html[data-rk-catatan-page="catatan-relasi"] .relation-section-heading p,
+html[data-rk-catatan-page="catatan-relasi"] .relation-empty p {
+  color: var(--rk-text-secondary) !important;
+}
+
+/* Toast / state ------------------------------------------------------ */
+html[data-rk-module="catatan"] :where(.catatan-toast, .catatan-editor-toast, .relation-toast) {
+  border: 1px solid var(--rk-border) !important;
+  background: color-mix(in srgb, var(--rk-surface-raised) 96%, transparent) !important;
+  color: var(--rk-text) !important;
+  box-shadow: var(--rk-shadow-float) !important;
+}
+
+html[data-rk-module="catatan"] :where(.catatan-skeleton-card, .catatan-skeleton-icon, .catatan-skeleton-line) {
+  background: linear-gradient(
+    90deg,
+    var(--rk-surface-soft),
+    color-mix(in srgb, var(--rk-secondary) 8%, var(--rk-surface)),
+    var(--rk-surface-soft)
+  ) !important;
+}
+
+/* Focus states ------------------------------------------------------- */
+html[data-rk-module="catatan"] :where(
+  button,
+  a,
+  input,
+  textarea,
+  [contenteditable="true"]
+):focus-visible {
+  outline: none;
+  box-shadow: var(--rk-focus-ring) !important;
+}
+
+/* Dark mode polish --------------------------------------------------- */
+html[data-theme="dark"][data-rk-module="catatan"] body {
+  background:
+    radial-gradient(circle at 50% -8%, color-mix(in srgb, var(--rk-secondary) 10%, transparent), transparent 34%),
+    var(--rk-outer-background);
+}
+
+html[data-theme="dark"][data-rk-module="catatan"] .catatan-bottom-nav,
+html[data-theme="dark"][data-rk-module="catatan"] .catatan-editor-toolbar,
+html[data-theme="dark"][data-rk-module="catatan"] .catatan-bulk-bar {
+  border-color: var(--rk-border-strong) !important;
+  background: color-mix(in srgb, var(--rk-surface-raised) 94%, transparent) !important;
+}
+
+html[data-theme="dark"][data-rk-module="catatan"] :where(
+  .catatan-folder-card,
+  .catatan-primary-card,
+  .catatan-member-card,
+  .catatan-checklist-board,
+  .relation-list-card,
+  .relation-map-shell
+) {
+  box-shadow: 0 14px 36px rgba(0, 0, 0, .22) !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html[data-rk-module="catatan"] :where(.catatan-primary-card, .catatan-member-card, .catatan-nav-item) {
+    transition: none !important;
+  }
+}

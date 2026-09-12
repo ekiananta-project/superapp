@@ -1,8 +1,8 @@
 (() => {
   "use strict";
 
-  const RK_DESIGN_SYSTEM_VERSION = "1.0.3";
-  const RK_BUILD_VERSION = "v2.0.0a48b3";
+  const RK_DESIGN_SYSTEM_VERSION = "1.0.4";
+  const RK_BUILD_VERSION = "v2.0.0a48c";
 
   function appBaseUrl() {
     try {
@@ -56,6 +56,18 @@
     "laporan-dompet.html"
   ]);
 
+  const RK_CATATAN_PAGES = new Set([
+    "catatan.html",
+    "catatan-keluarga.html",
+    "catatan-pribadi.html",
+    "catatan-anggota.html",
+    "catatan-folder.html",
+    "catatan-editor.html",
+    "catatan-checklist.html",
+    "catatan-arsip.html",
+    "catatan-relasi.html"
+  ]);
+
   function currentPageName() {
     try {
       const path = new URL(location.href).pathname.replace(/\/+$/, "");
@@ -67,20 +79,39 @@
 
   function ensureModuleDesignLayer() {
     const page = currentPageName();
-    if (!RK_FINANCE_PAGES.has(page)) return;
 
-    document.documentElement.dataset.rkModule = "finance";
-    document.documentElement.dataset.rkFinancePage = page.replace(/\.html$/i, "");
+    if (RK_FINANCE_PAGES.has(page)) {
+      document.documentElement.dataset.rkModule = "finance";
+      document.documentElement.dataset.rkFinancePage = page.replace(/\.html$/i, "");
 
-    if (document.querySelector('link[data-ruangkitha-finance]')) return;
-    const finance = document.createElement("link");
-    finance.rel = "stylesheet";
-    finance.dataset.ruangkithaFinance = "1.0.0";
-    finance.href = new URL(
-      `css/pages/ruangkitha-finance-v1.css?v=${RK_BUILD_VERSION}`,
-      appBaseUrl()
-    ).href;
-    document.head.appendChild(finance);
+      if (!document.querySelector('link[data-ruangkitha-finance]')) {
+        const finance = document.createElement("link");
+        finance.rel = "stylesheet";
+        finance.dataset.ruangkithaFinance = "1.0.0";
+        finance.href = new URL(
+          `css/pages/ruangkitha-finance-v1.css?v=${RK_BUILD_VERSION}`,
+          appBaseUrl()
+        ).href;
+        document.head.appendChild(finance);
+      }
+      return;
+    }
+
+    if (RK_CATATAN_PAGES.has(page)) {
+      document.documentElement.dataset.rkModule = "catatan";
+      document.documentElement.dataset.rkCatatanPage = page.replace(/\.html$/i, "");
+
+      if (!document.querySelector('link[data-ruangkitha-catatan]')) {
+        const catatan = document.createElement("link");
+        catatan.rel = "stylesheet";
+        catatan.dataset.ruangkithaCatatan = "1.0.0";
+        catatan.href = new URL(
+          `css/pages/ruangkitha-catatan-v1.css?v=${RK_BUILD_VERSION}`,
+          appBaseUrl()
+        ).href;
+        document.head.appendChild(catatan);
+      }
+    }
   }
 
   function syncBrowserThemeColor() {
@@ -247,7 +278,7 @@
   if ("serviceWorker" in navigator) {
     window.addEventListener("load", async () => {
       try {
-        const registration = await navigator.serviceWorker.register("./sw.js?v=20260912-v200a48b3", {
+        const registration = await navigator.serviceWorker.register("./sw.js?v=20260912-v200a48c", {
           scope: "./"
         });
 
