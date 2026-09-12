@@ -2,7 +2,7 @@
   "use strict";
 
   const RK_DESIGN_SYSTEM_VERSION = "1.0.7";
-  const RK_BUILD_VERSION = "v2.0.0a48e1";
+  const RK_BUILD_VERSION = "v2.0.0a48f";
 
   function appBaseUrl() {
     try {
@@ -170,6 +170,21 @@
   function enhanceIdentityBrandCopy() {
     if (document.documentElement.dataset.rkModule !== "identity") return;
 
+    // Production logo integration: auth pages use the real RuangKitha symbol asset.
+    if (document.documentElement.dataset.rkIdentityKind === "auth") {
+      const mark = document.querySelector(".auth-brand-mark");
+      if (mark && mark.dataset.rkLogoReady !== "true") {
+        mark.innerHTML = '<img src="assets/brand/ruangkitha-symbol-256.png" alt="" aria-hidden="true">';
+        mark.dataset.rkLogoReady = "true";
+      }
+    }
+
+    // Normalize legacy metadata when older HTML still says Family Superapp.
+    const applicationName = document.querySelector('meta[name="application-name"]');
+    if (applicationName) applicationName.setAttribute("content", "RuangKitha");
+    const appleTitle = document.querySelector('meta[name="apple-mobile-web-app-title"]');
+    if (appleTitle) appleTitle.setAttribute("content", "RuangKitha");
+
     // Keep the product wordmark visually consistent without changing auth logic.
     document.querySelectorAll(".auth-brand strong").forEach(node => {
       if (node.dataset.rkWordmarkReady === "true") return;
@@ -193,7 +208,7 @@
         const label = row.querySelector("span");
         const value = row.querySelector("small");
         if (label?.textContent?.trim() === "Versi" && value) {
-          value.textContent = "2.0.0a48e1 PWA";
+          value.textContent = "2.0.0a48f PWA";
         }
       });
     }
@@ -489,7 +504,7 @@
   if ("serviceWorker" in navigator) {
     window.addEventListener("load", async () => {
       try {
-        const registration = await navigator.serviceWorker.register("./sw.js?v=20260912-v200a48e1", {
+        const registration = await navigator.serviceWorker.register("./sw.js?v=20260912-v200a48f", {
           scope: "./"
         });
 

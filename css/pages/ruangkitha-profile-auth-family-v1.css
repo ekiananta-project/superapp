@@ -1071,3 +1071,24 @@ html.rk-modal-open body {
   opacity: .65;
   cursor: wait;
 }
+
+
+/* ======================================================================
+   v2.0.0a48f — Logo & App Icon Integration V1
+   ====================================================================== */
+html[data-rk-identity-kind="auth"] .auth-brand-mark {
+  overflow: hidden;
+  display: grid;
+  place-items: center;
+}
+
+html[data-rk-identity-kind="auth"] .auth-brand-mark > img {
+  width: 34px;
+  height: 34px;
+  display: block;
+  object-fit: contain;
+}
+
+html[data-theme="dark"][data-rk-identity-kind="auth"] .auth-brand-mark > img {
+  filter: saturate(.98) brightness(1.06);
+}

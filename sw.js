@@ -1,4 +1,4 @@
-const CACHE_NAME = "ruangkitha-v2.0.0a48e1-identity-ux-polish-design-system-v1";
+const CACHE_NAME = "ruangkitha-v2.0.0a48f-logo-app-icon-integration-v1";
 const OFFLINE_URL = "./offline.html";
 
 const APP_FILES = [
@@ -62,6 +62,17 @@ const APP_FILES = [
   "./icons/icon-192-v2.png",
   "./icons/icon-512-v2.png",
   "./icons/notification-badge-96.png",
+  "./icons/maskable-512-v3.png",
+  "./icons/monochrome-512-v3.png",
+  "./icons/icon-192-v3.png",
+  "./icons/icon-512-v3.png",
+  "./assets/brand/ruangkitha-symbol.png",
+  "./assets/brand/ruangkitha-symbol-256.png",
+  "./assets/brand/ruangkitha-wordmark.png",
+  "./assets/brand/ruangkitha-logo-light.png",
+  "./assets/brand/ruangkitha-logo-dark.png",
+  "./assets/brand/ruangkitha-monochrome-dark.png",
+  "./assets/brand/ruangkitha-monochrome-light.png",
   "./index.html",
   "./catatan.html",
   "./catatan-keluarga.html",
@@ -320,7 +331,7 @@ self.addEventListener("push", event => {
     tag: String(payload.tag || `ruangkitha-${notificationId || Date.now()}`),
     renotify: false,
     lang: "id-ID",
-    icon: "./icons/icon-192-v2.png",
+    icon: "./icons/icon-192-v3.png",
     badge: "./icons/notification-badge-96.png",
     actions: [{ action: "open", title: String(payload.actionTitle || "Buka") }],
     data: { url: target, notificationId }
