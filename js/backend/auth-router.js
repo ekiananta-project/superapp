@@ -49,7 +49,7 @@
    * that family has zero wallets. Wallet onboarding belongs to wajibFinance().
    */
   async function cekStatusAplikasi() {
-    const session = await AuthService.ambilSession();
+    const session = await AuthService.validasiSessionAktif();
     if (!session) {
       return {
         session: null,
@@ -94,14 +94,14 @@
   }
 
   async function redirectJikaSudahLogin() {
-    const session = await AuthService.ambilSession();
+    const session = await AuthService.validasiSessionAktif();
     if (!session) return false;
     await redirectSetelahLogin();
     return true;
   }
 
   async function wajibLogin() {
-    const session = await AuthService.ambilSession();
+    const session = await AuthService.validasiSessionAktif();
     if (session) return true;
     simpanTujuanSekarang();
     location.replace("login.html");

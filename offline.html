@@ -2,6 +2,8 @@
 <html lang="id">
 <head>
   <meta charset="utf-8">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' https://cdn.jsdelivr.net https://unpkg.com https://cdnjs.cloudflare.com; script-src-attr 'none'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' data: https://fonts.gstatic.com; img-src 'self' data: blob: https://eipviruaffujxsfpupki.supabase.co; connect-src 'self' https://eipviruaffujxsfpupki.supabase.co wss://eipviruaffujxsfpupki.supabase.co https://unpkg.com; media-src 'self' blob:; worker-src 'self' blob:; manifest-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; frame-src 'none'">
+  <script src="js/security/ruangkitha-log-guard.js?v=20260912-v200a49d"></script>
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#0B0D0C">
   <meta name="robots" content="noindex,nofollow,noarchive">
@@ -21,7 +23,8 @@
     <div class="icon" aria-hidden="true">⌁</div>
     <h1>Kamu sedang offline</h1>
     <p>RuangKitha membutuhkan koneksi internet untuk login dan menyinkronkan data keluarga. Sambungkan internet lalu coba lagi.</p>
-    <button type="button" onclick="location.reload()">Coba Lagi</button>
+    <button type="button" data-offline-retry>Coba Lagi</button>
   </main>
+  <script src="js/pages/offline.js?v=20260912-v200a49d"></script>
 </body>
 </html>

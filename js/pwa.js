@@ -2,7 +2,7 @@
   "use strict";
 
   const RK_DESIGN_SYSTEM_VERSION = "1.0.7";
-  const RK_BUILD_VERSION = "v2.0.0a50";
+  const RK_BUILD_VERSION = "v2.0.0a49d";
 
   function appBaseUrl() {
     try {
@@ -514,7 +514,7 @@
   if ("serviceWorker" in navigator) {
     window.addEventListener("load", async () => {
       try {
-        const registration = await navigator.serviceWorker.register("./sw.js?v=20260912-v200a49c", {
+        const registration = await navigator.serviceWorker.register("./sw.js?v=20260912-v200a49d", {
           scope: "./"
         });
 

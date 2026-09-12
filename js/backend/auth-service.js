@@ -172,8 +172,36 @@
     return data.user || null;
   }
 
+  function errorJaringan(error) {
+    const message = String(error?.message || error || "").toLowerCase();
+    return error instanceof TypeError || /failed to fetch|networkerror|network request|load failed|fetch failed/.test(message);
+  }
+
+  async function validasiSessionAktif() {
+    const session = await ambilSession();
+    if (!session) return null;
+
+    try {
+      // getUser() validates the access token against Supabase Auth instead of
+      // trusting only the locally persisted session payload.
+      const user = await ambilUserAktif();
+      if (!user || !session.user || user.id !== session.user.id) {
+        try { await client.auth.signOut({ scope: "local" }); } catch {}
+        return null;
+      }
+      return { ...session, user };
+    } catch (error) {
+      // A transient network failure must not be misclassified as an invalid
+      // credential. The protected-page guard will fail closed and let the user
+      // retry without deleting a potentially valid local session.
+      if (errorJaringan(error)) throw error;
+      try { await client.auth.signOut({ scope: "local" }); } catch {}
+      return null;
+    }
+  }
+
   async function sudahLogin() {
-    return Boolean(await ambilSession());
+    return Boolean(await validasiSessionAktif());
   }
 
   async function ubahNamaProfil(nama) {
@@ -288,6 +316,7 @@
     logout,
     ambilSession,
     ambilUserAktif,
+    validasiSessionAktif,
     sudahLogin,
     ubahNamaProfil,
     sinkronProfilSaya,

@@ -682,3 +682,29 @@ body.security-sheet-open {
 .security-device-item[data-revoked="true"]{opacity:.72}.security-device-item-copy{min-width:0;flex:1}.security-device-item-copy strong,.security-device-item-copy span,.security-device-item-copy small{display:block}.security-device-item-copy strong{font-size:var(--font-size-sm);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.security-device-item-copy span,.security-device-item-copy small{margin-top:2px;color:var(--color-text-secondary);font-size:var(--font-size-xs);line-height:1.4}.security-device-actions{display:flex;flex-direction:column;gap:6px;flex-shrink:0}.security-device-action{min-height:34px;padding:0 10px;border:1px solid var(--color-border);border-radius:var(--radius-md);background:var(--color-surface-soft);color:var(--color-text);font:inherit;font-size:11px;font-weight:var(--font-weight-semibold);cursor:pointer}.security-device-action.danger{color:#a13b3b}.security-device-state{display:inline-flex!important;width:max-content;margin-top:5px!important;padding:4px 7px;border-radius:var(--radius-full);background:color-mix(in srgb,var(--color-primary) 13%,transparent);color:var(--color-primary)!important;font-weight:var(--font-weight-semibold)}.security-device-state[data-state="revoked"]{background:rgba(180,45,45,.10);color:#a13b3b!important}
 .security-danger-box{display:flex;align-items:flex-start;gap:var(--space-2);margin:0 0 var(--space-3);padding:var(--space-3);border-radius:var(--radius-md);background:rgba(180,45,45,.08);color:#8f3535}.security-danger-box ion-icon{flex-shrink:0;margin-top:2px;font-size:18px}.security-danger-box p{margin:0;font-size:var(--font-size-xs);line-height:1.55}.security-danger-button{background:#a13b3b!important}.security-confirm-row{display:flex;align-items:flex-start;gap:10px;margin:var(--space-3) 0;padding:var(--space-3);border-radius:var(--radius-md);background:var(--color-surface-soft);color:var(--color-text-secondary);font-size:var(--font-size-xs);line-height:1.5}.security-confirm-row[hidden]{display:none!important}.security-confirm-row input{margin-top:2px;accent-color:var(--color-primary)}
 @media(max-width:380px){.security-device-item{align-items:flex-start}.security-device-actions{width:92px}.security-device-action{width:100%}}
+
+
+/* v2.0.0a49d — curated security activity audit UX */
+.security-activity-card{
+  background:var(--card,#fff);
+  border:1px solid color-mix(in srgb,var(--border,#dfe4e1) 82%,transparent);
+  border-radius:24px;
+  padding:16px;
+  box-shadow:0 10px 30px rgba(17,28,22,.05);
+}
+.security-activity-head{display:flex;align-items:flex-start;justify-content:space-between;gap:14px}
+.security-activity-head>div{min-width:0}
+.security-activity-head strong{display:block;font-size:14px;line-height:1.35}
+.security-activity-head small{display:block;margin-top:5px;color:var(--muted,#69766f);font-size:11.5px;line-height:1.55}
+.security-activity-refresh{flex:0 0 auto;padding-inline:13px;min-height:38px}
+.security-activity-status{margin:12px 0 0;padding:10px 12px;border-radius:14px;background:color-mix(in srgb,var(--danger,#b95a5a) 9%,transparent);color:var(--danger,#9f4444);font-size:12px;line-height:1.45}
+.security-activity-list{display:grid;gap:0;margin-top:10px}
+.security-activity-item{display:grid;grid-template-columns:38px minmax(0,1fr);gap:11px;padding:13px 0;border-top:1px solid color-mix(in srgb,var(--border,#dfe4e1) 74%,transparent)}
+.security-activity-item:first-child{border-top:0}
+.security-activity-icon{width:38px;height:38px;border-radius:13px;display:grid;place-items:center;background:color-mix(in srgb,var(--accent,#7fa58e) 13%,transparent);color:var(--accent-strong,#567a65);font-size:19px}
+.security-activity-copy{min-width:0}
+.security-activity-copy strong{display:block;font-size:13px;line-height:1.4}
+.security-activity-copy p{margin:3px 0 0;color:var(--muted,#69766f);font-size:11.5px;line-height:1.5;overflow-wrap:anywhere}
+.security-activity-copy time{display:block;margin-top:5px;color:var(--muted,#7b8780);font-size:10.5px}
+.security-activity-empty{padding:18px 6px 8px;text-align:center;color:var(--muted,#69766f);font-size:12px;line-height:1.5}
+@media (max-width:380px){.security-activity-head{display:grid}.security-activity-refresh{justify-self:start}}

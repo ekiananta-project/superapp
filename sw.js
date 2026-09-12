@@ -1,4 +1,4 @@
-const CACHE_NAME = "ruangkitha-v2.0.0a50-encrypted-documents-storage-foundation-v1";
+const CACHE_NAME = "ruangkitha-v2.0.0a49d-web-security-hardening-security-qa";
 const OFFLINE_URL = "./offline.html";
 
 const APP_FILES = [
@@ -135,6 +135,9 @@ const APP_FILES = [
   "./js/pages/calendar-source-deeplink.js",
   "./js/pages/superapp-profile-shell.js",
   "./js/app.js",
+  "./js/security/ruangkitha-log-guard.js",
+  "./js/security/ruangkitha-page-bootstrap.js",
+  "./js/pages/offline.js",
   "./js/backend/auth-guard.js",
   "./js/backend/auth-router.js",
   "./js/backend/auth-service.js",
@@ -200,9 +203,30 @@ const APP_FILES = [
   "./transaksi.html"
 ];
 
+// a49d: protected HTML is never precached or used as an offline fallback.
+// Only public entry pages may be cached. Protected application data already
+// depends on an authenticated online backend, so an old protected shell adds
+// risk without providing a meaningful offline workflow.
+const PUBLIC_HTML_NAMES = new Set(["login.html", "daftar.html", "offline.html"]);
+
+function pageName(url) {
+  const clean = String(url.pathname || "").replace(/\/+$/, "");
+  return clean.split("/").pop() || "index.html";
+}
+
+function isProtectedNavigationUrl(url) {
+  return !PUBLIC_HTML_NAMES.has(pageName(url));
+}
+
+function shouldPrecache(path) {
+  const url = new URL(path, self.registration?.scope || self.location.href);
+  if (!url.pathname.endsWith(".html")) return true;
+  return PUBLIC_HTML_NAMES.has(pageName(url));
+}
+
 async function precacheFresh() {
   const cache = await caches.open(CACHE_NAME);
-  await Promise.all(APP_FILES.map(async path => {
+  await Promise.all(APP_FILES.filter(shouldPrecache).map(async path => {
     try {
       // Paksa install mengambil bytes terbaru dari origin, bukan HTTP cache lama.
       const request = new Request(path, { cache: "reload" });
@@ -236,20 +260,24 @@ self.addEventListener("activate", event => {
 
 async function navigationResponse(request) {
   const url = new URL(request.url);
+  const protectedPage = isProtectedNavigationUrl(url);
   const shellKey = new Request(url.origin + url.pathname);
 
   try {
-    // HTML harus selalu mengecek origin. Query string (mis. ?id=wallet) adalah
-    // state halaman, bukan versi HTML yang layak disimpan terpisah.
+    // Protected navigations always require fresh origin bytes. They are never
+    // written to Cache Storage and can therefore never reappear after logout
+    // merely because an old service-worker shell survived.
     const response = await fetch(request, { cache: "no-store" });
-    if (response && response.ok) {
+    if (!protectedPage && response && response.ok) {
       const cache = await caches.open(CACHE_NAME);
       cache.put(shellKey, response.clone()).catch(() => {});
     }
     return response;
   } catch {
-    const cached = await caches.match(shellKey, { ignoreSearch: true });
-    if (cached) return cached;
+    if (!protectedPage) {
+      const cached = await caches.match(shellKey, { ignoreSearch: true });
+      if (cached) return cached;
+    }
     return (await caches.match(OFFLINE_URL, { ignoreSearch: true })) || Response.error();
   }
 }

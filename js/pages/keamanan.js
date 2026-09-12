@@ -61,7 +61,11 @@
     revokeCopy: document.querySelector("[data-security-device-revoke-copy]"),
     revokePin: document.querySelector("[data-security-device-revoke-pin]"),
     revokeMessage: document.querySelector("[data-security-device-revoke-message]"),
-    revokeSubmit: document.querySelector("[data-security-device-revoke-submit]")
+    revokeSubmit: document.querySelector("[data-security-device-revoke-submit]"),
+    activityList: document.querySelector("[data-security-activity-list]"),
+    activityEmpty: document.querySelector("[data-security-activity-empty]"),
+    activityStatus: document.querySelector("[data-security-activity-status]"),
+    activityRefresh: document.querySelector("[data-security-activity-refresh]")
   };
 
   let current = {
@@ -69,6 +73,8 @@
     local: null,
     capabilities: null,
     devices: [],
+    activities: [],
+    activityError: null,
     loading: false,
     renameTarget: null,
     revokeTarget: null
@@ -201,12 +207,26 @@
       ? await Trusted.listDevices({ supabase: client })
       : { devices: [], trusted_device_count: 0 };
 
+    let activitySnapshot = { events: [] };
+    let activityError = null;
+    if (state?.configured) {
+      try {
+        activitySnapshot = await rpc("security_activity_feed_v1", { p_limit: 20 }) || { events: [] };
+      } catch (error) {
+        // Activity presentation is intentionally non-blocking: a feed outage must
+        // never prevent PIN unlock, recovery, or device revocation workflows.
+        activityError = error;
+      }
+    }
+
     current = {
       ...current,
       state: state || { configured: false },
       local,
       capabilities,
-      devices: Array.isArray(deviceSnapshot?.devices) ? deviceSnapshot.devices : []
+      devices: Array.isArray(deviceSnapshot?.devices) ? deviceSnapshot.devices : [],
+      activities: Array.isArray(activitySnapshot?.events) ? activitySnapshot.events : [],
+      activityError
     };
     return current;
   }
@@ -318,6 +338,71 @@
     }
   }
 
+  function activityPresentation(event) {
+    const type = String(event?.event_type || "");
+    const details = event?.details && typeof event.details === "object" ? event.details : {};
+    const label = String(event?.device_label || details.target_label || "").trim();
+    switch (type) {
+      case "vault_created": return { icon: "shield-checkmark-outline", title: "Security Vault dibuat", copy: "Fondasi kunci akun diaktifkan pada Trusted Device pertama." };
+      case "device_registered": return { icon: "hardware-chip-outline", title: "Perangkat didaftarkan", copy: label ? `${label} didaftarkan ke Security Vault.` : "Perangkat baru didaftarkan ke Security Vault." };
+      case "device_trusted": return { icon: "checkmark-circle-outline", title: "Trusted Device ditambahkan", copy: label ? `${label} sekarang dipercaya untuk membuka vault.` : "Perangkat baru sekarang dipercaya untuk membuka vault." };
+      case "device_revoked": return { icon: "remove-circle-outline", title: "Trusted Device dicabut", copy: details.target_label ? `${details.target_label} tidak lagi dapat membuka Security Vault.` : "Akses sebuah Trusted Device telah dicabut." };
+      case "device_renamed": return { icon: "create-outline", title: "Nama perangkat diubah", copy: details.old_label && details.new_label ? `“${details.old_label}” diubah menjadi “${details.new_label}”.` : "Label Trusted Device diperbarui." };
+      case "recovery_rotated": return { icon: "key-outline", title: details.initial_saved_kit ? "Recovery Kit diaktifkan" : "Recovery Kit diganti", copy: details.initial_saved_kit ? "Recovery Kit tersimpan pertama berhasil diaktifkan." : "Recovery Kit lama digantikan oleh kit baru." };
+      case "vault_recovered": return { icon: "refresh-circle-outline", title: "Security Vault dipulihkan", copy: label ? `${label} dipulihkan menggunakan Recovery Kit.` : "Perangkat baru dipulihkan menggunakan Recovery Kit." };
+      case "vault_retired": return { icon: "archive-outline", title: "Security Vault dinonaktifkan", copy: "Vault lama ditandai tidak aktif." };
+      default: return { icon: "shield-outline", title: "Aktivitas keamanan", copy: "Perubahan keamanan tercatat pada akun ini." };
+    }
+  }
+
+  function renderActivityList() {
+    if (!els.activityList) return;
+    const activities = Array.isArray(current.activities) ? current.activities : [];
+    els.activityList.replaceChildren();
+
+    if (els.activityStatus) {
+      els.activityStatus.hidden = !current.activityError;
+      els.activityStatus.textContent = current.activityError
+        ? "Riwayat keamanan belum dapat dimuat. Fitur Security Vault lainnya tetap tersedia."
+        : "";
+    }
+
+    if (!activities.length) {
+      const empty = document.createElement("div");
+      empty.className = "security-activity-empty";
+      empty.textContent = current.state?.configured
+        ? "Belum ada aktivitas keamanan untuk ditampilkan."
+        : "Aktivitas keamanan akan tersedia setelah Security Vault diaktifkan.";
+      els.activityList.appendChild(empty);
+      return;
+    }
+
+    for (const event of activities) {
+      const presentation = activityPresentation(event);
+      const item = document.createElement("article");
+      item.className = "security-activity-item";
+
+      const iconWrap = document.createElement("span");
+      iconWrap.className = "security-activity-icon";
+      const icon = document.createElement("ion-icon");
+      icon.setAttribute("name", presentation.icon);
+      iconWrap.appendChild(icon);
+
+      const copy = document.createElement("div");
+      copy.className = "security-activity-copy";
+      const title = document.createElement("strong");
+      title.textContent = presentation.title;
+      const description = document.createElement("p");
+      description.textContent = presentation.copy;
+      const time = document.createElement("time");
+      time.dateTime = event.occurred_at || "";
+      time.textContent = formatWhen(event.occurred_at);
+      copy.append(title, description, time);
+      item.append(iconWrap, copy);
+      els.activityList.appendChild(item);
+    }
+  }
+
   function renderSnapshot() {
     current.loading = false;
     const state = current.state || { configured: false };
@@ -334,6 +419,7 @@
     if (els.deviceNameSection) els.deviceNameSection.hidden = !local.ready;
     if (els.deviceNameCurrent) els.deviceNameCurrent.textContent = local.deviceLabel || "—";
     renderDeviceList();
+    renderActivityList();
 
     if (els.trustedCount) els.trustedCount.textContent = state.configured ? String(state.trusted_device_count ?? 0) : "0";
     if (els.recoveryStatus) els.recoveryStatus.textContent = formatRecovery(state);
@@ -800,6 +886,7 @@
     els.pinForm?.addEventListener("submit", handlePinChangeSubmit);
     els.pinClose?.addEventListener("click", closePinChange);
     els.recoveryManage?.addEventListener("click", openRecoveryManage);
+    els.activityRefresh?.addEventListener("click", () => refreshStatus({ quiet: true }));
     els.deviceRenameCurrent?.addEventListener("click", () => {
       const device = currentDeviceDescriptor();
       if (device) openRenameDevice(device);
