@@ -1,4 +1,4 @@
-/* RuangKitha v2.0.0a50a1 — Documents UX Polish V1 (on a50a foundation) */
+/* RuangKitha v2.0.0a50a2 — Documents Attention-First Landing (on a50a1 UX polish) */
 (() => {
   "use strict";
 
@@ -66,7 +66,7 @@
   const unlockSubmit = q("[data-doc-unlock-submit]");
 
   let activeFamily = null;
-  let currentView = "family";
+  let currentView = "attention";
   let records = [];
   let currentRecord = null;
   let currentStatus = null;
