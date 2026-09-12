@@ -2,7 +2,7 @@
   "use strict";
 
   const RK_DESIGN_SYSTEM_VERSION = "1.0.7";
-  const RK_BUILD_VERSION = "v2.0.0a49c";
+  const RK_BUILD_VERSION = "v2.0.0a50";
 
   function appBaseUrl() {
     try {
@@ -73,6 +73,10 @@
     "notifikasi.html"
   ]);
 
+  const RK_DOCUMENT_PAGES = new Set([
+    "dokumen.html"
+  ]);
+
   const RK_IDENTITY_PAGE_KIND = new Map([
     ["login.html", "auth"],
     ["daftar.html", "auth"],
@@ -128,6 +132,12 @@
         ).href;
         document.head.appendChild(catatan);
       }
+      return;
+    }
+
+    if (RK_DOCUMENT_PAGES.has(page)) {
+      document.documentElement.dataset.rkModule = "documents";
+      document.documentElement.dataset.rkDocumentsPage = page.replace(/\.html$/i, "");
       return;
     }
 
@@ -208,7 +218,7 @@
         const label = row.querySelector("span");
         const value = row.querySelector("small");
         if (label?.textContent?.trim() === "Versi" && value) {
-          value.textContent = "2.0.0a49c PWA";
+          value.textContent = "2.0.0a50 PWA";
         }
       });
     }

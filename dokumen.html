@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="id" data-auth-guard="family">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#0B0D0C">
+  <meta name="application-name" content="RuangKitha">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="RuangKitha">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="robots" content="noindex,nofollow,noarchive">
+  <meta name="referrer" content="strict-origin-when-cross-origin">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32.png">
+  <link rel="apple-touch-icon" sizes="180x180" href="icons/apple-touch-icon.png">
+  <script src="js/theme.js"></script>
+  <title>Dokumen · RuangKitha</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/theme.css">
+  <link rel="stylesheet" href="css/pages/ruangkitha-documents-v1.css?v=20260912-v200a50">
+  <style id="ruangkitha-auth-cloak">html[data-auth-guard] body{visibility:hidden!important}</style>
+</head>
+<body>
+<div class="aplikasi dokumen-app" data-documents-root aria-busy="true">
+  <header class="header-halaman dokumen-header">
+    <a class="dokumen-back" href="index.html" aria-label="Kembali ke RuangKitha">
+      <ion-icon name="arrow-back-outline" aria-hidden="true"></ion-icon>
+      <span>RuangKitha</span>
+    </a>
+    <h1>Dokumen</h1>
+    <span class="kosong" aria-hidden="true"></span>
+  </header>
+
+  <main class="dokumen-main">
+    <section class="dokumen-security-card" data-doc-security>
+      <div class="dokumen-security-icon"><ion-icon name="shield-checkmark-outline"></ion-icon></div>
+      <div class="dokumen-security-copy">
+        <small>Encrypted Storage Foundation V1</small>
+        <strong data-doc-vault-title>Memeriksa Security Vault…</strong>
+        <p data-doc-vault-copy>File dan metadata sensitif dienkripsi di perangkat sebelum dikirim ke Storage.</p>
+      </div>
+      <span class="dokumen-security-badge" data-doc-vault-badge>Memuat</span>
+    </section>
+
+    <section class="dokumen-foundation-note">
+      <ion-icon name="lock-closed-outline" aria-hidden="true"></ion-icon>
+      <p><strong>a50 foundation:</strong> akses dokumen V1 masih pribadi untuk pemilik. Struktur access envelope sudah disiapkan untuk sharing keluarga pada patch lanjutan.</p>
+    </section>
+
+    <section class="dokumen-toolbar">
+      <div>
+        <h2>Vault dokumen</h2>
+        <p data-doc-count>Memuat dokumen…</p>
+      </div>
+      <button class="dokumen-add" type="button" data-doc-add disabled>
+        <ion-icon name="add-outline" aria-hidden="true"></ion-icon>
+        <span>Tambah</span>
+      </button>
+      <input data-doc-file type="file" hidden>
+    </section>
+
+    <section class="dokumen-message" data-doc-message role="status" hidden></section>
+
+    <section class="dokumen-list" data-doc-list aria-live="polite">
+      <div class="dokumen-state" data-doc-state>
+        <span><ion-icon name="hourglass-outline"></ion-icon></span>
+        <strong>Memuat vault dokumen</strong>
+        <p>RuangKitha sedang memeriksa Trusted Device dan Recovery Kit.</p>
+      </div>
+    </section>
+  </main>
+</div>
+
+<div class="lapisan dokumen-unlock-layer" data-doc-unlock-layer hidden>
+  <section class="bottom-sheet dokumen-unlock-sheet" role="dialog" aria-modal="true" aria-labelledby="doc-unlock-title">
+    <div class="sheet-handle"></div>
+    <div class="sheet-header">
+      <div>
+        <h2 id="doc-unlock-title">Buka Dokumen</h2>
+        <p class="sheet-subjudul">Masukkan PIN perangkat ini. PIN hanya diproses secara lokal.</p>
+      </div>
+      <button class="tombol-ikon" type="button" data-doc-unlock-close aria-label="Tutup"><ion-icon name="close-outline"></ion-icon></button>
+    </div>
+    <form class="formulir dokumen-unlock-form" data-doc-unlock-form>
+      <div class="grup-input">
+        <label for="doc-local-pin">PIN perangkat ini</label>
+        <input class="input" id="doc-local-pin" data-doc-pin type="password" inputmode="numeric" pattern="[0-9]*" minlength="6" maxlength="12" autocomplete="current-password" required>
+      </div>
+      <p class="dokumen-sheet-message" data-doc-unlock-message role="alert" hidden></p>
+      <button class="tombol-utama" type="submit" data-doc-unlock-submit>Buka vault dokumen</button>
+    </form>
+  </section>
+</div>
+
+<script type="module" src="https://unpkg.com/ionicons@8.0.13/dist/ionicons/ionicons.esm.js"></script>
+<script nomodule src="https://unpkg.com/ionicons@8.0.13/dist/ionicons/ionicons.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="js/backend/supabase.js"></script>
+<script src="js/backend/auth-service.js"></script>
+<script src="js/backend/family-service.js"></script>
+<script src="js/backend/auth-router.js?v=20260909-v200a8"></script>
+<script src="js/backend/auth-guard.js?v=20260909-v200a8"></script>
+<script src="js/security/ruangkitha-crypto-core.js?v=20260912-v200a49"></script>
+<script src="js/security/ruangkitha-trusted-device.js?v=20260912-v200a49c"></script>
+<script src="js/security/ruangkitha-documents-crypto.js?v=20260912-v200a50"></script>
+<script src="js/backend/documents-service.js?v=20260912-v200a50"></script>
+<script src="js/pages/dokumen.js?v=20260912-v200a50"></script>
+<script src="js/pwa.js?v=20260912-v200a50"></script>
+</body>
+</html>

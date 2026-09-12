@@ -5,7 +5,7 @@
   const LABELS = {
     finance: "Keuangan",
     notes: "Catatan",
-    documents: "Dokumen Keluarga",
+    documents: "Dokumen",
     maintenance: "Maintenance",
     fun: "Have Fun Family"
   };

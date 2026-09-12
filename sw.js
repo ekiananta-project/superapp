@@ -1,4 +1,4 @@
-const CACHE_NAME = "ruangkitha-v2.0.0a49c-security-device-management-v1";
+const CACHE_NAME = "ruangkitha-v2.0.0a50-encrypted-documents-storage-foundation-v1";
 const OFFLINE_URL = "./offline.html";
 
 const APP_FILES = [
@@ -29,6 +29,7 @@ const APP_FILES = [
   "./css/pages/home-report-entry.css",
   "./css/pages/laporan-finance.css",
   "./css/pages/keamanan.css",
+  "./css/pages/ruangkitha-documents-v1.css",
   "./css/pages/keluarga-awal.css",
   "./css/pages/keluarga-member-management.css",
   "./css/pages/keluarga-family-media.css",
@@ -74,6 +75,7 @@ const APP_FILES = [
   "./assets/brand/ruangkitha-monochrome-dark.png",
   "./assets/brand/ruangkitha-monochrome-light.png",
   "./index.html",
+  "./dokumen.html",
   "./catatan.html",
   "./catatan-keluarga.html",
   "./catatan-pribadi.html",
@@ -165,10 +167,13 @@ const APP_FILES = [
   "./js/pages/home-backend.js",
   "./js/security/ruangkitha-crypto-core.js",
   "./js/security/ruangkitha-trusted-device.js",
+  "./js/security/ruangkitha-documents-crypto.js",
   "./js/security/ruangkitha-security-setup-ui.js",
   "./js/security/ruangkitha-recovery-kit.js",
   "./js/security/ruangkitha-recovery-ui.js",
   "./js/pages/keamanan.js",
+  "./js/backend/documents-service.js",
+  "./js/pages/dokumen.js",
   "./js/pages/keluarga-awal.js",
   "./js/pages/keluarga.js",
   "./js/pages/keluarga-media.js",

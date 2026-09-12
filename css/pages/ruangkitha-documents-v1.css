@@ -1,0 +1,38 @@
+/* RuangKitha v2.0.0a50 — Documents Storage Foundation V1 */
+.dokumen-app{min-height:100dvh;background:var(--rk-bg,var(--warna-latar,#f7f4ee));}
+.dokumen-header{grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);}
+.dokumen-header h1{font-size:17px;margin:0;text-align:center;}
+.dokumen-back{display:inline-flex;align-items:center;gap:5px;color:var(--warna-teks,#252a27);text-decoration:none;font-size:13px;font-weight:650;justify-self:start;}
+.dokumen-back ion-icon{font-size:20px;}
+.dokumen-main{width:min(100%,430px);margin:0 auto;padding:14px 16px 36px;box-sizing:border-box;display:grid;gap:14px;}
+.dokumen-security-card{display:grid;grid-template-columns:auto minmax(0,1fr) auto;align-items:start;gap:12px;padding:15px;border-radius:20px;background:var(--warna-kartu,#fff);box-shadow:var(--rk-shadow-card,0 8px 28px rgba(31,41,35,.07));border:1px solid rgba(104,126,112,.10);}
+.dokumen-security-icon{display:grid;place-items:center;width:42px;height:42px;border-radius:14px;background:rgba(80,130,101,.11);color:#4f8064;font-size:22px;}
+.dokumen-security-copy{min-width:0;display:grid;gap:4px;}
+.dokumen-security-copy small{color:var(--warna-teks-sekunder,#7a817c);font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;}
+.dokumen-security-copy strong{font-size:14px;line-height:1.3;color:var(--warna-teks,#242925);}
+.dokumen-security-copy p{margin:0;color:var(--warna-teks-sekunder,#727a75);font-size:11px;line-height:1.5;}
+.dokumen-security-badge{align-self:start;white-space:nowrap;padding:5px 8px;border-radius:999px;background:rgba(120,128,123,.10);font-size:9px;font-weight:750;color:var(--warna-teks-sekunder,#717973);}
+.dokumen-security-badge[data-state="open"]{background:rgba(71,137,96,.12);color:#478560;}
+.dokumen-security-badge[data-state="locked"]{background:rgba(221,155,56,.13);color:#a66c18;}
+.dokumen-security-badge[data-state="blocked"]{background:rgba(214,83,83,.12);color:#b14d4d;}
+.dokumen-foundation-note{display:flex;align-items:flex-start;gap:9px;padding:11px 12px;border-radius:15px;background:rgba(119,94,177,.07);color:var(--warna-teks-sekunder,#6f7571);font-size:10px;line-height:1.55;}
+.dokumen-foundation-note ion-icon{flex:0 0 auto;margin-top:2px;font-size:16px;color:#765fb0;}
+.dokumen-foundation-note p{margin:0;}.dokumen-foundation-note strong{color:var(--warna-teks,#292e2b);}
+.dokumen-toolbar{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:2px;}
+.dokumen-toolbar h2{margin:0;font-size:15px;color:var(--warna-teks,#272c29);}.dokumen-toolbar p{margin:3px 0 0;font-size:10px;color:var(--warna-teks-sekunder,#777e79);}
+.dokumen-add{border:0;border-radius:13px;display:inline-flex;align-items:center;gap:5px;padding:9px 12px;background:var(--rk-accent,#557d68);color:#fff;font:inherit;font-size:11px;font-weight:700;cursor:pointer;}
+.dokumen-add:disabled{opacity:.45;cursor:not-allowed;}.dokumen-add ion-icon{font-size:17px;}
+.dokumen-message{padding:10px 12px;border-radius:13px;background:rgba(80,130,101,.10);font-size:11px;line-height:1.45;color:var(--warna-teks,#2b302d);}
+.dokumen-message.is-error{background:rgba(205,74,74,.10);color:#a24545;}
+.dokumen-list{display:grid;gap:10px;}
+.dokumen-state{display:grid;justify-items:center;text-align:center;gap:7px;padding:35px 20px;border-radius:20px;background:var(--warna-kartu,#fff);border:1px dashed rgba(110,123,115,.18);}
+.dokumen-state>span{display:grid;place-items:center;width:48px;height:48px;border-radius:16px;background:rgba(86,125,105,.09);color:#557d68;font-size:24px;}
+.dokumen-state strong{font-size:13px;color:var(--warna-teks,#2a2f2c);}.dokumen-state p{margin:0;max-width:290px;color:var(--warna-teks-sekunder,#747b77);font-size:10px;line-height:1.5;}
+.dokumen-state .dokumen-state-action{margin-top:3px;border:0;border-radius:12px;padding:9px 13px;background:var(--rk-accent,#557d68);color:#fff;font:inherit;font-size:10px;font-weight:700;cursor:pointer;text-decoration:none;}
+.dokumen-card{display:grid;grid-template-columns:auto minmax(0,1fr) auto;align-items:center;gap:11px;padding:13px;border-radius:17px;background:var(--warna-kartu,#fff);border:1px solid rgba(103,118,109,.10);box-shadow:0 5px 18px rgba(31,42,35,.045);}
+.dokumen-card-icon{display:grid;place-items:center;width:40px;height:40px;border-radius:13px;background:rgba(119,94,177,.09);color:#765fb0;font-size:20px;}
+.dokumen-card-copy{min-width:0;display:grid;gap:3px;}.dokumen-card-copy strong{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:12px;color:var(--warna-teks,#292e2b);}.dokumen-card-copy span{font-size:9px;color:var(--warna-teks-sekunder,#7b817d);}
+.dokumen-card-download{display:grid;place-items:center;width:34px;height:34px;border:0;border-radius:11px;background:rgba(80,130,101,.09);color:#4f8064;font-size:18px;cursor:pointer;}
+.dokumen-card-download:disabled{opacity:.45;}
+.dokumen-unlock-layer{z-index:2400;}.dokumen-unlock-sheet{padding-bottom:max(18px,env(safe-area-inset-bottom));}.dokumen-unlock-form{padding:4px 16px 16px;}.dokumen-sheet-message{margin:0 0 10px;padding:9px 10px;border-radius:11px;background:rgba(205,74,74,.10);color:#a24545;font-size:10px;line-height:1.4;}
+html[data-theme="dark"] .dokumen-app{background:var(--warna-latar,#101310);}html[data-theme="dark"] .dokumen-security-card,html[data-theme="dark"] .dokumen-card,html[data-theme="dark"] .dokumen-state{background:var(--warna-kartu,#181c19);border-color:rgba(223,232,226,.08);box-shadow:none;}html[data-theme="dark"] .dokumen-foundation-note{background:rgba(151,128,211,.10);}
