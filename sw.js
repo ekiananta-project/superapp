@@ -1,4 +1,4 @@
-const CACHE_NAME = "ruangkitha-v2.0.0a48a-home-global-shell-v1";
+const CACHE_NAME = "ruangkitha-v2.0.0a48b-finance-design-system-v1";
 const OFFLINE_URL = "./offline.html";
 
 const APP_FILES = [
@@ -45,6 +45,7 @@ const APP_FILES = [
   "./css/theme.css",
   "./css/ruangkitha-design-system-v1.css",
   "./css/ruangkitha-shell-v1.css",
+  "./css/pages/ruangkitha-finance-v1.css",
   "./daftar.html",
   "./detail-transaksi.html",
   "./dompet-detail.html",

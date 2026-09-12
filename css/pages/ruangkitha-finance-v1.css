@@ -1,0 +1,688 @@
+/* ======================================================================
+   RuangKitha Finance Visual System v1.0
+   Patch: v2.0.0a48b — Keuangan migration
+
+   Visual-only layer on top of locked a48a + Design System v1.
+   No Finance calculations, Supabase calls, routing, forms, bill lifecycle,
+   Calendar Projection, or notification logic are changed here.
+   ====================================================================== */
+
+html[data-rk-module="finance"] {
+  --rk-finance-primary: var(--rk-sage);
+  --rk-finance-secondary: var(--rk-teal);
+  --rk-finance-warm: var(--rk-peach);
+  --rk-finance-card-border: color-mix(in srgb, var(--rk-primary) 13%, var(--rk-border));
+  --rk-finance-soft-sage: color-mix(in srgb, var(--rk-primary) 11%, var(--rk-surface));
+  --rk-finance-soft-teal: color-mix(in srgb, var(--rk-secondary) 12%, var(--rk-surface));
+  --rk-finance-soft-peach: color-mix(in srgb, var(--rk-accent) 13%, var(--rk-surface));
+}
+
+html[data-rk-module="finance"] body {
+  background:
+    radial-gradient(circle at 50% -12%, color-mix(in srgb, var(--rk-primary) 8%, transparent), transparent 32%),
+    var(--rk-outer-background);
+}
+
+html[data-rk-module="finance"] .aplikasi {
+  background:
+    linear-gradient(180deg, color-mix(in srgb, var(--rk-primary) 2.5%, var(--rk-background)) 0, var(--rk-background) 180px);
+}
+
+/* Header -------------------------------------------------------------- */
+html[data-rk-module="finance"] .header-halaman {
+  color: var(--rk-text);
+}
+
+html[data-rk-module="finance"] .header-halaman h1 {
+  color: var(--rk-text);
+  font-weight: 750;
+  letter-spacing: -.022em;
+}
+
+html[data-rk-module="finance"] .header-halaman .tombol-ikon,
+html[data-rk-module="finance"] .finance-back-ruangkitha {
+  border: 1px solid var(--rk-border) !important;
+  background: var(--rk-surface) !important;
+  color: var(--rk-primary) !important;
+  box-shadow: var(--rk-shadow-sm) !important;
+}
+
+html[data-rk-module="finance"] .finance-back-ruangkitha {
+  border-radius: var(--rk-radius-full) !important;
+}
+
+/* Shared Finance surfaces -------------------------------------------- */
+html[data-rk-module="finance"] :where(
+  .kartu-uang,
+  .home-cash-card,
+  .home-report-entry,
+  .planning-intro,
+  .planning-card,
+  .budget-month-card,
+  .budget-summary-card,
+  .bill-card,
+  .bills-month-card,
+  .bills-summary-card,
+  .kartu-analisis-detail,
+  .kartu-ringkasan-detail,
+  .pemilih-dompet-detail,
+  .report-filter-card,
+  .report-hero,
+  .report-section.report-card-section,
+  .akun-form-section,
+  .akun-preview-card,
+  .akun-saran
+) {
+  border-color: var(--rk-finance-card-border) !important;
+  background: var(--rk-surface) !important;
+  color: var(--rk-text) !important;
+  box-shadow: var(--rk-shadow-sm) !important;
+}
+
+html[data-rk-module="finance"] :where(
+  .planning-intro,
+  .planning-card,
+  .budget-summary-card,
+  .bills-summary-card,
+  .bill-card,
+  .report-hero,
+  .report-filter-card,
+  .report-section.report-card-section,
+  .akun-form-section
+) {
+  border-radius: var(--rk-radius-xl) !important;
+}
+
+/* Finance Home ------------------------------------------------------- */
+html[data-rk-finance-page="finance"] .ringkasan-saldo {
+  gap: 12px;
+}
+
+html[data-rk-finance-page="finance"] .ringkasan-saldo .kartu-uang {
+  min-height: 82px;
+  border: 1px solid var(--rk-finance-card-border) !important;
+  border-radius: 20px !important;
+}
+
+html[data-rk-finance-page="finance"] .ringkasan-saldo .kartu-uang:first-child {
+  background:
+    linear-gradient(135deg, var(--rk-finance-soft-sage), var(--rk-surface) 72%) !important;
+}
+
+html[data-rk-finance-page="finance"] .kartu-uang-ikon,
+html[data-rk-module="finance"] .ikon-bulat {
+  background: var(--rk-primary-soft) !important;
+  color: var(--rk-primary) !important;
+}
+
+html[data-rk-finance-page="finance"] .kartu-uang-info,
+html[data-rk-finance-page="finance"] .home-hydrate-label {
+  color: var(--rk-text-secondary) !important;
+}
+
+html[data-rk-finance-page="finance"] .kartu-uang-info strong,
+html[data-rk-finance-page="finance"] .home-hydrate-money {
+  color: var(--rk-text) !important;
+}
+
+html[data-rk-finance-page="finance"] .kartu-uang-chevron {
+  color: var(--rk-primary) !important;
+}
+
+html[data-rk-finance-page="finance"] .finance-period-trigger {
+  border: 1px solid var(--rk-finance-card-border) !important;
+  background: var(--rk-finance-soft-sage) !important;
+  color: var(--rk-text) !important;
+  box-shadow: none !important;
+}
+
+html[data-rk-finance-page="finance"] .finance-period-trigger ion-icon {
+  color: var(--rk-primary) !important;
+}
+
+html[data-rk-finance-page="finance"] .home-cash-summary {
+  gap: 10px;
+}
+
+html[data-rk-finance-page="finance"] .home-cash-card {
+  border: 1px solid var(--rk-finance-card-border) !important;
+  border-radius: 18px !important;
+}
+
+html[data-rk-finance-page="finance"] .home-cash-card.pemasukan {
+  background: color-mix(in srgb, var(--rk-success) 7%, var(--rk-surface)) !important;
+}
+
+html[data-rk-finance-page="finance"] .home-cash-card.pengeluaran {
+  background: color-mix(in srgb, var(--rk-accent) 7%, var(--rk-surface)) !important;
+}
+
+html[data-rk-finance-page="finance"] .home-cash-card.pemasukan .home-cash-icon {
+  background: var(--rk-success-soft) !important;
+  color: var(--rk-success) !important;
+}
+
+html[data-rk-finance-page="finance"] .home-cash-card.pengeluaran .home-cash-icon {
+  background: var(--rk-accent-soft) !important;
+  color: var(--rk-accent) !important;
+}
+
+html[data-rk-finance-page="finance"] .home-report-entry {
+  border: 1px solid color-mix(in srgb, var(--rk-secondary) 20%, var(--rk-border)) !important;
+  border-radius: 20px !important;
+  background: linear-gradient(135deg, var(--rk-finance-soft-teal), var(--rk-surface) 76%) !important;
+}
+
+html[data-rk-finance-page="finance"] .home-report-icon {
+  background: var(--rk-secondary-soft) !important;
+  color: var(--rk-secondary) !important;
+}
+
+html[data-rk-finance-page="finance"] .home-report-copy small {
+  color: var(--rk-text-secondary) !important;
+}
+
+/* Five-slot Finance nav --------------------------------------------- */
+html[data-rk-module="finance"] .navigasi-bawah.finance-nav-v5 {
+  bottom: max(8px, env(safe-area-inset-bottom)) !important;
+  width: min(calc(100vw - 20px), 410px) !important;
+  min-height: 70px !important;
+  padding: 7px 8px !important;
+  border: 1px solid var(--rk-border) !important;
+  border-radius: 22px !important;
+  background: color-mix(in srgb, var(--rk-surface) 93%, transparent) !important;
+  box-shadow: var(--rk-shadow-float) !important;
+  backdrop-filter: blur(18px) saturate(1.06);
+  -webkit-backdrop-filter: blur(18px) saturate(1.06);
+}
+
+html[data-rk-module="finance"] .finance-nav-v5 .navigasi-item {
+  min-height: 53px;
+  justify-content: center;
+  border-radius: 15px;
+  color: var(--rk-text-secondary) !important;
+  transition: background .16s ease, color .16s ease, transform .16s ease;
+}
+
+html[data-rk-module="finance"] .finance-nav-v5 .navigasi-item.is-aktif {
+  background: var(--rk-primary-soft) !important;
+  color: var(--rk-primary) !important;
+}
+
+html[data-rk-module="finance"] .finance-nav-v5 .navigasi-item:active {
+  transform: scale(.97);
+}
+
+html[data-rk-module="finance"] .finance-nav-v5 .tombol-tambah {
+  border: 4px solid var(--rk-background) !important;
+  background: var(--rk-primary) !important;
+  color: var(--rk-on-primary) !important;
+  box-shadow: 0 12px 28px color-mix(in srgb, var(--rk-primary) 26%, transparent) !important;
+}
+
+html[data-rk-module="finance"] .finance-nav-v5 .tombol-tambah::before,
+html[data-rk-module="finance"] .finance-nav-v5 .tombol-tambah::after {
+  border-color: var(--rk-background) !important;
+}
+
+/* Planning / Manage -------------------------------------------------- */
+html[data-rk-module="finance"] .planning-intro {
+  background: linear-gradient(135deg, var(--rk-finance-soft-sage), var(--rk-surface) 78%) !important;
+}
+
+html[data-rk-module="finance"] .planning-intro-icon {
+  background: var(--rk-primary-soft) !important;
+  color: var(--rk-primary) !important;
+}
+
+html[data-rk-module="finance"] .planning-card {
+  transition: transform .16s ease, border-color .16s ease, box-shadow .16s ease;
+}
+
+html[data-rk-module="finance"] .planning-card:active {
+  transform: scale(.985);
+}
+
+html[data-rk-module="finance"] .planning-card-icon {
+  background: var(--rk-primary-soft) !important;
+  color: var(--rk-primary) !important;
+}
+
+html[data-rk-finance-page="perencanaan"] .planning-card:nth-child(2) .planning-card-icon,
+html[data-rk-finance-page="kelola"] .planning-card:nth-child(2) .planning-card-icon {
+  background: var(--rk-secondary-soft) !important;
+  color: var(--rk-secondary) !important;
+}
+
+html[data-rk-module="finance"] .planning-card-copy small,
+html[data-rk-module="finance"] .planning-intro p,
+html[data-rk-module="finance"] .planning-intro small {
+  color: var(--rk-text-secondary) !important;
+}
+
+html[data-rk-module="finance"] .planning-card-chevron {
+  color: var(--rk-primary) !important;
+  opacity: .72;
+}
+
+/* Budget ------------------------------------------------------------- */
+html[data-rk-finance-page="budget"] .budget-month-card {
+  border-color: var(--rk-finance-card-border) !important;
+  background: var(--rk-surface) !important;
+}
+
+html[data-rk-finance-page="budget"] .budget-month-nav,
+html[data-rk-finance-page="budget"] .budget-add-inline {
+  border-color: var(--rk-border) !important;
+  background: var(--rk-primary-soft) !important;
+  color: var(--rk-primary) !important;
+}
+
+html[data-rk-finance-page="budget"] .budget-summary-card {
+  background: linear-gradient(145deg, var(--rk-finance-soft-sage), var(--rk-surface) 70%) !important;
+}
+
+html[data-rk-finance-page="budget"] .budget-summary-values > div {
+  background: color-mix(in srgb, var(--rk-beige) 25%, var(--rk-surface)) !important;
+}
+
+html[data-rk-finance-page="budget"] :where(.budget-progress, .budget-item-progress) {
+  background: var(--rk-surface-strong) !important;
+}
+
+html[data-rk-finance-page="budget"] :where(.budget-progress, .budget-item-progress) > span {
+  background: var(--rk-primary) !important;
+}
+
+html[data-rk-finance-page="budget"] :where(.budget-summary-card.is-warning .budget-progress, .budget-item.is-warning .budget-item-progress) > span {
+  background: var(--rk-warning) !important;
+}
+
+html[data-rk-finance-page="budget"] :where(.budget-summary-card.is-over .budget-progress, .budget-item.is-over .budget-item-progress) > span {
+  background: var(--rk-danger) !important;
+}
+
+html[data-rk-finance-page="budget"] .budget-summary-badge {
+  background: var(--rk-success-soft) !important;
+  color: var(--rk-success) !important;
+}
+
+html[data-rk-finance-page="budget"] .budget-summary-card.is-warning .budget-summary-badge {
+  background: var(--rk-warning-soft) !important;
+  color: var(--rk-warning) !important;
+}
+
+html[data-rk-finance-page="budget"] .budget-summary-card.is-over .budget-summary-badge {
+  background: var(--rk-danger-soft) !important;
+  color: var(--rk-danger) !important;
+}
+
+html[data-rk-finance-page="budget"] :where(.budget-item, .budget-loading-card) {
+  border-color: var(--rk-finance-card-border) !important;
+}
+
+html[data-rk-finance-page="budget"] .budget-item {
+  background: var(--rk-surface) !important;
+  box-shadow: var(--rk-shadow-sm) !important;
+}
+
+html[data-rk-finance-page="budget"] :where(.budget-sheet-layer) {
+  background: rgba(12,18,14,.46) !important;
+  backdrop-filter: blur(6px);
+}
+
+html[data-rk-finance-page="budget"] .budget-sheet {
+  border-color: var(--rk-border) !important;
+  background: var(--rk-surface) !important;
+  color: var(--rk-text) !important;
+  box-shadow: var(--rk-shadow-float) !important;
+}
+
+/* Bills -------------------------------------------------------------- */
+html[data-rk-finance-page="tagihan"] .bills-month-card {
+  border-color: var(--rk-finance-card-border) !important;
+}
+
+html[data-rk-finance-page="tagihan"] .bills-month-nav {
+  background: var(--rk-primary-soft) !important;
+  color: var(--rk-primary) !important;
+}
+
+html[data-rk-finance-page="tagihan"] .bills-summary-card {
+  background: linear-gradient(145deg, var(--rk-finance-soft-sage), var(--rk-surface) 72%) !important;
+}
+
+html[data-rk-finance-page="tagihan"] .bills-summary-values > div {
+  background: color-mix(in srgb, var(--rk-beige) 24%, var(--rk-surface)) !important;
+}
+
+html[data-rk-finance-page="tagihan"] .bills-summary-values > div:first-child strong {
+  color: var(--rk-accent) !important;
+}
+
+html[data-rk-finance-page="tagihan"] .bills-summary-values > div:last-child strong {
+  color: var(--rk-success) !important;
+}
+
+html[data-rk-finance-page="tagihan"] :where(.bills-summary-badge, .bill-status) {
+  background: var(--rk-surface-soft) !important;
+  color: var(--rk-text-secondary) !important;
+}
+
+html[data-rk-finance-page="tagihan"] :where(.bills-summary-badge.is-warning, .bill-status.is-overdue) {
+  background: var(--rk-danger-soft) !important;
+  color: var(--rk-danger) !important;
+}
+
+html[data-rk-finance-page="tagihan"] :where(.bills-summary-badge.is-good, .bill-status.is-paid) {
+  background: var(--rk-success-soft) !important;
+  color: var(--rk-success) !important;
+}
+
+html[data-rk-finance-page="tagihan"] .bill-card.is-overdue {
+  border-color: color-mix(in srgb, var(--rk-danger) 38%, var(--rk-border)) !important;
+}
+
+html[data-rk-finance-page="tagihan"] :where(.bill-card-icon, .bill-pay-icon) {
+  background: var(--rk-accent-soft) !important;
+  color: var(--rk-accent) !important;
+}
+
+html[data-rk-finance-page="tagihan"] .bill-card-button {
+  border-color: var(--rk-border) !important;
+  background: var(--rk-surface-soft) !important;
+  color: var(--rk-text) !important;
+}
+
+html[data-rk-finance-page="tagihan"] .bill-card-button.primary {
+  border-color: transparent !important;
+  background: var(--rk-primary) !important;
+  color: var(--rk-on-primary) !important;
+}
+
+html[data-rk-finance-page="tagihan"] .bill-sheet-layer {
+  background: rgba(12,18,14,.48) !important;
+}
+
+html[data-rk-finance-page="tagihan"] .bill-sheet,
+html[data-rk-finance-page="tagihan"] .bill-pay-sheet {
+  border-color: var(--rk-border) !important;
+  background: var(--rk-surface) !important;
+  color: var(--rk-text) !important;
+  box-shadow: var(--rk-shadow-float) !important;
+}
+
+html[data-rk-finance-page="tagihan"] :where(.bill-form-info, .bill-pay-info, .bill-pay-hero) {
+  background: var(--rk-surface-soft) !important;
+  color: var(--rk-text-secondary) !important;
+}
+
+html[data-rk-finance-page="tagihan"] .bill-delete {
+  border-color: color-mix(in srgb, var(--rk-danger) 36%, transparent) !important;
+  background: var(--rk-danger-soft) !important;
+  color: var(--rk-danger) !important;
+}
+
+/* Transaction create / detail --------------------------------------- */
+html[data-rk-finance-page="transaksi"] .segmentasi,
+html[data-rk-finance-page="akun-form"] .segmentasi {
+  background: var(--rk-surface-soft) !important;
+}
+
+html[data-rk-finance-page="transaksi"] .segmentasi-item.is-aktif,
+html[data-rk-finance-page="akun-form"] .segmentasi-item.is-aktif {
+  background: var(--rk-surface) !important;
+  color: var(--rk-primary) !important;
+  box-shadow: var(--rk-shadow-sm) !important;
+}
+
+html[data-rk-finance-page="transaksi"] .category-picker-trigger,
+html[data-rk-finance-page="budget"] .category-picker-trigger,
+html[data-rk-finance-page="tagihan"] .category-picker-trigger {
+  border-color: var(--rk-border) !important;
+  background: var(--rk-surface) !important;
+  color: var(--rk-text) !important;
+}
+
+html[data-rk-module="finance"] .category-picker-layer {
+  background: rgba(12,18,14,.46) !important;
+}
+
+html[data-rk-module="finance"] .category-picker-sheet {
+  border-color: var(--rk-border) !important;
+  background: var(--rk-surface) !important;
+  color: var(--rk-text) !important;
+  box-shadow: var(--rk-shadow-float) !important;
+}
+
+html[data-rk-finance-page="detail-transaksi"] .void-peringatan {
+  border-color: color-mix(in srgb, var(--rk-danger) 25%, var(--rk-border)) !important;
+  background: var(--rk-danger-soft) !important;
+  color: var(--rk-danger) !important;
+}
+
+/* Wallets / accounts ------------------------------------------------- */
+html[data-rk-finance-page="dompet-form"] .setup-dompet,
+html[data-rk-finance-page="akun"] .akun-backend-intro {
+  border: 1px solid var(--rk-finance-card-border) !important;
+  border-radius: var(--rk-radius-xl) !important;
+  background: linear-gradient(135deg, var(--rk-finance-soft-sage), var(--rk-surface) 78%) !important;
+  color: var(--rk-text) !important;
+  box-shadow: var(--rk-shadow-sm) !important;
+}
+
+html[data-rk-finance-page="dompet-form"] .setup-dompet-ikon {
+  background: var(--rk-primary-soft) !important;
+  color: var(--rk-primary) !important;
+}
+
+html[data-rk-finance-page="dompet"] .daftar-kartu > *,
+html[data-rk-finance-page="akun"] .daftar-kartu > * {
+  border-color: var(--rk-finance-card-border) !important;
+  box-shadow: var(--rk-shadow-sm) !important;
+}
+
+html[data-rk-finance-page="dompet-detail"] .pemilih-dompet-detail,
+html[data-rk-finance-page="laporan-dompet"] .pemilih-dompet-detail {
+  background: linear-gradient(135deg, var(--rk-finance-soft-sage), var(--rk-surface) 78%) !important;
+}
+
+html[data-rk-finance-page="dompet-detail"] .pemilih-dompet-detail-ikon,
+html[data-rk-finance-page="laporan-dompet"] .pemilih-dompet-detail-ikon {
+  background: var(--rk-primary-soft) !important;
+  color: var(--rk-primary) !important;
+}
+
+html[data-rk-module="finance"] .tombol-laporan-dompet,
+html[data-rk-module="finance"] .finance-period-trigger-compact {
+  border-color: var(--rk-border) !important;
+  background: var(--rk-surface) !important;
+  color: var(--rk-text) !important;
+  box-shadow: var(--rk-shadow-sm) !important;
+}
+
+html[data-rk-module="finance"] .tombol-laporan-dompet ion-icon,
+html[data-rk-module="finance"] .finance-period-trigger-compact ion-icon {
+  color: var(--rk-primary) !important;
+}
+
+html[data-rk-module="finance"] .ringkasan-detail-ikon.pemasukan {
+  background: var(--rk-success-soft) !important;
+  color: var(--rk-success) !important;
+}
+
+html[data-rk-module="finance"] .ringkasan-detail-ikon.pengeluaran {
+  background: var(--rk-accent-soft) !important;
+  color: var(--rk-accent) !important;
+}
+
+html[data-rk-module="finance"] .isi-perbandingan.pemasukan {
+  background: var(--rk-success) !important;
+}
+
+html[data-rk-module="finance"] .isi-perbandingan.pengeluaran {
+  background: var(--rk-accent) !important;
+}
+
+/* Account visual picker keeps user-selected account colors, but chrome
+   around it belongs to the RuangKitha system. */
+html[data-rk-finance-page="akun-form"] :where(.akun-picker-block, .akun-icon-search, .akun-icon-scroll-control) {
+  border-color: var(--rk-border) !important;
+}
+
+html[data-rk-finance-page="akun-form"] .akun-icon-search,
+html[data-rk-finance-page="akun-form"] .akun-icon-scroll-control {
+  background: var(--rk-surface-soft) !important;
+  color: var(--rk-text) !important;
+}
+
+html[data-rk-finance-page="akun-form"] .akun-visual-badge {
+  background: var(--rk-secondary-soft) !important;
+  color: var(--rk-secondary) !important;
+}
+
+html[data-rk-finance-page="akun-form"] .akun-section-kicker,
+html[data-rk-finance-page="akun-form"] .akun-preview-caption,
+html[data-rk-finance-page="akun-form"] .bantuan-input {
+  color: var(--rk-text-secondary) !important;
+}
+
+/* Reports ------------------------------------------------------------ */
+html[data-rk-finance-page="laporan"] .report-filter-card {
+  background: var(--rk-surface) !important;
+}
+
+html[data-rk-finance-page="laporan"] .report-preset {
+  border-color: var(--rk-border) !important;
+  background: var(--rk-surface-soft) !important;
+  color: var(--rk-text-secondary) !important;
+}
+
+html[data-rk-finance-page="laporan"] .report-preset.is-active {
+  border-color: color-mix(in srgb, var(--rk-primary) 30%, var(--rk-border)) !important;
+  background: var(--rk-primary-soft) !important;
+  color: var(--rk-primary) !important;
+}
+
+html[data-rk-finance-page="laporan"] .report-hero {
+  background:
+    linear-gradient(145deg, color-mix(in srgb, var(--rk-primary) 15%, var(--rk-surface)), var(--rk-surface) 64%, color-mix(in srgb, var(--rk-secondary) 9%, var(--rk-surface))) !important;
+}
+
+html[data-rk-finance-page="laporan"] .report-hero-icon {
+  background: var(--rk-primary-soft) !important;
+  color: var(--rk-primary) !important;
+}
+
+html[data-rk-finance-page="laporan"] .report-status {
+  background: var(--rk-secondary-soft) !important;
+  color: var(--rk-secondary) !important;
+}
+
+html[data-rk-finance-page="laporan"] .report-money-card {
+  border: 1px solid var(--rk-border) !important;
+  background: var(--rk-surface-soft) !important;
+}
+
+html[data-rk-finance-page="laporan"] .report-money-card.income {
+  background: color-mix(in srgb, var(--rk-success) 7%, var(--rk-surface)) !important;
+}
+
+html[data-rk-finance-page="laporan"] .report-money-card.expense {
+  background: color-mix(in srgb, var(--rk-accent) 8%, var(--rk-surface)) !important;
+}
+
+html[data-rk-finance-page="laporan"] :where(.report-custom-sheet, .report-export-sheet) {
+  border-color: var(--rk-border) !important;
+  background: var(--rk-surface) !important;
+  color: var(--rk-text) !important;
+  box-shadow: var(--rk-shadow-float) !important;
+}
+
+html[data-rk-finance-page="laporan"] .report-export-option {
+  border-color: var(--rk-border) !important;
+  background: var(--rk-surface-soft) !important;
+  color: var(--rk-text) !important;
+}
+
+html[data-rk-finance-page="laporan"] .report-export-option-icon {
+  background: var(--rk-secondary-soft) !important;
+  color: var(--rk-secondary) !important;
+}
+
+/* Notifications, empty and loading ---------------------------------- */
+html[data-rk-module="finance"] .notifikasi {
+  border-color: var(--rk-border) !important;
+  background: var(--rk-surface-soft) !important;
+  color: var(--rk-text-secondary) !important;
+}
+
+html[data-rk-module="finance"] .notifikasi[data-tipe="success"],
+html[data-rk-module="finance"] .notifikasi[data-tipe="sukses"] {
+  background: var(--rk-success-soft) !important;
+  color: var(--rk-success) !important;
+}
+
+html[data-rk-module="finance"] .notifikasi[data-tipe="error"],
+html[data-rk-module="finance"] .notifikasi[data-tipe="danger"] {
+  background: var(--rk-danger-soft) !important;
+  color: var(--rk-danger) !important;
+}
+
+html[data-rk-module="finance"] .kosong-data {
+  color: var(--rk-text-secondary) !important;
+}
+
+html[data-rk-module="finance"] .kosong-data ion-icon {
+  color: var(--rk-primary) !important;
+}
+
+html[data-rk-module="finance"] :where(.budget-loading-card, .bills-loading-card) {
+  background-image: linear-gradient(
+    90deg,
+    var(--rk-surface-soft) 20%,
+    var(--rk-surface-strong) 42%,
+    var(--rk-surface-soft) 64%
+  ) !important;
+}
+
+/* Dark mode ---------------------------------------------------------- */
+html[data-theme="dark"][data-rk-module="finance"] body {
+  background:
+    radial-gradient(circle at 50% -10%, color-mix(in srgb, var(--rk-primary) 8%, transparent), transparent 34%),
+    var(--rk-outer-background);
+}
+
+html[data-theme="dark"][data-rk-module="finance"] .navigasi-bawah.finance-nav-v5 {
+  background: color-mix(in srgb, var(--rk-surface) 94%, transparent) !important;
+  box-shadow: 0 18px 52px rgba(0,0,0,.34) !important;
+}
+
+html[data-theme="dark"][data-rk-module="finance"] .finance-nav-v5 .tombol-tambah {
+  border-color: var(--rk-background) !important;
+}
+
+html[data-theme="dark"][data-rk-finance-page="finance"] .home-cash-card.pengeluaran,
+html[data-theme="dark"][data-rk-finance-page="laporan"] .report-money-card.expense {
+  background: color-mix(in srgb, var(--rk-accent) 9%, var(--rk-surface)) !important;
+}
+
+/* Motion ------------------------------------------------------------- */
+@media (prefers-reduced-motion: no-preference) {
+  html[data-rk-module="finance"] :where(.kartu-uang, .planning-card, .bill-card, .budget-item, .report-section) {
+    transition: border-color .16s ease, box-shadow .16s ease, transform .16s ease;
+  }
+}
+
+/* Small screens ------------------------------------------------------ */
+@media (max-width: 360px) {
+  html[data-rk-module="finance"] .navigasi-bawah.finance-nav-v5 {
+    width: calc(100vw - 14px) !important;
+    padding-inline: 5px !important;
+    border-radius: 20px !important;
+  }
+
+  html[data-rk-module="finance"] .finance-nav-v5 .navigasi-item {
+    border-radius: 13px;
+  }
+}

@@ -1,8 +1,8 @@
 (() => {
   "use strict";
 
-  const RK_DESIGN_SYSTEM_VERSION = "1.0.1";
-  const RK_BUILD_VERSION = "v2.0.0a48a";
+  const RK_DESIGN_SYSTEM_VERSION = "1.0.2";
+  const RK_BUILD_VERSION = "v2.0.0a48b";
 
   function appBaseUrl() {
     try {
@@ -39,6 +39,50 @@
     document.documentElement.dataset.shell = "ruangkitha-v1";
   }
 
+  const RK_FINANCE_PAGES = new Set([
+    "finance.html",
+    "transaksi.html",
+    "detail-transaksi.html",
+    "budget.html",
+    "tagihan.html",
+    "perencanaan.html",
+    "kelola.html",
+    "dompet.html",
+    "dompet-detail.html",
+    "dompet-form.html",
+    "akun.html",
+    "akun-form.html",
+    "laporan.html",
+    "laporan-dompet.html"
+  ]);
+
+  function currentPageName() {
+    try {
+      const path = new URL(location.href).pathname.replace(/\/+$/, "");
+      return path.split("/").pop() || "index.html";
+    } catch {
+      return "";
+    }
+  }
+
+  function ensureModuleDesignLayer() {
+    const page = currentPageName();
+    if (!RK_FINANCE_PAGES.has(page)) return;
+
+    document.documentElement.dataset.rkModule = "finance";
+    document.documentElement.dataset.rkFinancePage = page.replace(/\.html$/i, "");
+
+    if (document.querySelector('link[data-ruangkitha-finance]')) return;
+    const finance = document.createElement("link");
+    finance.rel = "stylesheet";
+    finance.dataset.ruangkithaFinance = "1.0.0";
+    finance.href = new URL(
+      `css/pages/ruangkitha-finance-v1.css?v=${RK_BUILD_VERSION}`,
+      appBaseUrl()
+    ).href;
+    document.head.appendChild(finance);
+  }
+
   function syncBrowserThemeColor() {
     const isDark = document.documentElement.dataset.theme === "dark";
     const color = isDark ? "#101612" : "#FBF7EE";
@@ -52,6 +96,7 @@
   }
 
   ensureDesignSystem();
+  ensureModuleDesignLayer();
   syncBrowserThemeColor();
 
   new MutationObserver(syncBrowserThemeColor).observe(document.documentElement, {
@@ -145,7 +190,7 @@
   if ("serviceWorker" in navigator) {
     window.addEventListener("load", async () => {
       try {
-        const registration = await navigator.serviceWorker.register("./sw.js?v=20260912-v200a48a", {
+        const registration = await navigator.serviceWorker.register("./sw.js?v=20260912-v200a48b", {
           scope: "./"
         });
 
