@@ -1,4 +1,4 @@
-const CACHE_NAME = "ruangkitha-v2.0.0a49b-recovery-kit-v1";
+const CACHE_NAME = "ruangkitha-v2.0.0a49b1-local-pin-management-v1";
 const OFFLINE_URL = "./offline.html";
 
 const APP_FILES = [

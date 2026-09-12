@@ -24,6 +24,16 @@
     lock: document.querySelector("[data-vault-lock]"),
     autoLock: document.querySelector("[data-security-autolock]"),
     autoLockSelect: document.querySelector("[data-security-autolock-select]"),
+    pinManage: document.querySelector("[data-security-pin-manage]"),
+    pinChange: document.querySelector("[data-security-pin-change]"),
+    pinLayer: document.querySelector("[data-security-pin-layer]"),
+    pinClose: document.querySelector("[data-security-pin-close]"),
+    pinForm: document.querySelector("[data-security-pin-form]"),
+    pinCurrent: document.querySelector("[data-security-pin-current]"),
+    pinNew: document.querySelector("[data-security-pin-new]"),
+    pinConfirm: document.querySelector("[data-security-pin-confirm]"),
+    pinMessage: document.querySelector("[data-security-pin-message]"),
+    pinSubmit: document.querySelector("[data-security-pin-submit]"),
     unlockLayer: document.querySelector("[data-security-unlock-layer]"),
     unlockClose: document.querySelector("[data-security-unlock-close]"),
     unlockForm: document.querySelector("[data-security-unlock-form]"),
@@ -89,6 +99,13 @@
     els.unlockMessage.dataset.tone = tone;
   }
 
+  function setPinMessage(message = "", tone = "error") {
+    if (!els.pinMessage) return;
+    els.pinMessage.hidden = !message;
+    els.pinMessage.textContent = message;
+    els.pinMessage.dataset.tone = tone;
+  }
+
   function formatRecovery(state) {
     if (!state || !state.configured) return "Belum dibuat";
     if (state.recovery_ready) return "Siap";
@@ -140,6 +157,7 @@
     }
     if (els.lock) els.lock.hidden = true;
     if (els.autoLock) els.autoLock.hidden = true;
+    if (els.pinManage) els.pinManage.hidden = true;
     if (els.recoveryCard) els.recoveryCard.hidden = true;
     setVaultMessage();
   }
@@ -160,6 +178,7 @@
     }
     if (els.lock) els.lock.hidden = true;
     if (els.autoLock) els.autoLock.hidden = true;
+    if (els.pinManage) els.pinManage.hidden = true;
     if (els.recoveryCard) els.recoveryCard.hidden = true;
     setVaultMessage(message, "error");
     if (els.deviceDetail) els.deviceDetail.textContent = "Status Security Vault belum tersedia";
@@ -174,6 +193,8 @@
     const state = current.state || { configured: false };
     const local = current.local || { present: false, ready: false, unlocked: false };
     const caps = current.capabilities || { supported: false, reasons: ["Capability belum diperiksa."] };
+
+    if (els.pinManage) els.pinManage.hidden = !local.ready;
 
     if (els.trustedCount) els.trustedCount.textContent = state.configured ? String(state.trusted_device_count ?? 0) : "0";
     if (els.recoveryStatus) els.recoveryStatus.textContent = formatRecovery(state);
@@ -234,7 +255,7 @@
       if (els.vaultHeading) els.vaultHeading.textContent = local.present ? "Setup Security Vault belum selesai" : "Security Vault belum diaktifkan";
       if (els.vaultCopy) {
         els.vaultCopy.textContent = caps.supported
-          ? "Perangkat ini siap menjadi Trusted Device pertama. Buat PIN lokal untuk melindungi material kunci pada browser ini."
+          ? "Perangkat ini siap menjadi Trusted Device pertama. Buat PIN perangkat ini untuk melindungi material kunci lokal pada browser ini."
           : `Browser ini belum memenuhi kebutuhan Security Vault. ${(caps.reasons || []).join(" ")}`;
       }
       setVaultBadge(local.present ? "Tertunda" : "Belum aktif", local.present ? "warning" : "neutral");
@@ -252,7 +273,7 @@
       if (els.vaultCopy) {
         els.vaultCopy.textContent = local.unlocked
           ? "Master Key runtime tersedia hanya di memori dan akan dibuang saat auto-lock, reload, atau halaman ditinggalkan."
-          : "Trusted Device ini siap. Buka vault menggunakan PIN lokal untuk memuat Master Key runtime ke memori.";
+          : "Trusted Device ini siap. Buka vault menggunakan PIN perangkat ini untuk memuat Master Key runtime ke memori.";
       }
       setVaultBadge(local.unlocked ? "Terbuka" : "Terkunci", local.unlocked ? "success" : "trusted");
       if (els.primary) {
@@ -265,7 +286,7 @@
       if (els.vaultHeading) els.vaultHeading.textContent = "Security Vault sudah aktif";
       if (els.vaultCopy) {
         els.vaultCopy.textContent = state.recovery_ready
-          ? "Browser ini belum menjadi Trusted Device. Gunakan Recovery Kit untuk memulihkan Master Key dan membuat PIN lokal baru pada perangkat ini."
+          ? "Browser ini belum menjadi Trusted Device. Gunakan Recovery Kit untuk memulihkan Master Key lalu buat PIN khusus perangkat ini. PIN perangkat lain tidak otomatis disalin."
           : "Browser ini belum dipercaya dan akun belum memiliki Recovery Kit aktif. Gunakan Trusted Device lama untuk membuat Recovery Kit terlebih dahulu.";
       }
       setVaultBadge("Aktif", "trusted");
@@ -304,6 +325,27 @@
     document.body.classList.remove("security-sheet-open");
     if (els.unlockPin) els.unlockPin.value = "";
     setUnlockMessage();
+  }
+
+  function openPinChange() {
+    if (!current.local?.ready || !els.pinLayer || !els.pinCurrent || !els.pinNew || !els.pinConfirm) return;
+    setPinMessage();
+    els.pinCurrent.value = "";
+    els.pinNew.value = "";
+    els.pinConfirm.value = "";
+    els.pinLayer.hidden = false;
+    document.body.classList.add("security-sheet-open");
+    requestAnimationFrame(() => els.pinCurrent.focus());
+  }
+
+  function closePinChange() {
+    if (!els.pinLayer) return;
+    els.pinLayer.hidden = true;
+    document.body.classList.remove("security-sheet-open");
+    if (els.pinCurrent) els.pinCurrent.value = "";
+    if (els.pinNew) els.pinNew.value = "";
+    if (els.pinConfirm) els.pinConfirm.value = "";
+    setPinMessage();
   }
 
   async function openSetup() {
@@ -406,6 +448,61 @@
     }
   }
 
+  async function handlePinChangeSubmit(event) {
+    event.preventDefault();
+    if (!Trusted || !els.pinCurrent || !els.pinNew || !els.pinConfirm || !els.pinSubmit) return;
+
+    const currentPin = els.pinCurrent.value;
+    const newPin = els.pinNew.value;
+    const confirmPin = els.pinConfirm.value;
+    setPinMessage();
+
+    if (newPin !== confirmPin) {
+      setPinMessage("Konfirmasi PIN baru belum sama.", "error");
+      els.pinConfirm.focus();
+      return;
+    }
+    if (currentPin === newPin) {
+      setPinMessage("PIN baru masih sama dengan PIN perangkat saat ini.", "error");
+      els.pinNew.select();
+      return;
+    }
+
+    els.pinSubmit.disabled = true;
+    els.pinSubmit.textContent = "Mengubah…";
+    try {
+      Trusted.validatePin(currentPin);
+      Trusted.validatePin(newPin);
+      await Trusted.changeLocalPin({
+        supabase: client,
+        currentPin,
+        newPin
+      });
+      closePinChange();
+      setVaultMessage("PIN perangkat ini berhasil diubah. Security Vault dikunci; buka kembali memakai PIN baru.", "success");
+      await refreshStatus({ quiet: true });
+    } catch (error) {
+      console.error("[RuangKitha Security] ubah PIN gagal:", error);
+      let message = error && error.message ? error.message : "PIN perangkat ini tidak dapat diubah.";
+      if (error?.code === "LOCAL_UNLOCK_FAILED") {
+        const attempts = Number(error.failedAttempts || 0);
+        message = attempts
+          ? `PIN perangkat saat ini salah. Percobaan gagal lokal: ${attempts}.`
+          : "PIN perangkat saat ini salah atau material Trusted Device lokal rusak.";
+        if (error.retryAfterMs) message += ` Coba lagi setelah ${formatRetry(error.retryAfterMs)}.`;
+      } else if (error?.code === "LOCAL_UNLOCK_THROTTLED") {
+        message = `Terlalu banyak percobaan PIN. Coba lagi setelah ${formatRetry(error.retryAfterMs)}.`;
+      } else if (error?.code === "LOCAL_PIN_UNCHANGED") {
+        message = "PIN baru masih sama dengan PIN perangkat saat ini.";
+      }
+      setPinMessage(message, "error");
+      if (error?.code === "LOCAL_UNLOCK_FAILED") els.pinCurrent.select();
+    } finally {
+      els.pinSubmit.disabled = false;
+      els.pinSubmit.textContent = "Ubah PIN";
+    }
+  }
+
   async function handleAutoLockChange() {
     if (!Trusted || !els.autoLockSelect) return;
     const previous = current.local?.autoLockMinutes || 5;
@@ -450,12 +547,20 @@
     els.unlockForm?.addEventListener("submit", handleUnlockSubmit);
     els.unlockClose?.addEventListener("click", closeUnlock);
     els.autoLockSelect?.addEventListener("change", handleAutoLockChange);
+    els.pinChange?.addEventListener("click", openPinChange);
+    els.pinForm?.addEventListener("submit", handlePinChangeSubmit);
+    els.pinClose?.addEventListener("click", closePinChange);
     els.recoveryManage?.addEventListener("click", openRecoveryManage);
     els.unlockLayer?.addEventListener("click", (event) => {
       if (event.target === els.unlockLayer) closeUnlock();
     });
+    els.pinLayer?.addEventListener("click", (event) => {
+      if (event.target === els.pinLayer) closePinChange();
+    });
     document.addEventListener("keydown", (event) => {
-      if (event.key === "Escape" && els.unlockLayer && !els.unlockLayer.hidden) closeUnlock();
+      if (event.key !== "Escape") return;
+      if (els.pinLayer && !els.pinLayer.hidden) closePinChange();
+      else if (els.unlockLayer && !els.unlockLayer.hidden) closeUnlock();
     });
     window.addEventListener("pageshow", () => refreshStatus({ quiet: true }));
     window.addEventListener("focus", () => refreshStatus({ quiet: true }));

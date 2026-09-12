@@ -1,6 +1,6 @@
 /*
  * RuangKitha Security Foundation v1 — Trusted Device + Local Unlock
- * Build: v2.0.0a49b
+ * Build: v2.0.0a49b1
  *
  * SECURITY CONTRACT
  * - Depends on ruangkitha-crypto-core.js (a49). Do not weaken/replace that core here.
@@ -28,7 +28,7 @@
   const subtle = webcrypto && webcrypto.subtle;
 
   const VERSION = 1;
-  const BUILD = "v2.0.0a49b";
+  const BUILD = "v2.0.0a49b1";
   const DEVICE_ALGORITHM = "ECDH-P256";
   const PIN_KDF = "PBKDF2-HMAC-SHA256";
   const PIN_ITERATIONS = 600000;
@@ -473,6 +473,88 @@
       });
     } finally {
       Crypto.zeroize(salt);
+      if (rawUnlock) Crypto.zeroize(rawUnlock);
+    }
+  }
+
+  async function rewrapLocalPin({ userId, currentPin, newPin, record } = {}) {
+    assertCore();
+    const uid = validateUserId(userId);
+    validatePin(currentPin);
+    validatePin(newPin);
+    if (currentPin === newPin) {
+      const error = new Error("PIN baru sama dengan PIN perangkat saat ini.");
+      error.code = "LOCAL_PIN_UNCHANGED";
+      throw error;
+    }
+    if (!record || record.user_id !== uid || record.version !== VERSION || record.phase !== READY_PHASE) {
+      const error = new Error("Trusted Device lokal yang siap diperlukan untuk mengubah PIN.");
+      error.code = "LOCAL_DEVICE_NOT_READY";
+      throw error;
+    }
+    if (!record.anchor_key || record.anchor_key.extractable !== false) {
+      throw new Error("Local device anchor tidak valid.");
+    }
+
+    const localPayload = await Crypto.decryptJson(record.anchor_key, record.local_seal, {
+      aad: localSealAad(uid, record.device_instance_id)
+    });
+    if (!localPayload || localPayload.kind !== "local-unlock-bundle") {
+      throw new Error("Local unlock bundle tidak valid.");
+    }
+    if (localPayload.public_key_fingerprint !== record.public_key_fingerprint) {
+      throw new Error("Fingerprint trusted device tidak cocok.");
+    }
+
+    const oldKdf = localPayload.pin_kdf || {};
+    if (oldKdf.name !== PIN_KDF) throw new Error("KDF PIN tidak didukung.");
+    const oldSalt = Crypto.base64UrlToBytes(oldKdf.salt);
+    const newSalt = Crypto.randomBytes(PIN_SALT_BYTES);
+    let rawUnlock;
+
+    try {
+      const currentPinKey = await derivePinKek(currentPin, oldSalt, Number(oldKdf.iterations));
+      try {
+        rawUnlock = await Crypto.decryptBytes(currentPinKey, localPayload.pin_wrapped_unlock_key, {
+          aad: pinAad(uid, record.device_instance_id, record.public_key_fingerprint)
+        });
+      } catch (error) {
+        const wrapped = new Error("PIN perangkat saat ini salah atau material Trusted Device lokal rusak.");
+        wrapped.code = "LOCAL_UNLOCK_FAILED";
+        wrapped.cause = error;
+        throw wrapped;
+      }
+
+      const newPinKey = await derivePinKek(newPin, newSalt, PIN_ITERATIONS);
+      const pinWrappedUnlockKey = await Crypto.encryptBytes(newPinKey, rawUnlock, {
+        aad: pinAad(uid, record.device_instance_id, record.public_key_fingerprint)
+      });
+      const changedAt = nowIso();
+      const nextPayload = {
+        ...localPayload,
+        pin_kdf: {
+          name: PIN_KDF,
+          iterations: PIN_ITERATIONS,
+          salt: Crypto.bytesToBase64Url(newSalt)
+        },
+        pin_wrapped_unlock_key: pinWrappedUnlockKey,
+        pin_changed_at: changedAt
+      };
+      const localSeal = await Crypto.encryptJson(record.anchor_key, nextPayload, {
+        aad: localSealAad(uid, record.device_instance_id)
+      });
+
+      return {
+        ...record,
+        build: BUILD,
+        local_seal: localSeal,
+        failed_attempts: 0,
+        locked_until_ms: 0,
+        pin_changed_at: changedAt
+      };
+    } finally {
+      Crypto.zeroize(oldSalt);
+      Crypto.zeroize(newSalt);
       if (rawUnlock) Crypto.zeroize(rawUnlock);
     }
   }
@@ -1032,6 +1114,64 @@
     };
   }
 
+  async function changeLocalPin({ supabase, currentPin, newPin } = {}) {
+    const userId = await currentUserId(supabase);
+    const record = await getLocalRecord(userId);
+    if (!record || record.phase !== READY_PHASE) {
+      const error = new Error("Trusted Device lokal yang siap diperlukan untuk mengubah PIN.");
+      error.code = "LOCAL_DEVICE_NOT_READY";
+      throw error;
+    }
+
+    validatePin(currentPin);
+    validatePin(newPin);
+    assertNotThrottled(record);
+
+    // PIN tetap faktor lokal per-device, tetapi perubahan hanya diizinkan bila server
+    // masih menganggap device ini trusted. Tidak ada PIN yang dikirim ke RPC ini.
+    const material = await rpc(supabase, "security_local_unlock_material_v1", {
+      p_device_client_id: record.device_instance_id
+    });
+    if (!material || !material.found || material.trust_state !== "trusted") {
+      lock(userId, "device-not-trusted");
+      const error = new Error("Trusted Device ini sudah tidak aktif atau telah dicabut.");
+      error.code = "DEVICE_NOT_TRUSTED";
+      throw error;
+    }
+
+    record.vault_id = material.vault_id || record.vault_id;
+    record.device_id = material.device_id || record.device_id;
+    if (material.device_key_envelope) record.cached_device_key_envelope = material.device_key_envelope;
+
+    let updated;
+    try {
+      updated = await rewrapLocalPin({ userId, currentPin, newPin, record });
+    } catch (error) {
+      if (error && error.code === "LOCAL_UNLOCK_FAILED") {
+        const throttle = await noteUnlockFailure(record);
+        error.failedAttempts = throttle.attempts;
+        error.retryAfterMs = throttle.retryAfterMs;
+      }
+      throw error;
+    }
+
+    await putLocalRecord(updated);
+    lock(userId, "pin-changed");
+    if (updated.device_id) {
+      rpc(supabase, "security_touch_device_v1", { p_device_id: updated.device_id }).catch(() => {});
+    }
+
+    return {
+      changed: true,
+      userId,
+      deviceId: updated.device_id,
+      deviceInstanceId: updated.device_instance_id,
+      deviceLabel: updated.device_label,
+      changedAt: updated.pin_changed_at,
+      unlocked: false
+    };
+  }
+
   async function localDeviceStatus({ supabase } = {}) {
     const userId = await currentUserId(supabase);
     const record = await getLocalRecord(userId);
@@ -1089,6 +1229,7 @@
     unlockWithPin,
     withExtractableMasterKeyFromPin,
     recoverDeviceWithMaster,
+    changeLocalPin,
     localDeviceStatus,
     updateAutoLock,
     isUnlocked,
@@ -1107,6 +1248,7 @@
       createBootstrapBundle,
       createDeviceBundleForMaster,
       unlockFromRecord,
+      rewrapLocalPin,
       throttleDelayMs,
       masterWrapContext
     });

@@ -605,3 +605,64 @@ body.security-sheet-open {
   .security-recovery-card-action { width: 100%; }
   .security-two-fields { grid-template-columns: 1fr; }
 }
+
+/* =========================================
+   a49b1 — LOCAL PIN MANAGEMENT V1
+========================================= */
+.security-local-pin {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  margin-top: var(--space-2);
+  padding: var(--space-3);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  background: var(--color-surface);
+}
+
+.security-local-pin[hidden] {
+  display: none !important;
+}
+
+.security-local-pin > div {
+  min-width: 0;
+}
+
+.security-local-pin strong,
+.security-local-pin small {
+  display: block;
+}
+
+.security-local-pin strong {
+  font-size: var(--font-size-sm);
+}
+
+.security-local-pin small {
+  margin-top: 2px;
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-xs);
+  line-height: 1.45;
+}
+
+.security-local-pin-action {
+  flex-shrink: 0;
+  width: auto;
+  min-width: 92px;
+  margin: 0;
+}
+
+.security-pin-device-hint {
+  display: block;
+  margin: -2px 0 var(--space-2);
+}
+
+@media (max-width: 390px) {
+  .security-local-pin {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+  .security-local-pin-action {
+    width: 100%;
+  }
+}

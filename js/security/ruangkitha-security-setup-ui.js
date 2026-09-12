@@ -1,5 +1,5 @@
 /*
- * RuangKitha v2.0.0a49b — Security Vault first-device setup UI
+ * RuangKitha v2.0.0a49b1 — Security Vault first-device setup UI
  * Optional, self-contained UI adapter around RuangKithaTrustedDevice.
  * Nothing opens automatically. Call RuangKithaSecuritySetupUI.open({ supabase }).
  */
@@ -71,7 +71,7 @@
     head.append(titleWrap, closeBtn);
     sheet.append(head);
 
-    const intro = el("p", { class: "rksec-copy" }, "Perangkat ini akan menyimpan material kunci lokal yang dilindungi PIN. PIN tidak dikirim ke server dan bukan kunci utama akun.");
+    const intro = el("p", { class: "rksec-copy" }, "Perangkat ini akan menyimpan material kunci lokal yang dilindungi PIN perangkat ini. PIN bersifat lokal per Trusted Device, tidak dikirim ke server, dan bukan kunci utama akun.");
     sheet.append(intro);
 
     const capabilityCard = el("div", { class: "rksec-card" });
@@ -96,9 +96,9 @@
     });
 
     form.append(el("label", { class: "rksec-label" }, "Nama perangkat"), deviceLabel);
-    form.append(el("label", { class: "rksec-label" }, "PIN lokal (6–12 digit)"), pin);
-    form.append(el("div", { class: "rksec-note" }, "PIN hanya membuka Security Vault pada browser/perangkat ini. Jangan gunakan PIN sebagai password akun."));
-    form.append(el("label", { class: "rksec-label" }, "Ulangi PIN"), pin2);
+    form.append(el("label", { class: "rksec-label" }, "PIN perangkat ini (6–12 digit)"), pin);
+    form.append(el("div", { class: "rksec-note" }, "PIN ini hanya berlaku pada browser/perangkat ini. Kamu boleh memakai angka yang sama di Trusted Device lain agar mudah diingat, tetapi setiap perangkat tetap menyimpan perlindungan PIN-nya sendiri."));
+    form.append(el("label", { class: "rksec-label" }, "Ulangi PIN perangkat ini"), pin2);
     form.append(el("label", { class: "rksec-label" }, "Kunci otomatis setelah tidak aktif"), autoLock);
 
     const warning = el("div", { class: "rksec-card" });
@@ -147,7 +147,7 @@
       errorBox.dataset.show = "false";
       errorBox.textContent = "";
       if (pin.value !== pin2.value) {
-        errorBox.textContent = "PIN dan konfirmasi PIN belum sama.";
+        errorBox.textContent = "PIN perangkat ini dan konfirmasinya belum sama.";
         errorBox.dataset.show = "true";
         pin2.focus();
         return;

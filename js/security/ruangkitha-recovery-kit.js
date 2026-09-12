@@ -1,6 +1,6 @@
 /*
  * RuangKitha Security Foundation — Recovery Kit V1
- * Build: v2.0.0a49b
+ * Build: v2.0.0a49b1
  *
  * SECURITY CONTRACT
  * - Recovery secret is 256-bit random material generated on-device.
@@ -20,7 +20,7 @@
   const Trusted = root.RuangKithaTrustedDevice ||
     (typeof module !== "undefined" && module.exports ? require("./ruangkitha-trusted-device.js") : null);
 
-  const BUILD = "v2.0.0a49b";
+  const BUILD = "v2.0.0a49b1";
   const VERSION = 1;
   const HUMAN_PREFIX = "RK1";
   const CROCKFORD = "0123456789ABCDEFGHJKMNPQRSTVWXYZ";

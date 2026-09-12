@@ -1,10 +1,10 @@
-/* RuangKitha a49b — Recovery Kit V1 UI */
+/* RuangKitha a49b1 — Recovery Kit V1 + per-device PIN UX */
 (function initRuangKithaRecoveryUI(root) {
   "use strict";
 
   const Recovery = root.RuangKithaRecoveryKit;
   const Trusted = root.RuangKithaTrustedDevice;
-  const BUILD = "v2.0.0a49b";
+  const BUILD = "v2.0.0a49b1";
 
   let generateState = null;
   let recoverState = null;
@@ -103,7 +103,7 @@
         <div class="sheet-header">
           <div>
             <h2 id="recovery-device-title">Pulihkan perangkat ini</h2>
-            <p class="sheet-subjudul">Gunakan Recovery Kit untuk menjadikan browser ini Trusted Device baru.</p>
+            <p class="sheet-subjudul">Gunakan Recovery Kit untuk menjadikan browser ini Trusted Device baru. Setelah recovery, buat PIN khusus perangkat ini.</p>
           </div>
           <button class="tombol-ikon" type="button" data-recovery-device-close aria-label="Tutup"><ion-icon name="close-outline"></ion-icon></button>
         </div>
@@ -119,14 +119,15 @@
           </div>
           <div class="security-two-fields">
             <div class="grup-input">
-              <label for="recovery-device-pin">PIN lokal baru</label>
+              <label for="recovery-device-pin">PIN perangkat ini</label>
               <input class="input" id="recovery-device-pin" data-recovery-device-pin type="password" inputmode="numeric" pattern="[0-9]*" minlength="6" maxlength="12" autocomplete="new-password" required>
             </div>
             <div class="grup-input">
-              <label for="recovery-device-pin-confirm">Ulangi PIN</label>
+              <label for="recovery-device-pin-confirm">Ulangi PIN perangkat ini</label>
               <input class="input" id="recovery-device-pin-confirm" data-recovery-device-pin-confirm type="password" inputmode="numeric" pattern="[0-9]*" minlength="6" maxlength="12" autocomplete="new-password" required>
             </div>
           </div>
+          <small class="security-field-hint security-pin-device-hint">PIN ini hanya berlaku di browser/perangkat ini. PIN perangkat lain tidak disalin lewat Recovery Kit. Kamu boleh memasukkan PIN yang sama seperti Trusted Device lain agar lebih mudah diingat.</small>
           <div class="grup-input">
             <label for="recovery-device-autolock">Kunci otomatis</label>
             <select class="input" id="recovery-device-autolock" data-recovery-device-autolock>
@@ -309,7 +310,7 @@
       message(msg);
 
       if (pin.value !== confirm.value) {
-        message(msg, "Konfirmasi PIN lokal belum sama.");
+        message(msg, "Konfirmasi PIN perangkat ini belum sama.");
         confirm.focus();
         return;
       }
