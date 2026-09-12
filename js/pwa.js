@@ -2,7 +2,7 @@
   "use strict";
 
   const RK_DESIGN_SYSTEM_VERSION = "1.0.7";
-  const RK_BUILD_VERSION = "v2.0.0a49a1";
+  const RK_BUILD_VERSION = "v2.0.0a49a1a";
 
   function appBaseUrl() {
     try {
@@ -208,7 +208,7 @@
         const label = row.querySelector("span");
         const value = row.querySelector("small");
         if (label?.textContent?.trim() === "Versi" && value) {
-          value.textContent = "2.0.0a49a1 PWA";
+          value.textContent = "2.0.0a49a1a PWA";
         }
       });
     }

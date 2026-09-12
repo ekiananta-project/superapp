@@ -1,4 +1,4 @@
-const CACHE_NAME = "ruangkitha-v2.0.0a49a1-security-vault-app-integration-v1";
+const CACHE_NAME = "ruangkitha-v2.0.0a49a1a-autolock-ui-sync-hotfix";
 const OFFLINE_URL = "./offline.html";
 
 const APP_FILES = [

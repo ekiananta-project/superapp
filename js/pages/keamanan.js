@@ -366,6 +366,25 @@
     }
   }
 
+  async function handleRuntimeStateChange(event) {
+    if (!Trusted) return;
+    const detail = event && event.detail ? event.detail : {};
+    const userId = current.local?.userId;
+    if (!userId || detail.userId !== userId) return;
+
+    if (detail.unlocked === false) {
+      if (detail.reason === "auto-lock" || detail.reason === "expired") {
+        setVaultMessage("Security Vault terkunci otomatis setelah tidak ada aktivitas.", "info");
+      }
+      await refreshStatus({ quiet: true });
+    }
+  }
+
+  function syncAfterVisibilityReturn() {
+    if (document.visibilityState === "hidden") return;
+    refreshStatus({ quiet: true });
+  }
+
   function bindEvents() {
     els.primary?.addEventListener("click", handlePrimary);
     els.lock?.addEventListener("click", handleLock);
@@ -379,6 +398,9 @@
       if (event.key === "Escape" && els.unlockLayer && !els.unlockLayer.hidden) closeUnlock();
     });
     window.addEventListener("pageshow", () => refreshStatus({ quiet: true }));
+    window.addEventListener("focus", () => refreshStatus({ quiet: true }));
+    document.addEventListener("visibilitychange", syncAfterVisibilityReturn);
+    window.addEventListener(Trusted?.STATE_EVENT || "ruangkitha:security-vault-statechange", handleRuntimeStateChange);
   }
 
   async function init() {

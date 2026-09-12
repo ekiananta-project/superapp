@@ -1,6 +1,6 @@
 /*
  * RuangKitha Security Foundation v1 — Trusted Device + Local Unlock
- * Build: v2.0.0a49a1
+ * Build: v2.0.0a49a1a
  *
  * SECURITY CONTRACT
  * - Depends on ruangkitha-crypto-core.js (a49). Do not weaken/replace that core here.
@@ -28,7 +28,7 @@
   const subtle = webcrypto && webcrypto.subtle;
 
   const VERSION = 1;
-  const BUILD = "v2.0.0a49a1";
+  const BUILD = "v2.0.0a49a1a";
   const DEVICE_ALGORITHM = "ECDH-P256";
   const PIN_KDF = "PBKDF2-HMAC-SHA256";
   const PIN_ITERATIONS = 600000;
@@ -44,7 +44,23 @@
   const READY_PHASE = "ready";
 
   const runtime = new Map();
+  const STATE_EVENT = "ruangkitha:security-vault-statechange";
   let activityHooksInstalled = false;
+
+  function emitStateChange(detail = {}) {
+    if (!isBrowser() || typeof root.dispatchEvent !== "function" || typeof root.CustomEvent !== "function") return;
+    try {
+      root.dispatchEvent(new root.CustomEvent(STATE_EVENT, {
+        detail: {
+          source: "trusted-device",
+          at: nowIso(),
+          ...detail
+        }
+      }));
+    } catch (_) {
+      // Runtime security state must not depend on UI event delivery.
+    }
+  }
 
   function assertCore() {
     if (!Crypto) throw new Error("RuangKitha Crypto Core belum dimuat.");
@@ -534,17 +550,20 @@
     }
   }
 
-  function lock(userId) {
+  function lock(userId, reason = "manual") {
     const uid = validateUserId(userId);
     const session = runtime.get(uid);
     if (session) clearRuntimeTimer(session);
-    runtime.delete(uid); // Drop CryptoKey references; CryptoKey cannot be manually zeroized.
+    const hadSession = runtime.delete(uid); // Drop CryptoKey references; CryptoKey cannot be manually zeroized.
+    if (hadSession) emitStateChange({ userId: uid, unlocked: false, reason });
     return true;
   }
 
-  function lockAll() {
+  function lockAll(reason = "all") {
+    const ids = [...runtime.keys()];
     for (const session of runtime.values()) clearRuntimeTimer(session);
     runtime.clear();
+    for (const uid of ids) emitStateChange({ userId: uid, unlocked: false, reason });
     return true;
   }
 
@@ -553,7 +572,7 @@
     if (!session) return;
     clearRuntimeTimer(session);
     const remaining = Math.max(0, session.expiresAtMs - Date.now());
-    session.timer = setTimeout(() => lock(userId), remaining);
+    session.timer = setTimeout(() => lock(userId, "auto-lock"), remaining);
   }
 
   function setRuntimeSession(userId, masterKey, autoLockMinutes) {
@@ -592,8 +611,8 @@
     ["pointerdown", "keydown", "touchstart"].forEach((eventName) => {
       document.addEventListener(eventName, activity, { capture: true, passive: true });
     });
-    window.addEventListener("pagehide", lockAll, { capture: true });
-    window.addEventListener("beforeunload", lockAll, { capture: true });
+    window.addEventListener("pagehide", () => lockAll("pagehide"), { capture: true });
+    window.addEventListener("beforeunload", () => lockAll("beforeunload"), { capture: true });
   }
 
   function isUnlocked(userId) {
@@ -601,7 +620,7 @@
     const session = runtime.get(uid);
     if (!session) return false;
     if (session.expiresAtMs <= Date.now()) {
-      lock(uid);
+      lock(uid, "expired");
       return false;
     }
     return true;
@@ -823,6 +842,7 @@
     PIN_KDF,
     PIN_ITERATIONS,
     DEFAULT_AUTO_LOCK_MINUTES,
+    STATE_EVENT,
     validatePin,
     checkCapabilities,
     suggestDeviceLabel,
