@@ -1,6 +1,51 @@
 (() => {
   "use strict";
 
+  const RK_DESIGN_SYSTEM_VERSION = "1.0.0";
+  const RK_BUILD_VERSION = "v2.0.0a48";
+
+  function appBaseUrl() {
+    try {
+      const script = document.currentScript?.src;
+      if (script) return new URL("../", script);
+    } catch {}
+    return new URL("./", document.baseURI || location.href);
+  }
+
+  function ensureDesignSystem() {
+    if (document.querySelector('link[data-ruangkitha-design-system]')) return;
+
+    const link = document.createElement("link");
+    link.rel = "stylesheet";
+    link.dataset.ruangkithaDesignSystem = RK_DESIGN_SYSTEM_VERSION;
+    link.href = new URL(
+      `css/ruangkitha-design-system-v1.css?v=${RK_BUILD_VERSION}`,
+      appBaseUrl()
+    ).href;
+    document.head.appendChild(link);
+    document.documentElement.dataset.designSystem = "ruangkitha-v1";
+  }
+
+  function syncBrowserThemeColor() {
+    const isDark = document.documentElement.dataset.theme === "dark";
+    const color = isDark ? "#101612" : "#FBF7EE";
+    let meta = document.querySelector('meta[name="theme-color"]');
+    if (!meta) {
+      meta = document.createElement("meta");
+      meta.name = "theme-color";
+      document.head.appendChild(meta);
+    }
+    meta.content = color;
+  }
+
+  ensureDesignSystem();
+  syncBrowserThemeColor();
+
+  new MutationObserver(syncBrowserThemeColor).observe(document.documentElement, {
+    attributes: true,
+    attributeFilter: ["data-theme"]
+  });
+
   let deferredPrompt = null;
 
   let swRegistration = null;
@@ -20,11 +65,11 @@
     banner.style.cssText = [
       "position:fixed","left:50%","bottom:max(18px,env(safe-area-inset-bottom))","transform:translateX(-50%)",
       "width:min(calc(100% - 28px),430px)","z-index:100000","box-sizing:border-box","padding:13px 14px",
-      "border-radius:18px","background:#1b201d","color:#f7faf8","box-shadow:0 16px 42px rgba(0,0,0,.38)",
+      "border-radius:18px","background:#171D19","color:#F1EADF","box-shadow:0 16px 42px rgba(0,0,0,.38)",
       "border:1px solid rgba(255,255,255,.09)","font-family:Manrope,system-ui,sans-serif","display:flex",
       "align-items:center","gap:12px"
     ].join(";");
-    banner.innerHTML = '<div style="min-width:0;flex:1"><strong style="display:block;font-size:13px">Versi baru RuangKitha tersedia</strong><small style="display:block;margin-top:3px;color:#aab7b0;font-size:11.5px;line-height:1.4">Muat ulang untuk memakai perbaikan terbaru.</small></div><button type="button" style="border:0;border-radius:999px;padding:10px 13px;background:#4ed880;color:#09200f;font:700 12px Manrope,system-ui,sans-serif;white-space:nowrap">Muat ulang</button>';
+    banner.innerHTML = '<div style="min-width:0;flex:1"><strong style="display:block;font-size:13px">Versi baru RuangKitha tersedia</strong><small style="display:block;margin-top:3px;color:#B9C2BC;font-size:11.5px;line-height:1.4">Muat ulang untuk memakai perbaikan terbaru.</small></div><button type="button" style="border:0;border-radius:999px;padding:10px 13px;background:#7FA58E;color:#101612;font:700 12px Manrope,system-ui,sans-serif;white-space:nowrap">Muat ulang</button>';
     banner.querySelector("button")?.addEventListener("click", () => {
       const button = banner.querySelector("button");
       if (button) { button.disabled = true; button.textContent = "Memuat…"; }
@@ -87,7 +132,7 @@
   if ("serviceWorker" in navigator) {
     window.addEventListener("load", async () => {
       try {
-        const registration = await navigator.serviceWorker.register("./sw.js?v=20260912-v200a47", {
+        const registration = await navigator.serviceWorker.register("./sw.js?v=20260912-v200a48", {
           scope: "./"
         });
 
@@ -176,8 +221,8 @@
       "z-index:99999",
       "padding:11px 16px",
       "border-radius:999px",
-      "background:rgba(30,33,31,.96)",
-      "color:#fff",
+      "background:rgba(23,29,25,.97)",
+      "color:#F1EADF",
       "font:600 14px/1.3 Manrope,system-ui,sans-serif",
       "box-shadow:0 8px 24px rgba(0,0,0,.35)",
       "opacity:0",
@@ -222,6 +267,11 @@
   } else {
     setupDoubleBackExit();
   }
+
+  window.RuangKithaDesignSystem = Object.freeze({
+    version: RK_DESIGN_SYSTEM_VERSION,
+    build: RK_BUILD_VERSION
+  });
 
   window.FamilyPWA = {
     install,

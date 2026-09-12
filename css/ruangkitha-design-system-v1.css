@@ -1,0 +1,507 @@
+/* ======================================================================
+   RuangKitha Design System v1.0
+   Patch: v2.0.0a48 — Design System Foundation V1
+
+   Brand direction:
+   - warm daylight in light mode
+   - calm night at home in dark mode
+   - sage = primary, muted teal = secondary, peach = human accent
+   - warm neutral surfaces carry most of the interface
+
+   This file intentionally exposes both rk-* tokens and legacy aliases so
+   existing Finance / Catatan / Calendar pages can migrate safely in stages.
+   ====================================================================== */
+
+:root {
+  color-scheme: light;
+
+  /* ------------------------------------------------------------------
+     BRAND PRIMITIVES — LIGHT
+     ------------------------------------------------------------------ */
+  --rk-sage: #6B8F7A;
+  --rk-teal: #7FB8B0;
+  --rk-peach: #F3A78F;
+  --rk-beige: #EADCC8;
+  --rk-cream: #FBF7EE;
+
+  /* ------------------------------------------------------------------
+     SEMANTIC COLORS
+     ------------------------------------------------------------------ */
+  --rk-primary: #6B8F7A;
+  --rk-primary-hover: #5F806E;
+  --rk-primary-soft: #E9F0EB;
+  --rk-on-primary: #101612;
+
+  --rk-secondary: #7FB8B0;
+  --rk-secondary-soft: #E7F2F0;
+  --rk-on-secondary: #101612;
+
+  --rk-accent: #F3A78F;
+  --rk-accent-soft: #FCEBE5;
+  --rk-on-accent: #2D211D;
+
+  --rk-background: #FBF7EE;
+  --rk-outer-background: #EFE8DC;
+  --rk-surface: #FFFDF8;
+  --rk-surface-raised: #FFFFFF;
+  --rk-surface-soft: #F4EFE7;
+  --rk-surface-strong: #EADCC8;
+
+  --rk-text: #28312C;
+  --rk-text-secondary: #68716C;
+  --rk-text-soft: #7D857F;
+  --rk-text-disabled: #9BA19D;
+  --rk-border: rgba(40, 49, 44, .12);
+  --rk-border-strong: rgba(40, 49, 44, .20);
+
+  /* Functional colors stay semantically independent from the brand palette. */
+  --rk-success: #5F8569;
+  --rk-success-soft: #E7F0E9;
+  --rk-warning: #A9722A;
+  --rk-warning-soft: #F8EDDC;
+  --rk-danger: #B65F5A;
+  --rk-danger-soft: #F8E7E4;
+  --rk-info: #5E8190;
+  --rk-info-soft: #E6EEF1;
+
+  /* ------------------------------------------------------------------
+     TYPOGRAPHY
+     ------------------------------------------------------------------ */
+  --rk-font-family: "Manrope", system-ui, -apple-system, BlinkMacSystemFont,
+                    "Segoe UI", sans-serif;
+  --rk-font-size-xs: 10px;
+  --rk-font-size-sm: 12px;
+  --rk-font-size-md: 14px;
+  --rk-font-size-lg: 16px;
+  --rk-font-size-xl: 20px;
+  --rk-font-size-2xl: 24px;
+  --rk-font-size-3xl: 30px;
+  --rk-font-weight-regular: 400;
+  --rk-font-weight-medium: 500;
+  --rk-font-weight-semibold: 600;
+  --rk-font-weight-bold: 700;
+
+  /* ------------------------------------------------------------------
+     SPACING / SHAPE
+     ------------------------------------------------------------------ */
+  --rk-space-1: 4px;
+  --rk-space-2: 8px;
+  --rk-space-3: 12px;
+  --rk-space-4: 16px;
+  --rk-space-5: 20px;
+  --rk-space-6: 24px;
+  --rk-space-8: 32px;
+
+  --rk-radius-sm: 10px;
+  --rk-radius-md: 14px;
+  --rk-radius-lg: 18px;
+  --rk-radius-xl: 24px;
+  --rk-radius-full: 999px;
+
+  --rk-shadow-sm: 0 6px 24px rgba(68, 76, 70, .08);
+  --rk-shadow-md: 0 14px 36px rgba(68, 76, 70, .12);
+  --rk-shadow-float: 0 18px 48px rgba(68, 76, 70, .16);
+  --rk-focus-ring: 0 0 0 3px rgba(107, 143, 122, .22);
+
+  --rk-page-padding: 16px;
+  --rk-app-max-width: 430px;
+  --rk-bottom-nav-height: 76px;
+
+  --rk-brand-gradient: linear-gradient(135deg, #6B8F7A 0%, #7FB8B0 50%, #F3A78F 100%);
+  --rk-warm-gradient: linear-gradient(135deg, #F4EFE7 0%, #FFFDF8 72%, #FCEBE5 100%);
+
+  /* ------------------------------------------------------------------
+     LEGACY COMPATIBILITY ALIASES
+     Existing modules keep functioning while migration is staged.
+     ------------------------------------------------------------------ */
+  --color-primary: var(--rk-primary);
+  --color-secondary: var(--rk-secondary);
+  --color-background: var(--rk-background);
+  --color-text: var(--rk-text);
+  --color-text-secondary: var(--rk-text-secondary);
+  --color-text-muted: var(--rk-text-secondary);
+  --color-text-soft: var(--rk-text-soft);
+  --color-surface: var(--rk-surface);
+  --color-surface-soft: var(--rk-surface-soft);
+  --color-surface-strong: var(--rk-surface-strong);
+  --color-border: var(--rk-border);
+  --color-danger: var(--rk-danger);
+  --color-success: var(--rk-success);
+  --color-warning: var(--rk-warning);
+  --color-info: var(--rk-info);
+  --color-white: #FFFFFF;
+
+  --text-primary: var(--rk-text);
+  --text-secondary: var(--rk-text-secondary);
+
+  --font-family: var(--rk-font-family);
+  --font-size-xs: var(--rk-font-size-xs);
+  --font-size-sm: var(--rk-font-size-sm);
+  --font-size-md: var(--rk-font-size-md);
+  --font-size-lg: var(--rk-font-size-lg);
+  --font-size-xl: var(--rk-font-size-xl);
+  --font-size-2xl: var(--rk-font-size-2xl);
+  --font-size-3xl: var(--rk-font-size-3xl);
+  --font-weight-regular: var(--rk-font-weight-regular);
+  --font-weight-medium: var(--rk-font-weight-medium);
+  --font-weight-semibold: var(--rk-font-weight-semibold);
+  --font-weight-bold: var(--rk-font-weight-bold);
+
+  --space-1: var(--rk-space-1);
+  --space-2: var(--rk-space-2);
+  --space-3: var(--rk-space-3);
+  --space-4: var(--rk-space-4);
+  --space-5: var(--rk-space-5);
+  --space-6: var(--rk-space-6);
+  --space-8: var(--rk-space-8);
+
+  --radius-sm: var(--rk-radius-sm);
+  --radius-md: var(--rk-radius-md);
+  --radius-lg: var(--rk-radius-lg);
+  --radius-xl: var(--rk-radius-xl);
+  --radius-full: var(--rk-radius-full);
+  --shadow-sm: var(--rk-shadow-sm);
+  --shadow-md: var(--rk-shadow-md);
+  --page-padding: var(--rk-page-padding);
+  --app-max-width: var(--rk-app-max-width);
+  --bottom-nav-height: var(--rk-bottom-nav-height);
+}
+
+html[data-theme="dark"] {
+  color-scheme: dark;
+
+  /* BRAND PRIMITIVES — DARK */
+  --rk-sage: #7FA58E;
+  --rk-teal: #6FA8A1;
+  --rk-peach: #E7A18E;
+  --rk-beige: #D8C8B4;
+  --rk-cream: #F1EADF;
+
+  /* SEMANTIC COLORS — DARK */
+  --rk-primary: #7FA58E;
+  --rk-primary-hover: #91B29E;
+  --rk-primary-soft: #233028;
+  --rk-on-primary: #101612;
+
+  --rk-secondary: #6FA8A1;
+  --rk-secondary-soft: #1E302E;
+  --rk-on-secondary: #101612;
+
+  --rk-accent: #E7A18E;
+  --rk-accent-soft: #372824;
+  --rk-on-accent: #17110F;
+
+  --rk-background: #101612;
+  --rk-outer-background: #0B100D;
+  --rk-surface: #171D19;
+  --rk-surface-raised: #1A211C;
+  --rk-surface-soft: #1D241F;
+  --rk-surface-strong: #263029;
+
+  --rk-text: #F1EADF;
+  --rk-text-secondary: #B9C2BC;
+  --rk-text-soft: #99A59E;
+  --rk-text-disabled: #6F7973;
+  --rk-border: rgba(241, 234, 223, .11);
+  --rk-border-strong: rgba(241, 234, 223, .19);
+
+  --rk-success: #86B394;
+  --rk-success-soft: #1D3023;
+  --rk-warning: #D1A15F;
+  --rk-warning-soft: #342A1B;
+  --rk-danger: #D7837C;
+  --rk-danger-soft: #352220;
+  --rk-info: #83A9B7;
+  --rk-info-soft: #1B2B31;
+
+  --rk-shadow-sm: 0 8px 28px rgba(0, 0, 0, .20);
+  --rk-shadow-md: 0 16px 42px rgba(0, 0, 0, .28);
+  --rk-shadow-float: 0 20px 56px rgba(0, 0, 0, .36);
+  --rk-focus-ring: 0 0 0 3px rgba(127, 165, 142, .25);
+
+  --rk-brand-gradient: linear-gradient(135deg, #7FA58E 0%, #6FA8A1 50%, #E7A18E 100%);
+  --rk-warm-gradient: linear-gradient(135deg, #171D19 0%, #1D241F 72%, #2A211E 100%);
+}
+
+/* ======================================================================
+   GLOBAL FOUNDATION
+   ====================================================================== */
+html {
+  background: var(--rk-outer-background);
+}
+
+body {
+  background: var(--rk-outer-background);
+  color: var(--rk-text);
+  font-family: var(--rk-font-family);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+.aplikasi {
+  background: var(--rk-background);
+  color: var(--rk-text);
+}
+
+::selection {
+  background: color-mix(in srgb, var(--rk-secondary) 34%, transparent);
+  color: var(--rk-text);
+}
+
+button,
+input,
+select,
+textarea {
+  font-family: var(--rk-font-family);
+}
+
+input,
+select,
+textarea {
+  accent-color: var(--rk-primary);
+}
+
+input::placeholder,
+textarea::placeholder {
+  color: var(--rk-text-soft);
+  opacity: .86;
+}
+
+:where(button, a, input, select, textarea, [tabindex]):focus-visible {
+  outline: 2px solid var(--rk-primary);
+  outline-offset: 2px;
+}
+
+:where(button, input, select, textarea):disabled {
+  cursor: not-allowed;
+}
+
+/* Shared legacy controls get the new surface language without changing DOM. */
+.tombol-utama {
+  background: var(--rk-primary) !important;
+  color: var(--rk-on-primary) !important;
+  border-radius: var(--rk-radius-md);
+  box-shadow: 0 8px 20px color-mix(in srgb, var(--rk-primary) 18%, transparent);
+}
+
+.tombol-utama:hover:not(:disabled) {
+  background: var(--rk-primary-hover) !important;
+}
+
+.tombol-sekunder {
+  background: var(--rk-primary-soft) !important;
+  color: var(--rk-primary) !important;
+  border: 1px solid color-mix(in srgb, var(--rk-primary) 20%, var(--rk-border));
+  border-radius: var(--rk-radius-md);
+}
+
+.tombol-bahaya {
+  background: var(--rk-danger-soft) !important;
+  color: var(--rk-danger) !important;
+  border-radius: var(--rk-radius-md);
+}
+
+:where(.input, .pilih, .area-teks) {
+  border-color: var(--rk-border) !important;
+  background: var(--rk-surface) !important;
+  color: var(--rk-text) !important;
+  border-radius: var(--rk-radius-md);
+}
+
+:where(.input, .pilih, .area-teks):focus {
+  border-color: var(--rk-primary) !important;
+  box-shadow: var(--rk-focus-ring) !important;
+}
+
+:where(.kartu-uang, .kartu-list, .kartu-pengaturan, .panel-transaksi, .bottom-sheet) {
+  background: var(--rk-surface);
+  border-color: var(--rk-border);
+  box-shadow: var(--rk-shadow-sm);
+}
+
+.bottom-sheet {
+  border: 1px solid var(--rk-border);
+  border-bottom: 0;
+}
+
+.lapisan {
+  background: rgba(17, 23, 19, .42) !important;
+  backdrop-filter: blur(3px);
+}
+
+.sheet-handle {
+  background: var(--rk-border-strong) !important;
+}
+
+.tombol-profil,
+.tombol-ikon {
+  background: var(--rk-surface-soft);
+  color: var(--rk-primary);
+}
+
+/* Keep persistent navigation visually quieter than content cards. */
+:where(.navigasi-bawah, .bottom-nav, .finance-bottom-nav, .catatan-bottom-nav) {
+  --rk-nav-surface: color-mix(in srgb, var(--rk-surface) 94%, transparent);
+}
+
+/* ======================================================================
+   NEW CORE COMPONENTS — AVAILABLE TO ALL FUTURE MODULES
+   ====================================================================== */
+.rk-page {
+  min-height: 100dvh;
+  background: var(--rk-background);
+  color: var(--rk-text);
+  font-family: var(--rk-font-family);
+}
+
+.rk-card {
+  padding: var(--rk-space-4);
+  border: 1px solid var(--rk-border);
+  border-radius: var(--rk-radius-lg);
+  background: var(--rk-surface);
+  color: var(--rk-text);
+  box-shadow: var(--rk-shadow-sm);
+}
+
+.rk-card--soft {
+  background: var(--rk-surface-soft);
+  box-shadow: none;
+}
+
+.rk-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 30px;
+  padding: 0 10px;
+  border: 1px solid var(--rk-border);
+  border-radius: var(--rk-radius-full);
+  background: var(--rk-surface);
+  color: var(--rk-text-secondary);
+  font-size: var(--rk-font-size-xs);
+  font-weight: var(--rk-font-weight-semibold);
+  white-space: nowrap;
+}
+
+.rk-chip--primary {
+  border-color: color-mix(in srgb, var(--rk-primary) 22%, transparent);
+  background: var(--rk-primary-soft);
+  color: var(--rk-primary);
+}
+
+.rk-chip--accent {
+  border-color: color-mix(in srgb, var(--rk-accent) 24%, transparent);
+  background: var(--rk-accent-soft);
+  color: color-mix(in srgb, var(--rk-accent) 72%, var(--rk-text));
+}
+
+.rk-button {
+  appearance: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 46px;
+  padding: 0 16px;
+  border: 0;
+  border-radius: var(--rk-radius-md);
+  background: var(--rk-primary);
+  color: var(--rk-on-primary);
+  font: inherit;
+  font-weight: var(--rk-font-weight-bold);
+  text-decoration: none;
+  box-shadow: 0 8px 20px color-mix(in srgb, var(--rk-primary) 18%, transparent);
+}
+
+.rk-button--secondary {
+  border: 1px solid color-mix(in srgb, var(--rk-primary) 22%, var(--rk-border));
+  background: var(--rk-primary-soft);
+  color: var(--rk-primary);
+  box-shadow: none;
+}
+
+.rk-button--ghost {
+  border: 1px solid var(--rk-border);
+  background: var(--rk-surface);
+  color: var(--rk-text);
+  box-shadow: none;
+}
+
+.rk-button--danger {
+  background: var(--rk-danger-soft);
+  color: var(--rk-danger);
+  box-shadow: none;
+}
+
+.rk-input,
+.rk-select,
+.rk-textarea {
+  width: 100%;
+  border: 1px solid var(--rk-border);
+  border-radius: var(--rk-radius-md);
+  outline: 0;
+  background: var(--rk-surface);
+  color: var(--rk-text);
+  font: inherit;
+  transition: border-color .16s ease, box-shadow .16s ease, background .16s ease;
+}
+
+.rk-input,
+.rk-select {
+  min-height: 48px;
+  padding: 0 13px;
+}
+
+.rk-textarea {
+  min-height: 96px;
+  padding: 12px 13px;
+  resize: vertical;
+}
+
+:where(.rk-input, .rk-select, .rk-textarea):focus {
+  border-color: var(--rk-primary);
+  box-shadow: var(--rk-focus-ring);
+}
+
+.rk-section-title {
+  margin: 0;
+  color: var(--rk-text);
+  font-size: var(--rk-font-size-lg);
+  line-height: 1.35;
+  font-weight: var(--rk-font-weight-bold);
+}
+
+.rk-section-copy {
+  margin: 4px 0 0;
+  color: var(--rk-text-secondary);
+  font-size: var(--rk-font-size-sm);
+  line-height: 1.55;
+}
+
+.rk-divider {
+  height: 1px;
+  border: 0;
+  background: var(--rk-border);
+}
+
+.rk-status-success { color: var(--rk-success); }
+.rk-status-warning { color: var(--rk-warning); }
+.rk-status-danger { color: var(--rk-danger); }
+.rk-status-info { color: var(--rk-info); }
+
+/* A small opt-in accent utility. Avoid using brand gradients for large UI areas. */
+.rk-brand-mark-surface {
+  background: var(--rk-brand-gradient);
+  color: var(--rk-on-primary);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    transition-duration: .001ms !important;
+    animation-duration: .001ms !important;
+    animation-iteration-count: 1 !important;
+  }
+}
