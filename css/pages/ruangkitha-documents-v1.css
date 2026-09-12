@@ -1,4 +1,4 @@
-/* RuangKitha v2.0.0a50c — Documents Lifecycle & Management V1 (on locked a50b1 baseline) */
+/* RuangKitha v2.0.0a50d — Documents Search, Filter & Smart Organization V1 (on locked a50c baseline) */
 .dokumen-app{min-height:100dvh;background:var(--rk-bg,var(--warna-latar,#f7f4ee));padding-bottom:max(92px,env(safe-area-inset-bottom));}
 .dokumen-header{grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);}
 .dokumen-header h1{font-size:17px;margin:0;text-align:center;}
@@ -313,3 +313,186 @@ html[data-theme="dark"] .dokumen-confirm-cancel{border-color:rgba(223,232,226,.1
 }
 .dokumen-card[data-lifecycle="attention"],.dokumen-card[data-lifecycle="today"]{border-color:rgba(221,155,56,.20)}
 .dokumen-card[data-lifecycle="expired"]{border-color:rgba(205,74,74,.18)}
+
+/* ------------------------------------------------------------------
+   a50d — Documents Search, Filter & Smart Organization V1
+   Search/filter/sort stays on plaintext catalog metadata only.
+   ------------------------------------------------------------------ */
+.dokumen-discovery{
+  display:grid;
+  grid-template-columns:minmax(0,1fr) auto;
+  gap:8px;
+  align-items:center;
+}
+.dokumen-search{
+  min-width:0;
+  min-height:43px;
+  display:flex;
+  align-items:center;
+  gap:8px;
+  padding:0 11px;
+  border:1px solid var(--rk-border,var(--color-border,#e0e4e1));
+  border-radius:14px;
+  background:var(--rk-surface,var(--warna-kartu,#fff));
+  box-shadow:0 3px 12px rgba(31,42,35,.025);
+}
+.dokumen-search>ion-icon{flex:0 0 auto;font-size:17px;color:var(--warna-teks-sekunder,#7a817c)}
+.dokumen-search input{
+  width:100%;
+  min-width:0;
+  border:0;
+  outline:0;
+  padding:0;
+  background:transparent;
+  color:var(--warna-teks,#292e2b);
+  font:inherit;
+  font-size:10.5px;
+}
+.dokumen-search input::placeholder{color:var(--warna-teks-sekunder,#929894)}
+.dokumen-search input::-webkit-search-cancel-button{display:none}
+.dokumen-search button{
+  flex:0 0 auto;
+  width:28px;
+  height:28px;
+  padding:0;
+  border:0;
+  border-radius:9px;
+  display:grid;
+  place-items:center;
+  background:transparent;
+  color:var(--warna-teks-sekunder,#7a817c);
+  cursor:pointer;
+}
+.dokumen-search button[hidden]{display:none}
+.dokumen-search button ion-icon{font-size:16px}
+.dokumen-search:focus-within{
+  border-color:color-mix(in srgb,var(--rk-primary,#557d68) 58%,var(--rk-border,#dfe4e0));
+  box-shadow:0 0 0 3px color-mix(in srgb,var(--rk-primary,#557d68) 11%,transparent);
+}
+.dokumen-filter-trigger{
+  position:relative;
+  min-height:43px;
+  padding:0 12px;
+  border:1px solid var(--rk-border,var(--color-border,#e0e4e1));
+  border-radius:14px;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  gap:6px;
+  background:var(--rk-surface,var(--warna-kartu,#fff));
+  color:var(--warna-teks,#292e2b);
+  font:inherit;
+  font-size:9.5px;
+  font-weight:750;
+  cursor:pointer;
+  white-space:nowrap;
+}
+.dokumen-filter-trigger>ion-icon{font-size:16px;color:var(--rk-primary,#557d68)}
+.dokumen-filter-trigger.is-active{border-color:color-mix(in srgb,var(--rk-primary,#557d68) 32%,var(--rk-border,#dfe4e0));background:color-mix(in srgb,var(--rk-primary,#557d68) 6%,var(--rk-surface,#fff))}
+.dokumen-filter-count{
+  min-width:18px;
+  height:18px;
+  padding:0 5px;
+  border-radius:999px;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  background:var(--rk-primary,#557d68);
+  color:#fff;
+  font-size:8px;
+  font-weight:800;
+  line-height:1;
+}
+.dokumen-filter-count[hidden]{display:none}
+.dokumen-active-filters{display:flex;gap:6px;overflow:auto;padding:0 1px 1px;scrollbar-width:none}
+.dokumen-active-filters::-webkit-scrollbar{display:none}
+.dokumen-active-filters[hidden]{display:none}
+.dokumen-active-filter-chip{
+  flex:0 0 auto;
+  min-height:28px;
+  padding:0 8px 0 10px;
+  border:1px solid color-mix(in srgb,var(--rk-primary,#557d68) 18%,var(--rk-border,#dfe4e0));
+  border-radius:999px;
+  display:inline-flex;
+  align-items:center;
+  gap:5px;
+  background:color-mix(in srgb,var(--rk-primary,#557d68) 7%,transparent);
+  color:var(--rk-primary,#557d68);
+  font:inherit;
+  font-size:8.7px;
+  font-weight:720;
+  cursor:pointer;
+  white-space:nowrap;
+}
+.dokumen-active-filter-chip ion-icon{font-size:13px}
+.dokumen-list-head>span{font-size:8.5px;color:var(--warna-teks-sekunder,#8a918d);white-space:nowrap}
+
+.dokumen-filter-layer{z-index:2508}
+.dokumen-filter-sheet{max-height:min(84dvh,720px);overflow:auto;padding-bottom:max(18px,env(safe-area-inset-bottom))}
+.dokumen-filter-form{padding:2px 16px 16px;display:grid;gap:15px}
+.dokumen-filter-group{border:0;margin:0;padding:0;display:grid;gap:8px}
+.dokumen-filter-group[hidden]{display:none}
+.dokumen-filter-group legend{font-size:10.5px;font-weight:780;color:var(--warna-teks,#292e2b);margin-bottom:1px}
+.dokumen-filter-options{display:grid;grid-template-columns:1fr 1fr;gap:7px}
+.dokumen-filter-options-compact{grid-template-columns:repeat(3,1fr)}
+.dokumen-filter-options label{min-width:0;cursor:pointer}
+.dokumen-filter-options input{position:absolute;opacity:0;pointer-events:none}
+.dokumen-filter-options span{
+  min-height:38px;
+  box-sizing:border-box;
+  padding:8px 9px;
+  border:1px solid var(--rk-border,var(--color-border,#e0e4e1));
+  border-radius:12px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  text-align:center;
+  background:var(--rk-surface,var(--warna-kartu,#fff));
+  color:var(--warna-teks-sekunder,#727a75);
+  font-size:9px;
+  line-height:1.3;
+  font-weight:690;
+}
+.dokumen-filter-options input:checked+span{
+  border-color:color-mix(in srgb,var(--rk-primary,#557d68) 38%,var(--rk-border,#dfe4e0));
+  background:color-mix(in srgb,var(--rk-primary,#557d68) 10%,var(--rk-surface,#fff));
+  color:var(--rk-primary,#557d68);
+  box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--rk-primary,#557d68) 10%,transparent);
+}
+.dokumen-filter-options input:focus-visible+span{outline:2px solid color-mix(in srgb,var(--rk-primary,#6f9984) 68%,transparent);outline-offset:2px}
+.dokumen-filter-actions{display:grid;grid-template-columns:auto minmax(0,1fr);gap:8px;padding-top:2px}
+.dokumen-filter-actions .tombol-utama{width:100%;min-height:43px}
+.dokumen-filter-reset{
+  min-width:88px;
+  min-height:43px;
+  padding:0 13px;
+  border:1px solid var(--rk-border,var(--color-border,#e0e4e1));
+  border-radius:13px;
+  background:transparent;
+  color:var(--warna-teks-sekunder,#6f7772);
+  font:inherit;
+  font-size:9.5px;
+  font-weight:750;
+  cursor:pointer;
+}
+.dokumen-filter-trigger:focus-visible,.dokumen-search button:focus-visible,.dokumen-active-filter-chip:focus-visible,.dokumen-filter-reset:focus-visible{
+  outline:2px solid color-mix(in srgb,var(--rk-primary,#6f9984) 72%,transparent);
+  outline-offset:2px;
+}
+
+html[data-theme="dark"] .dokumen-search,
+html[data-theme="dark"] .dokumen-filter-trigger,
+html[data-theme="dark"] .dokumen-filter-options span{
+  background:var(--rk-surface,var(--warna-kartu,#181c19));
+  border-color:rgba(223,232,226,.10);
+}
+html[data-theme="dark"] .dokumen-filter-trigger.is-active,
+html[data-theme="dark"] .dokumen-filter-options input:checked+span{background:rgba(111,153,132,.11)}
+
+@media (max-width:360px){
+  .dokumen-discovery{grid-template-columns:minmax(0,1fr) 44px}
+  .dokumen-filter-trigger{width:44px;padding:0}
+  .dokumen-filter-trigger>span:not(.dokumen-filter-count){display:none}
+  .dokumen-filter-count{position:absolute;top:-4px;right:-4px}
+  .dokumen-filter-options-compact{grid-template-columns:1fr}
+}

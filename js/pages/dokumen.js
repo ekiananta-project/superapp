@@ -1,4 +1,4 @@
-/* RuangKitha v2.0.0a50c — Documents Lifecycle & Management V1 */
+/* RuangKitha v2.0.0a50d — Documents Search, Filter & Smart Organization V1 */
 (() => {
   "use strict";
 
@@ -19,6 +19,17 @@
   const vaultBadge = q("[data-doc-vault-badge]");
   const tabs = qa("[data-doc-view]");
   const archiveOpen = q("[data-doc-archive-open]");
+  const searchInput = q("[data-doc-search]");
+  const searchClear = q("[data-doc-search-clear]");
+  const filterOpen = q("[data-doc-filter-open]");
+  const filterCount = q("[data-doc-filter-count]");
+  const activeFilters = q("[data-doc-active-filters]");
+  const sortLabel = q("[data-doc-sort-label]");
+  const filterLayer = q("[data-doc-filter-layer]");
+  const filterForm = q("[data-doc-filter-form]");
+  const filterClose = q("[data-doc-filter-close]");
+  const filterReset = q("[data-doc-filter-reset]");
+  const filterScopeSection = q("[data-doc-filter-scope-section]");
 
   const formLayer = q("[data-doc-form-layer]");
   const form = q("[data-doc-form]");
@@ -106,6 +117,13 @@
   let pendingUnlockAction = null;
   let pendingConfirmAction = null;
   let detailFileMode = { mode: "add", attachmentId: null };
+  const discovery = {
+    query: "",
+    status: "all",
+    attachment: "all",
+    scope: "all",
+    sort: "smart"
+  };
 
   const DOCUMENT_TYPE_GROUPS = [
     { label: "Identitas", items: ["KTP", "Kartu Keluarga", "SIM", "Paspor"] },
@@ -248,6 +266,161 @@
     tabs.forEach((tab) => tab.classList.toggle("is-active", tab.dataset.docView === currentView));
   }
 
+  function searchText(value) {
+    return String(value || "").trim().replace(/\s+/g, " ").toLocaleLowerCase("id-ID");
+  }
+
+  function lifecycleMatches(record, filterValue) {
+    if (filterValue === "all") return true;
+    const state = expiryPresentation(record).state;
+    if (filterValue === "attention") return state === "attention" || state === "today";
+    if (filterValue === "expired") return state === "expired";
+    if (filterValue === "valid") return state === "valid";
+    if (filterValue === "no-expiry") return state === "no-expiry";
+    return true;
+  }
+
+  function attachmentMatches(record, filterValue) {
+    const hasAttachment = Number(record?.attachment_count || 0) > 0;
+    if (filterValue === "with") return hasAttachment;
+    if (filterValue === "without") return !hasAttachment;
+    return true;
+  }
+
+  function scopeMatches(record, filterValue) {
+    if (currentView !== "attention" || filterValue === "all") return true;
+    return record?.scope === filterValue;
+  }
+
+  function smartRank(record) {
+    const state = expiryPresentation(record).state;
+    return ({ expired: 0, today: 1, attention: 2, valid: 3, "no-expiry": 4 })[state] ?? 5;
+  }
+
+  function expiryTime(record) {
+    const parts = parseDateOnly(record?.expires_on);
+    return parts ? Date.UTC(parts.y, parts.m - 1, parts.d) : Number.POSITIVE_INFINITY;
+  }
+
+  function updatedTime(record) {
+    const value = Date.parse(record?.updated_at || record?.created_at || "");
+    return Number.isFinite(value) ? value : 0;
+  }
+
+  function sortRecords(items) {
+    const output = items.slice();
+    const byName = (a, b) => String(a?.display_name || "").localeCompare(String(b?.display_name || ""), "id-ID", { sensitivity: "base" });
+    if (discovery.sort === "name") return output.sort(byName);
+    if (discovery.sort === "updated") return output.sort((a, b) => updatedTime(b) - updatedTime(a) || byName(a, b));
+    if (discovery.sort === "expiry") return output.sort((a, b) => expiryTime(a) - expiryTime(b) || updatedTime(b) - updatedTime(a) || byName(a, b));
+    return output.sort((a, b) => smartRank(a) - smartRank(b) || expiryTime(a) - expiryTime(b) || updatedTime(b) - updatedTime(a) || byName(a, b));
+  }
+
+  function visibleRecords() {
+    const query = searchText(discovery.query);
+    const filtered = records.filter((record) => {
+      if (query) {
+        const haystack = searchText(`${record?.display_name || ""} ${record?.document_type || ""}`);
+        if (!haystack.includes(query)) return false;
+      }
+      return lifecycleMatches(record, discovery.status)
+        && attachmentMatches(record, discovery.attachment)
+        && scopeMatches(record, discovery.scope);
+    });
+    return sortRecords(filtered);
+  }
+
+  function activeFilterCount() {
+    let count = 0;
+    if (discovery.status !== "all") count += 1;
+    if (discovery.attachment !== "all") count += 1;
+    if (currentView === "attention" && discovery.scope !== "all") count += 1;
+    if (discovery.sort !== "smart") count += 1;
+    return count;
+  }
+
+  function statusFilterLabel(value) {
+    return ({ attention: "Perlu perhatian", expired: "Kedaluwarsa", valid: "Aktif", "no-expiry": "Tanpa masa berlaku" })[value] || "";
+  }
+
+  function attachmentFilterLabel(value) {
+    return ({ with: "Ada lampiran", without: "Tanpa lampiran" })[value] || "";
+  }
+
+  function sortFilterLabel(value) {
+    return ({ smart: "Urutan pintar", expiry: "Masa berlaku terdekat", updated: "Baru diperbarui", name: "Nama A–Z" })[value] || "Urutan pintar";
+  }
+
+  function makeActiveFilterChip(text, onClear) {
+    const chip = document.createElement("button");
+    chip.type = "button";
+    chip.className = "dokumen-active-filter-chip";
+    const label = document.createElement("span");
+    label.textContent = text;
+    chip.append(label, ion("close-outline"));
+    chip.addEventListener("click", onClear);
+    return chip;
+  }
+
+  function renderDiscoveryState() {
+    const count = activeFilterCount();
+    filterCount.textContent = String(count);
+    filterCount.hidden = count === 0;
+    filterOpen.classList.toggle("is-active", count > 0);
+    searchClear.hidden = !searchText(discovery.query);
+    sortLabel.textContent = sortFilterLabel(discovery.sort);
+
+    activeFilters.replaceChildren();
+    const chips = [];
+    if (discovery.status !== "all") chips.push(makeActiveFilterChip(statusFilterLabel(discovery.status), () => { discovery.status = "all"; renderRecords(); }));
+    if (discovery.attachment !== "all") chips.push(makeActiveFilterChip(attachmentFilterLabel(discovery.attachment), () => { discovery.attachment = "all"; renderRecords(); }));
+    if (currentView === "attention" && discovery.scope !== "all") chips.push(makeActiveFilterChip(discovery.scope === "family" ? "Keluarga" : "Pribadi", () => { discovery.scope = "all"; renderRecords(); }));
+    if (discovery.sort !== "smart") chips.push(makeActiveFilterChip(sortFilterLabel(discovery.sort), () => { discovery.sort = "smart"; renderRecords(); }));
+    chips.forEach((chip) => activeFilters.appendChild(chip));
+    activeFilters.hidden = chips.length === 0;
+  }
+
+  function setRadioValue(name, value) {
+    const field = filterForm.elements.namedItem(name);
+    if (!field) return;
+    const items = typeof field.length === "number" && !field.tagName ? Array.from(field) : [field];
+    items.forEach((input) => { input.checked = input.value === value; });
+  }
+
+  function getRadioValue(name, fallback) {
+    const input = filterForm.querySelector(`input[name="${name}"]:checked`);
+    return input?.value || fallback;
+  }
+
+  function syncFilterForm() {
+    setRadioValue("doc-filter-status", discovery.status);
+    setRadioValue("doc-filter-attachment", discovery.attachment);
+    setRadioValue("doc-filter-scope", currentView === "attention" ? discovery.scope : "all");
+    setRadioValue("doc-filter-sort", discovery.sort);
+    filterScopeSection.hidden = currentView !== "attention";
+  }
+
+  function openFilterSheet() {
+    syncFilterForm();
+    filterLayer.hidden = false;
+  }
+
+  function closeFilterSheet() {
+    filterLayer.hidden = true;
+  }
+
+  function resetDiscovery({ clearSearch = true } = {}) {
+    discovery.status = "all";
+    discovery.attachment = "all";
+    discovery.scope = "all";
+    discovery.sort = "smart";
+    if (clearSearch) {
+      discovery.query = "";
+      searchInput.value = "";
+    }
+    renderRecords();
+  }
+
   async function refreshVaultStatus() {
     try {
       currentStatus = await Service().localStatus();
@@ -274,7 +447,10 @@
 
   function renderRecords() {
     list.replaceChildren();
+    renderDiscoveryState();
+
     if (!records.length) {
+      countLabel.textContent = "Belum ada dokumen";
       const copy = currentView === "attention"
         ? "Belum ada dokumen yang perlu perhatian. RuangKitha akan menampilkannya ketika masa berlaku mendekat."
         : currentView === "family"
@@ -289,7 +465,22 @@
       return;
     }
 
-    records.forEach((record) => {
+    const shown = visibleRecords();
+    countLabel.textContent = shown.length === records.length
+      ? `${records.length} dokumen`
+      : `${shown.length} dari ${records.length} dokumen`;
+
+    if (!shown.length) {
+      setState(
+        "search-outline",
+        "Tidak ada yang cocok",
+        "Coba ubah kata pencarian atau reset filter agar dokumen lain kembali terlihat.",
+        { label: "Reset pencarian & filter", onClick: () => resetDiscovery({ clearSearch: true }) }
+      );
+      return;
+    }
+
+    shown.forEach((record) => {
       const card = document.createElement("button");
       card.type = "button";
       card.className = "dokumen-card";
@@ -342,11 +533,11 @@
     countLabel.textContent = "Memuat dokumen…";
     try {
       records = await Service().listRecords({ familyId: activeFamily?.id || null, view: currentView });
-      countLabel.textContent = records.length ? `${records.length} dokumen` : "Belum ada dokumen";
       renderRecords();
     } catch (error) {
       records = [];
       countLabel.textContent = "Gagal memuat";
+      renderDiscoveryState();
       setState("alert-circle-outline", "Dokumen belum dapat dimuat", error?.message || "Terjadi kesalahan saat memuat dokumen.", { label: "Coba lagi", onClick: loadRecords });
     } finally {
       root.setAttribute("aria-busy", "false");
@@ -356,7 +547,9 @@
   async function switchView(view) {
     if (!['family', 'attention', 'personal'].includes(view)) return;
     currentView = view;
+    discovery.scope = "all";
     syncTabs();
+    closeFilterSheet();
     await loadRecords();
   }
 
@@ -1204,6 +1397,36 @@
 
   tabs.forEach((tab) => tab.addEventListener("click", () => switchView(tab.dataset.docView)));
   addButton.addEventListener("click", () => openForm());
+  searchInput.addEventListener("input", () => {
+    discovery.query = searchInput.value;
+    renderRecords();
+  });
+  searchClear.addEventListener("click", () => {
+    discovery.query = "";
+    searchInput.value = "";
+    searchInput.focus();
+    renderRecords();
+  });
+  filterOpen.addEventListener("click", openFilterSheet);
+  filterClose.addEventListener("click", closeFilterSheet);
+  filterLayer.addEventListener("click", (event) => { if (event.target === filterLayer) closeFilterSheet(); });
+  filterReset.addEventListener("click", () => {
+    discovery.status = "all";
+    discovery.attachment = "all";
+    discovery.scope = "all";
+    discovery.sort = "smart";
+    syncFilterForm();
+  });
+  filterForm.addEventListener("submit", (event) => {
+    event.preventDefault();
+    discovery.status = getRadioValue("doc-filter-status", "all");
+    discovery.attachment = getRadioValue("doc-filter-attachment", "all");
+    discovery.scope = currentView === "attention" ? getRadioValue("doc-filter-scope", "all") : "all";
+    discovery.sort = getRadioValue("doc-filter-sort", "smart");
+    closeFilterSheet();
+    renderRecords();
+  });
+
   archiveOpen.addEventListener("click", openArchiveManager);
 
   typeTrigger.addEventListener("click", openTypePicker);
@@ -1276,7 +1499,15 @@
         : await Service().updateRecord(editingId, payload);
 
       closeForm();
-      if (wasCreate) currentView = scope === "family" ? "family" : "personal";
+      if (wasCreate) {
+        currentView = scope === "family" ? "family" : "personal";
+        discovery.query = "";
+        discovery.status = "all";
+        discovery.attachment = "all";
+        discovery.scope = "all";
+        discovery.sort = "smart";
+        searchInput.value = "";
+      }
       syncTabs();
       await loadRecords();
       setMessage(selectedFile
@@ -1458,6 +1689,7 @@
       activeFamily = await window.AuthRouter.ambilFamilyAktif();
       if (!activeFamily) throw new Error("Keluarga aktif tidak ditemukan.");
       syncTabs();
+      renderDiscoveryState();
       await Promise.all([refreshVaultStatus(), loadRecords()]);
     } catch (error) {
       countLabel.textContent = "Gagal memuat";
