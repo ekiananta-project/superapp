@@ -1,8 +1,8 @@
-/* RuangKitha v2.0.0a50b1 — Family Document Sharing / Initial Flow Service V1 */
+/* RuangKitha v2.0.0a50c — Documents Lifecycle & Management Service V1 */
 (function initRuangKithaDocumentsService(root) {
   "use strict";
 
-  const BUILD = "v2.0.0a50b1";
+  const BUILD = "v2.0.0a50c";
   const RECORD_BUILD = "v2.0.0a50a";
   const BUCKET = "ruangkitha-documents-v1";
   const LEGACY_BUILD = "v2.0.0a50";
@@ -147,6 +147,53 @@
   async function archiveRecord(documentId) {
     const client = clientOnly();
     return rpc(client, "document_records_archive_v1", { p_document_id: documentId });
+  }
+
+  async function listArchivedRecords({ familyId = null } = {}) {
+    const client = clientOnly();
+    const result = await rpc(client, "document_records_archived_list_v1", {
+      p_family_id: familyId || null
+    });
+    return Array.isArray(result?.documents) ? result.documents : [];
+  }
+
+  async function restoreRecord(documentId, { familyId = null } = {}) {
+    const client = clientOnly();
+    return rpc(client, "document_records_restore_v1", {
+      p_document_id: documentId,
+      p_family_id: familyId || null
+    });
+  }
+
+  async function deleteArchivedRecord(documentId, { hasAttachments = false } = {}) {
+    if (!hasAttachments) {
+      const client = clientOnly();
+      return rpc(client, "document_records_delete_empty_v1", { p_document_id: documentId });
+    }
+
+    const { client, status } = await secureContext({ requireUnlocked: true });
+    const plan = await rpc(client, "document_records_delete_plan_v1", {
+      p_document_id: documentId,
+      p_device_client_id: status.deviceInstanceId
+    });
+    const attachments = Array.isArray(plan?.attachments) ? plan.attachments : [];
+    const byBucket = new Map();
+    for (const item of attachments) {
+      const bucket = String(item?.storage_bucket || BUCKET);
+      const storagePath = String(item?.storage_path || "").trim();
+      if (!storagePath) continue;
+      if (!byBucket.has(bucket)) byBucket.set(bucket, []);
+      byBucket.get(bucket).push(storagePath);
+    }
+    for (const [bucket, paths] of byBucket.entries()) {
+      if (!paths.length) continue;
+      const { error } = await client.storage.from(bucket).remove(paths);
+      if (error) throw new Error(error.message || "Ciphertext lampiran gagal dihapus.");
+    }
+    return rpc(client, "document_records_delete_finalize_v1", {
+      p_document_id: documentId,
+      p_device_client_id: status.deviceInstanceId
+    });
   }
 
   // ---------------------------------------------------------------------------
@@ -436,6 +483,25 @@
     });
   }
 
+  async function replaceAttachment(documentId, attachmentId, file, { familyId = null, onStage = null } = {}) {
+    onStage?.("uploading-replacement");
+    const uploaded = await uploadAttachment(documentId, file, { familyId, onStage });
+    try {
+      onStage?.("removing-old");
+      await deleteAttachment(attachmentId);
+      onStage?.("done");
+      return { ...uploaded, replaced: true, replacedAttachmentId: attachmentId };
+    } catch (error) {
+      onStage?.("done");
+      return {
+        ...uploaded,
+        replaced: false,
+        replacedAttachmentId: attachmentId,
+        replaceWarning: error?.message || "Lampiran baru tersimpan, tetapi lampiran lama belum dapat dihapus."
+      };
+    }
+  }
+
   // ---------------------------------------------------------------------------
   // a50b Family Document Sharing / Key Distribution V1
   // ---------------------------------------------------------------------------
@@ -669,6 +735,9 @@
     getRecord,
     updateRecord,
     archiveRecord,
+    listArchivedRecords,
+    restoreRecord,
+    deleteArchivedRecord,
     localStatus,
     preflight,
     unlock,
@@ -679,6 +748,7 @@
     downloadAttachment,
     downloadAttachmentToBrowser,
     deleteAttachment,
+    replaceAttachment,
     listShareCandidates,
     listShareTargets,
     sharePlan,

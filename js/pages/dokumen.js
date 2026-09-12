@@ -1,4 +1,4 @@
-/* RuangKitha v2.0.0a50b1 — Family Document Sharing / Initial Flow + Modal Stack Hotfix */
+/* RuangKitha v2.0.0a50c — Documents Lifecycle & Management V1 */
 (() => {
   "use strict";
 
@@ -18,6 +18,7 @@
   const vaultAction = q("[data-doc-vault-action]");
   const vaultBadge = q("[data-doc-vault-badge]");
   const tabs = qa("[data-doc-view]");
+  const archiveOpen = q("[data-doc-archive-open]");
 
   const formLayer = q("[data-doc-form-layer]");
   const form = q("[data-doc-form]");
@@ -54,11 +55,14 @@
   const detailExpiry = q("[data-doc-detail-expiry]");
   const detailReminder = q("[data-doc-detail-reminder]");
   const detailAttention = q("[data-doc-detail-attention]");
+  const detailLifecycle = q("[data-doc-detail-lifecycle]");
+  const detailUpdated = q("[data-doc-detail-updated]");
   const attachmentSummary = q("[data-doc-attachment-summary]");
   const attachmentBody = q("[data-doc-attachment-body]");
   const detailAddAttachment = q("[data-doc-detail-add-attachment]");
   const detailFile = q("[data-doc-detail-file]");
   const detailEdit = q("[data-doc-detail-edit]");
+  const detailArchive = q("[data-doc-detail-archive]");
   const shareSection = q("[data-doc-share-section]");
   const shareSummary = q("[data-doc-share-summary]");
   const shareManage = q("[data-doc-share-manage]");
@@ -66,6 +70,18 @@
   const shareClose = q("[data-doc-share-close]");
   const shareList = q("[data-doc-share-list]");
   const shareMessage = q("[data-doc-share-message]");
+
+  const archiveLayer = q("[data-doc-archive-layer]");
+  const archiveClose = q("[data-doc-archive-close]");
+  const archiveList = q("[data-doc-archive-list]");
+  const archiveMessage = q("[data-doc-archive-message]");
+
+  const confirmLayer = q("[data-doc-confirm-layer]");
+  const confirmClose = q("[data-doc-confirm-close]");
+  const confirmTitle = q("[data-doc-confirm-title]");
+  const confirmCopy = q("[data-doc-confirm-copy]");
+  const confirmAction = q("[data-doc-confirm-action]");
+  const confirmCancel = q("[data-doc-confirm-cancel]");
 
   const unlockLayer = q("[data-doc-unlock-layer]");
   const unlockForm = q("[data-doc-unlock-form]");
@@ -88,6 +104,8 @@
   let createShareLoadSeq = 0;
   let busy = false;
   let pendingUnlockAction = null;
+  let pendingConfirmAction = null;
+  let detailFileMode = { mode: "add", attachmentId: null };
 
   const DOCUMENT_TYPE_GROUPS = [
     { label: "Identitas", items: ["KTP", "Kartu Keluarga", "SIM", "Paspor"] },
@@ -126,6 +144,12 @@
     createShareMessage.textContent = text;
     createShareMessage.hidden = !text;
     createShareMessage.classList.toggle("is-error", Boolean(isError));
+  }
+
+  function setArchiveMessage(text = "", isError = false) {
+    archiveMessage.textContent = text;
+    archiveMessage.hidden = !text;
+    archiveMessage.classList.toggle("is-error", Boolean(isError));
   }
 
   function setVaultBadge(text, state = "") {
@@ -179,14 +203,14 @@
   }
 
   function expiryPresentation(record) {
-    if (!record?.expires_on) return { text: "Tidak ada masa berlaku", attention: false, expired: false };
+    if (!record?.expires_on) return { text: "Tidak ada masa berlaku", attention: false, expired: false, state: "no-expiry", label: "Tanpa masa berlaku" };
     const days = daysUntil(record.expires_on);
     const reminder = Number(record.reminder_days || 0);
-    if (days === null) return { text: formatDate(record.expires_on), attention: false, expired: false };
-    if (days < 0) return { text: `Kedaluwarsa ${Math.abs(days)} hari lalu`, attention: true, expired: true };
-    if (days === 0) return { text: "Berakhir hari ini", attention: true, expired: false };
-    if (reminder > 0 && days <= reminder) return { text: `Berakhir ${days} hari lagi`, attention: true, expired: false };
-    return { text: `Berlaku sampai ${formatDate(record.expires_on)}`, attention: false, expired: false };
+    if (days === null) return { text: formatDate(record.expires_on), attention: false, expired: false, state: "valid", label: "Aktif" };
+    if (days < 0) return { text: `Kedaluwarsa ${Math.abs(days)} hari lalu`, attention: true, expired: true, state: "expired", label: "Kedaluwarsa" };
+    if (days === 0) return { text: "Berakhir hari ini", attention: true, expired: false, state: "today", label: "Berakhir hari ini" };
+    if (reminder > 0 && days <= reminder) return { text: `Berakhir ${days} hari lagi`, attention: true, expired: false, state: "attention", label: "Perlu perhatian" };
+    return { text: `Berlaku sampai ${formatDate(record.expires_on)}`, attention: false, expired: false, state: "valid", label: "Aktif" };
   }
 
   function formatUpdated(value) {
@@ -286,6 +310,7 @@
       const status = document.createElement("span");
       status.className = "dokumen-card-status";
       const expiry = expiryPresentation(record);
+      card.dataset.lifecycle = expiry.state;
       status.textContent = record.expires_on ? expiry.text : formatUpdated(record.updated_at || record.created_at);
       if (expiry.attention) status.classList.add("is-attention");
       if (expiry.expired) status.classList.add("is-expired");
@@ -610,6 +635,21 @@
     if (cancelAction) pendingUnlockAction = null;
   }
 
+  function openConfirm({ title, copy, actionLabel = "Lanjutkan", danger = false, onConfirm }) {
+    pendingConfirmAction = typeof onConfirm === "function" ? onConfirm : null;
+    confirmTitle.textContent = title || "Konfirmasi";
+    confirmCopy.textContent = copy || "Pastikan tindakan ini memang kamu inginkan.";
+    confirmAction.textContent = actionLabel;
+    confirmAction.classList.toggle("is-danger", Boolean(danger));
+    confirmLayer.hidden = false;
+  }
+
+  function closeConfirm({ cancelAction = true } = {}) {
+    confirmLayer.hidden = true;
+    confirmAction.classList.remove("is-danger");
+    if (cancelAction) pendingConfirmAction = null;
+  }
+
   async function runWithVault(action, purpose) {
     let status;
     try {
@@ -634,6 +674,7 @@
     currentRecord = null;
     attachmentBody.replaceChildren();
     detailFile.value = "";
+    detailFileMode = { mode: "add", attachmentId: null };
   }
 
   function createAttachmentPlaceholder(iconName, titleText, copyText, buttonText = null, onClick = null) {
@@ -732,9 +773,13 @@
           : "Metadata gagal didekripsi";
         copy.append(title, meta);
 
+        const actions = document.createElement("div");
+        actions.className = "dokumen-attachment-actions";
+
         const download = document.createElement("button");
         download.type = "button";
         download.setAttribute("aria-label", `Unduh ${attachment.metadata?.name || "lampiran"}`);
+        download.title = "Unduh";
         download.appendChild(ion("download-outline"));
         download.disabled = !attachment.metadata;
         download.addEventListener("click", () => runWithVault(async () => {
@@ -743,7 +788,7 @@
           setMessage("Mendekripsi lampiran di perangkat…");
           try {
             const result = await Service().downloadAttachmentToBrowser(attachment.attachment_id);
-            setMessage(`Lampiran “${result.name}” berhasil dibuka dari ciphertext.`);
+            setMessage(`Lampiran “${result.name}” berhasil diunduh.`);
           } catch (error) {
             setMessage(error?.message || "Lampiran gagal diunduh.", true);
           } finally {
@@ -751,8 +796,55 @@
             download.disabled = false;
           }
         }, "Masukkan PIN untuk mengunduh lampiran ini."));
+        actions.appendChild(download);
 
-        row.append(copy, download);
+        if (record.can_edit) {
+          const replace = document.createElement("button");
+          replace.type = "button";
+          replace.className = "is-secondary";
+          replace.setAttribute("aria-label", `Ganti ${attachment.metadata?.name || "lampiran"}`);
+          replace.title = "Ganti lampiran";
+          replace.appendChild(ion("swap-horizontal-outline"));
+          replace.addEventListener("click", () => {
+            detailFileMode = { mode: "replace", attachmentId: attachment.attachment_id };
+            detailFile.click();
+          });
+
+          const remove = document.createElement("button");
+          remove.type = "button";
+          remove.className = "is-danger";
+          remove.setAttribute("aria-label", `Hapus ${attachment.metadata?.name || "lampiran"}`);
+          remove.title = "Hapus lampiran";
+          remove.appendChild(ion("trash-outline"));
+          remove.addEventListener("click", () => {
+            const attachmentName = attachment.metadata?.name || "lampiran ini";
+            openConfirm({
+              title: "Hapus lampiran?",
+              copy: `“${attachmentName}” akan dihapus dari penyimpanan terenkripsi. Catatan dokumennya tetap ada.`,
+              actionLabel: "Hapus lampiran",
+              danger: true,
+              onConfirm: () => runWithVault(async () => {
+                busy = true;
+                setMessage("Menghapus ciphertext lampiran…");
+                try {
+                  await Service().deleteAttachment(attachment.attachment_id);
+                  setMessage("Lampiran berhasil dihapus. Catatan dokumen tetap tersimpan.");
+                  const fresh = await refreshCurrentRecord();
+                  const status = await refreshVaultStatus();
+                  if (fresh && status?.unlocked) await loadReadableAttachments(fresh);
+                  await loadRecords();
+                } catch (error) {
+                  setMessage(error?.message || "Lampiran gagal dihapus.", true);
+                } finally {
+                  busy = false;
+                }
+              }, "Masukkan PIN untuk menghapus lampiran terenkripsi ini.")
+            });
+          });
+          actions.append(replace, remove);
+        }
+
+        row.append(copy, actions);
         attachmentBody.appendChild(row);
       });
       await refreshVaultStatus();
@@ -898,6 +990,133 @@
     await refreshShareTargets();
   }
 
+  function closeArchiveManager() {
+    archiveLayer.hidden = true;
+    archiveList.replaceChildren();
+    setArchiveMessage("");
+  }
+
+  function archivedAtLabel(record) {
+    if (!record?.archived_at) return "Diarsipkan";
+    try {
+      return `Diarsipkan ${new Intl.DateTimeFormat("id-ID", { day: "numeric", month: "short", year: "numeric" }).format(new Date(record.archived_at))}`;
+    } catch {
+      return "Diarsipkan";
+    }
+  }
+
+  function renderArchiveRecords(items) {
+    archiveList.replaceChildren();
+    if (!items.length) {
+      archiveList.appendChild(createAttachmentPlaceholder(
+        "archive-outline",
+        "Arsip masih kosong",
+        "Dokumen yang kamu arsipkan akan muncul di sini."
+      ));
+      return;
+    }
+
+    items.forEach((record) => {
+      const row = document.createElement("article");
+      row.className = "dokumen-archive-row";
+
+      const iconWrap = document.createElement("span");
+      iconWrap.className = "dokumen-archive-icon";
+      iconWrap.appendChild(ion(iconForType(record.document_type)));
+
+      const copy = document.createElement("div");
+      copy.className = "dokumen-archive-copy";
+      const title = document.createElement("strong");
+      title.textContent = record.display_name || "Dokumen";
+      const meta = document.createElement("span");
+      const attachmentCount = Number(record.attachment_count || 0);
+      meta.textContent = `${record.document_type || "Lainnya"} • ${scopeLabel(record)}${attachmentCount ? ` • ${attachmentCount} lampiran` : ""}`;
+      const archived = document.createElement("small");
+      archived.textContent = archivedAtLabel(record);
+      copy.append(title, meta, archived);
+
+      const actions = document.createElement("div");
+      actions.className = "dokumen-archive-actions";
+      const restore = document.createElement("button");
+      restore.type = "button";
+      restore.className = "is-restore";
+      restore.textContent = "Pulihkan";
+      restore.addEventListener("click", async () => {
+        if (busy) return;
+        busy = true;
+        restore.disabled = true;
+        setArchiveMessage("Memulihkan dokumen…");
+        try {
+          await Service().restoreRecord(record.document_id, { familyId: activeFamily?.id || null });
+          setArchiveMessage("Dokumen dipulihkan. Akses lampiran keluarga yang pernah dicabut tidak aktif kembali otomatis.");
+          await loadArchiveRecords();
+          await loadRecords();
+        } catch (error) {
+          setArchiveMessage(error?.message || "Dokumen gagal dipulihkan.", true);
+        } finally {
+          busy = false;
+          restore.disabled = false;
+        }
+      });
+
+      const remove = document.createElement("button");
+      remove.type = "button";
+      remove.className = "is-delete";
+      remove.textContent = "Hapus";
+      remove.addEventListener("click", () => {
+        const attachmentCount = Number(record.attachment_count || 0);
+        openConfirm({
+          title: "Hapus permanen?",
+          copy: attachmentCount
+            ? `“${record.display_name}” dan ${attachmentCount} lampiran terenkripsinya akan dihapus permanen. Tindakan ini tidak dapat dibatalkan.`
+            : `“${record.display_name}” akan dihapus permanen. Tindakan ini tidak dapat dibatalkan.`,
+          actionLabel: "Hapus permanen",
+          danger: true,
+          onConfirm: async () => {
+            const executeDelete = async () => {
+              busy = true;
+              setArchiveMessage(attachmentCount ? "Menghapus ciphertext dan dokumen…" : "Menghapus dokumen…");
+              try {
+                await Service().deleteArchivedRecord(record.document_id, { hasAttachments: attachmentCount > 0 });
+                setArchiveMessage("Dokumen berhasil dihapus permanen.");
+                await loadArchiveRecords();
+                await loadRecords();
+                await refreshVaultStatus();
+              } catch (error) {
+                setArchiveMessage(error?.message || "Dokumen gagal dihapus permanen.", true);
+              } finally {
+                busy = false;
+              }
+            };
+            if (attachmentCount > 0) {
+              return runWithVault(executeDelete, "Masukkan PIN untuk menghapus lampiran terenkripsi secara permanen.");
+            }
+            return executeDelete();
+          }
+        });
+      });
+      actions.append(restore, remove);
+      row.append(iconWrap, copy, actions);
+      archiveList.appendChild(row);
+    });
+  }
+
+  async function loadArchiveRecords() {
+    archiveList.replaceChildren(createAttachmentPlaceholder("hourglass-outline", "Memuat arsip", "RuangKitha sedang menyiapkan dokumen yang pernah diarsipkan."));
+    try {
+      const items = await Service().listArchivedRecords({ familyId: activeFamily?.id || null });
+      renderArchiveRecords(items);
+    } catch (error) {
+      archiveList.replaceChildren(createAttachmentPlaceholder("alert-circle-outline", "Arsip belum dapat dimuat", error?.message || "Coba lagi beberapa saat."));
+    }
+  }
+
+  async function openArchiveManager() {
+    setArchiveMessage("");
+    archiveLayer.hidden = false;
+    await loadArchiveRecords();
+  }
+
   function openDetail(record) {
     currentRecord = record;
     detailScope.textContent = scopeLabel(record);
@@ -909,10 +1128,14 @@
       : "Tidak diperlukan";
 
     const expiry = expiryPresentation(record);
+    detailLifecycle.textContent = expiry.label;
+    detailLifecycle.dataset.state = expiry.state;
+    detailUpdated.textContent = formatUpdated(record.updated_at || record.created_at) || "Tersimpan di RuangKitha";
     detailAttention.hidden = !expiry.attention;
     detailAttention.classList.toggle("is-expired", expiry.expired);
     detailAttention.textContent = expiry.attention ? expiry.text : "";
     detailEdit.hidden = !record.can_edit;
+    detailArchive.hidden = !record.can_edit;
     updateShareSection(record);
     renderAttachmentLockedState(record);
     detailLayer.hidden = false;
@@ -981,6 +1204,7 @@
 
   tabs.forEach((tab) => tab.addEventListener("click", () => switchView(tab.dataset.docView)));
   addButton.addEventListener("click", () => openForm());
+  archiveOpen.addEventListener("click", openArchiveManager);
 
   typeTrigger.addEventListener("click", openTypePicker);
   typeClose.addEventListener("click", closeTypePicker);
@@ -1096,20 +1320,101 @@
     closeDetail();
     openForm(record);
   });
+  detailArchive.addEventListener("click", () => {
+    if (!currentRecord?.can_edit) return;
+    const record = currentRecord;
+    openConfirm({
+      title: "Arsipkan dokumen?",
+      copy: `“${record.display_name}” akan disembunyikan dari tab aktif dan Perlu Perhatian. Lampiran tetap tersimpan aman dan dokumen dapat dipulihkan dari Arsip.`,
+      actionLabel: "Arsipkan",
+      onConfirm: async () => {
+        if (busy) return;
+        busy = true;
+        setMessage("Mengarsipkan dokumen…");
+        try {
+          await Service().archiveRecord(record.document_id);
+          closeDetail();
+          await loadRecords();
+          setMessage("Dokumen berhasil diarsipkan. Akses lampiran keluarga aktif telah dicabut.");
+        } catch (error) {
+          setMessage(error?.message || "Dokumen gagal diarsipkan.", true);
+        } finally {
+          busy = false;
+        }
+      }
+    });
+  });
   shareManage.addEventListener("click", openShareManager);
   shareClose.addEventListener("click", closeShareManager);
   shareLayer.addEventListener("click", (event) => { if (event.target === shareLayer && !busy) closeShareManager(); });
 
-  detailAddAttachment.addEventListener("click", () => detailFile.click());
+  detailAddAttachment.addEventListener("click", () => {
+    detailFileMode = { mode: "add", attachmentId: null };
+    detailFile.click();
+  });
   detailFile.addEventListener("change", async () => {
     const file = detailFile.files?.[0] || null;
     detailFile.value = "";
-    if (!file || !currentRecord) return;
+    if (!file || !currentRecord) {
+      detailFileMode = { mode: "add", attachmentId: null };
+      return;
+    }
     const recordId = currentRecord.document_id;
+    const mode = detailFileMode;
+    detailFileMode = { mode: "add", attachmentId: null };
+
+    if (mode.mode === "replace" && mode.attachmentId) {
+      await runWithVault(async () => {
+        busy = true;
+        setMessage("Mengganti lampiran secara aman…");
+        const stageCopy = {
+          encrypting: "Mengenkripsi lampiran baru di perangkat…",
+          preparing: "Menyiapkan lampiran pengganti…",
+          uploading: "Mengunggah ciphertext baru…",
+          committing: "Memverifikasi lampiran baru…",
+          sharing: "Menyinkronkan akses keluarga…",
+          "removing-old": "Menghapus ciphertext lampiran lama…",
+          done: "Lampiran berhasil diganti."
+        };
+        try {
+          const result = await Service().replaceAttachment(recordId, mode.attachmentId, file, {
+            familyId: activeFamily?.id || null,
+            onStage: (stage) => setMessage(stageCopy[stage] || "Memproses lampiran pengganti…")
+          });
+          setMessage(result?.replaceWarning
+            ? `Lampiran baru tersimpan. ${result.replaceWarning}`
+            : "Lampiran berhasil diganti dan tetap dilindungi Security Vault.", Boolean(result?.replaceWarning));
+          await loadRecords();
+          const fresh = await refreshCurrentRecord();
+          const status = await refreshVaultStatus();
+          if (fresh && status?.unlocked) await loadReadableAttachments(fresh);
+        } catch (error) {
+          setMessage(error?.message || "Lampiran gagal diganti.", true);
+        } finally {
+          busy = false;
+        }
+      }, "Masukkan PIN untuk mengenkripsi lampiran pengganti dan menghapus lampiran lama.");
+      return;
+    }
+
     await runWithVault(
       () => uploadToRecord(recordId, file),
       "Masukkan PIN untuk mengenkripsi dan menambahkan lampiran ini."
     );
+  });
+
+  archiveClose.addEventListener("click", closeArchiveManager);
+  archiveLayer.addEventListener("click", (event) => { if (event.target === archiveLayer && !busy) closeArchiveManager(); });
+
+  confirmClose.addEventListener("click", () => closeConfirm({ cancelAction: true }));
+  confirmCancel.addEventListener("click", () => closeConfirm({ cancelAction: true }));
+  confirmLayer.addEventListener("click", (event) => { if (event.target === confirmLayer && !busy) closeConfirm({ cancelAction: true }); });
+  confirmAction.addEventListener("click", async () => {
+    if (busy) return;
+    const action = pendingConfirmAction;
+    closeConfirm({ cancelAction: false });
+    pendingConfirmAction = null;
+    if (typeof action === "function") await action();
   });
 
   unlockClose.addEventListener("click", () => closeUnlock({ cancelAction: true }));

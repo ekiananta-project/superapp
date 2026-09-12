@@ -1,4 +1,4 @@
-/* RuangKitha v2.0.0a50a1 — Documents UX Polish V1 (on a50a foundation) */
+/* RuangKitha v2.0.0a50c — Documents Lifecycle & Management V1 (on locked a50b1 baseline) */
 .dokumen-app{min-height:100dvh;background:var(--rk-bg,var(--warna-latar,#f7f4ee));padding-bottom:max(92px,env(safe-area-inset-bottom));}
 .dokumen-header{grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);}
 .dokumen-header h1{font-size:17px;margin:0;text-align:center;}
@@ -198,3 +198,118 @@ html[data-theme="dark"] .dokumen-share-row{background:var(--warna-kartu,#181c19)
 .dokumen-create-share .dokumen-share-row{padding:9px 10px}
 .dokumen-create-share .dokumen-share-toggle.is-selected{background:var(--rk-primary,#557d68);color:#fff}
 html[data-theme="dark"] .dokumen-create-share{background:rgba(255,255,255,.025);border-color:rgba(223,232,226,.08)}
+
+/* ------------------------------------------------------------------
+   a50c — Documents Lifecycle & Management V1
+   ------------------------------------------------------------------ */
+.dokumen-archive-shortcut{
+  justify-self:end;
+  width:42px;
+  height:42px;
+  border:1px solid var(--rk-border,var(--color-border,#e0e4e1));
+  border-radius:999px;
+  display:grid;
+  place-items:center;
+  background:var(--rk-surface-soft,var(--color-surface-soft,#eef1ef));
+  color:var(--rk-primary,var(--color-primary,#557d68));
+  box-shadow:var(--rk-shadow-sm,var(--shadow-sm,0 5px 16px rgba(20,40,28,.05)));
+  cursor:pointer;
+}
+.dokumen-archive-shortcut ion-icon{font-size:18px}
+.dokumen-archive-shortcut:active{transform:scale(.98)}
+.dokumen-archive-shortcut:focus-visible,
+.dokumen-archive-action:focus-visible,
+.dokumen-confirm-primary:focus-visible,
+.dokumen-confirm-cancel:focus-visible,
+.dokumen-archive-actions button:focus-visible,
+.dokumen-attachment-actions button:focus-visible{
+  outline:2px solid color-mix(in srgb,var(--rk-primary,#6f9984) 72%,transparent);
+  outline-offset:2px;
+}
+
+.dokumen-detail-summary{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:10px;
+  min-height:28px;
+}
+.dokumen-lifecycle-badge{
+  display:inline-flex;
+  align-items:center;
+  min-height:26px;
+  padding:0 10px;
+  border-radius:999px;
+  background:rgba(80,130,101,.10);
+  color:#4c7d63;
+  font-size:8.7px;
+  font-weight:800;
+  white-space:nowrap;
+}
+.dokumen-lifecycle-badge[data-state="attention"],
+.dokumen-lifecycle-badge[data-state="today"]{background:rgba(221,155,56,.13);color:#9a671b}
+.dokumen-lifecycle-badge[data-state="expired"]{background:rgba(205,74,74,.11);color:#a24545}
+.dokumen-lifecycle-badge[data-state="no-expiry"]{background:rgba(111,124,116,.08);color:var(--warna-teks-sekunder,#737b76)}
+.dokumen-detail-updated{font-size:8.6px;color:var(--warna-teks-sekunder,#777e79);text-align:right}
+
+.dokumen-attachment-actions{display:flex;align-items:center;gap:5px}
+.dokumen-attachment-actions button{width:32px;height:32px;padding:0!important;border-radius:10px!important}
+.dokumen-attachment-actions button.is-secondary{background:rgba(111,124,116,.08);color:var(--warna-teks-sekunder,#6f7772)}
+.dokumen-attachment-actions button.is-danger{background:rgba(205,74,74,.09);color:#aa4a4a}
+.dokumen-archive-action{
+  width:100%;
+  min-height:42px;
+  border:1px solid rgba(185,123,45,.18);
+  border-radius:13px;
+  background:rgba(221,155,56,.08);
+  color:#95631b;
+  font:inherit;
+  font-size:10px;
+  font-weight:750;
+  cursor:pointer;
+}
+
+.dokumen-archive-layer{z-index:2505}
+.dokumen-archive-sheet{max-height:min(84dvh,700px);overflow:hidden;padding-bottom:max(18px,env(safe-area-inset-bottom))}
+.dokumen-archive-body{padding:2px 16px 16px;display:grid;gap:10px}
+.dokumen-archive-list{max-height:min(60dvh,520px);overflow:auto;overscroll-behavior:contain;display:grid;gap:8px;padding:1px 1px 3px}
+.dokumen-archive-row{
+  display:grid;
+  grid-template-columns:auto minmax(0,1fr);
+  gap:10px;
+  padding:11px;
+  border:1px solid rgba(103,118,109,.10);
+  border-radius:15px;
+  background:var(--warna-kartu,#fff);
+}
+.dokumen-archive-icon{width:36px;height:36px;border-radius:11px;display:grid;place-items:center;background:rgba(111,124,116,.08);color:#68756d}
+.dokumen-archive-icon ion-icon{font-size:18px}
+.dokumen-archive-copy{min-width:0;display:grid;gap:2px;align-content:start}
+.dokumen-archive-copy strong{font-size:10.5px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.dokumen-archive-copy span{font-size:8.6px;color:var(--warna-teks-sekunder,#777e79);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.dokumen-archive-copy small{font-size:8px;color:var(--warna-teks-sekunder,#8a918d)}
+.dokumen-archive-actions{grid-column:1/-1;display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-top:2px}
+.dokumen-archive-actions button{min-height:36px;border-radius:11px;font:inherit;font-size:9px;font-weight:750;cursor:pointer}
+.dokumen-archive-actions .is-restore{border:1px solid rgba(80,130,101,.16);background:rgba(80,130,101,.09);color:#4b7b61}
+.dokumen-archive-actions .is-delete{border:1px solid rgba(205,74,74,.14);background:rgba(205,74,74,.07);color:#a24545}
+
+.dokumen-confirm-layer{z-index:2610}
+.dokumen-confirm-sheet{padding-bottom:max(18px,env(safe-area-inset-bottom))}
+.dokumen-confirm-body{padding:2px 16px 16px;display:grid;gap:8px}
+.dokumen-confirm-primary,.dokumen-confirm-cancel{width:100%;min-height:44px;border-radius:13px;font:inherit;font-size:10.5px;font-weight:780;cursor:pointer}
+.dokumen-confirm-primary{border:0;background:var(--rk-primary,#557d68);color:#fff}
+.dokumen-confirm-primary.is-danger{background:#a94c4c}
+.dokumen-confirm-cancel{border:1px solid var(--rk-border,var(--color-border,#e0e4e1));background:transparent;color:var(--warna-teks,#292e2b)}
+
+html[data-theme="dark"] .dokumen-archive-shortcut{background:var(--rk-surface,var(--warna-kartu,#181c19));border-color:rgba(223,232,226,.10)}
+html[data-theme="dark"] .dokumen-archive-row{background:var(--warna-kartu,#181c19);border-color:rgba(223,232,226,.08)}
+html[data-theme="dark"] .dokumen-confirm-cancel{border-color:rgba(223,232,226,.10);color:var(--warna-teks,#e9efeb)}
+
+@media (max-width:360px){
+  .dokumen-attachment-actions{gap:3px}
+  .dokumen-attachment-actions button{width:30px;height:30px}
+  .dokumen-detail-summary{align-items:flex-start;flex-direction:column;gap:5px}
+  .dokumen-detail-updated{text-align:left}
+}
+.dokumen-card[data-lifecycle="attention"],.dokumen-card[data-lifecycle="today"]{border-color:rgba(221,155,56,.20)}
+.dokumen-card[data-lifecycle="expired"]{border-color:rgba(205,74,74,.18)}
