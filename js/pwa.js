@@ -2,7 +2,7 @@
   "use strict";
 
   const RK_DESIGN_SYSTEM_VERSION = "1.0.7";
-  const RK_BUILD_VERSION = "v2.0.0a49b1";
+  const RK_BUILD_VERSION = "v2.0.0a49c";
 
   function appBaseUrl() {
     try {
@@ -208,7 +208,7 @@
         const label = row.querySelector("span");
         const value = row.querySelector("small");
         if (label?.textContent?.trim() === "Versi" && value) {
-          value.textContent = "2.0.0a49b1 PWA";
+          value.textContent = "2.0.0a49c PWA";
         }
       });
     }
@@ -504,7 +504,7 @@
   if ("serviceWorker" in navigator) {
     window.addEventListener("load", async () => {
       try {
-        const registration = await navigator.serviceWorker.register("./sw.js?v=20260912-v200a49b1", {
+        const registration = await navigator.serviceWorker.register("./sw.js?v=20260912-v200a49c", {
           scope: "./"
         });
 

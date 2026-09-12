@@ -1,5 +1,5 @@
 /*
- * RuangKitha v2.0.0a49b1 — Security Vault first-device setup UI
+ * RuangKitha v2.0.0a49c — Security Vault first-device setup UI
  * Optional, self-contained UI adapter around RuangKithaTrustedDevice.
  * Nothing opens automatically. Call RuangKithaSecuritySetupUI.open({ supabase }).
  */

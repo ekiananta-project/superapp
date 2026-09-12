@@ -43,14 +43,35 @@
     recoveryCard: document.querySelector("[data-recovery-card]"),
     recoveryCardTitle: document.querySelector("[data-recovery-card-title]"),
     recoveryCardCopy: document.querySelector("[data-recovery-card-copy]"),
-    recoveryManage: document.querySelector("[data-recovery-manage]")
+    recoveryManage: document.querySelector("[data-recovery-manage]"),
+    deviceNameSection: document.querySelector("[data-security-device-name]"),
+    deviceNameCurrent: document.querySelector("[data-security-device-name-current]"),
+    deviceRenameCurrent: document.querySelector("[data-security-device-rename-current]"),
+    deviceList: document.querySelector("[data-device-list]"),
+    deviceListEmpty: document.querySelector("[data-device-list-empty]"),
+    renameLayer: document.querySelector("[data-security-device-rename-layer]"),
+    renameClose: document.querySelector("[data-security-device-rename-close]"),
+    renameForm: document.querySelector("[data-security-device-rename-form]"),
+    renameInput: document.querySelector("[data-security-device-rename-input]"),
+    renameMessage: document.querySelector("[data-security-device-rename-message]"),
+    renameSubmit: document.querySelector("[data-security-device-rename-submit]"),
+    revokeLayer: document.querySelector("[data-security-device-revoke-layer]"),
+    revokeClose: document.querySelector("[data-security-device-revoke-close]"),
+    revokeForm: document.querySelector("[data-security-device-revoke-form]"),
+    revokeCopy: document.querySelector("[data-security-device-revoke-copy]"),
+    revokePin: document.querySelector("[data-security-device-revoke-pin]"),
+    revokeMessage: document.querySelector("[data-security-device-revoke-message]"),
+    revokeSubmit: document.querySelector("[data-security-device-revoke-submit]")
   };
 
   let current = {
     state: null,
     local: null,
     capabilities: null,
-    loading: false
+    devices: [],
+    loading: false,
+    renameTarget: null,
+    revokeTarget: null
   };
 
   function deteksiBrowser() {
@@ -106,6 +127,41 @@
     els.pinMessage.dataset.tone = tone;
   }
 
+  function setRenameMessage(message = "", tone = "error") {
+    if (!els.renameMessage) return;
+    els.renameMessage.hidden = !message;
+    els.renameMessage.textContent = message;
+    els.renameMessage.dataset.tone = tone;
+  }
+
+  function setRevokeMessage(message = "", tone = "error") {
+    if (!els.revokeMessage) return;
+    els.revokeMessage.hidden = !message;
+    els.revokeMessage.textContent = message;
+    els.revokeMessage.dataset.tone = tone;
+  }
+
+  function formatWhen(value) {
+    if (!value) return "Belum ada aktivitas";
+    const time = new Date(value).getTime();
+    if (!Number.isFinite(time)) return "Waktu tidak tersedia";
+    const diff = Math.max(0, Date.now() - time);
+    const minute = 60 * 1000;
+    const hour = 60 * minute;
+    const day = 24 * hour;
+    if (diff < minute) return "Baru saja";
+    if (diff < hour) return `${Math.floor(diff / minute)} menit lalu`;
+    if (diff < day) return `${Math.floor(diff / hour)} jam lalu`;
+    if (diff < 7 * day) return `${Math.floor(diff / day)} hari lalu`;
+    return new Intl.DateTimeFormat("id-ID", { day: "numeric", month: "short", year: "numeric" }).format(new Date(time));
+  }
+
+  function iconForDeviceLabel(label = "") {
+    const value = String(label).toLowerCase();
+    if (/iphone|ipad|android|phone|mobile/.test(value)) return "phone-portrait-outline";
+    return "desktop-outline";
+  }
+
   function formatRecovery(state) {
     if (!state || !state.configured) return "Belum dibuat";
     if (state.recovery_ready) return "Siap";
@@ -132,13 +188,26 @@
   async function loadSnapshot() {
     if (!Trusted) throw new Error("Trusted Device engine belum dimuat.");
 
+    // a49c: if this browser was revoked from another Trusted Device, purge its local
+    // trusted record before rendering. A transient network error is surfaced normally.
+    await Trusted.revalidateCurrentDevice({ supabase: client, purgeRevoked: true });
+
     const [state, local, capabilities] = await Promise.all([
       rpc("security_vault_state_v1"),
       Trusted.localDeviceStatus({ supabase: client }),
       Trusted.checkCapabilities({ deep: false })
     ]);
+    const deviceSnapshot = state?.configured
+      ? await Trusted.listDevices({ supabase: client })
+      : { devices: [], trusted_device_count: 0 };
 
-    current = { ...current, state: state || { configured: false }, local, capabilities };
+    current = {
+      ...current,
+      state: state || { configured: false },
+      local,
+      capabilities,
+      devices: Array.isArray(deviceSnapshot?.devices) ? deviceSnapshot.devices : []
+    };
     return current;
   }
 
@@ -158,6 +227,7 @@
     if (els.lock) els.lock.hidden = true;
     if (els.autoLock) els.autoLock.hidden = true;
     if (els.pinManage) els.pinManage.hidden = true;
+    if (els.deviceNameSection) els.deviceNameSection.hidden = true;
     if (els.recoveryCard) els.recoveryCard.hidden = true;
     setVaultMessage();
   }
@@ -179,6 +249,7 @@
     if (els.lock) els.lock.hidden = true;
     if (els.autoLock) els.autoLock.hidden = true;
     if (els.pinManage) els.pinManage.hidden = true;
+    if (els.deviceNameSection) els.deviceNameSection.hidden = true;
     if (els.recoveryCard) els.recoveryCard.hidden = true;
     setVaultMessage(message, "error");
     if (els.deviceDetail) els.deviceDetail.textContent = "Status Security Vault belum tersedia";
@@ -188,13 +259,81 @@
     }
   }
 
+  function renderDeviceList() {
+    if (!els.deviceList) return;
+    const devices = Array.isArray(current.devices) ? current.devices : [];
+    const others = devices.filter((device) => !device.is_current);
+    els.deviceList.replaceChildren();
+
+    if (!others.length) {
+      const empty = document.createElement("div");
+      empty.className = "kartu-sesi-kosong";
+      empty.innerHTML = `<ion-icon name="devices-outline"></ion-icon><strong>Belum ada perangkat lain</strong><p>Perangkat yang dipulihkan dengan Recovery Kit akan muncul di sini.</p>`;
+      els.deviceList.appendChild(empty);
+      return;
+    }
+
+    for (const device of others) {
+      const item = document.createElement("article");
+      item.className = "security-device-item";
+      item.dataset.deviceId = device.device_id || "";
+      item.dataset.revoked = device.trust_state === "revoked" ? "true" : "false";
+
+      const icon = document.createElement("span");
+      icon.className = "ikon-perangkat";
+      icon.innerHTML = `<ion-icon name="${iconForDeviceLabel(device.device_label)}"></ion-icon>`;
+
+      const copy = document.createElement("div");
+      copy.className = "security-device-item-copy";
+      const name = document.createElement("strong");
+      name.textContent = device.device_label || "Trusted Device";
+      const seen = document.createElement("span");
+      seen.textContent = device.trust_state === "revoked"
+        ? `Dicabut ${formatWhen(device.revoked_at)}`
+        : `Terakhir aktif ${formatWhen(device.last_seen_at || device.verified_at || device.created_at)}`;
+      const added = document.createElement("small");
+      added.textContent = `Ditambahkan ${formatWhen(device.created_at)}`;
+      const badge = document.createElement("span");
+      badge.className = "security-device-state";
+      badge.dataset.state = device.trust_state === "revoked" ? "revoked" : "trusted";
+      badge.textContent = device.trust_state === "revoked" ? "Dicabut" : "Tepercaya";
+      copy.append(name, seen, added, badge);
+
+      item.append(icon, copy);
+
+      if (device.trust_state === "trusted" && current.local?.ready) {
+        const actions = document.createElement("div");
+        actions.className = "security-device-actions";
+        const rename = document.createElement("button");
+        rename.type = "button"; rename.className = "security-device-action"; rename.textContent = "Ubah nama";
+        rename.dataset.deviceAction = "rename";
+        const revoke = document.createElement("button");
+        revoke.type = "button"; revoke.className = "security-device-action danger"; revoke.textContent = "Cabut";
+        revoke.dataset.deviceAction = "revoke";
+        actions.append(rename, revoke);
+        item.append(actions);
+      }
+
+      els.deviceList.appendChild(item);
+    }
+  }
+
   function renderSnapshot() {
     current.loading = false;
     const state = current.state || { configured: false };
     const local = current.local || { present: false, ready: false, unlocked: false };
     const caps = current.capabilities || { supported: false, reasons: ["Capability belum diperiksa."] };
 
+    if (local.ready && local.deviceLabel) {
+      if (els.nama) els.nama.textContent = local.deviceLabel;
+      if (els.detail) els.detail.textContent = `${deteksiPerangkat().nama} · ${deteksiBrowser()}`;
+    } else {
+      setDeviceIdentity();
+    }
     if (els.pinManage) els.pinManage.hidden = !local.ready;
+    if (els.deviceNameSection) els.deviceNameSection.hidden = !local.ready;
+    if (els.deviceNameCurrent) els.deviceNameCurrent.textContent = local.deviceLabel || "—";
+    renderDeviceList();
 
     if (els.trustedCount) els.trustedCount.textContent = state.configured ? String(state.trusted_device_count ?? 0) : "0";
     if (els.recoveryStatus) els.recoveryStatus.textContent = formatRecovery(state);
@@ -346,6 +485,114 @@
     if (els.pinNew) els.pinNew.value = "";
     if (els.pinConfirm) els.pinConfirm.value = "";
     setPinMessage();
+  }
+
+  function openRenameDevice(device) {
+    if (!current.local?.ready || !device || !els.renameLayer || !els.renameInput) return;
+    current.renameTarget = device;
+    setRenameMessage();
+    els.renameInput.value = device.device_label || "";
+    els.renameLayer.hidden = false;
+    document.body.classList.add("security-sheet-open");
+    requestAnimationFrame(() => { els.renameInput.focus(); els.renameInput.select(); });
+  }
+
+  function closeRenameDevice() {
+    if (!els.renameLayer) return;
+    els.renameLayer.hidden = true;
+    document.body.classList.remove("security-sheet-open");
+    current.renameTarget = null;
+    if (els.renameInput) els.renameInput.value = "";
+    setRenameMessage();
+  }
+
+  function openRevokeDevice(device) {
+    if (!current.local?.ready || !current.state?.recovery_ready || !device || device.trust_state !== "trusted") {
+      setVaultMessage("Recovery Kit aktif dan Trusted Device saat ini diperlukan untuk mencabut perangkat lain.", "error");
+      return;
+    }
+    current.revokeTarget = device;
+    setRevokeMessage();
+    if (els.revokePin) els.revokePin.value = "";
+    if (els.revokeCopy) els.revokeCopy.textContent = `Cabut akses “${device.device_label || "Trusted Device"}”. Perangkat tersebut tidak akan dapat membuka Security Vault lagi.`;
+    els.revokeLayer.hidden = false;
+    document.body.classList.add("security-sheet-open");
+    requestAnimationFrame(() => els.revokePin?.focus());
+  }
+
+  function closeRevokeDevice() {
+    if (!els.revokeLayer) return;
+    els.revokeLayer.hidden = true;
+    document.body.classList.remove("security-sheet-open");
+    current.revokeTarget = null;
+    if (els.revokePin) els.revokePin.value = "";
+    setRevokeMessage();
+  }
+
+  async function handleRenameSubmit(event) {
+    event.preventDefault();
+    const target = current.renameTarget;
+    if (!target || !els.renameInput || !els.renameSubmit) return;
+    els.renameSubmit.disabled = true;
+    els.renameSubmit.textContent = "Menyimpan…";
+    try {
+      const result = await Trusted.renameDevice({
+        supabase: client,
+        deviceId: target.device_id,
+        deviceLabel: els.renameInput.value
+      });
+      closeRenameDevice();
+      setVaultMessage(`Nama perangkat diubah menjadi “${result?.device_label || els.renameInput.value}”.`, "success");
+      await refreshStatus({ quiet: true });
+    } catch (error) {
+      setRenameMessage(error?.message || "Nama perangkat tidak dapat diubah.", "error");
+    } finally {
+      els.renameSubmit.disabled = false;
+      els.renameSubmit.textContent = "Simpan nama";
+    }
+  }
+
+  async function handleRevokeSubmit(event) {
+    event.preventDefault();
+    const target = current.revokeTarget;
+    if (!target || !els.revokePin || !els.revokeSubmit) return;
+    const pin = els.revokePin.value;
+    els.revokeSubmit.disabled = true;
+    els.revokeSubmit.textContent = "Mencabut…";
+    setRevokeMessage();
+    try {
+      Trusted.validatePin(pin);
+      const proof = await Recovery.masterProofForTrustedAction({ supabase: client, pin });
+      const result = await Trusted.revokeDevice({
+        supabase: client,
+        deviceId: target.device_id,
+        masterProofSha256: proof
+      });
+      closeRevokeDevice();
+      setVaultMessage(`Akses “${target.device_label || "Trusted Device"}” berhasil dicabut.`, "success");
+      await refreshStatus({ quiet: true });
+      return result;
+    } catch (error) {
+      let message = error?.message || "Trusted Device tidak dapat dicabut.";
+      if (error?.code === "LOCAL_UNLOCK_FAILED") message = "PIN perangkat ini salah.";
+      else if (error?.code === "LOCAL_UNLOCK_THROTTLED") message = `Terlalu banyak percobaan PIN. Coba lagi setelah ${formatRetry(error.retryAfterMs)}.`;
+      setRevokeMessage(message, "error");
+      els.revokePin.select();
+    } finally {
+      els.revokeSubmit.disabled = false;
+      els.revokeSubmit.textContent = "Cabut akses perangkat";
+    }
+  }
+
+  function currentDeviceDescriptor() {
+    const local = current.local;
+    if (!local?.ready || !local.deviceId) return null;
+    return {
+      device_id: local.deviceId,
+      device_label: local.deviceLabel || deteksiPerangkat().nama,
+      trust_state: "trusted",
+      is_current: true
+    };
   }
 
   async function openSetup() {
@@ -531,6 +778,8 @@
     if (detail.unlocked === false) {
       if (detail.reason === "auto-lock" || detail.reason === "expired") {
         setVaultMessage("Security Vault terkunci otomatis setelah tidak ada aktivitas.", "info");
+      } else if (detail.reason === "device-revoked" || detail.reason === "self-revoked") {
+        setVaultMessage("Trust perangkat ini telah dicabut. Gunakan Recovery Kit bila ingin mempercayai perangkat ini kembali.", "error");
       }
       await refreshStatus({ quiet: true });
     }
@@ -551,15 +800,40 @@
     els.pinForm?.addEventListener("submit", handlePinChangeSubmit);
     els.pinClose?.addEventListener("click", closePinChange);
     els.recoveryManage?.addEventListener("click", openRecoveryManage);
+    els.deviceRenameCurrent?.addEventListener("click", () => {
+      const device = currentDeviceDescriptor();
+      if (device) openRenameDevice(device);
+    });
+    els.deviceList?.addEventListener("click", (event) => {
+      const button = event.target.closest("[data-device-action]");
+      if (!button) return;
+      const item = button.closest("[data-device-id]");
+      const device = current.devices.find((entry) => entry.device_id === item?.dataset.deviceId);
+      if (!device) return;
+      if (button.dataset.deviceAction === "rename") openRenameDevice(device);
+      else if (button.dataset.deviceAction === "revoke") openRevokeDevice(device);
+    });
+    els.renameForm?.addEventListener("submit", handleRenameSubmit);
+    els.renameClose?.addEventListener("click", closeRenameDevice);
+    els.revokeForm?.addEventListener("submit", handleRevokeSubmit);
+    els.revokeClose?.addEventListener("click", closeRevokeDevice);
     els.unlockLayer?.addEventListener("click", (event) => {
       if (event.target === els.unlockLayer) closeUnlock();
     });
     els.pinLayer?.addEventListener("click", (event) => {
       if (event.target === els.pinLayer) closePinChange();
     });
+    els.renameLayer?.addEventListener("click", (event) => {
+      if (event.target === els.renameLayer) closeRenameDevice();
+    });
+    els.revokeLayer?.addEventListener("click", (event) => {
+      if (event.target === els.revokeLayer) closeRevokeDevice();
+    });
     document.addEventListener("keydown", (event) => {
       if (event.key !== "Escape") return;
-      if (els.pinLayer && !els.pinLayer.hidden) closePinChange();
+      if (els.revokeLayer && !els.revokeLayer.hidden) closeRevokeDevice();
+      else if (els.renameLayer && !els.renameLayer.hidden) closeRenameDevice();
+      else if (els.pinLayer && !els.pinLayer.hidden) closePinChange();
       else if (els.unlockLayer && !els.unlockLayer.hidden) closeUnlock();
     });
     window.addEventListener("pageshow", () => refreshStatus({ quiet: true }));

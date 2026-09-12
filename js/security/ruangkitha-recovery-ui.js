@@ -4,7 +4,7 @@
 
   const Recovery = root.RuangKithaRecoveryKit;
   const Trusted = root.RuangKithaTrustedDevice;
-  const BUILD = "v2.0.0a49b1";
+  const BUILD = "v2.0.0a49c";
 
   let generateState = null;
   let recoverState = null;

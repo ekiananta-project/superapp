@@ -1,6 +1,6 @@
 /*
  * RuangKitha Security Foundation v1 — Trusted Device + Local Unlock
- * Build: v2.0.0a49b1
+ * Build: v2.0.0a49c
  *
  * SECURITY CONTRACT
  * - Depends on ruangkitha-crypto-core.js (a49). Do not weaken/replace that core here.
@@ -28,7 +28,7 @@
   const subtle = webcrypto && webcrypto.subtle;
 
   const VERSION = 1;
-  const BUILD = "v2.0.0a49b1";
+  const BUILD = "v2.0.0a49c";
   const DEVICE_ALGORITHM = "ECDH-P256";
   const PIN_KDF = "PBKDF2-HMAC-SHA256";
   const PIN_ITERATIONS = 600000;
@@ -42,6 +42,7 @@
   const STORE_NAME = "device_local";
   const PENDING_PHASE = "pending-bootstrap";
   const READY_PHASE = "ready";
+  const TRUST_RECHECK_MS = 60 * 1000;
 
   const runtime = new Map();
   const STATE_EVENT = "ruangkitha:security-vault-statechange";
@@ -605,10 +606,21 @@
     return idbRequest("readonly", (store) => store.get(validateUserId(userId)));
   }
 
+  function sanitizeRecordForPersistence(record) {
+    if (!record || typeof record !== "object") return record;
+    if (record.phase !== READY_PHASE) return record;
+    // a49c: a ready Trusted Device must not persist the server Device Master Key envelope.
+    // Fresh unlock always fetches it from a trusted-only RPC so revocation cannot be bypassed
+    // by the normal client using a stale IndexedDB cache.
+    return { ...record, cached_device_key_envelope: null };
+  }
+
   function putLocalRecord(record) {
     if (!record || !record.record_key) return Promise.reject(new Error("Local record tidak valid."));
     record.updated_at = nowIso();
-    return idbRequest("readwrite", (store) => store.put(record));
+    const persisted = sanitizeRecordForPersistence(record);
+    persisted.updated_at = record.updated_at;
+    return idbRequest("readwrite", (store) => store.put(persisted));
   }
 
   function deleteLocalRecord(userId) {
@@ -726,6 +738,10 @@
       clearTimeout(session.timer);
       session.timer = null;
     }
+    if (session && session.trustTimer) {
+      clearTimeout(session.trustTimer);
+      session.trustTimer = null;
+    }
   }
 
   function lock(userId, reason = "manual") {
@@ -753,7 +769,55 @@
     session.timer = setTimeout(() => lock(userId, "auto-lock"), remaining);
   }
 
-  function setRuntimeSession(userId, masterKey, autoLockMinutes) {
+  async function serverDeviceStatus(supabase, deviceInstanceId) {
+    if (!deviceInstanceId) return { found: false };
+    return rpc(supabase, "security_device_status_v1", {
+      p_device_client_id: deviceInstanceId
+    });
+  }
+
+  async function purgeRevokedLocalDevice(userId, reason = "device-revoked") {
+    const uid = validateUserId(userId);
+    lock(uid, reason);
+    await deleteLocalRecord(uid);
+    emitStateChange({ userId: uid, unlocked: false, reason, localDeviceRemoved: true });
+    return true;
+  }
+
+  async function revalidateCurrentDevice({ supabase, purgeRevoked = true } = {}) {
+    const userId = await currentUserId(supabase);
+    const record = await getLocalRecord(userId);
+    if (!record || record.phase !== READY_PHASE) {
+      return { userId, present: Boolean(record), trusted: false, status: null };
+    }
+    const status = await serverDeviceStatus(supabase, record.device_instance_id);
+    const trusted = Boolean(status && status.found && status.trust_state === "trusted");
+    if (!trusted && purgeRevoked) await purgeRevokedLocalDevice(userId, "device-revoked");
+    return { userId, present: true, trusted, status: status || { found: false } };
+  }
+
+  function scheduleTrustRecheck(userId) {
+    const session = runtime.get(userId);
+    if (!session || !session.supabase || !session.deviceInstanceId) return;
+    if (session.trustTimer) clearTimeout(session.trustTimer);
+    session.trustTimer = setTimeout(async () => {
+      const active = runtime.get(userId);
+      if (!active) return;
+      try {
+        const status = await serverDeviceStatus(active.supabase, active.deviceInstanceId);
+        if (!status || !status.found || status.trust_state !== "trusted") {
+          await purgeRevokedLocalDevice(userId, "device-revoked");
+          return;
+        }
+      } catch (_) {
+        // A transient network failure does not destroy an already-unlocked runtime session.
+        // Fresh unlock remains online-only; the monitor retries when connectivity returns.
+      }
+      if (runtime.has(userId)) scheduleTrustRecheck(userId);
+    }, TRUST_RECHECK_MS);
+  }
+
+  function setRuntimeSession(userId, masterKey, autoLockMinutes, { supabase = null, deviceInstanceId = null } = {}) {
     const uid = validateUserId(userId);
     if (!masterKey || masterKey.type !== "secret" || masterKey.extractable !== false) {
       throw new Error("Runtime Master Key harus non-extractable.");
@@ -764,10 +828,14 @@
       autoLockMinutes: minutes,
       lastActivityMs: Date.now(),
       expiresAtMs: Date.now() + minutes * 60 * 1000,
-      timer: null
+      timer: null,
+      trustTimer: null,
+      supabase,
+      deviceInstanceId
     };
     runtime.set(uid, session);
     scheduleAutoLock(uid);
+    scheduleTrustRecheck(uid);
     installActivityHooks();
   }
 
@@ -789,6 +857,19 @@
     ["pointerdown", "keydown", "touchstart"].forEach((eventName) => {
       document.addEventListener(eventName, activity, { capture: true, passive: true });
     });
+    const recheck = () => {
+      for (const [uid, session] of runtime.entries()) {
+        if (!session.supabase || !session.deviceInstanceId) continue;
+        serverDeviceStatus(session.supabase, session.deviceInstanceId).then(async (status) => {
+          if (!status || !status.found || status.trust_state !== "trusted") {
+            await purgeRevokedLocalDevice(uid, "device-revoked");
+          }
+        }).catch(() => {});
+      }
+    };
+    window.addEventListener("online", recheck, { passive: true });
+    window.addEventListener("focus", recheck, { passive: true });
+    document.addEventListener("visibilitychange", () => { if (document.visibilityState === "visible") recheck(); }, { passive: true });
     window.addEventListener("pagehide", () => lockAll("pagehide"), { capture: true });
     window.addEventListener("beforeunload", () => lockAll("beforeunload"), { capture: true });
   }
@@ -821,7 +902,7 @@
     if (result.trust_state !== "trusted") throw new Error("Perangkat lokal tidak berstatus trusted.");
     record.vault_id = result.vault_id;
     record.device_id = result.device_id;
-    if (result.device_key_envelope) record.cached_device_key_envelope = result.device_key_envelope;
+    record.cached_device_key_envelope = null;
     record.phase = READY_PHASE;
     record.pending_recovery_envelope = null;
     await putLocalRecord(record);
@@ -882,10 +963,10 @@
     existing.device_id = result.device_id;
     existing.phase = READY_PHASE;
     existing.pending_recovery_envelope = null;
-    existing.cached_device_key_envelope = bundle.bootstrapRpc.p_device_key_envelope;
+    existing.cached_device_key_envelope = null;
     await putLocalRecord(existing);
 
-    setRuntimeSession(userId, bundle.runtimeMasterKey, existing.auto_lock_minutes);
+    setRuntimeSession(userId, bundle.runtimeMasterKey, existing.auto_lock_minutes, { supabase, deviceInstanceId: existing.device_instance_id });
 
     return {
       configured: true,
@@ -932,9 +1013,9 @@
       throw error;
     }
 
-    record.cached_device_key_envelope = material.device_key_envelope;
     record.vault_id = material.vault_id;
     record.device_id = material.device_id;
+    record.cached_device_key_envelope = null;
     await putLocalRecord(record);
 
     let masterKey;
@@ -943,7 +1024,7 @@
         userId,
         pin,
         record,
-        deviceKeyEnvelope: record.cached_device_key_envelope
+        deviceKeyEnvelope: material.device_key_envelope
       });
     } catch (error) {
       if (error && error.code === "LOCAL_UNLOCK_FAILED") {
@@ -955,7 +1036,7 @@
     }
 
     await clearUnlockFailures(record);
-    setRuntimeSession(userId, masterKey, record.auto_lock_minutes);
+    setRuntimeSession(userId, masterKey, record.auto_lock_minutes, { supabase, deviceInstanceId: record.device_instance_id });
 
     if (record.device_id) {
       rpc(supabase, "security_touch_device_v1", { p_device_id: record.device_id }).catch(() => {});
@@ -1099,9 +1180,9 @@
     existing.vault_id = result.vault_id;
     existing.device_id = result.device_id;
     existing.phase = READY_PHASE;
-    existing.cached_device_key_envelope = bundle.deviceRpc.p_device_key_envelope;
+    existing.cached_device_key_envelope = null;
     await putLocalRecord(existing);
-    setRuntimeSession(userId, bundle.runtimeMasterKey, existing.auto_lock_minutes);
+    setRuntimeSession(userId, bundle.runtimeMasterKey, existing.auto_lock_minutes, { supabase, deviceInstanceId: existing.device_instance_id });
 
     return {
       recovered: true,
@@ -1141,7 +1222,7 @@
 
     record.vault_id = material.vault_id || record.vault_id;
     record.device_id = material.device_id || record.device_id;
-    if (material.device_key_envelope) record.cached_device_key_envelope = material.device_key_envelope;
+    record.cached_device_key_envelope = null;
 
     let updated;
     try {
@@ -1174,7 +1255,11 @@
 
   async function localDeviceStatus({ supabase } = {}) {
     const userId = await currentUserId(supabase);
-    const record = await getLocalRecord(userId);
+    let record = await getLocalRecord(userId);
+    if (record && record.phase === READY_PHASE && record.cached_device_key_envelope) {
+      record = { ...record, cached_device_key_envelope: null };
+      await putLocalRecord(record);
+    }
     return {
       userId,
       present: Boolean(record),
@@ -1190,6 +1275,49 @@
         ? Number(record.locked_until_ms) - Date.now()
         : 0
     };
+  }
+
+  async function listDevices({ supabase } = {}) {
+    const userId = await currentUserId(supabase);
+    const record = await getLocalRecord(userId);
+    const result = await rpc(supabase, "security_list_devices_v1", {
+      p_current_device_client_id: record && record.phase === READY_PHASE ? record.device_instance_id : null
+    });
+    return result || { devices: [], trusted_device_count: 0 };
+  }
+
+  async function renameDevice({ supabase, deviceId, deviceLabel } = {}) {
+    const userId = await currentUserId(supabase);
+    const record = await getLocalRecord(userId);
+    if (!record || record.phase !== READY_PHASE) throw new Error("Trusted Device aktif diperlukan untuk mengubah nama perangkat.");
+    const label = validateDeviceLabel(deviceLabel);
+    const result = await rpc(supabase, "security_rename_device_v1", {
+      p_device_id: deviceId,
+      p_device_label: label,
+      p_actor_device_client_id: record.device_instance_id
+    });
+    if (result?.renamed && result.device_id === record.device_id) {
+      record.device_label = result.device_label || label;
+      await putLocalRecord(record);
+    }
+    return result;
+  }
+
+  async function revokeDevice({ supabase, deviceId, masterProofSha256 } = {}) {
+    const userId = await currentUserId(supabase);
+    const record = await getLocalRecord(userId);
+    if (!record || record.phase !== READY_PHASE) throw new Error("Trusted Device aktif diperlukan untuk mencabut perangkat.");
+    const proof = String(masterProofSha256 || "");
+    if (!/^[A-Za-z0-9_-]{43}$/.test(proof)) throw new Error("Master proof perangkat tidak valid.");
+    const result = await rpc(supabase, "security_revoke_device_v1", {
+      p_device_id: deviceId,
+      p_actor_device_client_id: record.device_instance_id,
+      p_master_proof_sha256: proof
+    });
+    if (result?.revoked && result.device_id === record.device_id) {
+      await purgeRevokedLocalDevice(userId, "self-revoked");
+    }
+    return result;
   }
 
   async function updateAutoLock({ supabase, minutes } = {}) {
@@ -1231,6 +1359,10 @@
     recoverDeviceWithMaster,
     changeLocalPin,
     localDeviceStatus,
+    revalidateCurrentDevice,
+    listDevices,
+    renameDevice,
+    revokeDevice,
     updateAutoLock,
     isUnlocked,
     touchActivity,
@@ -1250,7 +1382,8 @@
       unlockFromRecord,
       rewrapLocalPin,
       throttleDelayMs,
-      masterWrapContext
+      masterWrapContext,
+      sanitizeRecordForPersistence
     });
     module.exports = Object.freeze(api);
   }

@@ -1,6 +1,6 @@
 /*
  * RuangKitha Security Foundation — Recovery Kit V1
- * Build: v2.0.0a49b1
+ * Build: v2.0.0a49c
  *
  * SECURITY CONTRACT
  * - Recovery secret is 256-bit random material generated on-device.
@@ -20,7 +20,7 @@
   const Trusted = root.RuangKithaTrustedDevice ||
     (typeof module !== "undefined" && module.exports ? require("./ruangkitha-trusted-device.js") : null);
 
-  const BUILD = "v2.0.0a49b1";
+  const BUILD = "v2.0.0a49c";
   const VERSION = 1;
   const HUMAN_PREFIX = "RK1";
   const CROCKFORD = "0123456789ABCDEFGHJKMNPQRSTVWXYZ";
@@ -168,6 +168,25 @@
   async function recoveryMaterial(supabase) {
     const data = await rpc(supabase, "security_recovery_material_v1");
     return data || { found: false };
+  }
+
+  async function masterProofForTrustedAction({ supabase, pin } = {}) {
+    assertDeps();
+    Trusted.validatePin(pin);
+    await currentUserId(supabase);
+    return Trusted.withExtractableMasterKeyFromPin({
+      supabase,
+      pin,
+      callback: async (masterKey, context) => {
+        const material = await recoveryMaterial(supabase);
+        if (!material?.found || !material.envelope || !material.vault_id) {
+          const error = new Error("Recovery Kit aktif diperlukan untuk aksi perangkat sensitif.");
+          error.code = "RECOVERY_NOT_READY";
+          throw error;
+        }
+        return masterProofHashFromEnvelope(masterKey, material.envelope, context.vaultId || material.vault_id);
+      }
+    });
   }
 
   async function prepareRecoveryKit({ supabase, pin } = {}) {
@@ -527,6 +546,7 @@
     activatePreparedRecovery,
     cancelPreparedRecovery,
     recoveryMaterial,
+    masterProofForTrustedAction,
     recoverNewDevice,
     parseRecoveryCode,
     formatRecoveryCode,

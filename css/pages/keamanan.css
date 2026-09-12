@@ -666,3 +666,19 @@ body.security-sheet-open {
     width: 100%;
   }
 }
+
+
+/* =========================================
+   a49c — SECURITY HARDENING / DEVICE MANAGEMENT V1
+========================================= */
+.security-device-name {
+  display:flex; align-items:center; justify-content:space-between; gap:var(--space-3);
+  margin-top:var(--space-2); padding:var(--space-3); border:1px solid var(--color-border);
+  border-radius:var(--radius-lg); background:var(--color-surface);
+}
+.security-device-name[hidden]{display:none!important}.security-device-name>div{min-width:0}.security-device-name strong,.security-device-name small{display:block}.security-device-name strong{font-size:var(--font-size-sm)}.security-device-name small{margin-top:2px;color:var(--color-text-secondary);font-size:var(--font-size-xs);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.security-device-list{display:flex;flex-direction:column;gap:var(--space-2)}
+.security-device-item{display:flex;align-items:center;gap:var(--space-3);padding:var(--space-3);border:1px solid var(--color-border);border-radius:var(--radius-lg);background:var(--color-surface);box-shadow:var(--shadow-sm)}
+.security-device-item[data-revoked="true"]{opacity:.72}.security-device-item-copy{min-width:0;flex:1}.security-device-item-copy strong,.security-device-item-copy span,.security-device-item-copy small{display:block}.security-device-item-copy strong{font-size:var(--font-size-sm);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.security-device-item-copy span,.security-device-item-copy small{margin-top:2px;color:var(--color-text-secondary);font-size:var(--font-size-xs);line-height:1.4}.security-device-actions{display:flex;flex-direction:column;gap:6px;flex-shrink:0}.security-device-action{min-height:34px;padding:0 10px;border:1px solid var(--color-border);border-radius:var(--radius-md);background:var(--color-surface-soft);color:var(--color-text);font:inherit;font-size:11px;font-weight:var(--font-weight-semibold);cursor:pointer}.security-device-action.danger{color:#a13b3b}.security-device-state{display:inline-flex!important;width:max-content;margin-top:5px!important;padding:4px 7px;border-radius:var(--radius-full);background:color-mix(in srgb,var(--color-primary) 13%,transparent);color:var(--color-primary)!important;font-weight:var(--font-weight-semibold)}.security-device-state[data-state="revoked"]{background:rgba(180,45,45,.10);color:#a13b3b!important}
+.security-danger-box{display:flex;align-items:flex-start;gap:var(--space-2);margin:0 0 var(--space-3);padding:var(--space-3);border-radius:var(--radius-md);background:rgba(180,45,45,.08);color:#8f3535}.security-danger-box ion-icon{flex-shrink:0;margin-top:2px;font-size:18px}.security-danger-box p{margin:0;font-size:var(--font-size-xs);line-height:1.55}.security-danger-button{background:#a13b3b!important}.security-confirm-row{display:flex;align-items:flex-start;gap:10px;margin:var(--space-3) 0;padding:var(--space-3);border-radius:var(--radius-md);background:var(--color-surface-soft);color:var(--color-text-secondary);font-size:var(--font-size-xs);line-height:1.5}.security-confirm-row[hidden]{display:none!important}.security-confirm-row input{margin-top:2px;accent-color:var(--color-primary)}
+@media(max-width:380px){.security-device-item{align-items:flex-start}.security-device-actions{width:92px}.security-device-action{width:100%}}
