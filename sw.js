@@ -1,4 +1,4 @@
-const CACHE_NAME = "ruangkitha-v2.0.0a46e-notification-interaction-history";
+const CACHE_NAME = "ruangkitha-v2.0.0a46f-android-deeplink-confirm-ux";
 const OFFLINE_URL = "./offline.html";
 
 const APP_FILES = [
@@ -259,7 +259,35 @@ self.addEventListener("fetch", event => {
 });
 
 
-// v2.0.0a46e: background Web Push with source deep-link + optional Buka action.
+// v2.0.0a46f: resolve notification targets against the service-worker scope.
+// GitHub Pages hosts RuangKitha under /superapp/, so origin-only resolution would
+// incorrectly open https://host/catatan-editor.html and produce a 404.
+function resolveNotificationTarget(rawTarget) {
+  const scopeBase = new URL(self.registration?.scope || "./", self.location.href);
+  const fallback = new URL("kalender.html", scopeBase);
+  const raw = String(rawTarget || "").trim();
+  if (!raw) return fallback.href;
+
+  try {
+    let resolved = new URL(raw, scopeBase);
+    if (resolved.origin !== scopeBase.origin) return fallback.href;
+
+    const scopePath = scopeBase.pathname.endsWith("/")
+      ? scopeBase.pathname
+      : `${scopeBase.pathname}/`;
+
+    // Repair legacy same-origin URLs that were accidentally anchored at `/`.
+    if (!resolved.pathname.startsWith(scopePath)) {
+      const leafPath = resolved.pathname.replace(/^\/+/, "");
+      resolved = new URL(`${leafPath}${resolved.search}${resolved.hash}`, scopeBase);
+    }
+    return resolved.href;
+  } catch {
+    return fallback.href;
+  }
+}
+
+// v2.0.0a46f: background Web Push payload from the centralized Notification Scheduler.
 self.addEventListener("push", event => {
   let payload = {};
   try { payload = event.data?.json?.() || {}; } catch {
@@ -267,12 +295,12 @@ self.addEventListener("push", event => {
   }
   const title = String(payload.title || "Pengingat RuangKitha");
   const notificationId = String(payload.notificationId || "");
-  let target = String(payload.url || "kalender.html");
+  let target = resolveNotificationTarget(payload.url || "kalender.html");
   try {
-    const url = new URL(target, self.location.origin);
+    const url = new URL(target);
     if (notificationId) url.searchParams.set("rk_notification", notificationId);
     target = url.href;
-  } catch { target = new URL("kalender.html", self.location.origin).href; }
+  } catch { target = resolveNotificationTarget("kalender.html"); }
 
   const options = {
     body: String(payload.body || "Ada agenda yang perlu diperhatikan."),
@@ -281,25 +309,18 @@ self.addEventListener("push", event => {
     lang: "id-ID",
     icon: "./icons/icon-192.png",
     badge: "./icons/favicon-32.png",
-    timestamp: payload.scheduledFor ? new Date(payload.scheduledFor).getTime() : Date.now(),
-    actions: [{ action: "open", title: String(payload.actionTitle || "Buka") }],
-    data: {
-      url: target,
-      notificationId,
-      sourceModule: String(payload.sourceModule || ""),
-      sourceType: String(payload.sourceType || "")
-    }
+    data: { url: target, notificationId }
   };
   event.waitUntil(self.registration.showNotification(title, options));
 });
 
-// Default tap and the optional “Buka” action both deep-link to the original source.
-// The rk_notification query marker lets the destination page sync read_at after auth.
+// Notification clicks always deep-link to the original Calendar source.
+// v2.0.0a46 background scheduling is handled by the centralized server dispatcher.
 self.addEventListener("notificationclick", event => {
   event.notification?.close();
-  if (event.action && event.action !== "open") return;
-  const target = event.notification?.data?.url;
-  if (!target) return;
+  const rawTarget = event.notification?.data?.url;
+  if (!rawTarget) return;
+  const target = resolveNotificationTarget(rawTarget);
   event.waitUntil((async () => {
     const windows = await self.clients.matchAll({ type: "window", includeUncontrolled: true });
     for (const client of windows) {

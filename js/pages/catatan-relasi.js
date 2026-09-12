@@ -1,4 +1,4 @@
-// RuangKitha v2.0.0a43d — Relation Card Delete + Node Meta Polish
+// RuangKitha v2.0.0a46f — Android Deep-link + In-app Relation Confirm UX
 (() => {
   "use strict";
 
@@ -24,6 +24,7 @@
   const activePointers = new Map();
   let suppressMapClickUntil = 0;
   let selectedEdge = null;
+  let relationDeleteConfirmResolve = null;
   let lastLayoutBounds = null;
   let toastTimer = null;
   let focusId = "";
@@ -52,6 +53,27 @@
     el.textContent = message;
     el.hidden = false;
     toastTimer = setTimeout(() => { el.hidden = true; }, 3200);
+  }
+
+  function closeRelationDeleteConfirm(result = false) {
+    const layer = q("[data-relation-delete-confirm-layer]");
+    if (layer) layer.hidden = true;
+    const resolve = relationDeleteConfirmResolve;
+    relationDeleteConfirmResolve = null;
+    resolve?.(Boolean(result));
+  }
+
+  function confirmRelationDelete(name) {
+    // Resolve any stale pending confirmation before opening a new one.
+    if (relationDeleteConfirmResolve) closeRelationDeleteConfirm(false);
+    const layer = q("[data-relation-delete-confirm-layer]");
+    const label = q("[data-relation-delete-confirm-name]");
+    const confirmButton = q("[data-relation-delete-confirm-ok]");
+    if (!layer || !label || !confirmButton) return Promise.resolve(false);
+    label.textContent = `“${clean(name, "Tanpa nama")}”`;
+    layer.hidden = false;
+    setTimeout(() => confirmButton.focus(), 30);
+    return new Promise(resolve => { relationDeleteConfirmResolve = resolve; });
   }
 
   function scopeLabel(scope) {
@@ -132,6 +154,11 @@
     q("[data-relation-edge-layer]")?.addEventListener("click", event => {
       if (event.target === q("[data-relation-edge-layer]")) closeEdgeDialog();
     });
+    q("[data-relation-delete-confirm-cancel]")?.addEventListener("click", () => closeRelationDeleteConfirm(false));
+    q("[data-relation-delete-confirm-ok]")?.addEventListener("click", () => closeRelationDeleteConfirm(true));
+    q("[data-relation-delete-confirm-layer]")?.addEventListener("click", event => {
+      if (event.target === q("[data-relation-delete-confirm-layer]")) closeRelationDeleteConfirm(false);
+    });
     q("[data-zoom-in]")?.addEventListener("click", () => setScale(scale + .12));
     q("[data-zoom-out]")?.addEventListener("click", () => setScale(scale - .12));
     q("[data-zoom-reset]")?.addEventListener("click", () => {
@@ -142,7 +169,9 @@
       if (!event.target?.closest?.(".relation-card-actions")) closeRelationCardMenus();
     });
     document.addEventListener("keydown", event => {
-      if (event.key === "Escape") closeRelationCardMenus();
+      if (event.key !== "Escape") return;
+      closeRelationCardMenus();
+      if (!q("[data-relation-delete-confirm-layer]")?.hidden) closeRelationDeleteConfirm(false);
     });
     setupMapPanning();
   }
@@ -357,7 +386,7 @@
   async function deleteCurrentRelation() {
     if (!graph?.relation?.can_admin) return;
     q("[data-relation-manage-layer]").hidden = true;
-    const ok = window.confirm(`Hapus relasi “${graph.relation.name}”?\n\nCatatan tidak ikut terhapus. Semua tautan inline yang dibuat untuk relasi ini akan dilepas dan teksnya tetap dipertahankan.`);
+    const ok = await confirmRelationDelete(graph.relation.name);
     if (!ok) return;
     try {
       await NotesService.hapusRelasi(graph.relation.id);
@@ -421,7 +450,7 @@
   async function deleteRelationFromList(group, card) {
     if (!group?.id || !group?.can_admin) return;
     closeRelationCardMenus();
-    const ok = window.confirm(`Hapus relasi “${group.name}”?\n\nCatatan tidak ikut terhapus. Semua tautan inline yang dibuat untuk relasi ini akan dilepas dan teksnya tetap dipertahankan.`);
+    const ok = await confirmRelationDelete(group.name);
     if (!ok) return;
 
     const moreButton = card?.querySelector?.(".relation-card-more");

@@ -563,3 +563,69 @@ html[data-theme="dark"] .relation-map-shell {
 }
 
 /* v2.0.0a43d — relation card overflow delete + readable node metadata */
+
+
+/* v2.0.0a46f — branded in-app destructive confirmation; avoids browser/domain confirm UI. */
+.relation-confirm-dialog {
+  width: min(100%, 392px);
+  padding: 22px 20px 20px;
+  border: 1px solid var(--color-border, #e0e4e1);
+  border-radius: 26px;
+  background: var(--color-surface, #fff);
+  color: var(--color-text, #18201b);
+  box-shadow: 0 28px 72px rgba(0,0,0,.26);
+  text-align: center;
+}
+.relation-confirm-icon {
+  width: 58px;
+  height: 58px;
+  display: grid;
+  place-items: center;
+  margin: 0 auto 13px;
+  border-radius: 19px;
+  background: color-mix(in srgb, #c94343 12%, var(--color-surface, #fff));
+  color: #c94343;
+}
+.relation-confirm-icon ion-icon { font-size: 27px; }
+.relation-confirm-dialog > small {
+  display: block;
+  color: var(--color-text-soft, #6f7b73);
+  font-size: 9.5px;
+  font-weight: 700;
+  letter-spacing: .05em;
+  text-transform: uppercase;
+}
+.relation-confirm-dialog h2 { margin: 4px 0 0; font-size: 19px; }
+.relation-confirm-name {
+  margin: 13px 0 0;
+  font-size: 12px;
+  font-weight: 750;
+  line-height: 1.45;
+  overflow-wrap: anywhere;
+}
+.relation-confirm-dialog #relation-delete-confirm-copy {
+  margin: 9px 0 0;
+  color: var(--color-text-soft, #6f7b73);
+  font-size: 10.5px;
+  line-height: 1.6;
+}
+.relation-confirm-actions {
+  display: grid;
+  grid-template-columns: .9fr 1.25fr;
+  gap: 9px;
+  margin-top: 18px;
+}
+.relation-confirm-actions button {
+  min-height: 48px;
+  border-radius: 15px;
+  font: inherit;
+  font-size: 11px;
+  font-weight: 750;
+}
+.relation-confirm-actions .is-secondary {
+  border: 1px solid var(--color-border, #e0e4e1);
+  background: transparent;
+  color: var(--color-text, #18201b);
+}
+.relation-confirm-actions .is-danger { border: 0; background: #c94343; color: #fff; }
+.relation-confirm-actions button:disabled { opacity: .58; }

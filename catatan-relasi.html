@@ -25,7 +25,7 @@
 
   <link rel="stylesheet" href="css/style.css">
   <link rel="stylesheet" href="css/theme.css">
-  <link rel="stylesheet" href="css/pages/catatan-relasi.css?v=20260911-v200a43c">
+  <link rel="stylesheet" href="css/pages/catatan-relasi.css?v=20260911-v200a46f">
   <style id="ruangkitha-auth-cloak">html[data-auth-guard] body{visibility:hidden!important}</style>
 </head>
 <body>
@@ -125,6 +125,20 @@
     </section>
   </div>
 
+  <div class="relation-modal-layer" data-relation-delete-confirm-layer hidden>
+    <section class="relation-confirm-dialog" role="alertdialog" aria-modal="true" aria-labelledby="relation-delete-confirm-title" aria-describedby="relation-delete-confirm-copy">
+      <span class="relation-confirm-icon" aria-hidden="true"><ion-icon name="trash-outline"></ion-icon></span>
+      <small>Relasi Catatan</small>
+      <h2 id="relation-delete-confirm-title">Hapus relasi?</h2>
+      <p class="relation-confirm-name" data-relation-delete-confirm-name></p>
+      <p id="relation-delete-confirm-copy">Catatan tidak ikut terhapus. Semua tautan inline yang dibuat untuk relasi ini akan dilepas dan teksnya tetap dipertahankan.</p>
+      <div class="relation-confirm-actions">
+        <button class="is-secondary" type="button" data-relation-delete-confirm-cancel>Batal</button>
+        <button class="is-danger" type="button" data-relation-delete-confirm-ok>Hapus relasi</button>
+      </div>
+    </section>
+  </div>
+
   <div class="relation-modal-layer" data-relation-name-layer hidden>
     <section class="relation-name-dialog" role="dialog" aria-modal="true" aria-labelledby="relation-name-title">
       <h2 id="relation-name-title">Ganti nama relasi</h2>
@@ -143,7 +157,7 @@
 <script src="js/backend/auth-router.js?v=20260909-v200a8"></script>
 <script src="js/backend/auth-guard.js?v=20260909-v200a8"></script>
 <script src="js/backend/notes-service.js?v=20260911-v200a43c"></script>
-<script src="js/pages/catatan-relasi.js?v=20260911-v200a43c"></script>
-<script src="js/pwa.js?v=20260911-v200a43c"></script>
+<script src="js/pages/catatan-relasi.js?v=20260911-v200a46f"></script>
+<script src="js/pwa.js?v=20260911-v200a46f"></script>
 </body>
 </html>
