@@ -1,8 +1,8 @@
 (() => {
   "use strict";
 
-  const RK_DESIGN_SYSTEM_VERSION = "1.0.0";
-  const RK_BUILD_VERSION = "v2.0.0a48";
+  const RK_DESIGN_SYSTEM_VERSION = "1.0.1";
+  const RK_BUILD_VERSION = "v2.0.0a48a";
 
   function appBaseUrl() {
     try {
@@ -13,17 +13,30 @@
   }
 
   function ensureDesignSystem() {
-    if (document.querySelector('link[data-ruangkitha-design-system]')) return;
+    if (!document.querySelector('link[data-ruangkitha-design-system]')) {
+      const link = document.createElement("link");
+      link.rel = "stylesheet";
+      link.dataset.ruangkithaDesignSystem = RK_DESIGN_SYSTEM_VERSION;
+      link.href = new URL(
+        `css/ruangkitha-design-system-v1.css?v=${RK_BUILD_VERSION}`,
+        appBaseUrl()
+      ).href;
+      document.head.appendChild(link);
+    }
 
-    const link = document.createElement("link");
-    link.rel = "stylesheet";
-    link.dataset.ruangkithaDesignSystem = RK_DESIGN_SYSTEM_VERSION;
-    link.href = new URL(
-      `css/ruangkitha-design-system-v1.css?v=${RK_BUILD_VERSION}`,
-      appBaseUrl()
-    ).href;
-    document.head.appendChild(link);
+    if (!document.querySelector('link[data-ruangkitha-shell]')) {
+      const shell = document.createElement("link");
+      shell.rel = "stylesheet";
+      shell.dataset.ruangkithaShell = RK_DESIGN_SYSTEM_VERSION;
+      shell.href = new URL(
+        `css/ruangkitha-shell-v1.css?v=${RK_BUILD_VERSION}`,
+        appBaseUrl()
+      ).href;
+      document.head.appendChild(shell);
+    }
+
     document.documentElement.dataset.designSystem = "ruangkitha-v1";
+    document.documentElement.dataset.shell = "ruangkitha-v1";
   }
 
   function syncBrowserThemeColor() {
@@ -132,7 +145,7 @@
   if ("serviceWorker" in navigator) {
     window.addEventListener("load", async () => {
       try {
-        const registration = await navigator.serviceWorker.register("./sw.js?v=20260912-v200a48", {
+        const registration = await navigator.serviceWorker.register("./sw.js?v=20260912-v200a48a", {
           scope: "./"
         });
 
