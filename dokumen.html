@@ -24,7 +24,9 @@
   <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="css/style.css">
   <link rel="stylesheet" href="css/theme.css">
-  <link rel="stylesheet" href="css/pages/ruangkitha-documents-v1.css?v=20260912-v200a50">
+  <link rel="stylesheet" href="css/ruangkitha-design-system-v1.css?v=v2.0.0a50a" data-ruangkitha-design-system="1.0.7">
+  <link rel="stylesheet" href="css/ruangkitha-shell-v1.css?v=v2.0.0a50a" data-ruangkitha-shell="1.0.7">
+  <link rel="stylesheet" href="css/pages/ruangkitha-documents-v1.css?v=20260912-v200a50a">
   <style id="ruangkitha-auth-cloak">html[data-auth-guard] body{visibility:hidden!important}</style>
 </head>
 <body>
@@ -39,52 +41,175 @@
   </header>
 
   <main class="dokumen-main">
-    <section class="dokumen-security-card" data-doc-security>
-      <div class="dokumen-security-icon"><ion-icon name="shield-checkmark-outline"></ion-icon></div>
-      <div class="dokumen-security-copy">
-        <small>Encrypted Storage Foundation V1</small>
-        <strong data-doc-vault-title>Memeriksa Security Vault…</strong>
-        <p data-doc-vault-copy>File dan metadata sensitif dienkripsi di perangkat sebelum dikirim ke Storage.</p>
+    <section class="dokumen-vault-compact" data-doc-security>
+      <span class="dokumen-vault-icon" aria-hidden="true"><ion-icon name="shield-checkmark-outline"></ion-icon></span>
+      <div class="dokumen-vault-copy">
+        <strong>Security Vault</strong>
+        <span data-doc-vault-copy>Lampiran aman hanya dibuka saat diperlukan.</span>
       </div>
-      <span class="dokumen-security-badge" data-doc-vault-badge>Memuat</span>
+      <span class="dokumen-vault-badge" data-doc-vault-badge>Memuat</span>
     </section>
 
-    <section class="dokumen-foundation-note">
-      <ion-icon name="lock-closed-outline" aria-hidden="true"></ion-icon>
-      <p><strong>a50 foundation:</strong> akses dokumen V1 masih pribadi untuk pemilik. Struktur access envelope sudah disiapkan untuk sharing keluarga pada patch lanjutan.</p>
-    </section>
+    <nav class="dokumen-tabs" aria-label="Area dokumen">
+      <button type="button" class="dokumen-tab is-active" data-doc-view="family">Keluarga</button>
+      <button type="button" class="dokumen-tab" data-doc-view="attention">Perlu Perhatian</button>
+      <button type="button" class="dokumen-tab" data-doc-view="personal">Pribadi</button>
+    </nav>
 
-    <section class="dokumen-toolbar">
-      <div>
-        <h2>Vault dokumen</h2>
-        <p data-doc-count>Memuat dokumen…</p>
-      </div>
-      <button class="dokumen-add" type="button" data-doc-add disabled>
-        <ion-icon name="add-outline" aria-hidden="true"></ion-icon>
-        <span>Tambah</span>
-      </button>
-      <input data-doc-file type="file" hidden>
-    </section>
+    <div class="dokumen-list-head">
+      <p data-doc-count>Memuat dokumen…</p>
+    </div>
 
     <section class="dokumen-message" data-doc-message role="status" hidden></section>
 
     <section class="dokumen-list" data-doc-list aria-live="polite">
       <div class="dokumen-state" data-doc-state>
         <span><ion-icon name="hourglass-outline"></ion-icon></span>
-        <strong>Memuat vault dokumen</strong>
-        <p>RuangKitha sedang memeriksa Trusted Device dan Recovery Kit.</p>
+        <strong>Memuat dokumen</strong>
+        <p>RuangKitha sedang menyiapkan catatan dokumen keluarga.</p>
       </div>
     </section>
   </main>
+
+  <button class="dokumen-fab" type="button" data-doc-add aria-label="Tambah dokumen">
+    <ion-icon name="add-outline" aria-hidden="true"></ion-icon>
+  </button>
 </div>
 
+<!-- Add / edit document record. Attachment is deliberately optional. -->
+<div class="lapisan dokumen-form-layer" data-doc-form-layer hidden>
+  <section class="bottom-sheet dokumen-form-sheet" role="dialog" aria-modal="true" aria-labelledby="doc-form-title">
+    <div class="sheet-handle"></div>
+    <div class="sheet-header dokumen-sheet-header">
+      <div>
+        <h2 id="doc-form-title" data-doc-form-title>Tambah Dokumen</h2>
+        <p class="sheet-subjudul">Catat yang perlu dijaga. Lampiran boleh ditambahkan jika kamu mau.</p>
+      </div>
+      <button class="tombol-ikon" type="button" data-doc-form-close aria-label="Tutup"><ion-icon name="close-outline"></ion-icon></button>
+    </div>
+
+    <form class="dokumen-record-form" data-doc-form>
+      <div class="dokumen-field">
+        <label for="doc-name">Nama dokumen</label>
+        <input id="doc-name" class="input" data-doc-name maxlength="120" autocomplete="off" placeholder="Contoh: SIM A Eki" required>
+      </div>
+
+      <div class="dokumen-field">
+        <label for="doc-type">Jenis dokumen</label>
+        <input id="doc-type" class="input" data-doc-type list="doc-type-options" maxlength="80" autocomplete="off" placeholder="Pilih atau tulis jenis dokumen" required>
+        <datalist id="doc-type-options">
+          <option value="KTP"></option>
+          <option value="Kartu Keluarga"></option>
+          <option value="SIM"></option>
+          <option value="Paspor"></option>
+          <option value="STNK"></option>
+          <option value="BPKB"></option>
+          <option value="Sertifikat"></option>
+          <option value="PBB"></option>
+          <option value="Ijazah"></option>
+          <option value="Kartu BPJS"></option>
+          <option value="Dokumen kesehatan"></option>
+          <option value="Lainnya"></option>
+        </datalist>
+      </div>
+
+      <fieldset class="dokumen-field dokumen-scope-field">
+        <legend>Simpan di</legend>
+        <div class="dokumen-segmented">
+          <label><input type="radio" name="doc-scope" value="family" data-doc-scope-family checked><span>Keluarga</span></label>
+          <label><input type="radio" name="doc-scope" value="private" data-doc-scope-private><span>Pribadi</span></label>
+        </div>
+      </fieldset>
+
+      <label class="dokumen-expiry-toggle">
+        <span>
+          <strong>Punya tanggal berakhir</strong>
+          <small>Aktifkan untuk pengingat masa berlaku.</small>
+        </span>
+        <input type="checkbox" data-doc-expiry-toggle>
+      </label>
+
+      <div class="dokumen-expiry-fields" data-doc-expiry-fields hidden>
+        <div class="dokumen-field">
+          <label for="doc-expiry">Masa berlaku sampai</label>
+          <input id="doc-expiry" class="input" data-doc-expiry type="date">
+        </div>
+        <div class="dokumen-field">
+          <label for="doc-reminder">Pengingat</label>
+          <select id="doc-reminder" class="input" data-doc-reminder>
+            <option value="7">7 hari sebelumnya</option>
+            <option value="14">14 hari sebelumnya</option>
+            <option value="30" selected>30 hari sebelumnya</option>
+            <option value="60">60 hari sebelumnya</option>
+            <option value="90">90 hari sebelumnya</option>
+            <option value="">Tanpa pengingat</option>
+          </select>
+        </div>
+      </div>
+
+      <section class="dokumen-optional-attachment">
+        <div>
+          <strong>Lampiran <span>Opsional</span></strong>
+          <p>Tambahkan foto atau file jika ingin menyimpan salinan dokumen di RuangKitha.</p>
+        </div>
+        <button type="button" class="dokumen-attachment-picker" data-doc-form-pick-file>
+          <ion-icon name="attach-outline" aria-hidden="true"></ion-icon>
+          <span data-doc-form-file-label>Tambahkan foto atau file</span>
+        </button>
+        <input data-doc-form-file type="file" accept="image/*,.pdf,application/pdf" hidden>
+      </section>
+
+      <p class="dokumen-form-message" data-doc-form-message role="alert" hidden></p>
+      <button class="tombol-utama dokumen-save" type="submit" data-doc-save>Simpan</button>
+    </form>
+  </section>
+</div>
+
+<!-- Metadata detail stays accessible without PIN. -->
+<div class="lapisan dokumen-detail-layer" data-doc-detail-layer hidden>
+  <section class="bottom-sheet dokumen-detail-sheet" role="dialog" aria-modal="true" aria-labelledby="doc-detail-title">
+    <div class="sheet-handle"></div>
+    <div class="sheet-header dokumen-sheet-header">
+      <div class="dokumen-detail-heading">
+        <small data-doc-detail-scope>Dokumen</small>
+        <h2 id="doc-detail-title" data-doc-detail-title>Dokumen</h2>
+      </div>
+      <button class="tombol-ikon" type="button" data-doc-detail-close aria-label="Tutup"><ion-icon name="close-outline"></ion-icon></button>
+    </div>
+
+    <div class="dokumen-detail-body">
+      <section class="dokumen-detail-grid">
+        <div><span>Jenis dokumen</span><strong data-doc-detail-type>—</strong></div>
+        <div><span>Masa berlaku</span><strong data-doc-detail-expiry>—</strong></div>
+        <div><span>Pengingat</span><strong data-doc-detail-reminder>—</strong></div>
+      </section>
+
+      <section class="dokumen-detail-attention" data-doc-detail-attention hidden></section>
+
+      <section class="dokumen-attachment-section">
+        <div class="dokumen-section-title">
+          <div><strong>Lampiran</strong><span data-doc-attachment-summary>Opsional</span></div>
+          <button type="button" data-doc-detail-add-attachment hidden>+ Tambah</button>
+        </div>
+        <div class="dokumen-attachment-body" data-doc-attachment-body></div>
+        <input data-doc-detail-file type="file" accept="image/*,.pdf,application/pdf" hidden>
+      </section>
+
+      <div class="dokumen-detail-actions">
+        <button class="tombol-sekunder" type="button" data-doc-detail-edit hidden>Edit informasi</button>
+      </div>
+    </div>
+  </section>
+</div>
+
+<!-- PIN is contextual: only attachment operations call this sheet. -->
 <div class="lapisan dokumen-unlock-layer" data-doc-unlock-layer hidden>
   <section class="bottom-sheet dokumen-unlock-sheet" role="dialog" aria-modal="true" aria-labelledby="doc-unlock-title">
     <div class="sheet-handle"></div>
-    <div class="sheet-header">
+    <div class="sheet-header dokumen-sheet-header">
       <div>
-        <h2 id="doc-unlock-title">Buka Dokumen</h2>
-        <p class="sheet-subjudul">Masukkan PIN perangkat ini. PIN hanya diproses secara lokal.</p>
+        <h2 id="doc-unlock-title">Buka Security Vault</h2>
+        <p class="sheet-subjudul" data-doc-unlock-purpose>Lampiran dokumen dilindungi Security Vault.</p>
       </div>
       <button class="tombol-ikon" type="button" data-doc-unlock-close aria-label="Tutup"><ion-icon name="close-outline"></ion-icon></button>
     </div>
@@ -94,7 +219,7 @@
         <input class="input" id="doc-local-pin" data-doc-pin type="password" inputmode="numeric" pattern="[0-9]*" minlength="6" maxlength="12" autocomplete="current-password" required>
       </div>
       <p class="dokumen-sheet-message" data-doc-unlock-message role="alert" hidden></p>
-      <button class="tombol-utama" type="submit" data-doc-unlock-submit>Buka vault dokumen</button>
+      <button class="tombol-utama" type="submit" data-doc-unlock-submit>Buka Security Vault</button>
     </form>
   </section>
 </div>
@@ -109,9 +234,9 @@
 <script src="js/backend/auth-guard.js?v=20260912-v200a49d"></script>
 <script src="js/security/ruangkitha-crypto-core.js?v=20260912-v200a49"></script>
 <script src="js/security/ruangkitha-trusted-device.js?v=20260912-v200a49c"></script>
-<script src="js/security/ruangkitha-documents-crypto.js?v=20260912-v200a50"></script>
-<script src="js/backend/documents-service.js?v=20260912-v200a50"></script>
-<script src="js/pages/dokumen.js?v=20260912-v200a50"></script>
+<script src="js/security/ruangkitha-documents-crypto.js?v=20260912-v200a50a"></script>
+<script src="js/backend/documents-service.js?v=20260912-v200a50a"></script>
+<script src="js/pages/dokumen.js?v=20260912-v200a50a"></script>
 <script src="js/pwa.js?v=20260912-v200a49d"></script>
 </body>
 </html>

@@ -1,5 +1,5 @@
 /*
- * RuangKitha v2.0.0a50 — Encrypted Documents Crypto V1
+ * RuangKitha v2.0.0a50a — Encrypted Attachments Crypto V1 (a50-compatible)
  *
  * SECURITY CONTRACT
  * - File bytes and sensitive metadata are encrypted on-device before upload.
@@ -16,7 +16,8 @@
   if (!Crypto) throw new Error("RuangKithaCrypto wajib dimuat sebelum Documents Crypto.");
 
   const VERSION = 1;
-  const BUILD = "v2.0.0a50";
+  const BUILD = "v2.0.0a50a";
+  const LEGACY_BUILD = "v2.0.0a50";
   const FORMAT_MAGIC = "RKD1";
   const FORMAT_VERSION = 1;
   const HEADER_BYTES = 12;
@@ -200,9 +201,50 @@
     return { metadata, bytes };
   }
 
+
+  function buildAttachmentStoragePath(userId, documentId, attachmentId) {
+    return `${cleanUuid(userId, "User ID")}/${cleanUuid(documentId, "Document ID")}/${cleanUuid(attachmentId, "Attachment ID")}/content-v1.rkd`;
+  }
+
+  async function sealAttachment({ masterKey, attachmentId, fileBytes, metadata, contentRevision = 1, metadataRevision = 1 } = {}) {
+    const result = await sealDocument({
+      masterKey,
+      documentId: attachmentId,
+      fileBytes,
+      metadata,
+      contentRevision,
+      metadataRevision
+    });
+    return { ...result, attachmentId: result.documentId };
+  }
+
+  async function decryptAttachmentMetadata({ masterKey, attachmentId, metadataEnvelope, keyEnvelope, metadataRevision = 1 } = {}) {
+    return decryptMetadata({
+      masterKey,
+      documentId: attachmentId,
+      metadataEnvelope,
+      keyEnvelope,
+      metadataRevision
+    });
+  }
+
+  async function openAttachment({ masterKey, attachmentId, encryptedFile, metadataEnvelope, keyEnvelope, ciphertextSha256 = null, contentRevision = 1, metadataRevision = 1 } = {}) {
+    return openDocument({
+      masterKey,
+      documentId: attachmentId,
+      encryptedFile,
+      metadataEnvelope,
+      keyEnvelope,
+      ciphertextSha256,
+      contentRevision,
+      metadataRevision
+    });
+  }
+
   const api = Object.freeze({
     VERSION,
     BUILD,
+    LEGACY_BUILD,
     FORMAT_MAGIC,
     FORMAT_VERSION,
     MAX_FILE_BYTES,
@@ -210,12 +252,16 @@
     buildMetadataAad,
     buildKeyContext,
     buildStoragePath,
+    buildAttachmentStoragePath,
     packFileEnvelope,
     unpackFileEnvelope,
     sha256Base64Url,
     sealDocument,
     decryptMetadata,
-    openDocument
+    openDocument,
+    sealAttachment,
+    decryptAttachmentMetadata,
+    openAttachment
   });
 
   root.RuangKithaDocumentsCrypto = api;
