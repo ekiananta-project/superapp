@@ -1,4 +1,4 @@
-const CACHE_NAME = "ruangkitha-v2.0.0a48b1-home-wordmark-micro-patch";
+const CACHE_NAME = "ruangkitha-v2.0.0a48b2-today-palette-gesture-scope";
 const OFFLINE_URL = "./offline.html";
 
 const APP_FILES = [
@@ -105,6 +105,7 @@ const APP_FILES = [
   "./css/pages/finance-container.css",
   "./js/pages/superapp-home.js",
   "./js/pages/superapp-home-lottie.js",
+  "./js/pages/superapp-home-lottie-palette.js",
   "./assets/lottie/today-family.json",
   "./assets/lottie/catatan-empty-notes-light.lottie",
   "./assets/lottie/catatan-empty-notes-dark.lottie",

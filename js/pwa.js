@@ -1,8 +1,8 @@
 (() => {
   "use strict";
 
-  const RK_DESIGN_SYSTEM_VERSION = "1.0.2";
-  const RK_BUILD_VERSION = "v2.0.0a48b1";
+  const RK_DESIGN_SYSTEM_VERSION = "1.0.3";
+  const RK_BUILD_VERSION = "v2.0.0a48b2";
 
   function appBaseUrl() {
     try {
@@ -157,6 +157,63 @@
     );
   }
 
+  function setupStandaloneGestureScope() {
+    // Installed RuangKitha behaves like an app: normal page pinch-zoom is
+    // disabled, while the Catatan relation map keeps its own custom pointer
+    // pinch implementation. Browser mode remains zoomable for accessibility.
+    if (!isStandalone()) return;
+
+    document.documentElement.dataset.rkGestureScope = "standalone-app";
+
+    let viewport = document.querySelector('meta[name="viewport"]');
+    if (!viewport) {
+      viewport = document.createElement("meta");
+      viewport.name = "viewport";
+      document.head.prepend(viewport);
+    }
+    viewport.content = "width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover";
+
+    if (!document.getElementById("ruangkitha-gesture-scope-style")) {
+      const style = document.createElement("style");
+      style.id = "ruangkitha-gesture-scope-style";
+      style.textContent = `
+        html[data-rk-gesture-scope="standalone-app"],
+        html[data-rk-gesture-scope="standalone-app"] body {
+          touch-action: pan-x pan-y;
+        }
+        html[data-rk-gesture-scope="standalone-app"] [data-relation-map-viewport],
+        html[data-rk-gesture-scope="standalone-app"] .relation-map-viewport {
+          touch-action: none !important;
+        }
+      `;
+      document.head.appendChild(style);
+    }
+
+    const isRelationMapTarget = target => Boolean(
+      target?.closest?.("[data-relation-map-viewport], .relation-map-viewport")
+    );
+
+    // Android browsers can still start a native page zoom gesture before
+    // touch-action settles on some WebView/PWA builds. Cancel only multi-touch
+    // outside the relation map; one-finger scrolling stays untouched.
+    document.addEventListener("touchmove", event => {
+      if ((event.touches?.length || 0) < 2) return;
+      if (isRelationMapTarget(event.target)) return;
+      event.preventDefault();
+    }, { passive: false, capture: true });
+
+    // Safari-family gesture events must never zoom the document. The relation
+    // map does not rely on these events; it uses Pointer Events instead.
+    ["gesturestart", "gesturechange", "gestureend"].forEach(type => {
+      document.addEventListener(type, event => event.preventDefault(), {
+        passive: false,
+        capture: true
+      });
+    });
+  }
+
+  setupStandaloneGestureScope();
+
   async function install() {
     if (!deferredPrompt) return false;
 
@@ -190,7 +247,7 @@
   if ("serviceWorker" in navigator) {
     window.addEventListener("load", async () => {
       try {
-        const registration = await navigator.serviceWorker.register("./sw.js?v=20260912-v200a48b1", {
+        const registration = await navigator.serviceWorker.register("./sw.js?v=20260912-v200a48b2", {
           scope: "./"
         });
 
