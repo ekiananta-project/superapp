@@ -1,6 +1,6 @@
 /*
  * RuangKitha Security Foundation v1 — Trusted Device + Local Unlock
- * Build: v2.0.0a49a1a
+ * Build: v2.0.0a49b
  *
  * SECURITY CONTRACT
  * - Depends on ruangkitha-crypto-core.js (a49). Do not weaken/replace that core here.
@@ -28,7 +28,7 @@
   const subtle = webcrypto && webcrypto.subtle;
 
   const VERSION = 1;
-  const BUILD = "v2.0.0a49a1a";
+  const BUILD = "v2.0.0a49b";
   const DEVICE_ALGORITHM = "ECDH-P256";
   const PIN_KDF = "PBKDF2-HMAC-SHA256";
   const PIN_ITERATIONS = 600000;
@@ -225,6 +225,102 @@
     }
   }
 
+  async function createDeviceBundleForMaster({ userId, pin, deviceLabel, autoLockMinutes = DEFAULT_AUTO_LOCK_MINUTES, masterKey } = {}) {
+    assertCore();
+    const uid = validateUserId(userId);
+    const label = validateDeviceLabel(deviceLabel);
+    validatePin(pin);
+    const lockMinutes = normalizeAutoLockMinutes(autoLockMinutes);
+    if (!masterKey || masterKey.type !== "secret" || masterKey.extractable !== true) {
+      throw new Error("Master Key recovery harus sementara extractable untuk membuat envelope perangkat baru.");
+    }
+
+    const deviceInstanceId = randomUuid();
+    const identity = await generateDeviceIdentity();
+    const anchorKey = await Crypto.generateAesKey({ extractable: false });
+    const unlockKey = await Crypto.generateAesKey({ extractable: true });
+    const pinSalt = Crypto.randomBytes(PIN_SALT_BYTES);
+    let rawUnlock;
+
+    try {
+      const context = masterWrapContext(uid, deviceInstanceId, identity.fingerprint);
+      const wrappedMaster = await Crypto.wrapAesKey(unlockKey, masterKey, { context });
+      const deviceKeyEnvelope = {
+        v: VERSION,
+        suite: Crypto.SUITE,
+        kind: "device-master-key",
+        context,
+        public_key_fingerprint: identity.fingerprint,
+        wrapped: wrappedMaster
+      };
+
+      const pinKey = await derivePinKek(pin, pinSalt, PIN_ITERATIONS);
+      rawUnlock = await Crypto.exportRawKey(unlockKey);
+      const pinWrappedUnlockKey = await Crypto.encryptBytes(pinKey, rawUnlock, {
+        aad: pinAad(uid, deviceInstanceId, identity.fingerprint)
+      });
+
+      const localPayload = {
+        v: VERSION,
+        kind: "local-unlock-bundle",
+        pin_kdf: {
+          name: PIN_KDF,
+          iterations: PIN_ITERATIONS,
+          salt: Crypto.bytesToBase64Url(pinSalt)
+        },
+        pin_wrapped_unlock_key: pinWrappedUnlockKey,
+        public_key_fingerprint: identity.fingerprint,
+        created_at: nowIso()
+      };
+      const localSeal = await Crypto.encryptJson(anchorKey, localPayload, {
+        aad: localSealAad(uid, deviceInstanceId)
+      });
+
+      const runtimeMasterKey = await Crypto.hardenRuntimeKey(masterKey);
+      const localRecord = {
+        record_key: uid,
+        version: VERSION,
+        build: BUILD,
+        phase: PENDING_PHASE,
+        user_id: uid,
+        vault_id: null,
+        device_id: null,
+        device_instance_id: deviceInstanceId,
+        device_label: label,
+        public_key_algorithm: DEVICE_ALGORITHM,
+        public_key: identity.publicJwk,
+        public_key_fingerprint: identity.fingerprint,
+        identity_private_key: identity.privateKey,
+        anchor_key: anchorKey,
+        local_seal: localSeal,
+        cached_device_key_envelope: deviceKeyEnvelope,
+        pending_recovery_envelope: null,
+        auto_lock_minutes: lockMinutes,
+        failed_attempts: 0,
+        locked_until_ms: 0,
+        created_at: nowIso(),
+        updated_at: nowIso()
+      };
+
+      return {
+        localRecord,
+        runtimeMasterKey,
+        deviceRpc: {
+          p_device_label: label,
+          p_device_public_key_algorithm: DEVICE_ALGORITHM,
+          p_device_public_key: identity.publicJwk,
+          p_device_public_key_fingerprint: identity.fingerprint,
+          p_device_client_id: deviceInstanceId,
+          p_device_key_envelope: deviceKeyEnvelope,
+          p_key_suite: Crypto.SUITE
+        }
+      };
+    } finally {
+      if (rawUnlock) Crypto.zeroize(rawUnlock);
+      Crypto.zeroize(pinSalt);
+    }
+  }
+
   async function createBootstrapBundle({ userId, pin, deviceLabel, autoLockMinutes = DEFAULT_AUTO_LOCK_MINUTES } = {}) {
     assertCore();
     const uid = validateUserId(userId);
@@ -324,7 +420,7 @@
     }
   }
 
-  async function unlockFromRecord({ userId, pin, record, deviceKeyEnvelope = null } = {}) {
+  async function unlockFromRecord({ userId, pin, record, deviceKeyEnvelope = null, extractable = false } = {}) {
     assertCore();
     const uid = validateUserId(userId);
     validatePin(pin);
@@ -373,7 +469,7 @@
       }
       return Crypto.unwrapAesKey(unlockKey, envelope.wrapped, {
         context: expectedContext,
-        extractable: false
+        extractable: Boolean(extractable)
       });
     } finally {
       Crypto.zeroize(salt);
@@ -793,6 +889,149 @@
     };
   }
 
+  async function withExtractableMasterKeyFromPin({ supabase, pin, callback } = {}) {
+    if (typeof callback !== "function") throw new TypeError("callback wajib berupa function.");
+    const userId = await currentUserId(supabase);
+    const record = await getLocalRecord(userId);
+    if (!record || record.phase !== READY_PHASE) {
+      const error = new Error("Trusted Device lokal yang siap diperlukan.");
+      error.code = "LOCAL_DEVICE_NOT_READY";
+      throw error;
+    }
+
+    assertNotThrottled(record);
+    const material = await rpc(supabase, "security_local_unlock_material_v1", {
+      p_device_client_id: record.device_instance_id
+    });
+    if (!material || !material.found || material.trust_state !== "trusted" || !material.device_key_envelope) {
+      const error = new Error("Trusted Device ini sudah tidak aktif atau material unlock tidak tersedia.");
+      error.code = "DEVICE_NOT_TRUSTED";
+      throw error;
+    }
+
+    let masterKey;
+    try {
+      masterKey = await unlockFromRecord({
+        userId,
+        pin,
+        record,
+        deviceKeyEnvelope: material.device_key_envelope,
+        extractable: true
+      });
+    } catch (error) {
+      if (error && error.code === "LOCAL_UNLOCK_FAILED") {
+        const throttle = await noteUnlockFailure(record);
+        error.failedAttempts = throttle.attempts;
+        error.retryAfterMs = throttle.retryAfterMs;
+      }
+      throw error;
+    }
+
+    await clearUnlockFailures(record);
+    if (record.device_id) rpc(supabase, "security_touch_device_v1", { p_device_id: record.device_id }).catch(() => {});
+    return callback(masterKey, {
+      userId,
+      vaultId: material.vault_id || record.vault_id,
+      deviceId: material.device_id || record.device_id,
+      deviceInstanceId: record.device_instance_id
+    });
+  }
+
+  async function recoverDeviceWithMaster({
+    supabase,
+    pin,
+    deviceLabel,
+    autoLockMinutes = DEFAULT_AUTO_LOCK_MINUTES,
+    masterKey,
+    recoveryEnvelopeId,
+    masterProofSha256
+  } = {}) {
+    const capabilities = await checkCapabilities({ deep: true });
+    if (!capabilities.supported) {
+      const error = new Error(`Browser/perangkat belum mendukung Security Vault: ${capabilities.reasons.join(" ")}`);
+      error.code = "SECURITY_CAPABILITY_UNSUPPORTED";
+      throw error;
+    }
+    if (!masterKey || masterKey.type !== "secret" || masterKey.extractable !== true) {
+      throw new Error("Master Key hasil recovery harus sementara extractable.");
+    }
+    if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(String(recoveryEnvelopeId || ""))) {
+      throw new Error("Recovery envelope ID tidak valid.");
+    }
+    if (!/^[A-Za-z0-9_-]{43}$/.test(String(masterProofSha256 || ""))) {
+      throw new Error("Master proof recovery tidak valid.");
+    }
+
+    const userId = await currentUserId(supabase);
+    let existing = await getLocalRecord(userId);
+    if (existing) {
+      if (existing.phase === READY_PHASE) {
+        throw new Error("Perangkat ini sudah menjadi Trusted Device.");
+      }
+      if (existing.phase === PENDING_PHASE) {
+        try {
+          const resumed = await resumePendingSetup(supabase, existing);
+          if (resumed) return unlockWithPin({ supabase, pin });
+        } catch (_) {
+          // If the server did not commit the recovered device, regenerate a fresh local bundle below.
+        }
+        await deleteLocalRecord(userId);
+        existing = null;
+      }
+    }
+
+    const state = await rpc(supabase, "security_vault_state_v1");
+    if (!state || !state.configured || !state.recovery_ready) {
+      const error = new Error("Recovery Kit aktif belum tersedia untuk akun ini.");
+      error.code = "RECOVERY_NOT_READY";
+      throw error;
+    }
+
+    const bundle = await createDeviceBundleForMaster({
+      userId,
+      pin,
+      deviceLabel,
+      autoLockMinutes,
+      masterKey
+    });
+    existing = bundle.localRecord;
+    await putLocalRecord(existing);
+
+    let result;
+    try {
+      result = await rpc(supabase, "security_recover_device_v1", {
+        p_recovery_envelope_id: recoveryEnvelopeId,
+        p_master_proof_sha256: masterProofSha256,
+        ...bundle.deviceRpc
+      });
+    } catch (error) {
+      try {
+        const resumed = await resumePendingSetup(supabase, existing);
+        if (resumed) result = resumed;
+      } catch (_) {
+        // Preserve pending local material after an ambiguous network result.
+      }
+      if (!result) throw error;
+    }
+
+    existing.vault_id = result.vault_id;
+    existing.device_id = result.device_id;
+    existing.phase = READY_PHASE;
+    existing.cached_device_key_envelope = bundle.deviceRpc.p_device_key_envelope;
+    await putLocalRecord(existing);
+    setRuntimeSession(userId, bundle.runtimeMasterKey, existing.auto_lock_minutes);
+
+    return {
+      recovered: true,
+      unlocked: true,
+      vaultId: existing.vault_id,
+      deviceId: existing.device_id,
+      deviceInstanceId: existing.device_instance_id,
+      deviceLabel: existing.device_label,
+      autoLockMinutes: existing.auto_lock_minutes
+    };
+  }
+
   async function localDeviceStatus({ supabase } = {}) {
     const userId = await currentUserId(supabase);
     const record = await getLocalRecord(userId);
@@ -848,6 +1087,8 @@
     suggestDeviceLabel,
     setupFirstVault,
     unlockWithPin,
+    withExtractableMasterKeyFromPin,
+    recoverDeviceWithMaster,
     localDeviceStatus,
     updateAutoLock,
     isUnlocked,
@@ -864,6 +1105,7 @@
       generateDeviceIdentity,
       publicKeyFingerprint,
       createBootstrapBundle,
+      createDeviceBundleForMaster,
       unlockFromRecord,
       throttleDelayMs,
       masterWrapContext

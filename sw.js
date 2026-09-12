@@ -1,4 +1,4 @@
-const CACHE_NAME = "ruangkitha-v2.0.0a49a1a-autolock-ui-sync-hotfix";
+const CACHE_NAME = "ruangkitha-v2.0.0a49b-recovery-kit-v1";
 const OFFLINE_URL = "./offline.html";
 
 const APP_FILES = [
@@ -166,6 +166,8 @@ const APP_FILES = [
   "./js/security/ruangkitha-crypto-core.js",
   "./js/security/ruangkitha-trusted-device.js",
   "./js/security/ruangkitha-security-setup-ui.js",
+  "./js/security/ruangkitha-recovery-kit.js",
+  "./js/security/ruangkitha-recovery-ui.js",
   "./js/pages/keamanan.js",
   "./js/pages/keluarga-awal.js",
   "./js/pages/keluarga.js",

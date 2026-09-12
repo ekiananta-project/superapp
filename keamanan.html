@@ -93,6 +93,18 @@
       </div>
     </section>
 
+    <section class="security-recovery-card" data-recovery-card hidden>
+      <div class="security-recovery-card-icon">
+        <ion-icon name="key-outline"></ion-icon>
+      </div>
+      <div class="security-recovery-card-copy">
+        <span class="security-vault-eyebrow">Recovery Kit V1</span>
+        <strong data-recovery-card-title>Recovery Kit belum dibuat</strong>
+        <p data-recovery-card-copy>Buat Recovery Kit agar vault dapat dipulihkan bila semua Trusted Device hilang.</p>
+      </div>
+      <button class="tombol-sekunder security-recovery-card-action" type="button" data-recovery-manage>Buat</button>
+    </section>
+
     <h2 class="judul-grup">Perangkat Ini</h2>
 
     <section class="kartu-sesi">
@@ -128,8 +140,8 @@
       <ion-icon name="devices-outline"></ion-icon>
       <strong>Pengelolaan perangkat berikutnya</strong>
       <p>
-        a49a mengaktifkan Trusted Device pertama dan local unlock. Penambahan perangkat baru,
-        Recovery Kit, dan pencabutan trust lengkap dilanjutkan pada tahap security berikutnya.
+        Recovery Kit V1 dapat memulihkan browser baru sebagai Trusted Device. Daftar perangkat,
+        approval antar perangkat, dan pencabutan trust lengkap dilanjutkan pada a49c.
       </p>
     </section>
 
@@ -153,8 +165,8 @@
     <section class="catatan-keamanan-backend">
       <ion-icon name="information-circle-outline"></ion-icon>
       <p>
-        Recovery Kit belum final pada a49a. Jangan gunakan Security Vault untuk satu-satunya salinan
-        data terenkripsi penting sampai Recovery Kit V1 tersedia.
+        Simpan Recovery Kit di tempat pribadi yang aman. RuangKitha tidak menyimpan Recovery Code
+        dan tidak dapat menampilkannya kembali. Jika kit hilang tetapi Trusted Device masih ada, buat kit pengganti.
       </p>
     </section>
 
@@ -210,9 +222,11 @@
 <script>window.AUTH_BACKEND_MODE = true;</script>
 <script src="js/app.js"></script>
 <script src="js/security/ruangkitha-crypto-core.js?v=20260912-v200a49"></script>
-<script src="js/security/ruangkitha-trusted-device.js?v=20260912-v200a49a1a"></script>
-<script src="js/security/ruangkitha-security-setup-ui.js?v=20260912-v200a49a1a"></script>
-<script src="js/pages/keamanan.js?v=20260912-v200a49a1a"></script>
-<script src="js/pwa.js?v=20260912-v200a49a1a"></script>
+<script src="js/security/ruangkitha-trusted-device.js?v=20260912-v200a49b"></script>
+<script src="js/security/ruangkitha-security-setup-ui.js?v=20260912-v200a49b"></script>
+<script src="js/security/ruangkitha-recovery-kit.js?v=20260912-v200a49b"></script>
+<script src="js/security/ruangkitha-recovery-ui.js?v=20260912-v200a49b"></script>
+<script src="js/pages/keamanan.js?v=20260912-v200a49b"></script>
+<script src="js/pwa.js?v=20260912-v200a49b"></script>
 </body>
 </html>

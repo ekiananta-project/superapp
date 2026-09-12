@@ -4,6 +4,8 @@
   const client = window.supabaseClient;
   const Trusted = window.RuangKithaTrustedDevice;
   const SetupUI = window.RuangKithaSecuritySetupUI;
+  const Recovery = window.RuangKithaRecoveryKit;
+  const RecoveryUI = window.RuangKithaRecoveryUI;
 
   const els = {
     nama: document.querySelector("[data-nama-perangkat]"),
@@ -27,7 +29,11 @@
     unlockForm: document.querySelector("[data-security-unlock-form]"),
     unlockPin: document.querySelector("[data-security-unlock-pin]"),
     unlockMessage: document.querySelector("[data-security-unlock-message]"),
-    unlockSubmit: document.querySelector("[data-security-unlock-submit]")
+    unlockSubmit: document.querySelector("[data-security-unlock-submit]"),
+    recoveryCard: document.querySelector("[data-recovery-card]"),
+    recoveryCardTitle: document.querySelector("[data-recovery-card-title]"),
+    recoveryCardCopy: document.querySelector("[data-recovery-card-copy]"),
+    recoveryManage: document.querySelector("[data-recovery-manage]")
   };
 
   let current = {
@@ -86,7 +92,7 @@
   function formatRecovery(state) {
     if (!state || !state.configured) return "Belum dibuat";
     if (state.recovery_ready) return "Siap";
-    if (state.recovery_state === "provisional") return "Belum siap (a49b)";
+    if (state.recovery_state === "provisional") return "Belum dibuat";
     if (state.recovery_state === "missing") return "Belum tersedia";
     return "Belum siap";
   }
@@ -134,6 +140,7 @@
     }
     if (els.lock) els.lock.hidden = true;
     if (els.autoLock) els.autoLock.hidden = true;
+    if (els.recoveryCard) els.recoveryCard.hidden = true;
     setVaultMessage();
   }
 
@@ -153,6 +160,7 @@
     }
     if (els.lock) els.lock.hidden = true;
     if (els.autoLock) els.autoLock.hidden = true;
+    if (els.recoveryCard) els.recoveryCard.hidden = true;
     setVaultMessage(message, "error");
     if (els.deviceDetail) els.deviceDetail.textContent = "Status Security Vault belum tersedia";
     if (els.deviceBadge) {
@@ -169,6 +177,22 @@
 
     if (els.trustedCount) els.trustedCount.textContent = state.configured ? String(state.trusted_device_count ?? 0) : "0";
     if (els.recoveryStatus) els.recoveryStatus.textContent = formatRecovery(state);
+
+    if (els.recoveryCard) {
+      const canManageRecovery = Boolean(state.configured && local.ready);
+      els.recoveryCard.hidden = !canManageRecovery;
+      if (canManageRecovery) {
+        if (state.recovery_ready) {
+          if (els.recoveryCardTitle) els.recoveryCardTitle.textContent = "Recovery Kit aktif";
+          if (els.recoveryCardCopy) els.recoveryCardCopy.textContent = "Kode lama tidak disimpan oleh RuangKitha. Jika kit hilang, buat kit pengganti dari Trusted Device ini.";
+          if (els.recoveryManage) { els.recoveryManage.textContent = "Ganti"; els.recoveryManage.dataset.action = "rotate-recovery"; }
+        } else {
+          if (els.recoveryCardTitle) els.recoveryCardTitle.textContent = "Recovery Kit belum dibuat";
+          if (els.recoveryCardCopy) els.recoveryCardCopy.textContent = "Buat Recovery Kit agar vault dapat dipulihkan bila semua Trusted Device hilang.";
+          if (els.recoveryManage) { els.recoveryManage.textContent = "Buat"; els.recoveryManage.dataset.action = "create-recovery"; }
+        }
+      }
+    }
 
     if (local.ready) {
       if (els.localStatus) els.localStatus.textContent = local.unlocked ? "Terbuka" : "Terkunci";
@@ -240,13 +264,15 @@
     } else {
       if (els.vaultHeading) els.vaultHeading.textContent = "Security Vault sudah aktif";
       if (els.vaultCopy) {
-        els.vaultCopy.textContent = "Vault akun ini sudah memiliki Trusted Device, tetapi browser ini belum dipercaya. Penambahan perangkat baru membutuhkan Recovery / Device Trust flow pada tahap security berikutnya.";
+        els.vaultCopy.textContent = state.recovery_ready
+          ? "Browser ini belum menjadi Trusted Device. Gunakan Recovery Kit untuk memulihkan Master Key dan membuat PIN lokal baru pada perangkat ini."
+          : "Browser ini belum dipercaya dan akun belum memiliki Recovery Kit aktif. Gunakan Trusted Device lama untuk membuat Recovery Kit terlebih dahulu.";
       }
       setVaultBadge("Aktif", "trusted");
       if (els.primary) {
-        els.primary.disabled = true;
-        els.primary.textContent = "Butuh Recovery / Device Trust";
-        els.primary.dataset.action = "";
+        els.primary.disabled = !state.recovery_ready || !caps.supported;
+        els.primary.textContent = state.recovery_ready ? "Pulihkan perangkat ini" : "Recovery Kit belum tersedia";
+        els.primary.dataset.action = state.recovery_ready && caps.supported ? "recover" : "";
       }
       if (els.lock) els.lock.hidden = true;
     }
@@ -301,7 +327,40 @@
     const action = els.primary?.dataset.action;
     if (action === "setup") return openSetup();
     if (action === "unlock") return openUnlock();
+    if (action === "recover") return openRecoveryDevice();
     if (action === "refresh") return refreshStatus();
+  }
+
+  function openRecoveryDevice() {
+    if (!RecoveryUI || typeof RecoveryUI.openRecover !== "function") {
+      setVaultMessage("Recovery Kit UI belum tersedia.", "error");
+      return;
+    }
+    RecoveryUI.openRecover({
+      supabase: client,
+      onSuccess: async () => {
+        setVaultMessage("Perangkat ini berhasil dipulihkan dan menjadi Trusted Device.", "success");
+        await refreshStatus({ quiet: true });
+      },
+      onClose: () => refreshStatus({ quiet: true })
+    });
+  }
+
+  function openRecoveryManage() {
+    if (!RecoveryUI || typeof RecoveryUI.openGenerate !== "function") {
+      setVaultMessage("Recovery Kit UI belum tersedia.", "error");
+      return;
+    }
+    const rotating = current.state?.recovery_ready === true;
+    RecoveryUI.openGenerate({
+      supabase: client,
+      rotating,
+      onSuccess: async () => {
+        setVaultMessage(rotating ? "Recovery Kit berhasil diganti." : "Recovery Kit berhasil diaktifkan.", "success");
+        await refreshStatus({ quiet: true });
+      },
+      onClose: () => refreshStatus({ quiet: true })
+    });
   }
 
   async function handleLock() {
@@ -391,6 +450,7 @@
     els.unlockForm?.addEventListener("submit", handleUnlockSubmit);
     els.unlockClose?.addEventListener("click", closeUnlock);
     els.autoLockSelect?.addEventListener("change", handleAutoLockChange);
+    els.recoveryManage?.addEventListener("click", openRecoveryManage);
     els.unlockLayer?.addEventListener("click", (event) => {
       if (event.target === els.unlockLayer) closeUnlock();
     });
@@ -407,8 +467,8 @@
     setDeviceIdentity();
     bindEvents();
 
-    if (!client || !Trusted) {
-      renderError(new Error("Security Foundation belum dimuat lengkap."));
+    if (!client || !Trusted || !Recovery || !RecoveryUI) {
+      renderError(new Error("Security Foundation / Recovery Kit belum dimuat lengkap."));
       return;
     }
 

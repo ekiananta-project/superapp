@@ -1,5 +1,5 @@
 /*
- * RuangKitha v2.0.0a49a1 — Security Vault first-device setup UI
+ * RuangKitha v2.0.0a49b — Security Vault first-device setup UI
  * Optional, self-contained UI adapter around RuangKithaTrustedDevice.
  * Nothing opens automatically. Call RuangKithaSecuritySetupUI.open({ supabase }).
  */
@@ -102,7 +102,7 @@
     form.append(el("label", { class: "rksec-label" }, "Kunci otomatis setelah tidak aktif"), autoLock);
 
     const warning = el("div", { class: "rksec-card" });
-    warning.append(el("p", { class: "rksec-small" }, "Recovery Kit belum dibuat pada a49a. Sampai a49b dipasang, jangan bergantung pada perangkat ini sebagai satu-satunya tempat untuk data terenkripsi penting."));
+    warning.append(el("p", { class: "rksec-small" }, "Setelah Trusted Device pertama aktif, buat Recovery Kit dari halaman Perangkat & Sesi agar vault tetap dapat dipulihkan bila perangkat hilang."));
     form.append(warning);
 
     const errorBox = el("div", { class: "rksec-error", role: "alert", "data-show": "false" });
@@ -173,7 +173,7 @@
         title.textContent = "Perangkat sudah tepercaya";
         const done = el("div", { class: "rksec-card" });
         done.append(el("p", { class: "rksec-success" }, "Security Vault aktif di perangkat ini."));
-        done.append(el("p", { class: "rksec-small" }, `Vault akan terkunci otomatis setelah ${result.autoLockMinutes} menit tanpa aktivitas. Recovery Kit akan dilengkapi pada a49b.`));
+        done.append(el("p", { class: "rksec-small" }, `Vault akan terkunci otomatis setelah ${result.autoLockMinutes} menit tanpa aktivitas. Setelah menutup sheet ini, lanjutkan dengan membuat Recovery Kit pada halaman Perangkat & Sesi.`));
         const doneBtn = el("button", { class: "rksec-btn rksec-primary", type: "button" }, "Selesai");
         doneBtn.style.width = "100%";
         doneBtn.style.marginTop = "14px";
