@@ -1,4 +1,4 @@
-const CACHE_NAME = "ruangkitha-v2.0.0a48e-identity-final-consistency-design-system-v1";
+const CACHE_NAME = "ruangkitha-v2.0.0a48e1-identity-ux-polish-design-system-v1";
 const OFFLINE_URL = "./offline.html";
 
 const APP_FILES = [

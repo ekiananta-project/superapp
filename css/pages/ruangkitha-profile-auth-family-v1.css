@@ -943,3 +943,131 @@ html[data-theme="dark"][data-rk-module="identity"] .header-halaman {
     box-shadow: var(--rk-shadow-md);
   }
 }
+
+
+/* ======================================================================
+   v2.0.0a48e1 — Identity UX Polish
+   - Login eyebrow removed to avoid "Akun keluarga" misinterpretation.
+   - Profile setting icon tiles reduced for better visual proportion.
+   - Native browser logout confirm replaced by RuangKitha modal.
+   ====================================================================== */
+html[data-rk-identity-page="login"] .auth-heading .auth-eyebrow {
+  display: none !important;
+}
+
+html[data-rk-identity-page="login"] .auth-heading h1 {
+  margin-top: 0;
+}
+
+html[data-rk-identity-kind="profile"] .item-pengaturan {
+  min-height: 56px;
+}
+
+html[data-rk-identity-kind="profile"] .item-pengaturan > ion-icon:first-child {
+  width: 30px;
+  height: 30px;
+  padding: 6px;
+  border-radius: 9px;
+  font-size: 18px;
+}
+
+html.rk-modal-open,
+html.rk-modal-open body {
+  overflow: hidden;
+}
+
+.rk-logout-modal-layer[hidden] {
+  display: none !important;
+}
+
+.rk-logout-modal-layer {
+  position: fixed;
+  inset: 0;
+  z-index: 100200;
+  display: grid;
+  place-items: center;
+  box-sizing: border-box;
+  padding: 22px;
+  background: rgba(12, 18, 14, .52);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+
+.rk-logout-modal-card {
+  width: min(100%, 360px);
+  box-sizing: border-box;
+  padding: 22px;
+  border: 1px solid var(--rk-border);
+  border-radius: 24px;
+  background: var(--rk-surface);
+  color: var(--rk-text);
+  box-shadow: var(--rk-shadow-float);
+  font-family: var(--rk-font-family, Manrope, system-ui, sans-serif);
+}
+
+.rk-logout-modal-icon {
+  width: 44px;
+  height: 44px;
+  display: grid;
+  place-items: center;
+  margin-bottom: 16px;
+  border-radius: 14px;
+  background: var(--rk-primary-soft);
+  color: var(--rk-primary);
+}
+
+.rk-logout-modal-icon ion-icon {
+  font-size: 23px;
+}
+
+.rk-logout-modal-card h2 {
+  margin: 0;
+  color: var(--rk-text);
+  font-size: 20px;
+  line-height: 1.25;
+  letter-spacing: -.025em;
+}
+
+.rk-logout-modal-card p {
+  margin: 9px 0 0;
+  color: var(--rk-text-secondary);
+  font-size: 13px;
+  line-height: 1.58;
+}
+
+.rk-logout-modal-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-top: 22px;
+}
+
+.rk-logout-modal-actions button {
+  min-height: 46px;
+  border-radius: 14px;
+  font: 700 13px/1 var(--rk-font-family, Manrope, system-ui, sans-serif);
+  cursor: pointer;
+}
+
+.rk-logout-modal-cancel {
+  border: 1px solid var(--rk-border);
+  background: var(--rk-surface-soft);
+  color: var(--rk-text);
+}
+
+.rk-logout-modal-confirm {
+  border: 1px solid transparent;
+  background: var(--rk-primary);
+  color: var(--rk-on-primary);
+  box-shadow: 0 8px 20px color-mix(in srgb, var(--rk-primary) 20%, transparent);
+}
+
+.rk-logout-modal-actions button:focus-visible {
+  outline: none;
+  box-shadow: var(--rk-focus-ring);
+}
+
+.rk-logout-modal-actions button:disabled {
+  opacity: .65;
+  cursor: wait;
+}

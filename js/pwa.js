@@ -1,8 +1,8 @@
 (() => {
   "use strict";
 
-  const RK_DESIGN_SYSTEM_VERSION = "1.0.6";
-  const RK_BUILD_VERSION = "v2.0.0a48e";
+  const RK_DESIGN_SYSTEM_VERSION = "1.0.7";
+  const RK_BUILD_VERSION = "v2.0.0a48e1";
 
   function appBaseUrl() {
     try {
@@ -157,7 +157,7 @@
       if (!document.querySelector('link[data-ruangkitha-identity]')) {
         const identity = document.createElement("link");
         identity.rel = "stylesheet";
-        identity.dataset.ruangkithaIdentity = "1.0.0";
+        identity.dataset.ruangkithaIdentity = "1.0.1";
         identity.href = new URL(
           `css/pages/ruangkitha-profile-auth-family-v1.css?v=${RK_BUILD_VERSION}`,
           appBaseUrl()
@@ -193,10 +193,134 @@
         const label = row.querySelector("span");
         const value = row.querySelector("small");
         if (label?.textContent?.trim() === "Versi" && value) {
-          value.textContent = "2.0.0a48e PWA";
+          value.textContent = "2.0.0a48e1 PWA";
         }
       });
     }
+  }
+
+  let rkLogoutNativePass = false;
+  let rkLogoutSourceControl = null;
+  let rkLogoutPreviousFocus = null;
+
+  function findProfileLogoutControl(target) {
+    if (document.documentElement.dataset.rkIdentityKind !== "profile") return null;
+    if (!(target instanceof Element)) return null;
+
+    const control = target.closest(
+      "button, a, .item-pengaturan-tombol, .tautan-pengaturan, .item-pengaturan"
+    );
+    if (!control) return null;
+
+    const text = String(control.textContent || "")
+      .replace(/\s+/g, " ")
+      .trim()
+      .toLowerCase();
+
+    const isLogout = /(^|\s)keluar(\s|$)/i.test(text);
+    const isThisDevice = text.includes("perangkat ini");
+    return isLogout && isThisDevice ? control : null;
+  }
+
+  function ensureProfileLogoutModal() {
+    let layer = document.querySelector("[data-rk-logout-modal]");
+    if (layer) return layer;
+
+    layer = document.createElement("div");
+    layer.className = "rk-logout-modal-layer";
+    layer.dataset.rkLogoutModal = "";
+    layer.hidden = true;
+    layer.innerHTML = `
+      <section class="rk-logout-modal-card" role="dialog" aria-modal="true" aria-labelledby="rk-logout-title" aria-describedby="rk-logout-copy">
+        <span class="rk-logout-modal-icon" aria-hidden="true"><ion-icon name="log-out-outline"></ion-icon></span>
+        <h2 id="rk-logout-title">Keluar dari RuangKitha?</h2>
+        <p id="rk-logout-copy">Kamu akan keluar dari akun pada perangkat ini. Perangkat lain tetap masuk.</p>
+        <div class="rk-logout-modal-actions">
+          <button type="button" class="rk-logout-modal-cancel" data-rk-logout-cancel>Batal</button>
+          <button type="button" class="rk-logout-modal-confirm" data-rk-logout-confirm>Keluar</button>
+        </div>
+      </section>`;
+
+    const close = () => {
+      layer.hidden = true;
+      document.documentElement.classList.remove("rk-modal-open");
+      rkLogoutSourceControl = null;
+      const focusBack = rkLogoutPreviousFocus;
+      rkLogoutPreviousFocus = null;
+      if (focusBack instanceof HTMLElement && focusBack.isConnected) {
+        focusBack.focus({ preventScroll: true });
+      }
+    };
+
+    layer.querySelector("[data-rk-logout-cancel]")?.addEventListener("click", close);
+    layer.addEventListener("click", event => {
+      if (event.target === layer) close();
+    });
+
+    layer.querySelector("[data-rk-logout-confirm]")?.addEventListener("click", () => {
+      const source = rkLogoutSourceControl;
+      if (!source) return close();
+
+      const confirmButton = layer.querySelector("[data-rk-logout-confirm]");
+      if (confirmButton) {
+        confirmButton.disabled = true;
+        confirmButton.textContent = "Keluar…";
+      }
+
+      layer.hidden = true;
+      document.documentElement.classList.remove("rk-modal-open");
+
+      const nativeConfirm = window.confirm;
+      rkLogoutNativePass = true;
+      window.confirm = message => {
+        const text = String(message || "");
+        if (/keluar.*akun.*perangkat|keluar.*perangkat/i.test(text)) return true;
+        return nativeConfirm.call(window, message);
+      };
+
+      try {
+        source.click();
+      } finally {
+        window.confirm = nativeConfirm;
+        rkLogoutNativePass = false;
+        rkLogoutSourceControl = null;
+        rkLogoutPreviousFocus = null;
+        if (confirmButton) {
+          confirmButton.disabled = false;
+          confirmButton.textContent = "Keluar";
+        }
+      }
+    });
+
+    document.addEventListener("keydown", event => {
+      if (event.key === "Escape" && !layer.hidden) close();
+    });
+
+    document.body.appendChild(layer);
+    return layer;
+  }
+
+  function installProfileLogoutModalGuard() {
+    if (document.documentElement.dataset.rkIdentityKind !== "profile") return;
+
+    document.addEventListener("click", event => {
+      if (rkLogoutNativePass) return;
+      const control = findProfileLogoutControl(event.target);
+      if (!control) return;
+
+      event.preventDefault();
+      event.stopPropagation();
+      event.stopImmediatePropagation();
+
+      rkLogoutSourceControl = control;
+      rkLogoutPreviousFocus = document.activeElement;
+      const layer = ensureProfileLogoutModal();
+      layer.hidden = false;
+      document.documentElement.classList.add("rk-modal-open");
+      requestAnimationFrame(() => {
+        layer.querySelector("[data-rk-logout-cancel]")?.focus({ preventScroll: true });
+      });
+    }, true);
   }
 
   function syncBrowserThemeColor() {
@@ -214,6 +338,7 @@
   ensureDesignSystem();
   ensureModuleDesignLayer();
   enhanceIdentityBrandCopy();
+  installProfileLogoutModalGuard();
   syncBrowserThemeColor();
 
   new MutationObserver(syncBrowserThemeColor).observe(document.documentElement, {
@@ -364,7 +489,7 @@
   if ("serviceWorker" in navigator) {
     window.addEventListener("load", async () => {
       try {
-        const registration = await navigator.serviceWorker.register("./sw.js?v=20260912-v200a48e", {
+        const registration = await navigator.serviceWorker.register("./sw.js?v=20260912-v200a48e1", {
           scope: "./"
         });
 
