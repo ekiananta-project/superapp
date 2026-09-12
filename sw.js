@@ -1,4 +1,4 @@
-const CACHE_NAME = "ruangkitha-v2.0.0a48d-calendar-notification-design-system-v1";
+const CACHE_NAME = "ruangkitha-v2.0.0a48e-identity-final-consistency-design-system-v1";
 const OFFLINE_URL = "./offline.html";
 
 const APP_FILES = [
@@ -48,6 +48,7 @@ const APP_FILES = [
   "./css/pages/ruangkitha-finance-v1.css",
   "./css/pages/ruangkitha-catatan-v1.css",
   "./css/pages/ruangkitha-calendar-notification-v1.css",
+  "./css/pages/ruangkitha-profile-auth-family-v1.css",
   "./daftar.html",
   "./detail-transaksi.html",
   "./dompet-detail.html",

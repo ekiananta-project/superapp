@@ -1,8 +1,8 @@
 (() => {
   "use strict";
 
-  const RK_DESIGN_SYSTEM_VERSION = "1.0.5";
-  const RK_BUILD_VERSION = "v2.0.0a48d";
+  const RK_DESIGN_SYSTEM_VERSION = "1.0.6";
+  const RK_BUILD_VERSION = "v2.0.0a48e";
 
   function appBaseUrl() {
     try {
@@ -73,6 +73,18 @@
     "notifikasi.html"
   ]);
 
+  const RK_IDENTITY_PAGE_KIND = new Map([
+    ["login.html", "auth"],
+    ["daftar.html", "auth"],
+    ["profil.html", "profile"],
+    ["pengaturan.html", "profile"],
+    ["keamanan.html", "profile"],
+    ["keluarga.html", "family"],
+    ["keluarga-awal.html", "family"],
+    ["kelola-undangan.html", "family"],
+    ["riwayat-anggota.html", "family"]
+  ]);
+
   function currentPageName() {
     try {
       const path = new URL(location.href).pathname.replace(/\/+$/, "");
@@ -133,6 +145,57 @@
         ).href;
         document.head.appendChild(calendar);
       }
+      return;
+    }
+
+    const identityKind = RK_IDENTITY_PAGE_KIND.get(page);
+    if (identityKind) {
+      document.documentElement.dataset.rkModule = "identity";
+      document.documentElement.dataset.rkIdentityKind = identityKind;
+      document.documentElement.dataset.rkIdentityPage = page.replace(/\.html$/i, "");
+
+      if (!document.querySelector('link[data-ruangkitha-identity]')) {
+        const identity = document.createElement("link");
+        identity.rel = "stylesheet";
+        identity.dataset.ruangkithaIdentity = "1.0.0";
+        identity.href = new URL(
+          `css/pages/ruangkitha-profile-auth-family-v1.css?v=${RK_BUILD_VERSION}`,
+          appBaseUrl()
+        ).href;
+        document.head.appendChild(identity);
+      }
+    }
+  }
+
+  function enhanceIdentityBrandCopy() {
+    if (document.documentElement.dataset.rkModule !== "identity") return;
+
+    // Keep the product wordmark visually consistent without changing auth logic.
+    document.querySelectorAll(".auth-brand strong").forEach(node => {
+      if (node.dataset.rkWordmarkReady === "true") return;
+      if (String(node.textContent || "").trim() !== "RuangKitha") return;
+      node.innerHTML = '<span class="rk-wordmark-ruang">Ruang</span><span class="rk-wordmark-kitha">Kitha</span>';
+      node.dataset.rkWordmarkReady = "true";
+    });
+
+    // Final consistency cleanup from the pre-brand design system.
+    if (document.documentElement.dataset.rkIdentityPage === "profil") {
+      document.querySelectorAll(".pilihan-tema-info small").forEach(node => {
+        const text = String(node.textContent || "").trim();
+        if (/Graphite Emerald.*terang/i.test(text)) {
+          node.textContent = "RuangKitha terang dengan cream hangat dan warna yang lembut.";
+        } else if (/Graphite Emerald.*charcoal/i.test(text)) {
+          node.textContent = "RuangKitha gelap dengan nuansa malam yang hangat dan tenang.";
+        }
+      });
+
+      document.querySelectorAll(".item-pengaturan").forEach(row => {
+        const label = row.querySelector("span");
+        const value = row.querySelector("small");
+        if (label?.textContent?.trim() === "Versi" && value) {
+          value.textContent = "2.0.0a48e PWA";
+        }
+      });
     }
   }
 
@@ -150,6 +213,7 @@
 
   ensureDesignSystem();
   ensureModuleDesignLayer();
+  enhanceIdentityBrandCopy();
   syncBrowserThemeColor();
 
   new MutationObserver(syncBrowserThemeColor).observe(document.documentElement, {
@@ -300,7 +364,7 @@
   if ("serviceWorker" in navigator) {
     window.addEventListener("load", async () => {
       try {
-        const registration = await navigator.serviceWorker.register("./sw.js?v=20260912-v200a48d", {
+        const registration = await navigator.serviceWorker.register("./sw.js?v=20260912-v200a48e", {
           scope: "./"
         });
 

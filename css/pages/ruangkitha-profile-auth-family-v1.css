@@ -1,0 +1,945 @@
+/* ======================================================================
+   RuangKitha Profile / Auth / Family Design Layer v1.0.0
+   Patch: v2.0.0a48e — Profil / Auth / Family + Final Consistency Audit
+
+   Visual migration only. No Supabase/Auth/Family RPC behavior is changed.
+   Scope is activated by js/pwa.js through data-rk-module="identity".
+   ====================================================================== */
+
+html[data-rk-module="identity"] {
+  --rk-identity-icon-size: 42px;
+  --rk-identity-row-radius: 16px;
+  --rk-identity-section-gap: 22px;
+}
+
+html[data-rk-module="identity"] body {
+  color: var(--rk-text);
+  background: var(--rk-outer-background);
+}
+
+html[data-rk-module="identity"] .aplikasi {
+  min-height: 100dvh;
+  background: var(--rk-background);
+}
+
+html[data-rk-module="identity"] :where(h1, h2, h3, strong, label) {
+  color: var(--rk-text);
+}
+
+html[data-rk-module="identity"] :where(p, small, .bantuan-field, .sheet-subjudul, .sheet-subjudul-keluarga) {
+  color: var(--rk-text-secondary);
+}
+
+/* ----------------------------------------------------------------------
+   SHARED PAGE HEADER / CONTENT
+   ---------------------------------------------------------------------- */
+html[data-rk-module="identity"] .header-halaman {
+  min-height: 64px;
+  padding-inline: 16px;
+  border-bottom: 1px solid color-mix(in srgb, var(--rk-border) 72%, transparent);
+  background: color-mix(in srgb, var(--rk-background) 94%, transparent);
+  backdrop-filter: blur(16px) saturate(1.04);
+  -webkit-backdrop-filter: blur(16px) saturate(1.04);
+}
+
+html[data-rk-module="identity"] .header-halaman h1 {
+  font-size: 18px;
+  font-weight: 700;
+  letter-spacing: -.025em;
+}
+
+html[data-rk-module="identity"] .header-halaman .tombol-ikon {
+  width: 38px;
+  height: 38px;
+  border: 1px solid var(--rk-border);
+  border-radius: 13px;
+  background: var(--rk-surface-soft) !important;
+  color: var(--rk-primary) !important;
+  box-shadow: none;
+}
+
+html[data-rk-module="identity"] .konten-halaman {
+  padding: 18px 16px calc(112px + env(safe-area-inset-bottom));
+}
+
+html[data-rk-module="identity"] .judul-grup {
+  margin: 23px 2px 10px;
+  color: var(--rk-text-secondary);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: .055em;
+  text-transform: uppercase;
+}
+
+html[data-rk-module="identity"] .notifikasi {
+  border: 1px solid var(--rk-border);
+  border-radius: 15px;
+  background: var(--rk-surface-soft);
+  color: var(--rk-text-secondary);
+}
+
+html[data-rk-module="identity"] .notifikasi[data-tipe="success"],
+html[data-rk-module="identity"] .notifikasi[data-type="success"] {
+  border-color: color-mix(in srgb, var(--rk-success) 28%, var(--rk-border));
+  background: var(--rk-success-soft);
+  color: var(--rk-success);
+}
+
+html[data-rk-module="identity"] .notifikasi[data-tipe="error"],
+html[data-rk-module="identity"] .notifikasi[data-type="error"] {
+  border-color: color-mix(in srgb, var(--rk-danger) 28%, var(--rk-border));
+  background: var(--rk-danger-soft);
+  color: var(--rk-danger);
+}
+
+/* ----------------------------------------------------------------------
+   AUTH — LOGIN / REGISTER
+   ---------------------------------------------------------------------- */
+html[data-rk-identity-kind="auth"] body.auth-page {
+  min-height: 100dvh;
+  background:
+    radial-gradient(circle at 18% 12%, color-mix(in srgb, var(--rk-secondary) 12%, transparent), transparent 34%),
+    radial-gradient(circle at 82% 88%, color-mix(in srgb, var(--rk-accent) 11%, transparent), transparent 31%),
+    var(--rk-outer-background);
+}
+
+html[data-rk-identity-kind="auth"] .auth-shell {
+  width: min(100%, 430px);
+  min-height: 100dvh;
+  margin-inline: auto;
+  padding: max(34px, env(safe-area-inset-top)) 20px max(30px, env(safe-area-inset-bottom));
+  justify-content: center;
+}
+
+html[data-rk-identity-kind="auth"] .auth-brand {
+  margin: 0 0 30px;
+  gap: 12px;
+}
+
+html[data-rk-identity-kind="auth"] .auth-brand-mark {
+  width: 48px;
+  height: 48px;
+  border: 1px solid color-mix(in srgb, var(--rk-primary) 18%, var(--rk-border));
+  border-radius: 17px;
+  background:
+    linear-gradient(145deg,
+      color-mix(in srgb, var(--rk-primary-soft) 88%, var(--rk-surface)),
+      color-mix(in srgb, var(--rk-accent-soft) 54%, var(--rk-surface)));
+  color: var(--rk-primary);
+  box-shadow: var(--rk-shadow-sm);
+}
+
+html[data-rk-identity-kind="auth"] .auth-brand-mark ion-icon { font-size: 25px; }
+
+html[data-rk-identity-kind="auth"] .auth-brand strong {
+  font-size: 19px;
+  font-weight: 700;
+  letter-spacing: -.035em;
+}
+
+html[data-rk-identity-kind="auth"] .auth-brand strong .rk-wordmark-ruang,
+html[data-rk-identity-kind="auth"] .auth-brand strong .rk-wordmark-kitha {
+  display: inline !important;
+  margin: 0 !important;
+  font: inherit !important;
+  line-height: inherit !important;
+}
+
+html[data-rk-identity-kind="auth"] .auth-brand strong .rk-wordmark-ruang { color: var(--rk-primary); }
+html[data-rk-identity-kind="auth"] .auth-brand strong .rk-wordmark-kitha { color: var(--rk-accent); }
+
+html[data-rk-identity-kind="auth"] .auth-brand > div > span {
+  margin-top: 4px;
+  color: var(--rk-text-secondary);
+  font-size: 11.5px;
+  line-height: 1.45;
+}
+
+html[data-rk-identity-kind="auth"] .auth-heading {
+  margin-bottom: 22px;
+}
+
+html[data-rk-identity-kind="auth"] .auth-heading .auth-eyebrow {
+  padding: 7px 10px;
+  border: 1px solid color-mix(in srgb, var(--rk-secondary) 22%, var(--rk-border));
+  border-radius: 999px;
+  background: var(--rk-secondary-soft);
+  color: var(--rk-secondary);
+  letter-spacing: .04em;
+}
+
+html[data-rk-identity-kind="auth"] .auth-heading h1 {
+  margin-top: 12px;
+  color: var(--rk-text);
+  font-size: clamp(30px, 9vw, 39px);
+  letter-spacing: -.045em;
+}
+
+html[data-rk-identity-kind="auth"] .auth-heading p {
+  color: var(--rk-text-secondary);
+}
+
+html[data-rk-identity-kind="auth"] .auth-card {
+  padding: 20px;
+  border: 1px solid var(--rk-border);
+  border-radius: var(--rk-radius-xl);
+  background: color-mix(in srgb, var(--rk-surface) 96%, transparent);
+  box-shadow: var(--rk-shadow-md);
+}
+
+html[data-rk-identity-kind="auth"] .auth-field label {
+  color: var(--rk-text);
+  font-weight: 650;
+}
+
+html[data-rk-identity-kind="auth"] .auth-input {
+  min-height: 52px;
+  border-color: var(--rk-border);
+  border-radius: 15px;
+  background: var(--rk-surface-soft);
+  color: var(--rk-text);
+}
+
+html[data-rk-identity-kind="auth"] .auth-input:focus {
+  border-color: var(--rk-primary);
+  background: var(--rk-surface);
+  box-shadow: var(--rk-focus-ring);
+}
+
+html[data-rk-identity-kind="auth"] .auth-input-icon {
+  color: var(--rk-text-secondary);
+}
+
+html[data-rk-identity-kind="auth"] :where(.auth-text-action, .auth-switch a) {
+  color: var(--rk-primary);
+}
+
+html[data-rk-identity-kind="auth"] .auth-submit {
+  min-height: 54px;
+  border-radius: 16px;
+  background: var(--rk-primary);
+  color: var(--rk-on-primary);
+  box-shadow: 0 10px 24px color-mix(in srgb, var(--rk-primary) 22%, transparent);
+}
+
+html[data-rk-identity-kind="auth"] .auth-security {
+  margin-top: 20px;
+  padding: 12px 13px;
+  border: 1px solid color-mix(in srgb, var(--rk-secondary) 18%, var(--rk-border));
+  border-radius: 15px;
+  background: color-mix(in srgb, var(--rk-secondary-soft) 68%, var(--rk-surface));
+  color: var(--rk-text-secondary);
+}
+
+html[data-rk-identity-kind="auth"] .auth-security ion-icon {
+  color: var(--rk-secondary);
+}
+
+html[data-rk-identity-kind="auth"] .auth-notice {
+  border-color: color-mix(in srgb, var(--rk-danger) 25%, var(--rk-border));
+  background: var(--rk-danger-soft);
+  color: var(--rk-danger);
+}
+
+html[data-rk-identity-kind="auth"] .auth-notice[data-type="success"] {
+  border-color: color-mix(in srgb, var(--rk-success) 25%, var(--rk-border));
+  background: var(--rk-success-soft);
+  color: var(--rk-success);
+}
+
+html[data-rk-identity-kind="auth"] .auth-modal-layer {
+  background: rgba(12, 18, 14, .50);
+  backdrop-filter: blur(7px);
+  -webkit-backdrop-filter: blur(7px);
+}
+
+html[data-rk-identity-kind="auth"] .auth-modal-card {
+  border-color: var(--rk-border);
+  border-radius: var(--rk-radius-xl);
+  background: var(--rk-surface);
+  color: var(--rk-text);
+  box-shadow: var(--rk-shadow-float);
+}
+
+html[data-rk-identity-kind="auth"] .auth-modal-icon {
+  background: var(--rk-primary-soft);
+  color: var(--rk-primary);
+}
+
+html[data-rk-identity-kind="auth"] .auth-modal-primary {
+  background: var(--rk-primary);
+  color: var(--rk-on-primary);
+}
+
+html[data-rk-identity-kind="auth"] .auth-modal-secondary {
+  border: 1px solid var(--rk-border);
+  background: var(--rk-surface-soft);
+  color: var(--rk-text);
+}
+
+/* ----------------------------------------------------------------------
+   PROFILE
+   ---------------------------------------------------------------------- */
+html[data-rk-identity-kind="profile"] .judul-profil-saya {
+  margin-top: 2px;
+}
+
+html[data-rk-identity-kind="profile"] .kartu-profil-saya {
+  position: relative;
+  overflow: hidden;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 14px;
+  align-items: center;
+  padding: 17px;
+  border: 1px solid var(--rk-border);
+  border-radius: 22px;
+  background:
+    radial-gradient(circle at 100% 0%, color-mix(in srgb, var(--rk-accent) 13%, transparent), transparent 38%),
+    linear-gradient(145deg, color-mix(in srgb, var(--rk-primary-soft) 50%, var(--rk-surface)), var(--rk-surface));
+  box-shadow: var(--rk-shadow-sm);
+}
+
+html[data-rk-identity-kind="profile"] .avatar-profil-besar {
+  width: 72px;
+  height: 72px;
+  border: 3px solid var(--rk-surface);
+  border-radius: 50%;
+  box-shadow: 0 0 0 1px var(--rk-border), var(--rk-shadow-sm);
+}
+
+html[data-rk-identity-kind="profile"] .info-profil-saya strong {
+  display: block;
+  margin-bottom: 4px;
+  font-size: 17px;
+  letter-spacing: -.02em;
+}
+
+html[data-rk-identity-kind="profile"] .info-profil-saya > span {
+  color: var(--rk-text-secondary);
+  font-size: 11.5px;
+  line-height: 1.45;
+}
+
+html[data-rk-identity-kind="profile"] .aksi-foto-profil {
+  margin-top: 10px;
+}
+
+html[data-rk-identity-kind="profile"] .tombol-foto-profil {
+  border: 1px solid color-mix(in srgb, var(--rk-primary) 22%, var(--rk-border));
+  border-radius: 999px;
+  background: var(--rk-primary-soft);
+  color: var(--rk-primary);
+}
+
+html[data-rk-identity-kind="profile"] .tombol-hapus-foto {
+  color: var(--rk-danger);
+}
+
+html[data-rk-identity-kind="profile"] .formulir-profil {
+  margin-top: 12px;
+  padding: 16px;
+  border: 1px solid var(--rk-border);
+  border-radius: 19px;
+  background: var(--rk-surface);
+  box-shadow: var(--rk-shadow-sm);
+}
+
+html[data-rk-identity-kind="profile"] .kartu-pengaturan {
+  overflow: hidden;
+  border: 1px solid var(--rk-border);
+  border-radius: 19px;
+  background: var(--rk-surface);
+  box-shadow: var(--rk-shadow-sm);
+}
+
+html[data-rk-identity-kind="profile"] .item-pengaturan {
+  position: relative;
+  min-height: 58px;
+  border-color: var(--rk-border) !important;
+  color: var(--rk-text);
+}
+
+html[data-rk-identity-kind="profile"] .item-pengaturan > ion-icon:first-child {
+  width: 34px;
+  height: 34px;
+  padding: 8px;
+  box-sizing: border-box;
+  border-radius: 11px;
+  background: var(--rk-primary-soft);
+  color: var(--rk-primary);
+}
+
+html[data-rk-identity-kind="profile"] .item-pengaturan small {
+  color: var(--rk-text-secondary);
+}
+
+html[data-rk-identity-kind="profile"] .chevron-pengaturan {
+  color: var(--rk-text-soft);
+}
+
+html[data-rk-identity-kind="profile"] .item-pengaturan-tombol:active,
+html[data-rk-identity-kind="profile"] .tautan-pengaturan:active {
+  background: var(--rk-surface-soft);
+}
+
+html[data-rk-identity-kind="profile"] .judul-zona-bahaya {
+  color: var(--rk-danger);
+}
+
+html[data-rk-identity-kind="profile"] .kartu-zona-bahaya {
+  border-color: color-mix(in srgb, var(--rk-danger) 22%, var(--rk-border));
+  background: color-mix(in srgb, var(--rk-danger-soft) 42%, var(--rk-surface));
+}
+
+html[data-rk-identity-kind="profile"] .item-hapus-akun > ion-icon:first-child {
+  background: var(--rk-danger-soft);
+  color: var(--rk-danger);
+}
+
+html[data-rk-identity-kind="profile"] :where(.tombol-hapus-akun-final, .item-hapus-akun) {
+  color: var(--rk-danger);
+}
+
+html[data-rk-identity-kind="profile"] .tombol-hapus-akun-final {
+  border: 1px solid color-mix(in srgb, var(--rk-danger) 24%, var(--rk-border));
+  background: var(--rk-danger-soft);
+  color: var(--rk-danger);
+}
+
+html[data-rk-identity-kind="profile"] .pilihan-tema {
+  border-color: var(--rk-border) !important;
+  color: var(--rk-text);
+}
+
+html[data-rk-identity-kind="profile"] .pilihan-tema ion-icon:first-child {
+  color: var(--rk-primary);
+}
+
+html[data-rk-identity-kind="profile"] .pilihan-tema-info small {
+  color: var(--rk-text-secondary);
+}
+
+html[data-rk-identity-kind="profile"] .pilihan-tema .cek {
+  color: var(--rk-primary);
+}
+
+html[data-rk-identity-kind="profile"] :where(.sheet-security-account, .sheet-hapus-akun) {
+  color: var(--rk-text);
+}
+
+html[data-rk-identity-kind="profile"] :where(.security-account-note, .peringatan-hapus-akun) {
+  border: 1px solid var(--rk-border);
+  border-radius: 15px;
+  background: var(--rk-surface-soft);
+  color: var(--rk-text-secondary);
+}
+
+html[data-rk-identity-kind="profile"] .peringatan-hapus-akun {
+  border-color: color-mix(in srgb, var(--rk-danger) 22%, var(--rk-border));
+  background: var(--rk-danger-soft);
+}
+
+html[data-rk-identity-kind="profile"] :where(.profile-photo-preview-layer, .media-preview-layer) {
+  background: rgba(12, 18, 14, .58);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+
+html[data-rk-identity-kind="profile"] .profile-photo-preview-card {
+  border: 1px solid var(--rk-border);
+  border-radius: 24px;
+  background: var(--rk-surface);
+  box-shadow: var(--rk-shadow-float);
+}
+
+/* ----------------------------------------------------------------------
+   FAMILY — MAIN PAGE
+   ---------------------------------------------------------------------- */
+html[data-rk-identity-kind="family"] .family-profile-card,
+html[data-rk-identity-kind="family"] .kartu-keluarga-utama {
+  overflow: hidden;
+  border: 1px solid var(--rk-border);
+  border-radius: 22px;
+  background:
+    radial-gradient(circle at 92% 8%, color-mix(in srgb, var(--rk-accent) 13%, transparent), transparent 34%),
+    linear-gradient(145deg, color-mix(in srgb, var(--rk-secondary-soft) 46%, var(--rk-surface)), var(--rk-surface));
+  color: var(--rk-text);
+  box-shadow: var(--rk-shadow-sm);
+}
+
+html[data-rk-identity-kind="family"] .family-profile-eyebrow {
+  color: var(--rk-secondary);
+  font-weight: 700;
+}
+
+html[data-rk-identity-kind="family"] .family-photo-wrap,
+html[data-rk-identity-kind="family"] .family-photo-button,
+html[data-rk-identity-kind="family"] .family-photo-visual {
+  border-color: var(--rk-border);
+}
+
+html[data-rk-identity-kind="family"] .family-photo-button {
+  box-shadow: 0 0 0 3px var(--rk-surface), 0 0 0 4px var(--rk-border);
+}
+
+html[data-rk-identity-kind="family"] .family-photo-edit {
+  background: var(--rk-primary);
+  color: var(--rk-on-primary);
+  box-shadow: var(--rk-shadow-sm);
+}
+
+html[data-rk-identity-kind="family"] .family-membership-card,
+html[data-rk-identity-kind="family"] .family-management-row,
+html[data-rk-identity-kind="family"] .kartu-anggota,
+html[data-rk-identity-kind="family"] .relationship-target-card {
+  border: 1px solid var(--rk-border);
+  border-radius: 17px;
+  background: var(--rk-surface);
+  color: var(--rk-text);
+  box-shadow: var(--rk-shadow-sm);
+}
+
+html[data-rk-identity-kind="family"] :where(.family-membership-icon, .family-management-icon) {
+  background: var(--rk-secondary-soft);
+  color: var(--rk-secondary);
+}
+
+html[data-rk-identity-kind="family"] .family-management-row:active {
+  background: var(--rk-surface-soft);
+}
+
+html[data-rk-identity-kind="family"] .family-management-copy small,
+html[data-rk-identity-kind="family"] .family-membership-copy small {
+  color: var(--rk-text-secondary);
+}
+
+html[data-rk-identity-kind="family"] .family-management-chevron {
+  color: var(--rk-text-soft);
+}
+
+html[data-rk-identity-kind="family"] .tombol-tambah-anggota {
+  border-color: color-mix(in srgb, var(--rk-primary) 22%, var(--rk-border));
+  background: var(--rk-primary-soft);
+  color: var(--rk-primary);
+}
+
+html[data-rk-identity-kind="family"] .family-danger-section {
+  margin-top: 26px;
+}
+
+html[data-rk-identity-kind="family"] .family-danger-card {
+  border: 1px solid color-mix(in srgb, var(--rk-danger) 20%, var(--rk-border));
+  border-radius: 18px;
+  background: color-mix(in srgb, var(--rk-danger-soft) 38%, var(--rk-surface));
+  box-shadow: none;
+}
+
+html[data-rk-identity-kind="family"] .family-danger-icon {
+  background: var(--rk-danger-soft);
+  color: var(--rk-danger);
+}
+
+html[data-rk-identity-kind="family"] .tombol-link-bahaya {
+  color: var(--rk-danger);
+}
+
+html[data-rk-identity-kind="family"] :where(
+  .peringatan-transfer-ownership,
+  .peringatan-leave-family,
+  .peringatan-dissolve-family,
+  .dissolve-confirm-hint
+) {
+  border: 1px solid color-mix(in srgb, var(--rk-warning) 20%, var(--rk-border));
+  border-radius: 14px;
+  background: var(--rk-warning-soft);
+  color: var(--rk-warning);
+}
+
+html[data-rk-identity-kind="family"] .dissolve-impact-list {
+  border-radius: 15px;
+  background: var(--rk-surface-soft);
+  color: var(--rk-text-secondary);
+}
+
+/* Dynamic owner member-menu from member management patch. */
+html[data-rk-identity-kind="family"] .member-v4-trigger {
+  border: 1px solid var(--rk-border) !important;
+  background: var(--rk-surface-soft) !important;
+  color: var(--rk-text-secondary) !important;
+}
+
+html[data-rk-identity-kind="family"] .member-v4-popover {
+  border: 1px solid var(--rk-border) !important;
+  border-radius: 14px !important;
+  background: var(--rk-surface) !important;
+  color: var(--rk-text) !important;
+  box-shadow: var(--rk-shadow-md) !important;
+}
+
+html[data-rk-identity-kind="family"] .member-v4-remove {
+  color: var(--rk-danger) !important;
+}
+
+/* ----------------------------------------------------------------------
+   FAMILY ONBOARDING
+   ---------------------------------------------------------------------- */
+html[data-rk-identity-page="keluarga-awal"] body {
+  background:
+    radial-gradient(circle at 15% 10%, color-mix(in srgb, var(--rk-primary) 10%, transparent), transparent 32%),
+    radial-gradient(circle at 90% 85%, color-mix(in srgb, var(--rk-accent) 9%, transparent), transparent 30%),
+    var(--rk-outer-background);
+}
+
+html[data-rk-identity-page="keluarga-awal"] .onboarding-keluarga {
+  min-height: 100dvh;
+  background: transparent;
+}
+
+html[data-rk-identity-page="keluarga-awal"] .konten-onboarding {
+  width: min(100%, 430px);
+  margin-inline: auto;
+  padding: max(30px, env(safe-area-inset-top)) 18px max(28px, env(safe-area-inset-bottom));
+}
+
+html[data-rk-identity-page="keluarga-awal"] .hero-onboarding {
+  margin-bottom: 22px;
+}
+
+html[data-rk-identity-page="keluarga-awal"] .hero-onboarding-ikon {
+  width: 58px;
+  height: 58px;
+  border: 1px solid color-mix(in srgb, var(--rk-primary) 18%, var(--rk-border));
+  border-radius: 20px;
+  background: linear-gradient(145deg, var(--rk-primary-soft), color-mix(in srgb, var(--rk-accent-soft) 45%, var(--rk-surface)));
+  color: var(--rk-primary);
+  box-shadow: var(--rk-shadow-sm);
+}
+
+html[data-rk-identity-page="keluarga-awal"] .eyebrow-onboarding {
+  color: var(--rk-primary);
+  font-weight: 700;
+  letter-spacing: .035em;
+}
+
+html[data-rk-identity-page="keluarga-awal"] .hero-onboarding h1 {
+  color: var(--rk-text);
+  letter-spacing: -.04em;
+}
+
+html[data-rk-identity-page="keluarga-awal"] .hero-onboarding p {
+  color: var(--rk-text-secondary);
+}
+
+html[data-rk-identity-page="keluarga-awal"] .pilihan-keluarga {
+  gap: 12px;
+}
+
+html[data-rk-identity-page="keluarga-awal"] .kartu-pilihan-keluarga {
+  border: 1px solid var(--rk-border);
+  border-radius: 19px;
+  background: var(--rk-surface);
+  color: var(--rk-text);
+  box-shadow: var(--rk-shadow-sm);
+}
+
+html[data-rk-identity-page="keluarga-awal"] .kartu-pilihan-keluarga:active {
+  background: var(--rk-surface-soft);
+  transform: scale(.992);
+}
+
+html[data-rk-identity-page="keluarga-awal"] .kartu-pilihan-ikon {
+  background: var(--rk-secondary-soft);
+  color: var(--rk-secondary);
+}
+
+html[data-rk-identity-page="keluarga-awal"] .kartu-pilihan-info > span {
+  color: var(--rk-text-secondary);
+}
+
+html[data-rk-identity-page="keluarga-awal"] .kartu-pilihan-chevron {
+  color: var(--rk-text-soft);
+}
+
+html[data-rk-identity-page="keluarga-awal"] .panel-onboarding {
+  padding: 18px;
+  border: 1px solid var(--rk-border);
+  border-radius: 22px;
+  background: var(--rk-surface);
+  box-shadow: var(--rk-shadow-md);
+}
+
+html[data-rk-identity-page="keluarga-awal"] .tombol-kembali-inline {
+  color: var(--rk-primary);
+}
+
+html[data-rk-identity-page="keluarga-awal"] .panel-ikon {
+  background: var(--rk-primary-soft);
+  color: var(--rk-primary);
+}
+
+html[data-rk-identity-page="keluarga-awal"] .alur-setelah,
+html[data-rk-identity-page="keluarga-awal"] .catatan-backend {
+  border: 1px solid var(--rk-border);
+  border-radius: 15px;
+  background: var(--rk-surface-soft);
+  color: var(--rk-text-secondary);
+}
+
+html[data-rk-identity-page="keluarga-awal"] .catatan-backend ion-icon {
+  color: var(--rk-secondary);
+}
+
+html[data-rk-identity-page="keluarga-awal"] .preview-undangan-gabung {
+  border: 1px solid color-mix(in srgb, var(--rk-secondary) 20%, var(--rk-border));
+  border-radius: 18px;
+  background: color-mix(in srgb, var(--rk-secondary-soft) 45%, var(--rk-surface));
+}
+
+html[data-rk-identity-page="keluarga-awal"] .preview-undangan-label {
+  color: var(--rk-secondary);
+}
+
+/* ----------------------------------------------------------------------
+   INVITATION MANAGEMENT / MEMBER HISTORY
+   ---------------------------------------------------------------------- */
+html[data-rk-identity-kind="family"] :where(
+  .invitation-management-intro,
+  .member-history-intro
+) {
+  border: 1px solid var(--rk-border);
+  border-radius: 18px;
+  background: linear-gradient(145deg, color-mix(in srgb, var(--rk-secondary-soft) 54%, var(--rk-surface)), var(--rk-surface));
+  color: var(--rk-text);
+  box-shadow: var(--rk-shadow-sm);
+}
+
+html[data-rk-identity-kind="family"] :where(
+  .invitation-management-intro > ion-icon,
+  .member-history-intro > ion-icon
+) {
+  color: var(--rk-secondary);
+}
+
+html[data-rk-identity-kind="family"] .invitation-create-card {
+  border: 1px solid var(--rk-border);
+  border-radius: 20px;
+  background: var(--rk-surface);
+  box-shadow: var(--rk-shadow-sm);
+}
+
+html[data-rk-identity-kind="family"] .invitation-eyebrow {
+  color: var(--rk-secondary);
+}
+
+html[data-rk-identity-kind="family"] .invitation-section-heading > ion-icon {
+  color: var(--rk-primary);
+}
+
+html[data-rk-identity-kind="family"] .invitation-security-note {
+  border-radius: 14px;
+  background: var(--rk-surface-soft);
+  color: var(--rk-text-secondary);
+}
+
+html[data-rk-identity-kind="family"] .invitation-count {
+  background: var(--rk-primary-soft);
+  color: var(--rk-primary);
+}
+
+html[data-rk-identity-kind="family"] :where(
+  .invitation-active-section,
+  .invitation-history-section,
+  .member-history-list
+) {
+  color: var(--rk-text);
+}
+
+html[data-rk-identity-kind="family"] .invitation-history-toggle {
+  border: 1px solid var(--rk-border);
+  border-radius: 17px;
+  background: var(--rk-surface);
+  color: var(--rk-text);
+  box-shadow: var(--rk-shadow-sm);
+}
+
+html[data-rk-identity-kind="family"] .invitation-history-toggle-icon {
+  background: var(--rk-primary-soft);
+  color: var(--rk-primary);
+}
+
+html[data-rk-identity-kind="family"] :where(
+  .invitation-loading,
+  .invitation-empty,
+  .member-history-loading,
+  .member-history-empty,
+  .member-history-error
+) {
+  border: 1px solid var(--rk-border);
+  border-radius: 17px;
+  background: var(--rk-surface-soft);
+  color: var(--rk-text-secondary);
+}
+
+html[data-rk-identity-kind="family"] .member-history-error {
+  border-color: color-mix(in srgb, var(--rk-danger) 20%, var(--rk-border));
+  background: var(--rk-danger-soft);
+}
+
+html[data-rk-identity-kind="family"] .member-history-family-name {
+  color: var(--rk-primary);
+  font-weight: 700;
+}
+
+/* Cards injected by invitation/member scripts often use generic card-like
+   class names. Keep them within the identity surface family without relying
+   on backend-specific DOM details. */
+html[data-rk-identity-kind="family"] :where(
+  .invitation-active-list > *,
+  .invitation-history-list > *,
+  .member-history-list > *
+) {
+  border-color: var(--rk-border) !important;
+  background-color: var(--rk-surface) !important;
+  color: var(--rk-text);
+}
+
+/* ----------------------------------------------------------------------
+   SECURITY / DEVICE SESSIONS
+   ---------------------------------------------------------------------- */
+html[data-rk-identity-page="keamanan"] .keamanan-halaman {
+  color: var(--rk-text);
+}
+
+html[data-rk-identity-page="keamanan"] .kartu-keamanan-info {
+  border: 1px solid var(--rk-border);
+  border-radius: 20px;
+  background: linear-gradient(145deg, color-mix(in srgb, var(--rk-primary-soft) 55%, var(--rk-surface)), var(--rk-surface));
+  box-shadow: var(--rk-shadow-sm);
+}
+
+html[data-rk-identity-page="keamanan"] .ikon-keamanan {
+  background: var(--rk-primary-soft);
+  color: var(--rk-primary);
+}
+
+html[data-rk-identity-page="keamanan"] .kartu-sesi {
+  border: 1px solid var(--rk-border);
+  border-radius: 17px;
+  background: var(--rk-surface);
+  color: var(--rk-text);
+  box-shadow: var(--rk-shadow-sm);
+}
+
+html[data-rk-identity-page="keamanan"] .ikon-perangkat {
+  background: var(--rk-secondary-soft);
+  color: var(--rk-secondary);
+}
+
+html[data-rk-identity-page="keamanan"] .info-sesi small,
+html[data-rk-identity-page="keamanan"] .penjelasan-keamanan {
+  color: var(--rk-text-secondary);
+}
+
+html[data-rk-identity-page="keamanan"] .badge-sesi-aktif {
+  background: var(--rk-success-soft);
+  color: var(--rk-success);
+}
+
+html[data-rk-identity-page="keamanan"] :where(.kartu-sesi-kosong, .catatan-keamanan-backend) {
+  border: 1px solid var(--rk-border);
+  border-radius: 16px;
+  background: var(--rk-surface-soft);
+  color: var(--rk-text-secondary);
+}
+
+/* ----------------------------------------------------------------------
+   SHEETS / MEDIA MODALS USED BY PROFILE + FAMILY
+   ---------------------------------------------------------------------- */
+html[data-rk-module="identity"] .bottom-sheet {
+  border-color: var(--rk-border) !important;
+  background: var(--rk-surface) !important;
+  color: var(--rk-text) !important;
+  box-shadow: var(--rk-shadow-float) !important;
+}
+
+html[data-rk-module="identity"] .sheet-header h2 {
+  color: var(--rk-text);
+}
+
+html[data-rk-module="identity"] :where(.media-preview-card, .invitation-photo-preview-card) {
+  border: 1px solid var(--rk-border);
+  border-radius: 24px;
+  background: var(--rk-surface);
+  color: var(--rk-text);
+  box-shadow: var(--rk-shadow-float);
+}
+
+html[data-rk-module="identity"] :where(.media-preview-close, .invitation-photo-preview-close) {
+  border: 1px solid var(--rk-border);
+  background: color-mix(in srgb, var(--rk-surface) 91%, transparent);
+  color: var(--rk-text);
+}
+
+html[data-rk-module="identity"] :where(.media-preview-info, .invitation-photo-preview-info) span {
+  color: var(--rk-primary);
+}
+
+/* ----------------------------------------------------------------------
+   DARK MODE REFINEMENT
+   ---------------------------------------------------------------------- */
+html[data-theme="dark"][data-rk-identity-kind="auth"] body.auth-page {
+  background:
+    radial-gradient(circle at 18% 12%, rgba(111, 168, 161, .10), transparent 35%),
+    radial-gradient(circle at 84% 88%, rgba(231, 161, 142, .08), transparent 32%),
+    var(--rk-outer-background);
+}
+
+html[data-theme="dark"][data-rk-module="identity"] :where(
+  .kartu-profil-saya,
+  .family-profile-card,
+  .kartu-keluarga-utama,
+  .invitation-management-intro,
+  .member-history-intro,
+  .kartu-keamanan-info
+) {
+  box-shadow: 0 10px 34px rgba(0, 0, 0, .20);
+}
+
+html[data-theme="dark"][data-rk-module="identity"] .header-halaman {
+  background: color-mix(in srgb, var(--rk-background) 95%, transparent);
+}
+
+/* ----------------------------------------------------------------------
+   COMPACT MOBILE POLISH
+   ---------------------------------------------------------------------- */
+@media (max-width: 360px) {
+  html[data-rk-identity-kind="auth"] .auth-shell {
+    padding-inline: 16px;
+  }
+
+  html[data-rk-identity-kind="profile"] .kartu-profil-saya {
+    grid-template-columns: 62px minmax(0, 1fr);
+    padding: 14px;
+  }
+
+  html[data-rk-identity-kind="profile"] .avatar-profil-besar {
+    width: 62px;
+    height: 62px;
+  }
+
+  html[data-rk-identity-page="keluarga-awal"] .konten-onboarding {
+    padding-inline: 14px;
+  }
+}
+
+@media (min-width: 700px) {
+  html[data-rk-identity-kind="auth"] .auth-shell {
+    min-height: calc(100dvh - 36px);
+    margin-block: 18px;
+    border: 1px solid var(--rk-border);
+    border-radius: 30px;
+    background: var(--rk-background);
+    box-shadow: var(--rk-shadow-md);
+  }
+}
