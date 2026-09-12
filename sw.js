@@ -1,4 +1,4 @@
-const CACHE_NAME = "ruangkitha-v2.0.0a48f-logo-app-icon-integration-v1";
+const CACHE_NAME = "ruangkitha-v2.0.0a49a1-security-vault-app-integration-v1";
 const OFFLINE_URL = "./offline.html";
 
 const APP_FILES = [
@@ -163,6 +163,9 @@ const APP_FILES = [
   "./js/vendor/family-xlsx.js",
   "./js/pages/dompet-form-backend.js",
   "./js/pages/home-backend.js",
+  "./js/security/ruangkitha-crypto-core.js",
+  "./js/security/ruangkitha-trusted-device.js",
+  "./js/security/ruangkitha-security-setup-ui.js",
   "./js/pages/keamanan.js",
   "./js/pages/keluarga-awal.js",
   "./js/pages/keluarga.js",

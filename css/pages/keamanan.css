@@ -236,3 +236,238 @@
   font-size: var(--font-size-xs);
   line-height: 1.55;
 }
+
+
+/* =========================================
+   a49a1 — SECURITY VAULT APP INTEGRATION
+========================================= */
+
+.security-vault-card {
+  margin-top: var(--space-4);
+  padding: var(--space-4);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-xl);
+  background: var(--color-surface);
+  box-shadow: var(--shadow-sm);
+}
+
+.security-vault-card-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-3);
+}
+
+.security-vault-eyebrow {
+  display: block;
+  margin-bottom: 4px;
+  color: var(--color-text-secondary);
+  font-size: 11px;
+  font-weight: var(--font-weight-semibold);
+  letter-spacing: .07em;
+  text-transform: uppercase;
+}
+
+.security-vault-card h2 {
+  margin: 0;
+  font-size: var(--font-size-md);
+  line-height: 1.35;
+}
+
+.security-vault-badge {
+  flex-shrink: 0;
+  padding: 5px 9px;
+  border-radius: var(--radius-full);
+  background: var(--color-surface-soft);
+  color: var(--color-text-secondary);
+  font-size: 11px;
+  font-weight: var(--font-weight-semibold);
+}
+
+.security-vault-badge[data-state="success"] {
+  background: rgba(82, 122, 67, .12);
+  color: var(--color-success);
+}
+
+.security-vault-badge[data-state="trusted"] {
+  background: color-mix(in srgb, var(--color-primary) 13%, transparent);
+  color: var(--color-primary);
+}
+
+.security-vault-badge[data-state="warning"] {
+  background: rgba(178, 120, 35, .12);
+  color: #9a671e;
+}
+
+.security-vault-badge[data-state="danger"] {
+  background: rgba(180, 45, 45, .10);
+  color: #a13b3b;
+}
+
+.security-vault-copy {
+  margin: var(--space-2) 0 0;
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-xs);
+  line-height: 1.6;
+}
+
+.security-vault-meta {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+  margin-top: var(--space-4);
+}
+
+.security-vault-meta > div {
+  min-width: 0;
+  padding: 10px;
+  border-radius: var(--radius-md);
+  background: var(--color-surface-soft);
+}
+
+.security-vault-meta span,
+.security-vault-meta strong {
+  display: block;
+}
+
+.security-vault-meta span {
+  color: var(--color-text-secondary);
+  font-size: 10px;
+  line-height: 1.35;
+}
+
+.security-vault-meta strong {
+  margin-top: 3px;
+  overflow: hidden;
+  color: var(--color-text);
+  font-size: 12px;
+  line-height: 1.35;
+  text-overflow: ellipsis;
+}
+
+.security-vault-actions {
+  display: flex;
+  gap: var(--space-2);
+  margin-top: var(--space-4);
+}
+
+.security-vault-actions > * {
+  flex: 1;
+  margin: 0;
+}
+
+.security-vault-message,
+.security-unlock-message {
+  margin: var(--space-3) 0 0;
+  padding: 10px 12px;
+  border-radius: var(--radius-md);
+  background: var(--color-surface-soft);
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-xs);
+  line-height: 1.5;
+}
+
+.security-vault-message[data-tone="success"],
+.security-unlock-message[data-tone="success"] {
+  background: rgba(82, 122, 67, .10);
+  color: var(--color-success);
+}
+
+.security-vault-message[data-tone="error"],
+.security-unlock-message[data-tone="error"] {
+  background: rgba(180, 45, 45, .10);
+  color: #a13b3b;
+}
+
+.badge-sesi-aktif[data-state="trusted"] {
+  background: color-mix(in srgb, var(--color-primary) 13%, transparent);
+  color: var(--color-primary);
+}
+
+.badge-sesi-aktif[data-state="warning"] {
+  background: rgba(178, 120, 35, .12);
+  color: #9a671e;
+}
+
+.badge-sesi-aktif[data-state="danger"] {
+  background: rgba(180, 45, 45, .10);
+  color: #a13b3b;
+}
+
+.security-autolock {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  margin-top: var(--space-2);
+  padding: var(--space-3);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  background: var(--color-surface);
+}
+
+.security-autolock > div {
+  min-width: 0;
+}
+
+.security-autolock strong,
+.security-autolock small {
+  display: block;
+}
+
+.security-autolock strong {
+  font-size: var(--font-size-sm);
+}
+
+.security-autolock small,
+.security-field-hint {
+  margin-top: 2px;
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-xs);
+  line-height: 1.45;
+}
+
+.security-autolock-select {
+  flex-shrink: 0;
+  min-height: 40px;
+  padding: 0 10px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-surface-soft);
+  color: var(--color-text);
+  font: inherit;
+  font-size: var(--font-size-xs);
+}
+
+.security-unlock-layer[hidden] {
+  display: none !important;
+}
+
+body.security-sheet-open {
+  overflow: hidden;
+}
+
+.security-unlock-sheet {
+  padding-bottom: max(var(--space-6), env(safe-area-inset-bottom));
+}
+
+.security-unlock-sheet .sheet-subjudul {
+  margin: 4px 0 0;
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-xs);
+  line-height: 1.45;
+}
+
+.security-unlock-form .tombol-utama {
+  width: 100%;
+}
+
+@media (max-width: 360px) {
+  .security-vault-meta {
+    grid-template-columns: 1fr;
+  }
+
+  .security-vault-actions {
+    flex-direction: column;
+  }
+}

@@ -17,7 +17,7 @@
   <link rel="apple-touch-icon" sizes="180x180" href="icons/apple-touch-icon.png">
   <script src="js/theme.js"></script>
 
-  <title>Perangkat & Sesi</title>
+  <title>Perangkat &amp; Sesi</title>
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -49,11 +49,47 @@
       </span>
 
       <div>
-        <h2>Login di perangkat</h2>
+        <h2>Security Vault</h2>
         <p>
-          Nanti setiap login akan mempunyai sesi sendiri. Jika sebuah HP hilang,
-          sesi perangkat itu dapat dicabut tanpa mengubah keanggotaan di ruang keluarga.
+          Trusted Device menyimpan material kunci secara lokal di perangkat ini.
+          PIN lokal hanya dipakai untuk membuka vault dan tidak dikirim ke server.
         </p>
+      </div>
+    </section>
+
+    <section class="security-vault-card" data-security-vault-card aria-live="polite">
+      <div class="security-vault-card-head">
+        <div>
+          <span class="security-vault-eyebrow">Security Foundation</span>
+          <h2 data-vault-heading>Memeriksa Security Vault…</h2>
+        </div>
+        <span class="security-vault-badge" data-vault-badge data-state="loading">Memuat</span>
+      </div>
+
+      <p class="security-vault-copy" data-vault-copy>
+        Memeriksa status vault dan trusted device pada akun ini.
+      </p>
+
+      <div class="security-vault-meta">
+        <div>
+          <span>Perangkat tepercaya</span>
+          <strong data-trusted-device-count>—</strong>
+        </div>
+        <div>
+          <span>Recovery Kit</span>
+          <strong data-recovery-status>—</strong>
+        </div>
+        <div>
+          <span>Vault lokal</span>
+          <strong data-local-vault-status>—</strong>
+        </div>
+      </div>
+
+      <p class="security-vault-message" data-vault-message role="status" hidden></p>
+
+      <div class="security-vault-actions">
+        <button class="tombol-utama" type="button" data-vault-primary disabled>Memuat…</button>
+        <button class="tombol-sekunder" type="button" data-vault-lock hidden>Kunci sekarang</button>
       </div>
     </section>
 
@@ -67,43 +103,98 @@
       <div class="info-sesi">
         <strong data-nama-perangkat>Perangkat ini</strong>
         <span data-detail-perangkat>Browser saat ini</span>
-        <small>Aktif sekarang</small>
+        <small data-device-security-detail>Memeriksa status Trusted Device…</small>
       </div>
 
-      <span class="badge-sesi-aktif">Saat ini</span>
+      <span class="badge-sesi-aktif" data-device-security-badge>Saat ini</span>
+    </section>
+
+    <section class="security-autolock" data-security-autolock hidden>
+      <div>
+        <strong>Kunci otomatis</strong>
+        <small>Vault dikunci setelah perangkat tidak aktif.</small>
+      </div>
+      <select class="security-autolock-select" data-security-autolock-select aria-label="Durasi kunci otomatis">
+        <option value="5">5 menit</option>
+        <option value="10">10 menit</option>
+        <option value="15">15 menit</option>
+        <option value="30">30 menit</option>
+      </select>
     </section>
 
     <h2 class="judul-grup">Perangkat Lain</h2>
 
     <section class="kartu-sesi-kosong" data-daftar-sesi-lain>
       <ion-icon name="devices-outline"></ion-icon>
-      <strong>Sesi akun aktif</strong>
+      <strong>Pengelolaan perangkat berikutnya</strong>
       <p>
-        Perangkat ini sedang login. Daftar perangkat lengkap dan tombol <b>Cabut Sesi</b>
-        untuk perangkat lain akan tersedia pada pembaruan berikutnya.
+        a49a mengaktifkan Trusted Device pertama dan local unlock. Penambahan perangkat baru,
+        Recovery Kit, dan pencabutan trust lengkap dilanjutkan pada tahap security berikutnya.
       </p>
     </section>
 
     <section class="penjelasan-keamanan">
       <div>
-        <ion-icon name="log-out-outline"></ion-icon>
+        <ion-icon name="key-outline"></ion-icon>
         <p>
-          <strong>Cabut sesi</strong> hanya mengeluarkan satu perangkat.
-          Orangnya tetap menjadi anggota ruang keluarga dan bisa login lagi dari HP baru.
+          <strong>PIN lokal</strong> bukan password akun dan bukan Master Key.
+          PIN hanya membuka material kunci yang tersimpan pada browser/perangkat ini.
+        </p>
+      </div>
+      <div>
+        <ion-icon name="lock-closed-outline"></ion-icon>
+        <p>
+          <strong>Auto-lock</strong> membuang Master Key runtime dari memori.
+          Membuka kembali vault selalu memeriksa status trust perangkat ke server.
         </p>
       </div>
     </section>
 
     <section class="catatan-keamanan-backend">
       <ion-icon name="information-circle-outline"></ion-icon>
-
       <p>
-        Logout perangkat aktif sudah tersedia. Pengelolaan sesi perangkat lain
-        belum tersedia pada versi ini.
+        Recovery Kit belum final pada a49a. Jangan gunakan Security Vault untuk satu-satunya salinan
+        data terenkripsi penting sampai Recovery Kit V1 tersedia.
       </p>
     </section>
 
   </main>
+</div>
+
+<div class="lapisan security-unlock-layer" data-security-unlock-layer hidden>
+  <section class="bottom-sheet security-unlock-sheet" role="dialog" aria-modal="true" aria-labelledby="security-unlock-title">
+    <div class="sheet-handle"></div>
+    <div class="sheet-header">
+      <div>
+        <h2 id="security-unlock-title">Buka Security Vault</h2>
+        <p class="sheet-subjudul">Masukkan PIN lokal perangkat ini.</p>
+      </div>
+      <button class="tombol-ikon" type="button" data-security-unlock-close aria-label="Tutup">
+        <ion-icon name="close-outline"></ion-icon>
+      </button>
+    </div>
+
+    <form class="formulir security-unlock-form" data-security-unlock-form>
+      <div class="grup-input">
+        <label for="security-local-pin">PIN lokal</label>
+        <input
+          class="input"
+          id="security-local-pin"
+          data-security-unlock-pin
+          type="password"
+          inputmode="numeric"
+          pattern="[0-9]*"
+          minlength="6"
+          maxlength="12"
+          autocomplete="current-password"
+          required>
+        <small class="security-field-hint">6–12 digit. PIN ini tidak dikirim ke Supabase.</small>
+      </div>
+
+      <p class="security-unlock-message" data-security-unlock-message role="alert" hidden></p>
+      <button class="tombol-utama" type="submit" data-security-unlock-submit>Buka Vault</button>
+    </form>
+  </section>
 </div>
 
 <script type="module" src="https://unpkg.com/ionicons@8.0.13/dist/ionicons/ionicons.esm.js"></script>
@@ -118,7 +209,10 @@
 <script src="js/backend/auth-guard.js?v=20260909-v200a8"></script>
 <script>window.AUTH_BACKEND_MODE = true;</script>
 <script src="js/app.js"></script>
-<script src="js/pages/keamanan.js"></script>
-<script src="js/pwa.js?v=20260909-v200a8"></script>
+<script src="js/security/ruangkitha-crypto-core.js?v=20260912-v200a49"></script>
+<script src="js/security/ruangkitha-trusted-device.js?v=20260912-v200a49a1"></script>
+<script src="js/security/ruangkitha-security-setup-ui.js?v=20260912-v200a49a1"></script>
+<script src="js/pages/keamanan.js?v=20260912-v200a49a1"></script>
+<script src="js/pwa.js?v=20260912-v200a49a1"></script>
 </body>
 </html>
