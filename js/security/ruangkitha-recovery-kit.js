@@ -189,6 +189,20 @@
     });
   }
 
+  async function masterProofFromUnlocked({ supabase } = {}) {
+    assertDeps();
+    const userId = await currentUserId(supabase);
+    const material = await recoveryMaterial(supabase);
+    if (!material?.found || !material.envelope || !material.vault_id) {
+      const error = new Error("Recovery Kit aktif diperlukan untuk menerima key sharing dokumen.");
+      error.code = "RECOVERY_NOT_READY";
+      throw error;
+    }
+    return Trusted.withMasterKey(userId, (masterKey) =>
+      masterProofHashFromEnvelope(masterKey, material.envelope, material.vault_id)
+    );
+  }
+
   async function prepareRecoveryKit({ supabase, pin } = {}) {
     assertDeps();
     Trusted.validatePin(pin);
@@ -547,6 +561,7 @@
     cancelPreparedRecovery,
     recoveryMaterial,
     masterProofForTrustedAction,
+    masterProofFromUnlocked,
     recoverNewDevice,
     parseRecoveryCode,
     formatRecoveryCode,

@@ -160,3 +160,29 @@ html[data-theme="dark"] .dokumen-type-custom:hover{background:rgba(255,255,255,.
   .dokumen-back{padding:0 8px;font-size:10px;gap:3px}
   .dokumen-back ion-icon{font-size:18px}
 }
+
+/* ------------------------------------------------------------------
+   a50b — Family Document Sharing / Key Distribution V1
+   ------------------------------------------------------------------ */
+.dokumen-share-section{display:grid;gap:10px;padding-top:2px}
+.dokumen-share-manage{width:100%;min-height:42px}
+.dokumen-share-layer{z-index:2510}
+.dokumen-share-sheet{max-height:min(78dvh,650px);overflow:hidden;padding-bottom:max(16px,env(safe-area-inset-bottom))}
+.dokumen-share-body{padding:2px 16px 16px;display:grid;gap:11px}
+.dokumen-share-list{max-height:min(48dvh,410px);overflow:auto;overscroll-behavior:contain;display:grid;gap:8px;padding:1px 1px 3px}
+.dokumen-share-row{display:grid;grid-template-columns:auto minmax(0,1fr) auto;align-items:center;gap:10px;padding:10px 11px;border:1px solid rgba(103,118,109,.10);border-radius:14px;background:var(--warna-kartu,#fff)}
+.dokumen-share-avatar{width:34px;height:34px;border-radius:11px;display:grid;place-items:center;background:rgba(80,130,101,.09);color:#4f8064;flex:0 0 auto}
+.dokumen-share-avatar ion-icon{font-size:18px}
+.dokumen-share-row-copy{min-width:0;display:grid;gap:2px}
+.dokumen-share-row-copy strong{font-size:10px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.dokumen-share-row-copy span{font-size:8.5px;line-height:1.4;color:var(--warna-teks-sekunder,#777e79)}
+.dokumen-share-toggle{min-width:70px;min-height:34px;border:0;border-radius:999px;padding:0 10px;background:rgba(80,130,101,.10);color:#4f8064;font:inherit;font-size:8.5px;font-weight:800;cursor:pointer;white-space:nowrap}
+.dokumen-share-toggle.is-active{background:rgba(80,130,101,.16);color:#3f7357}
+.dokumen-share-toggle:disabled{cursor:not-allowed;background:rgba(111,124,116,.07);color:var(--warna-teks-sekunder,#8a918d);opacity:.82}
+.dokumen-share-toggle:focus-visible{outline:2px solid color-mix(in srgb,var(--rk-primary,#6f9984) 72%,transparent);outline-offset:2px}
+.dokumen-share-empty{display:grid;justify-items:center;text-align:center;gap:7px;padding:20px 14px;border-radius:15px;border:1px dashed rgba(103,118,109,.16);background:rgba(111,124,116,.035)}
+.dokumen-share-empty>ion-icon{font-size:23px;color:#5b7f6c}
+.dokumen-share-empty strong{font-size:10.5px}
+.dokumen-share-empty p{margin:0;max-width:280px;font-size:9px;line-height:1.5;color:var(--warna-teks-sekunder,#757c78)}
+.dokumen-share-footnote{margin:0;padding:0 2px;font-size:8.2px;line-height:1.5;color:var(--warna-teks-sekunder,#7c837f)}
+html[data-theme="dark"] .dokumen-share-row{background:var(--warna-kartu,#181c19);border-color:rgba(223,232,226,.08)}

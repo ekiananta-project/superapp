@@ -894,6 +894,24 @@
     return callback(session.masterKey);
   }
 
+  async function withDeviceIdentityPrivateKey(userId, callback) {
+    const uid = validateUserId(userId);
+    if (typeof callback !== "function") throw new TypeError("callback wajib berupa function.");
+    if (!isUnlocked(uid)) throw new Error("Security Vault sedang terkunci.");
+    const record = await getLocalRecord(uid);
+    if (!record || record.phase !== READY_PHASE) throw new Error("Trusted Device lokal belum siap.");
+    const privateKey = record.identity_private_key;
+    if (!privateKey || privateKey.type !== "private" || privateKey.algorithm?.name !== "ECDH") {
+      throw new Error("Identity private key Trusted Device tidak tersedia.");
+    }
+    touchActivity(uid);
+    return callback(privateKey, {
+      deviceId: record.device_id || null,
+      deviceInstanceId: record.device_instance_id || null,
+      publicKeyFingerprint: record.public_key_fingerprint || null
+    });
+  }
+
   async function resumePendingSetup(supabase, record) {
     const result = await rpc(supabase, "security_resume_device_v1", {
       p_device_client_id: record.device_instance_id
@@ -1367,6 +1385,7 @@
     isUnlocked,
     touchActivity,
     withMasterKey,
+    withDeviceIdentityPrivateKey,
     lock,
     lockAll
   };

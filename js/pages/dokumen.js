@@ -1,4 +1,4 @@
-/* RuangKitha v2.0.0a50a2 — Documents Attention-First Landing (on a50a1 UX polish) */
+/* RuangKitha v2.0.0a50b — Family Document Sharing / Key Distribution V1 */
 (() => {
   "use strict";
 
@@ -56,6 +56,13 @@
   const detailAddAttachment = q("[data-doc-detail-add-attachment]");
   const detailFile = q("[data-doc-detail-file]");
   const detailEdit = q("[data-doc-detail-edit]");
+  const shareSection = q("[data-doc-share-section]");
+  const shareSummary = q("[data-doc-share-summary]");
+  const shareManage = q("[data-doc-share-manage]");
+  const shareLayer = q("[data-doc-share-layer]");
+  const shareClose = q("[data-doc-share-close]");
+  const shareList = q("[data-doc-share-list]");
+  const shareMessage = q("[data-doc-share-message]");
 
   const unlockLayer = q("[data-doc-unlock-layer]");
   const unlockForm = q("[data-doc-unlock-form]");
@@ -101,6 +108,12 @@
   function setFormMessage(text = "") {
     formMessage.textContent = text;
     formMessage.hidden = !text;
+  }
+
+  function setShareMessage(text = "", isError = false) {
+    shareMessage.textContent = text;
+    shareMessage.hidden = !text;
+    shareMessage.classList.toggle("is-error", Boolean(isError));
   }
 
   function setVaultBadge(text, state = "") {
@@ -549,11 +562,27 @@
     }
 
     if (accessible < 1) {
-      attachmentBody.appendChild(createAttachmentPlaceholder(
-        "lock-closed-outline",
-        "Lampiran aman tersedia",
-        "Metadata dokumen keluarga bisa dilihat, tetapi kunci lampiran belum dibagikan ke akunmu. Sharing lampiran akan masuk di tahap a50b."
-      ));
+      if (!record?.can_edit && record?.attachment_share_granted) {
+        attachmentBody.appendChild(createAttachmentPlaceholder(
+          "key-outline",
+          "Akses lampiran tersedia",
+          "Pemilik sudah membagikan kunci lampiran. Buka Security Vault untuk mengaktifkan akses aman di akunmu.",
+          "Buka lampiran",
+          () => runWithVault(() => loadReadableAttachments(record), "Masukkan PIN untuk menerima kunci dan membuka lampiran dokumen ini.")
+        ));
+      } else if (!record?.can_edit) {
+        attachmentBody.appendChild(createAttachmentPlaceholder(
+          "lock-closed-outline",
+          "Lampiran belum dibagikan",
+          "Metadata dokumen keluarga dapat kamu lihat, tetapi lampiran aman hanya terbuka setelah pemilik memberikan akses."
+        ));
+      } else {
+        attachmentBody.appendChild(createAttachmentPlaceholder(
+          "lock-closed-outline",
+          "Lampiran aman tersedia",
+          "Buka Security Vault untuk melihat lampiran milikmu."
+        ));
+      }
       return;
     }
 
@@ -622,6 +651,141 @@
     }
   }
 
+  function updateShareSection(record) {
+    const isFamily = record?.scope === "family";
+    shareSection.hidden = !isFamily;
+    if (!isFamily) return;
+
+    const ownerCanManage = Boolean(record?.can_manage_sharing ?? (record?.can_edit && isFamily));
+    shareManage.hidden = !ownerCanManage;
+    if (ownerCanManage) {
+      shareSummary.textContent = "Pilih anggota yang boleh membuka lampiran aman. Metadata keluarga tetap terlihat oleh semua anggota aktif.";
+    } else if (record?.attachment_share_granted) {
+      shareSummary.textContent = "Pemilik sudah memberikan akses lampiran aman ke akunmu.";
+    } else {
+      shareSummary.textContent = "Metadata keluarga terlihat, tetapi lampiran aman belum dibagikan ke akunmu.";
+    }
+  }
+
+  function closeShareManager() {
+    shareLayer.hidden = true;
+    shareList.replaceChildren();
+    setShareMessage("");
+  }
+
+  function shareStatusText(member) {
+    const deviceCount = Number(member.trusted_device_count || 0);
+    const acceptedCount = Number(member.accepted_attachment_count || 0);
+    const pendingCount = Number(member.pending_transfer_count || 0);
+    if (member.share_active && acceptedCount > 0) return "Dapat melihat lampiran";
+    if (member.share_active && pendingCount > 0) return "Dibagikan · menunggu dibuka";
+    if (member.share_active && (deviceCount < 1 || !member.recovery_ready)) return "Dibagikan · perangkat belum siap";
+    if (member.share_active) return "Dibagikan";
+    if (deviceCount < 1) return "Belum punya Trusted Device";
+    if (!member.recovery_ready) return "Recovery Kit belum siap";
+    return `${deviceCount} Trusted Device siap`;
+  }
+
+  function renderShareTargets(members) {
+    shareList.replaceChildren();
+    if (!members.length) {
+      const empty = document.createElement("div");
+      empty.className = "dokumen-share-empty";
+      empty.appendChild(ion("people-outline"));
+      const strong = document.createElement("strong");
+      strong.textContent = "Belum ada anggota lain";
+      const p = document.createElement("p");
+      p.textContent = "Saat ada anggota aktif lain di keluarga, akses lampiran dapat dibagikan dari sini.";
+      empty.append(strong, p);
+      shareList.appendChild(empty);
+      return;
+    }
+
+    members.forEach((member) => {
+      const row = document.createElement("div");
+      row.className = "dokumen-share-row";
+
+      const avatar = document.createElement("span");
+      avatar.className = "dokumen-share-avatar";
+      avatar.appendChild(ion("person-outline"));
+
+      const copy = document.createElement("div");
+      copy.className = "dokumen-share-row-copy";
+      const name = document.createElement("strong");
+      name.textContent = member.display_name || "Anggota keluarga";
+      const status = document.createElement("span");
+      status.textContent = shareStatusText(member);
+      copy.append(name, status);
+
+      const action = document.createElement("button");
+      action.type = "button";
+      action.className = "dokumen-share-toggle";
+      action.classList.toggle("is-active", Boolean(member.share_active));
+      const ready = Number(member.trusted_device_count || 0) > 0 && Boolean(member.recovery_ready);
+      const canAct = Boolean(member.share_active) || ready;
+      action.textContent = member.share_active ? "Cabut" : (ready ? "Bagikan" : "Belum siap");
+      action.disabled = !canAct;
+
+      action.addEventListener("click", async () => {
+        if (!currentRecord || busy || !canAct) return;
+        const documentId = currentRecord.document_id;
+        await runWithVault(async () => {
+          busy = true;
+          action.disabled = true;
+          setShareMessage(member.share_active ? "Mencabut akses lampiran…" : `Menyiapkan kunci aman untuk ${member.display_name || "anggota keluarga"}…`);
+          try {
+            if (member.share_active) {
+              await Service().revokeMemberShare(documentId, member.user_id);
+              setShareMessage("Akses lampiran berhasil dicabut.");
+            } else {
+              await Service().shareWithMember(documentId, member.user_id, {
+                onStage: (stage) => {
+                  const copyByStage = {
+                    planning: "Memeriksa Trusted Device penerima…",
+                    wrapping: "Mendistribusikan Attachment Key secara terenkripsi…",
+                    committing: "Menyimpan key transfer aman…",
+                    done: "Akses lampiran berhasil dibagikan."
+                  };
+                  setShareMessage(copyByStage[stage] || "Memproses akses lampiran…");
+                }
+              });
+              setShareMessage("Akses lampiran berhasil dibagikan.");
+            }
+            await refreshShareTargets();
+            await refreshCurrentRecord();
+          } catch (error) {
+            setShareMessage(error?.message || "Akses lampiran gagal diperbarui.", true);
+          } finally {
+            busy = false;
+          }
+        }, member.share_active
+          ? "Masukkan PIN untuk mencabut akses lampiran keluarga ini."
+          : "Masukkan PIN untuk membagikan Attachment Key secara aman.");
+      });
+
+      row.append(avatar, copy, action);
+      shareList.appendChild(row);
+    });
+  }
+
+  async function refreshShareTargets() {
+    if (!currentRecord || !(currentRecord.can_manage_sharing ?? (currentRecord.can_edit && currentRecord.scope === "family"))) return;
+    shareList.replaceChildren(createAttachmentPlaceholder("hourglass-outline", "Memuat akses keluarga", "RuangKitha sedang memeriksa anggota dan Trusted Device yang siap."));
+    try {
+      const members = await Service().listShareTargets(currentRecord.document_id);
+      renderShareTargets(members);
+    } catch (error) {
+      shareList.replaceChildren(createAttachmentPlaceholder("alert-circle-outline", "Akses belum dapat dimuat", error?.message || "Coba lagi beberapa saat."));
+    }
+  }
+
+  async function openShareManager() {
+    if (!currentRecord || !(currentRecord.can_manage_sharing ?? (currentRecord.can_edit && currentRecord.scope === "family"))) return;
+    setShareMessage("");
+    shareLayer.hidden = false;
+    await refreshShareTargets();
+  }
+
   function openDetail(record) {
     currentRecord = record;
     detailScope.textContent = scopeLabel(record);
@@ -637,6 +801,7 @@
     detailAttention.classList.toggle("is-expired", expiry.expired);
     detailAttention.textContent = expiry.attention ? expiry.text : "";
     detailEdit.hidden = !record.can_edit;
+    updateShareSection(record);
     renderAttachmentLockedState(record);
     detailLayer.hidden = false;
   }
@@ -661,15 +826,18 @@
       preparing: "Menyiapkan record lampiran aman…",
       uploading: "Mengunggah ciphertext…",
       committing: "Memverifikasi lampiran terenkripsi…",
+      sharing: "Menyinkronkan akses lampiran keluarga…",
       done: "Lampiran aman berhasil disimpan."
     };
     setMessage("Menyiapkan lampiran aman…");
     try {
-      await Service().uploadAttachment(recordId, file, {
+      const uploaded = await Service().uploadAttachment(recordId, file, {
         familyId: activeFamily?.id || null,
         onStage: (stage) => setMessage(stageCopy[stage] || "Memproses lampiran…")
       });
-      setMessage("Lampiran berhasil disimpan secara terenkripsi.");
+      setMessage(uploaded?.shareSyncWarning
+        ? `Lampiran tersimpan aman. ${uploaded.shareSyncWarning}`
+        : "Lampiran berhasil disimpan secara terenkripsi.", Boolean(uploaded?.shareSyncWarning));
       await loadRecords();
       if (currentRecord?.document_id === recordId) await refreshCurrentRecord();
       await refreshVaultStatus();
@@ -776,6 +944,10 @@
     closeDetail();
     openForm(record);
   });
+  shareManage.addEventListener("click", openShareManager);
+  shareClose.addEventListener("click", closeShareManager);
+  shareLayer.addEventListener("click", (event) => { if (event.target === shareLayer && !busy) closeShareManager(); });
+
   detailAddAttachment.addEventListener("click", () => detailFile.click());
   detailFile.addEventListener("change", async () => {
     const file = detailFile.files?.[0] || null;

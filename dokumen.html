@@ -26,7 +26,7 @@
   <link rel="stylesheet" href="css/theme.css">
   <link rel="stylesheet" href="css/ruangkitha-design-system-v1.css?v=v2.0.0a50a" data-ruangkitha-design-system="1.0.7">
   <link rel="stylesheet" href="css/ruangkitha-shell-v1.css?v=v2.0.0a50a" data-ruangkitha-shell="1.0.7">
-  <link rel="stylesheet" href="css/pages/ruangkitha-documents-v1.css?v=20260912-v200a50a2">
+  <link rel="stylesheet" href="css/pages/ruangkitha-documents-v1.css?v=20260912-v200a50b">
   <style id="ruangkitha-auth-cloak">html[data-auth-guard] body{visibility:hidden!important}</style>
 </head>
 <body>
@@ -209,9 +209,38 @@
         <input data-doc-detail-file type="file" accept="image/*,.pdf,application/pdf" hidden>
       </section>
 
+      <section class="dokumen-share-section" data-doc-share-section hidden>
+        <div class="dokumen-section-title">
+          <div>
+            <strong>Akses keluarga</strong>
+            <span data-doc-share-summary>Lampiran aman dibagikan secara terpisah dari metadata dokumen.</span>
+          </div>
+        </div>
+        <button class="tombol-sekunder dokumen-share-manage" type="button" data-doc-share-manage hidden>Kelola akses lampiran</button>
+      </section>
+
       <div class="dokumen-detail-actions">
         <button class="tombol-sekunder" type="button" data-doc-detail-edit hidden>Edit informasi</button>
       </div>
+    </div>
+  </section>
+</div>
+
+<!-- a50b: owner-managed attachment access for family documents. Metadata remains family-visible. -->
+<div class="lapisan dokumen-share-layer" data-doc-share-layer hidden>
+  <section class="bottom-sheet dokumen-share-sheet" role="dialog" aria-modal="true" aria-labelledby="doc-share-title">
+    <div class="sheet-handle"></div>
+    <div class="sheet-header dokumen-sheet-header">
+      <div>
+        <h2 id="doc-share-title">Kelola akses lampiran</h2>
+        <p class="sheet-subjudul">Metadata dokumen keluarga tetap terlihat oleh anggota aktif. Pilih siapa yang boleh membuka lampiran aman.</p>
+      </div>
+      <button class="tombol-ikon" type="button" data-doc-share-close aria-label="Tutup"><ion-icon name="close-outline"></ion-icon></button>
+    </div>
+    <div class="dokumen-share-body">
+      <div class="dokumen-share-list" data-doc-share-list></div>
+      <p class="dokumen-sheet-message" data-doc-share-message role="alert" hidden></p>
+      <p class="dokumen-share-footnote">Akses yang dicabut langsung menghentikan akses server ke ciphertext. Salinan yang sebelumnya sudah diunduh di luar RuangKitha tidak dapat ditarik kembali.</p>
     </div>
   </section>
 </div>
@@ -247,10 +276,11 @@
 <script src="js/backend/auth-router.js?v=20260912-v200a49d"></script>
 <script src="js/backend/auth-guard.js?v=20260912-v200a49d"></script>
 <script src="js/security/ruangkitha-crypto-core.js?v=20260912-v200a49"></script>
-<script src="js/security/ruangkitha-trusted-device.js?v=20260912-v200a49c"></script>
-<script src="js/security/ruangkitha-documents-crypto.js?v=20260912-v200a50a"></script>
-<script src="js/backend/documents-service.js?v=20260912-v200a50a"></script>
-<script src="js/pages/dokumen.js?v=20260912-v200a50a2"></script>
+<script src="js/security/ruangkitha-trusted-device.js?v=20260912-v200a50b-sharebridge"></script>
+<script src="js/security/ruangkitha-recovery-kit.js?v=20260912-v200a50b-shareproof"></script>
+<script src="js/security/ruangkitha-documents-crypto.js?v=20260912-v200a50b"></script>
+<script src="js/backend/documents-service.js?v=20260912-v200a50b"></script>
+<script src="js/pages/dokumen.js?v=20260912-v200a50b"></script>
 <script src="js/pwa.js?v=20260912-v200a49d"></script>
 </body>
 </html>

@@ -1,5 +1,5 @@
 /*
- * RuangKitha v2.0.0a50a — Encrypted Attachments Crypto V1 (a50-compatible)
+ * RuangKitha v2.0.0a50b — Encrypted Attachments + Family Key Distribution Crypto V1 (a50-compatible)
  *
  * SECURITY CONTRACT
  * - File bytes and sensitive metadata are encrypted on-device before upload.
@@ -14,10 +14,17 @@
 
   const Crypto = root.RuangKithaCrypto || (typeof require === "function" ? require("./ruangkitha-crypto-core.js") : null);
   if (!Crypto) throw new Error("RuangKithaCrypto wajib dimuat sebelum Documents Crypto.");
+  const webcrypto = root.crypto;
+  const subtle = webcrypto && webcrypto.subtle;
+  if (!subtle) throw new Error("Web Crypto diperlukan untuk Documents Crypto.");
 
   const VERSION = 1;
   const BUILD = "v2.0.0a50a";
+  const SHARE_BUILD = "v2.0.0a50b";
   const LEGACY_BUILD = "v2.0.0a50";
+  const RECORD_BUILD = "v2.0.0a50a";
+  const SHARE_SUITE = "RK-DOCSHARE1-ECDH-P256-HKDF-SHA256-A256GCM";
+  const SHARE_KDF_INFO = "RuangKitha Documents Family Share V1";
   const FORMAT_MAGIC = "RKD1";
   const FORMAT_VERSION = 1;
   const HEADER_BYTES = 12;
@@ -241,10 +248,155 @@
     });
   }
 
+
+
+  function canonicalPublicJwk(jwk) {
+    if (!jwk || jwk.kty !== "EC" || jwk.crv !== "P-256" || !jwk.x || !jwk.y) {
+      throw new Error("Public key perangkat penerima tidak valid.");
+    }
+    return JSON.stringify({ crv: "P-256", kty: "EC", x: jwk.x, y: jwk.y });
+  }
+
+  async function publicKeyFingerprint(jwk) {
+    const digest = await Crypto.sha256(Crypto.utf8(canonicalPublicJwk(jwk)));
+    try {
+      return Crypto.bytesToBase64Url(digest);
+    } finally {
+      Crypto.zeroize(digest);
+    }
+  }
+
+  function shareTransferContext(attachmentId, granteeUserId, recipientDeviceFingerprint) {
+    return `document-share-transfer-v1:${cleanUuid(attachmentId, "Attachment ID")}:${cleanUuid(granteeUserId, "Grantee User ID")}:${String(recipientDeviceFingerprint || "").trim()}`;
+  }
+
+  function shareKdfInfo(attachmentId, granteeUserId, recipientDeviceFingerprint) {
+    return Crypto.utf8(`${SHARE_KDF_INFO}|${cleanUuid(attachmentId, "Attachment ID")}|${cleanUuid(granteeUserId, "Grantee User ID")}|${String(recipientDeviceFingerprint || "").trim()}`);
+  }
+
+  async function importEcdhPublicKey(jwk) {
+    canonicalPublicJwk(jwk);
+    return subtle.importKey(
+      "jwk",
+      jwk,
+      { name: "ECDH", namedCurve: "P-256" },
+      false,
+      []
+    );
+  }
+
+  async function deriveShareKek(privateKey, publicKey, saltBytes, infoBytes) {
+    if (!privateKey || privateKey.type !== "private" || privateKey.algorithm?.name !== "ECDH") {
+      throw new Error("Private key ECDH perangkat tidak valid.");
+    }
+    const bits = new Uint8Array(await subtle.deriveBits({ name: "ECDH", public: publicKey }, privateKey, 256));
+    try {
+      const material = await subtle.importKey("raw", bits, "HKDF", false, ["deriveKey"]);
+      return subtle.deriveKey(
+        { name: "HKDF", hash: "SHA-256", salt: saltBytes, info: infoBytes },
+        material,
+        { name: "AES-GCM", length: 256 },
+        false,
+        ["encrypt", "decrypt"]
+      );
+    } finally {
+      Crypto.zeroize(bits);
+    }
+  }
+
+  async function unwrapAttachmentKey({ masterKey, attachmentId, keyEnvelope, extractable = true } = {}) {
+    if (!masterKey || masterKey.type !== "secret") throw new Error("Master Key diperlukan.");
+    return Crypto.unwrapAesKey(masterKey, keyEnvelope, {
+      context: buildKeyContext(attachmentId),
+      extractable: Boolean(extractable)
+    });
+  }
+
+  async function wrapAttachmentKey({ masterKey, attachmentId, attachmentKey } = {}) {
+    if (!masterKey || masterKey.type !== "secret") throw new Error("Master Key diperlukan.");
+    if (!attachmentKey || attachmentKey.type !== "secret" || attachmentKey.extractable !== true) {
+      throw new Error("Attachment Key sementara harus extractable untuk key distribution.");
+    }
+    return Crypto.wrapAesKey(masterKey, attachmentKey, { context: buildKeyContext(attachmentId) });
+  }
+
+  async function createAttachmentShareTransfer({ attachmentKey, attachmentId, granteeUserId, recipientPublicJwk, recipientDeviceFingerprint } = {}) {
+    if (!attachmentKey || attachmentKey.type !== "secret" || attachmentKey.extractable !== true) {
+      throw new Error("Attachment Key extractable diperlukan untuk membuat share transfer.");
+    }
+    const attachment = cleanUuid(attachmentId, "Attachment ID");
+    const grantee = cleanUuid(granteeUserId, "Grantee User ID");
+    const expectedFingerprint = String(recipientDeviceFingerprint || "").trim();
+    if (!/^[A-Za-z0-9_-]{43}$/.test(expectedFingerprint)) throw new Error("Fingerprint perangkat penerima tidak valid.");
+    const actualFingerprint = await publicKeyFingerprint(recipientPublicJwk);
+    if (actualFingerprint !== expectedFingerprint) throw new Error("Public key perangkat penerima tidak cocok dengan fingerprint.");
+
+    const recipientPublicKey = await importEcdhPublicKey(recipientPublicJwk);
+    const ephemeral = await subtle.generateKey({ name: "ECDH", namedCurve: "P-256" }, false, ["deriveKey", "deriveBits"]);
+    const ephemeralPublicJwk = await subtle.exportKey("jwk", ephemeral.publicKey);
+    const salt = Crypto.randomBytes(Crypto.constants.HKDF_SALT_BYTES);
+    const info = shareKdfInfo(attachment, grantee, expectedFingerprint);
+    try {
+      const kek = await deriveShareKek(ephemeral.privateKey, recipientPublicKey, salt, info);
+      const context = shareTransferContext(attachment, grantee, expectedFingerprint);
+      const wrapped = await Crypto.wrapAesKey(kek, attachmentKey, { context });
+      return {
+        v: 1,
+        suite: SHARE_SUITE,
+        kind: "attachment-share-transfer",
+        attachment_id: attachment,
+        grantee_user_id: grantee,
+        recipient_device_fingerprint: expectedFingerprint,
+        ephemeral_public_key: ephemeralPublicJwk,
+        kdf: {
+          name: "HKDF",
+          hash: "SHA-256",
+          salt: Crypto.bytesToBase64Url(salt),
+          info: SHARE_KDF_INFO
+        },
+        wrapped
+      };
+    } finally {
+      Crypto.zeroize(salt);
+      Crypto.zeroize(info);
+    }
+  }
+
+  async function openAttachmentShareTransfer({ recipientPrivateKey, attachmentId, granteeUserId, recipientDeviceFingerprint, transferEnvelope } = {}) {
+    const attachment = cleanUuid(attachmentId, "Attachment ID");
+    const grantee = cleanUuid(granteeUserId, "Grantee User ID");
+    const fingerprint = String(recipientDeviceFingerprint || "").trim();
+    const env = transferEnvelope;
+    if (!env || env.v !== 1 || env.suite !== SHARE_SUITE || env.kind !== "attachment-share-transfer") {
+      throw new Error("Share transfer lampiran tidak didukung.");
+    }
+    if (env.attachment_id !== attachment || env.grantee_user_id !== grantee || env.recipient_device_fingerprint !== fingerprint) {
+      throw new Error("Share transfer tidak terikat ke lampiran/perangkat ini.");
+    }
+    if (!env.kdf || env.kdf.name !== "HKDF" || env.kdf.hash !== "SHA-256" || env.kdf.info !== SHARE_KDF_INFO) {
+      throw new Error("KDF share transfer tidak valid.");
+    }
+    const ephemeralPublicKey = await importEcdhPublicKey(env.ephemeral_public_key);
+    const salt = Crypto.base64UrlToBytes(env.kdf.salt);
+    const info = shareKdfInfo(attachment, grantee, fingerprint);
+    try {
+      const kek = await deriveShareKek(recipientPrivateKey, ephemeralPublicKey, salt, info);
+      return Crypto.unwrapAesKey(kek, env.wrapped, {
+        context: shareTransferContext(attachment, grantee, fingerprint),
+        extractable: true
+      });
+    } finally {
+      Crypto.zeroize(salt);
+      Crypto.zeroize(info);
+    }
+  }
   const api = Object.freeze({
     VERSION,
     BUILD,
     LEGACY_BUILD,
+    RECORD_BUILD,
+    SHARE_BUILD,
+    SHARE_SUITE,
     FORMAT_MAGIC,
     FORMAT_VERSION,
     MAX_FILE_BYTES,
@@ -261,7 +413,11 @@
     openDocument,
     sealAttachment,
     decryptAttachmentMetadata,
-    openAttachment
+    openAttachment,
+    unwrapAttachmentKey,
+    wrapAttachmentKey,
+    createAttachmentShareTransfer,
+    openAttachmentShareTransfer
   });
 
   root.RuangKithaDocumentsCrypto = api;

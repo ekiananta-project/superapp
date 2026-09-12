@@ -1,8 +1,9 @@
-/* RuangKitha v2.0.0a50a — Document Record + Optional Encrypted Attachments Service V1 */
+/* RuangKitha v2.0.0a50b — Family Document Sharing / Key Distribution Service V1 */
 (function initRuangKithaDocumentsService(root) {
   "use strict";
 
-  const BUILD = "v2.0.0a50a";
+  const BUILD = "v2.0.0a50b";
+  const RECORD_BUILD = "v2.0.0a50a";
   const BUCKET = "ruangkitha-documents-v1";
   const LEGACY_BUILD = "v2.0.0a50";
 
@@ -15,12 +16,13 @@
   function securityDeps() {
     const client = clientOnly();
     const Trusted = root.RuangKithaTrustedDevice;
+    const Recovery = root.RuangKithaRecoveryKit;
     const DocCrypto = root.RuangKithaDocumentsCrypto;
     const Crypto = root.RuangKithaCrypto;
-    if (!Trusted || !DocCrypto || !Crypto) {
+    if (!Trusted || !Recovery || !DocCrypto || !Crypto) {
       throw new Error("Security Foundation lampiran belum dimuat lengkap.");
     }
-    return { client, Trusted, DocCrypto, Crypto };
+    return { client, Trusted, Recovery, DocCrypto, Crypto };
   }
 
   async function rpc(client, name, params = {}) {
@@ -269,8 +271,21 @@
         p_attachment_id: attachmentId,
         p_device_client_id: status.deviceInstanceId
       });
+
+      let shareSyncWarning = null;
+      if (record.scope === "family") {
+        try {
+          onStage?.("sharing");
+          await syncActiveShares(documentId);
+        } catch (shareError) {
+          // The encrypted attachment itself is already safely committed. A sharing sync
+          // failure must not roll back or delete the owner's ciphertext. The owner can
+          // retry from Kelola akses later.
+          shareSyncWarning = shareError?.message || "Akses keluarga perlu disinkronkan ulang.";
+        }
+      }
       onStage?.("done");
-      return { ...committed, attachmentId, documentId, storagePath };
+      return { ...committed, attachmentId, documentId, storagePath, shareSyncWarning };
     } catch (error) {
       if (uploaded && prepared) {
         try {
@@ -322,6 +337,9 @@
 
   async function listReadableAttachments(documentId, { familyId = null } = {}) {
     const { Trusted, status } = await secureContext({ requireUnlocked: true });
+    // If this is the first open on a recipient account, convert one device-bound
+    // ECDH transfer into the recipient's normal Master-Key envelope first.
+    await acceptIncomingShares(documentId);
     const rows = await listAttachments(documentId, { familyId });
     const { DocCrypto } = securityDeps();
     return Trusted.withMasterKey(status.userId, async (masterKey) => {
@@ -419,6 +437,155 @@
   }
 
   // ---------------------------------------------------------------------------
+  // a50b Family Document Sharing / Key Distribution V1
+  // ---------------------------------------------------------------------------
+  async function listShareTargets(documentId) {
+    const client = clientOnly();
+    const result = await rpc(client, "document_share_targets_v1", {
+      p_document_id: documentId
+    });
+    return Array.isArray(result?.members) ? result.members : [];
+  }
+
+  async function sharePlan(documentId, granteeUserId) {
+    const client = clientOnly();
+    return rpc(client, "document_share_plan_v1", {
+      p_document_id: documentId,
+      p_grantee_user_id: granteeUserId
+    });
+  }
+
+  async function buildShareTransfers(plan, status, Trusted, DocCrypto) {
+    const devices = Array.isArray(plan?.trusted_devices) ? plan.trusted_devices : [];
+    const attachments = Array.isArray(plan?.attachments_needing_transfer) ? plan.attachments_needing_transfer : [];
+    if (!plan?.recovery_ready) {
+      const error = new Error(`${plan?.display_name || "Anggota keluarga"} perlu mengaktifkan Recovery Kit sebelum menerima lampiran aman.`);
+      error.code = "GRANTEE_RECOVERY_KIT_REQUIRED";
+      throw error;
+    }
+    if (!devices.length) {
+      const error = new Error(`${plan?.display_name || "Anggota keluarga"} belum memiliki Trusted Device yang siap menerima lampiran aman.`);
+      error.code = "GRANTEE_TRUSTED_DEVICE_REQUIRED";
+      throw error;
+    }
+    if (!attachments.length) return [];
+
+    return Trusted.withMasterKey(status.userId, async (masterKey) => {
+      const transfers = [];
+      for (const attachment of attachments) {
+        const attachmentKey = await DocCrypto.unwrapAttachmentKey({
+          masterKey,
+          attachmentId: attachment.attachment_id,
+          keyEnvelope: attachment.owner_key_envelope,
+          extractable: true
+        });
+        for (const device of devices) {
+          const transferEnvelope = await DocCrypto.createAttachmentShareTransfer({
+            attachmentKey,
+            attachmentId: attachment.attachment_id,
+            granteeUserId: plan.grantee_user_id,
+            recipientPublicJwk: device.public_key,
+            recipientDeviceFingerprint: device.public_key_fingerprint
+          });
+          transfers.push({
+            attachment_id: attachment.attachment_id,
+            grantee_device_id: device.device_id,
+            grantee_device_fingerprint: device.public_key_fingerprint,
+            transfer_envelope: transferEnvelope
+          });
+        }
+      }
+      return transfers;
+    });
+  }
+
+  async function shareWithMember(documentId, granteeUserId, { onStage = null } = {}) {
+    const { client, Trusted, status } = await secureContext({ requireUnlocked: true });
+    const { DocCrypto } = securityDeps();
+    onStage?.("planning");
+    const plan = await sharePlan(documentId, granteeUserId);
+    onStage?.("wrapping");
+    const transfers = await buildShareTransfers(plan, status, Trusted, DocCrypto);
+    onStage?.("committing");
+    const result = await rpc(client, "document_share_commit_v1", {
+      p_document_id: documentId,
+      p_grantee_user_id: granteeUserId,
+      p_transfers: transfers
+    });
+    onStage?.("done");
+    return { ...result, transferCount: transfers.length };
+  }
+
+  async function revokeMemberShare(documentId, granteeUserId) {
+    const { client } = await secureContext({ requireUnlocked: true });
+    return rpc(client, "document_share_revoke_v1", {
+      p_document_id: documentId,
+      p_grantee_user_id: granteeUserId
+    });
+  }
+
+  async function syncActiveShares(documentId) {
+    const members = await listShareTargets(documentId);
+    const active = members.filter((member) => member.share_active && Number(member.trusted_device_count || 0) > 0);
+    const results = [];
+    for (const member of active) {
+      results.push(await shareWithMember(documentId, member.user_id));
+    }
+    return { synced: results.length, results };
+  }
+
+  async function pendingIncomingShares(documentId, { masterProofSha256 = null } = {}) {
+    const { client, status } = await secureContext({ requireUnlocked: true });
+    const { Recovery } = securityDeps();
+    const proof = masterProofSha256 || await Recovery.masterProofFromUnlocked({ supabase: client });
+    const result = await rpc(client, "document_attachment_share_pending_v1", {
+      p_document_id: documentId,
+      p_device_client_id: status.deviceInstanceId,
+      p_master_proof_sha256: proof
+    });
+    return { transfers: Array.isArray(result?.transfers) ? result.transfers : [], masterProofSha256: proof };
+  }
+
+  async function acceptIncomingShares(documentId) {
+    const { client, Trusted, status } = await secureContext({ requireUnlocked: true });
+    const { DocCrypto, Recovery } = securityDeps();
+    const masterProofSha256 = await Recovery.masterProofFromUnlocked({ supabase: client });
+    const pending = await pendingIncomingShares(documentId, { masterProofSha256 });
+    const transfers = pending.transfers;
+    let accepted = 0;
+
+    for (const transfer of transfers) {
+      const attachmentKey = await Trusted.withDeviceIdentityPrivateKey(status.userId, async (privateKey, identity) => {
+        if (identity.publicKeyFingerprint !== transfer.grantee_device_fingerprint) {
+          throw new Error("Fingerprint Trusted Device lokal tidak cocok dengan key transfer.");
+        }
+        return DocCrypto.openAttachmentShareTransfer({
+          recipientPrivateKey: privateKey,
+          attachmentId: transfer.attachment_id,
+          granteeUserId: status.userId,
+          recipientDeviceFingerprint: transfer.grantee_device_fingerprint,
+          transferEnvelope: transfer.transfer_envelope
+        });
+      });
+
+      const recipientEnvelope = await Trusted.withMasterKey(status.userId, (masterKey) => DocCrypto.wrapAttachmentKey({
+        masterKey,
+        attachmentId: transfer.attachment_id,
+        attachmentKey
+      }));
+
+      await rpc(client, "document_attachment_share_accept_v1", {
+        p_transfer_id: transfer.transfer_id,
+        p_device_client_id: status.deviceInstanceId,
+        p_master_proof_sha256: masterProofSha256,
+        p_recipient_key_envelope: recipientEnvelope
+      });
+      accepted += 1;
+    }
+    return { accepted, pending: transfers.length };
+  }
+
+  // ---------------------------------------------------------------------------
   // a50 compatibility surface. Kept so the locked crypto/storage foundation can
   // still be regression-tested while the product UI uses record + attachment.
   // ---------------------------------------------------------------------------
@@ -485,6 +652,7 @@
 
   const api = Object.freeze({
     BUILD,
+    RECORD_BUILD,
     LEGACY_BUILD,
     BUCKET,
     createRecord,
@@ -502,6 +670,13 @@
     downloadAttachment,
     downloadAttachmentToBrowser,
     deleteAttachment,
+    listShareTargets,
+    sharePlan,
+    shareWithMember,
+    revokeMemberShare,
+    syncActiveShares,
+    pendingIncomingShares,
+    acceptIncomingShares,
     // compatibility
     listEncrypted,
     listReadable,
