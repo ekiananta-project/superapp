@@ -1,4 +1,4 @@
-const CACHE_NAME = "ruangkitha-v2.0.0a49d-web-security-hardening-security-qa-a49d2-home-lottie-first-paint-hotfix-a50a-document-record-optional-attachments-v1-a50a1-documents-ux-polish-v1-a50a2-attention-first-landing-a50b-family-document-sharing-v1-a50b1-initial-sharing-flow-modal-stack-hotfix-a50c-documents-lifecycle-management-v1-a50d-documents-search-filter-smart-organization-v1-a50e-documents-reminder-calendar-notification-v1-a50e1-documents-reminder-projection-hotfix";
+const CACHE_NAME = "ruangkitha-v2.0.0a49d-web-security-hardening-security-qa-a49d2-home-lottie-first-paint-hotfix-a50a-document-record-optional-attachments-v1-a50a1-documents-ux-polish-v1-a50a2-attention-first-landing-a50b-family-document-sharing-v1-a50b1-initial-sharing-flow-modal-stack-hotfix-a50c-documents-lifecycle-management-v1-a50d-documents-search-filter-smart-organization-v1-a50e-documents-reminder-calendar-notification-v1-a50e1-documents-reminder-projection-hotfix-a50f-documents-home-insight-summary-polish-v1";
 const OFFLINE_URL = "./offline.html";
 
 const APP_FILES = [

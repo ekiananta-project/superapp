@@ -1,4 +1,4 @@
-// RuangKitha v2.0.0a50e — Home Documents reminder insight integration.
+// RuangKitha v2.0.0a50f — Documents Home Insight + Summary Polish V1.
 (() => {
   "use strict";
 
@@ -181,9 +181,21 @@
   function renderDocumentAttention(summary) {
     const title = q("[data-documents-attention]");
     const helper = q("[data-documents-helper]");
+    const preview = q(".document-preview");
+    const card = q('[data-module-id="documents"]');
     const count = Math.max(0, Number(summary?.attentionCount || 0));
     const expired = Math.max(0, Number(summary?.expiredCount || 0));
     const today = Math.max(0, Number(summary?.todayCount || 0));
+    const top = summary?.topUrgent || null;
+
+    let state = "safe";
+    if (expired > 0) state = "expired";
+    else if (today > 0) state = "today";
+    else if (count > 0) state = "attention";
+
+    preview?.classList.remove("is-safe", "is-expired", "is-today", "is-attention");
+    preview?.classList.add(`is-${state}`);
+    card?.setAttribute("data-documents-state", state);
 
     if (title) {
       if (count === 0) title.textContent = "Semua masih aman";
@@ -191,10 +203,26 @@
       else if (today > 0) title.textContent = `${today} dokumen berakhir hari ini`;
       else title.textContent = `${count} dokumen perlu perhatian`;
     }
-    if (helper) {
-      helper.textContent = count === 0
-        ? "Tidak ada masa berlaku yang perlu ditindak."
-        : "Buka Dokumen untuk melihat yang perlu dijaga.";
+
+    if (!helper) return;
+    if (count === 0) {
+      helper.textContent = "Tidak ada dokumen yang perlu ditindak saat ini.";
+      return;
+    }
+    if (!top?.displayName) {
+      helper.textContent = "Buka Dokumen untuk melihat yang perlu dijaga.";
+      return;
+    }
+
+    const days = Number(top.daysRemaining);
+    if (top.state === "expired" && Number.isFinite(days)) {
+      helper.textContent = `${top.displayName} · kedaluwarsa ${Math.abs(days)} hari lalu`;
+    } else if (top.state === "today") {
+      helper.textContent = `${top.displayName} · berakhir hari ini`;
+    } else if (Number.isFinite(days)) {
+      helper.textContent = `${top.displayName} · berakhir ${days} hari lagi`;
+    } else {
+      helper.textContent = `${top.displayName} · perlu diperhatikan`;
     }
   }
 
@@ -398,6 +426,7 @@
   window.addEventListener("storage", event => {
     if (event.key === "ruangkitha:calendar:dirty") refreshTodayFromExternalChange();
   });
+  window.addEventListener("ruangkitha:documents-reminder-changed", refreshTodayFromExternalChange);
 
   document.addEventListener("DOMContentLoaded", init, { once: true });
 })();

@@ -1,8 +1,8 @@
-/* RuangKitha v2.0.0a50e1 — Documents Reminder Projection Hotfix */
+/* RuangKitha v2.0.0a50f — Documents Home Insight + Summary Polish V1 */
 (() => {
   "use strict";
 
-  const BUILD = "v2.0.0a50e1";
+  const BUILD = "v2.0.0a50f";
 
   function client() {
     if (!window.supabaseClient) throw new Error("Supabase belum tersedia.");
@@ -164,6 +164,7 @@
     let todayCount = 0;
     let upcomingCount = 0;
     let nearestExpiresOn = null;
+    let topUrgent = null;
 
     for (const record of records || []) {
       const expiry = cleanDate(record?.expires_on);
@@ -183,9 +184,27 @@
       else if (diff === 0) todayCount += 1;
       else upcomingCount += 1;
       if (!nearestExpiresOn || expiry < nearestExpiresOn) nearestExpiresOn = expiry;
+
+      // Home only receives catalog metadata that is already intentionally visible
+      // without Vault unlock. Attachment names/content/OCR are never inspected.
+      const candidate = {
+        documentId: String(record?.document_id || ""),
+        displayName: String(record?.display_name || "Dokumen").trim() || "Dokumen",
+        documentType: String(record?.document_type || "Dokumen").trim() || "Dokumen",
+        expiresOn: expiry,
+        daysRemaining: diff,
+        state: diff < 0 ? "expired" : (diff === 0 ? "today" : "attention")
+      };
+      const rank = ({ expired: 0, today: 1, attention: 2 })[candidate.state] ?? 9;
+      const currentRank = topUrgent ? (({ expired: 0, today: 1, attention: 2 })[topUrgent.state] ?? 9) : 99;
+      const shouldReplace = !topUrgent
+        || rank < currentRank
+        || (rank === currentRank && candidate.expiresOn < topUrgent.expiresOn)
+        || (rank === currentRank && candidate.expiresOn === topUrgent.expiresOn && candidate.displayName.localeCompare(topUrgent.displayName, "id") < 0);
+      if (shouldReplace) topUrgent = candidate;
     }
 
-    return { attentionCount, expiredCount, todayCount, upcomingCount, nearestExpiresOn };
+    return { attentionCount, expiredCount, todayCount, upcomingCount, nearestExpiresOn, topUrgent };
   }
 
   async function loadCalendarEvents({ familyId = null, start, end } = {}) {
@@ -227,7 +246,8 @@
       expiredCount: Number(data?.expired_count || 0),
       todayCount: Number(data?.today_count || 0),
       upcomingCount: Number(data?.upcoming_count || 0),
-      nearestExpiresOn: cleanDate(data?.nearest_expires_on)
+      nearestExpiresOn: cleanDate(data?.nearest_expires_on),
+      topUrgent: null
     };
   }
 

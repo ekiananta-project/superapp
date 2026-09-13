@@ -1058,3 +1058,34 @@ html[data-theme="dark"] .notes-paper {
   .superapp-greeting h1 { font-size: 26px; }
   .module-order-trigger span { display: none; }
 }
+
+
+/* v2.0.0a50f — Documents Home Insight + Summary Polish V1 */
+.family-module-card[data-module-id="documents"][data-documents-state="safe"] {
+  --module-accent: var(--rk-success);
+  --module-soft: var(--rk-success-soft);
+}
+.family-module-card[data-module-id="documents"][data-documents-state="attention"],
+.family-module-card[data-module-id="documents"][data-documents-state="today"] {
+  --module-accent: var(--rk-warning);
+  --module-soft: var(--rk-warning-soft);
+}
+.family-module-card[data-module-id="documents"][data-documents-state="expired"] {
+  --module-accent: var(--rk-danger);
+  --module-soft: var(--rk-danger-soft);
+}
+.document-preview.is-safe > span { background: var(--rk-success-soft); color: var(--rk-success); }
+.document-preview.is-attention > span,
+.document-preview.is-today > span { background: var(--rk-warning-soft); color: var(--rk-warning); }
+.document-preview.is-expired > span { background: var(--rk-danger-soft); color: var(--rk-danger); }
+.document-preview strong,
+.document-preview small {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.document-preview strong { white-space: nowrap; }
+.document-preview small {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}

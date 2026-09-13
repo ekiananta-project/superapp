@@ -1701,6 +1701,8 @@
       if (window.AUTH_READY) await window.AUTH_READY;
       activeFamily = await window.AuthRouter.ambilFamilyAktif();
       if (!activeFamily) throw new Error("Keluarga aktif tidak ditemukan.");
+      const requestedView = new URLSearchParams(location.search).get("view");
+      if (["family", "attention", "personal"].includes(requestedView)) currentView = requestedView;
       syncTabs();
       renderDiscoveryState();
       await Promise.all([refreshVaultStatus(), loadRecords()]);
