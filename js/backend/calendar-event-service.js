@@ -1,8 +1,8 @@
-// RuangKitha v2.0.0a45 — Calendar Event Projection V2 + fast cache.
+// RuangKitha v2.0.0a50e1 — Calendar projection + Documents reminder projection hotfix.
 (() => {
   "use strict";
 
-  const CACHE_VERSION = "a45-projection-v1";
+  const CACHE_VERSION = "a50e1-projection-v1";
   const CACHE_PREFIX = "ruangkitha:calendar-range:";
   const inflight = new Map();
 
@@ -151,7 +151,21 @@
         }));
       }
       if (error) throw error;
-      const items = sortItems(data || []);
+
+      let documentItems = [];
+      if (window.RuangKithaDocumentReminders?.loadCalendarEvents) {
+        try {
+          documentItems = await window.RuangKithaDocumentReminders.loadCalendarEvents({
+            familyId,
+            start: rangeStart,
+            end: rangeEnd
+          });
+        } catch (documentError) {
+          console.debug?.("[Calendar documents projection]", documentError);
+        }
+      }
+
+      const items = sortItems([...(data || []), ...(documentItems || [])]);
       saveRange({ viewerId: resolvedViewerId, familyId, start: rangeStart, end: rangeEnd, items });
       return items;
     })();
@@ -177,7 +191,7 @@
   }
 
   function moduleLabel(module) {
-    const labels = { finance: "Keuangan", notes: "Catatan", calendar: "Kalender" };
+    const labels = { finance: "Keuangan", notes: "Catatan", documents: "Dokumen", calendar: "Kalender" };
     return labels[module] || "RuangKitha";
   }
 
