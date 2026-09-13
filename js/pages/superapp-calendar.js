@@ -46,7 +46,7 @@
     return { start, end };
   }
 
-  function iconFor(item) { return item.icon || ({ finance: "receipt-outline", notes: "alarm-outline", calendar: "calendar-clear-outline" }[item.module] || "calendar-clear-outline"); }
+  function iconFor(item) { return item.icon || ({ finance: "receipt-outline", notes: "alarm-outline", documents: "document-text-outline", maintenance: "build-outline", calendar: "calendar-clear-outline" }[item.module] || "calendar-clear-outline"); }
   function holidayEvent(items) { return (items || []).find(item => item.type === "national_holiday" || item.type === "collective_leave"); }
   function dotItems(items) { return (items || []).slice(0, 3); }
 

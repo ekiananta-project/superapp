@@ -1,4 +1,4 @@
-// RuangKitha v2.0.0a51a — Agenda Dekat V1 + a50f Home Insight baseline.
+// RuangKitha v2.0.0a52 — Agenda Dekat + Maintenance Core V1 Home integration.
 (() => {
   "use strict";
 
@@ -174,7 +174,7 @@
   }
 
   function iconForEvent(item) {
-    return item?.icon || ({ finance: "receipt-outline", notes: "alarm-outline", documents: "document-text-outline", calendar: "calendar-clear-outline" }[item?.module] || "notifications-outline");
+    return item?.icon || ({ finance: "receipt-outline", notes: "alarm-outline", documents: "document-text-outline", maintenance: "build-outline", calendar: "calendar-clear-outline" }[item?.module] || "notifications-outline");
   }
 
 
@@ -229,6 +229,49 @@
   async function loadDocumentAttention(familyId) {
     if (!window.RuangKithaDocumentReminders?.attentionSummary) return { attentionCount: 0 };
     return window.RuangKithaDocumentReminders.attentionSummary(familyId);
+  }
+
+  function renderMaintenanceSummary(summary) {
+    const title = q("[data-maintenance-attention]");
+    const helper = q("[data-maintenance-helper]");
+    const preview = q(".maintenance-preview");
+    const card = q('[data-module-id="maintenance"]');
+    const overdue = Math.max(0, Number(summary?.overdue || 0));
+    const todayCount = Math.max(0, Number(summary?.todayCount || 0));
+    const upcoming = Math.max(0, Number(summary?.upcoming || 0));
+    const active = Math.max(0, Number(summary?.activeCount || 0));
+    const top = summary?.top || null;
+
+    let state = "safe";
+    if (overdue > 0) state = "overdue";
+    else if (todayCount > 0) state = "today";
+    else if (upcoming > 0) state = "upcoming";
+
+    preview?.classList.remove("is-safe", "is-overdue", "is-today", "is-upcoming");
+    preview?.classList.add(`is-${state}`);
+    card?.setAttribute("data-maintenance-state", state);
+
+    if (title) {
+      if (!active) title.textContent = "Belum ada jadwal aktif";
+      else if (overdue > 0) title.textContent = `${overdue} perawatan terlewat`;
+      else if (todayCount > 0) title.textContent = `${todayCount} perawatan hari ini`;
+      else if (upcoming > 0) title.textContent = `${upcoming} perawatan dalam 30 hari`;
+      else title.textContent = `${active} jadwal perawatan aktif`;
+    }
+
+    if (!helper) return;
+    if (!top?.title) {
+      helper.textContent = "Kelompokkan aset lalu jaga siklus perawatannya.";
+      return;
+    }
+    if (top.days < 0) helper.textContent = `${top.title} · ${top.assetName} · terlewat ${Math.abs(top.days)} hari`;
+    else if (top.days === 0) helper.textContent = `${top.title} · ${top.assetName} · hari ini`;
+    else helper.textContent = `${top.title} · ${top.assetName} · ${top.days} hari lagi`;
+  }
+
+  async function loadMaintenanceSummary(familyId) {
+    if (!window.RuangKithaMaintenance?.summary) return { activeCount: 0 };
+    return window.RuangKithaMaintenance.summary(familyId);
   }
 
   function eventMeta(item) {
@@ -519,10 +562,11 @@
       saveActiveFamily(family.id);
 
       activeFamilyId = family.id;
-      const [cashflowResult, reminderResult, documentsResult] = await Promise.allSettled([
+      const [cashflowResult, reminderResult, documentsResult, maintenanceResult] = await Promise.allSettled([
         loadCashflow(family.id),
         loadNearAgenda(family.id),
-        loadDocumentAttention(family.id)
+        loadDocumentAttention(family.id),
+        loadMaintenanceSummary(family.id)
       ]);
 
       if (cashflowResult.status === "fulfilled") renderCashflow(cashflowResult.value);
@@ -543,6 +587,12 @@
         renderDocumentAttention({ attentionCount: 0 });
       }
 
+      if (maintenanceResult.status === "fulfilled") renderMaintenanceSummary(maintenanceResult.value);
+      else {
+        console.warn("[Superapp Home maintenance]", maintenanceResult.reason);
+        renderMaintenanceSummary({ activeCount: 0 });
+      }
+
       // Warm the exact Calendar grid range after Home is usable. This is intentionally
       // idle/background work and never blocks the Home card.
       prefetchCurrentCalendarMonth(family.id);
@@ -551,6 +601,7 @@
       renderReminders([]);
       renderCashflow({ net: 0 });
       renderDocumentAttention({ attentionCount: 0 });
+      renderMaintenanceSummary({ activeCount: 0 });
     } finally {
       q("[data-superapp-home]")?.setAttribute("aria-busy", "false");
     }
@@ -558,14 +609,17 @@
 
   async function refreshTodayFromExternalChange() {
     if (!activeFamilyId || document.hidden) return;
-    const [todayResult, documentsResult] = await Promise.allSettled([
+    const [todayResult, documentsResult, maintenanceResult] = await Promise.allSettled([
       loadNearAgenda(activeFamilyId),
-      loadDocumentAttention(activeFamilyId)
+      loadDocumentAttention(activeFamilyId),
+      loadMaintenanceSummary(activeFamilyId)
     ]);
     if (todayResult.status === "fulfilled") renderReminders(todayResult.value);
     else console.warn("[Superapp Home Today refresh]", todayResult.reason);
     if (documentsResult.status === "fulfilled") renderDocumentAttention(documentsResult.value);
     else console.warn("[Superapp Home Documents refresh]", documentsResult.reason);
+    if (maintenanceResult.status === "fulfilled") renderMaintenanceSummary(maintenanceResult.value);
+    else console.warn("[Superapp Home Maintenance refresh]", maintenanceResult.reason);
   }
 
   window.addEventListener("pageshow", event => {
@@ -578,6 +632,7 @@
     if (event.key === "ruangkitha:calendar:dirty") refreshTodayFromExternalChange();
   });
   window.addEventListener("ruangkitha:documents-reminder-changed", refreshTodayFromExternalChange);
+  window.addEventListener("ruangkitha:maintenance-changed", refreshTodayFromExternalChange);
 
   document.addEventListener("DOMContentLoaded", init, { once: true });
 })();

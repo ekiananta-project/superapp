@@ -134,17 +134,17 @@
           </div>
         </a>
 
-        <button class="family-module-card" type="button" data-module-id="maintenance" data-coming-soon="Maintenance">
+        <a class="family-module-card" href="maintenance.html" data-module-id="maintenance" data-maintenance-state="safe">
           <div class="module-heading">
             <span class="module-icon is-mint"><ion-icon name="construct-outline"></ion-icon></span>
-            <span class="module-title"><strong>Maintenance</strong><small>Perawatan &amp; kewajiban</small></span>
+            <span class="module-title"><strong>Maintenance</strong><small>Perawatan aset keluarga</small></span>
             <ion-icon class="module-chevron" name="chevron-forward-outline"></ion-icon>
           </div>
-          <div class="module-preview maintenance-preview">
+          <div class="module-preview maintenance-preview is-safe">
             <span><ion-icon name="build-outline"></ion-icon></span>
-            <div><strong>Jadwal perawatan</strong><small>Rumah &amp; kendaraan · segera hadir</small></div>
+            <div><strong data-maintenance-attention>Memuat jadwal perawatan</strong><small data-maintenance-helper>Mengecek siklus aset keluarga</small></div>
           </div>
-        </button>
+        </a>
 
         <button class="family-module-card fun-module" type="button" data-module-id="fun" data-coming-soon="Have Fun Family">
           <div class="module-heading">
@@ -202,10 +202,11 @@
 <script src="js/pages/superapp-home-lottie.js?v=20260912-v200a49d2"></script>
 <script src="js/pages/superapp-home-lottie-palette.js?v=20260912-v200a48b3"></script>
 <script src="js/backend/document-reminder-service.js?v=20260913-v200a50f"></script>
-<script src="js/backend/calendar-event-service.js?v=20260913-v200a50e1"></script>
-<script src="js/backend/near-agenda-service.js?v=20260913-v200a51a"></script>
-<script src="js/backend/notification-service.js?v=20260912-v200a50e"></script>
-<script src="js/pages/superapp-home.js?v=20260913-v200a51a"></script>
+<script src="js/backend/maintenance-service.js?v=20260913-v200a52"></script>
+<script src="js/backend/calendar-event-service.js?v=20260913-v200a52"></script>
+<script src="js/backend/near-agenda-service.js?v=20260913-v200a52"></script>
+<script src="js/backend/notification-service.js?v=20260913-v200a52"></script>
+<script src="js/pages/superapp-home.js?v=20260913-v200a52"></script>
 <script src="js/pages/notification-health.js?v=20260911-v200a46d"></script>
 <script src="js/components/avatar-preview-dialog.js?v=20260909-v200a1"></script>
 <script src="js/pages/superapp-module-order.js?v=20260909-v200a8"></script>

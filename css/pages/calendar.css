@@ -18,6 +18,7 @@
 .calendar-dot { display:block; width:4px; height:4px; border-radius:50%; background:var(--color-primary,#159447); }
 .calendar-dot.is-finance { background:#167746; }
 .calendar-dot.is-notes { background:#d88a12; }
+.calendar-dot.is-maintenance { background:#159447; }
 .calendar-dot.is-holiday, .calendar-dot.is-calendar { background:#dc5570; }
 .calendar-day.is-selected .calendar-dot { background:#fff; opacity:.92; }
 .calendar-grid[aria-busy="true"] { opacity:.62; }
@@ -33,6 +34,7 @@ button.calendar-agenda-card { cursor:pointer; }
 button.calendar-agenda-card:active { transform:scale(.993); }
 .calendar-agenda-icon { display:grid; place-items:center; width:42px; height:42px; border-radius:14px; background:color-mix(in srgb,var(--color-primary,#159447) 10%,var(--color-surface,#fff)); color:var(--color-primary,#159447); }
 .calendar-agenda-card.is-notes .calendar-agenda-icon { background:rgba(216,138,18,.12); color:#d88a12; }
+.calendar-agenda-card.is-maintenance .calendar-agenda-icon { background:rgba(21,148,71,.12); color:#159447; }
 .calendar-agenda-card.is-holiday .calendar-agenda-icon, .calendar-agenda-card.is-calendar .calendar-agenda-icon { background:rgba(220,85,112,.11); color:#d84d69; }
 .calendar-agenda-copy { min-width:0; }
 .calendar-agenda-source { display:block; margin-bottom:3px; color:var(--color-text-secondary,#767c78); font-size:8.5px; font-weight:700; text-transform:uppercase; letter-spacing:.06em; }

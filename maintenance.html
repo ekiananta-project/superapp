@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="id" data-auth-guard="family">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' https://cdn.jsdelivr.net https://unpkg.com https://cdnjs.cloudflare.com; script-src-attr 'none'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' data: https://fonts.gstatic.com; img-src 'self' data: blob: https://eipviruaffujxsfpupki.supabase.co; connect-src 'self' https://eipviruaffujxsfpupki.supabase.co wss://eipviruaffujxsfpupki.supabase.co https://unpkg.com; media-src 'self' blob:; worker-src 'self' blob:; manifest-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; frame-src 'none'">
+  <script src="js/security/ruangkitha-log-guard.js?v=20260912-v200a49d"></script>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#0B0D0C">
+  <meta name="application-name" content="RuangKitha">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="robots" content="noindex,nofollow,noarchive">
+  <meta name="referrer" content="strict-origin-when-cross-origin">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32.png">
+  <script src="js/theme.js"></script>
+  <title>Maintenance · RuangKitha</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/theme.css">
+  <link rel="stylesheet" href="css/ruangkitha-design-system-v1.css?v=v2.0.0a50a" data-ruangkitha-design-system="1.0.7">
+  <link rel="stylesheet" href="css/ruangkitha-shell-v1.css?v=v2.0.0a50a" data-ruangkitha-shell="1.0.7">
+  <link rel="stylesheet" href="css/pages/ruangkitha-maintenance-v1.css?v=20260913-v200a52">
+  <style id="ruangkitha-auth-cloak">html[data-auth-guard] body{visibility:hidden!important}</style>
+</head>
+<body>
+<div class="aplikasi maintenance-app" data-maintenance-root aria-busy="true">
+  <header class="header-halaman maintenance-header">
+    <a class="maintenance-back" href="index.html" aria-label="Kembali ke RuangKitha">
+      <ion-icon name="arrow-back-outline" aria-hidden="true"></ion-icon><span>RuangKitha</span>
+    </a>
+    <h1>Maintenance</h1>
+    <button class="maintenance-manage-shortcut" type="button" data-maint-manage-open aria-label="Kelola kelompok dan aset">
+      <ion-icon name="options-outline" aria-hidden="true"></ion-icon>
+    </button>
+  </header>
+
+  <main class="maintenance-main">
+    <section class="maintenance-intro">
+      <div class="maintenance-intro-icon"><ion-icon name="construct-outline" aria-hidden="true"></ion-icon></div>
+      <div>
+        <small>Perawatan keluarga</small>
+        <strong>Jaga siklus, bukan sekadar tanggal.</strong>
+        <p>RuangKitha mengingatkan jadwal, menyimpan riwayat, lalu menghitung siklus berikutnya dari tanggal yang benar-benar dilakukan.</p>
+      </div>
+    </section>
+
+    <section class="maintenance-summary" aria-label="Ringkasan maintenance">
+      <div><strong data-maint-overdue>0</strong><span>Terlewat</span></div>
+      <div><strong data-maint-today>0</strong><span>Hari ini</span></div>
+      <div><strong data-maint-upcoming>0</strong><span>30 hari</span></div>
+    </section>
+
+    <div class="maintenance-section-head">
+      <div><small>Aset keluarga</small><h2>Yang sedang dijaga</h2></div>
+      <button type="button" data-maint-add-item><ion-icon name="add-outline"></ion-icon><span>Perawatan</span></button>
+    </div>
+
+    <section class="maintenance-message" data-maint-message role="status" hidden></section>
+    <section class="maintenance-groups" data-maint-groups aria-live="polite">
+      <div class="maintenance-empty-state">
+        <span><ion-icon name="hourglass-outline"></ion-icon></span>
+        <strong>Memuat aset keluarga</strong>
+        <p>Menyiapkan kelompok, aset, dan jadwal perawatan.</p>
+      </div>
+    </section>
+  </main>
+
+  <button class="maintenance-fab" type="button" data-maint-add-item-fab aria-label="Tambah perawatan">
+    <ion-icon name="add-outline" aria-hidden="true"></ion-icon>
+  </button>
+</div>
+
+<!-- Add/edit maintenance item -->
+<div class="lapisan maintenance-layer" data-maint-item-layer hidden>
+  <section class="bottom-sheet maintenance-sheet maintenance-item-sheet" role="dialog" aria-modal="true" aria-labelledby="maint-item-title">
+    <div class="sheet-handle"></div>
+    <div class="sheet-header maintenance-sheet-header">
+      <div><h2 id="maint-item-title" data-maint-item-title>Tambah Perawatan</h2><p class="sheet-subjudul">Pilih aset, tulis perawatannya, lalu atur siklus dan pengingat.</p></div>
+      <button class="tombol-ikon" type="button" data-maint-item-close aria-label="Tutup"><ion-icon name="close-outline"></ion-icon></button>
+    </div>
+    <form class="maintenance-form" data-maint-item-form>
+      <div class="maintenance-field">
+        <label for="maint-asset">Aset / barang</label>
+        <select id="maint-asset" name="asset" required data-maint-asset-select></select>
+        <div class="maintenance-field-inline-action">
+          <small>Nama kelompok hanya sebagai pemisah. Yang dapat dipilih selalu aset di dalamnya.</small>
+          <button type="button" data-maint-quick-asset>+ Tambah aset baru</button>
+        </div>
+      </div>
+      <div class="maintenance-field">
+        <label for="maint-title">Perawatan</label>
+        <input id="maint-title" name="title" type="text" maxlength="140" placeholder="Contoh: Ganti oli mesin" autocomplete="off" required>
+      </div>
+      <div class="maintenance-field">
+        <label for="maint-due">Jadwal berikutnya</label>
+        <input id="maint-due" name="due" type="date" required>
+      </div>
+
+      <fieldset class="maintenance-field maintenance-fieldset">
+        <legend>Jadwal</legend>
+        <div class="maintenance-segmented">
+          <label><input type="radio" name="scheduleMode" value="once" checked><span>Sekali</span></label>
+          <label><input type="radio" name="scheduleMode" value="recurring"><span>Berulang</span></label>
+        </div>
+      </fieldset>
+
+      <div class="maintenance-repeat" data-maint-repeat hidden>
+        <span>Ulang setiap</span>
+        <div><input name="intervalValue" type="number" min="1" max="1200" inputmode="numeric" value="3"><select name="intervalUnit"><option value="day">Hari</option><option value="week">Minggu</option><option value="month" selected>Bulan</option><option value="year">Tahun</option></select></div>
+      </div>
+
+      <fieldset class="maintenance-field maintenance-fieldset maintenance-reminders">
+        <legend>Pengingat tambahan</legend>
+        <p>Jatuh tempo tetap masuk Kalender &amp; Agenda Dekat. Pilih kapan keluarga ingin diingatkan lebih awal.</p>
+        <div class="maintenance-reminder-options" data-maint-reminder-options>
+          <label><input type="checkbox" value="30"><span>30 hari sebelum</span></label>
+          <label><input type="checkbox" value="7" checked><span>7 hari sebelum</span></label>
+          <label><input type="checkbox" value="3" checked><span>3 hari sebelum</span></label>
+        </div>
+        <div class="maintenance-custom-reminder">
+          <input type="number" min="1" max="3650" inputmode="numeric" placeholder="Contoh: 14" data-maint-custom-reminder>
+          <button type="button" data-maint-custom-add><ion-icon name="add-outline"></ion-icon>Atur pengingat</button>
+        </div>
+      </fieldset>
+
+      <div class="maintenance-field">
+        <label for="maint-note">Catatan <span>Opsional</span></label>
+        <textarea id="maint-note" name="note" maxlength="2000" rows="3" placeholder="Hal yang perlu diingat saat perawatan..."></textarea>
+      </div>
+      <p class="maintenance-form-message" data-maint-item-message hidden></p>
+      <button class="tombol-utama maintenance-save" type="submit" data-maint-item-submit>Simpan Perawatan</button>
+    </form>
+  </section>
+</div>
+
+<!-- Asset detail / item detail -->
+<div class="lapisan maintenance-layer" data-maint-detail-layer hidden>
+  <section class="bottom-sheet maintenance-sheet maintenance-detail-sheet" role="dialog" aria-modal="true" aria-labelledby="maint-detail-title">
+    <div class="sheet-handle"></div>
+    <div class="sheet-header maintenance-sheet-header">
+      <div><small data-maint-detail-group>Maintenance</small><h2 id="maint-detail-title" data-maint-detail-title>Perawatan</h2></div>
+      <button class="tombol-ikon" type="button" data-maint-detail-close aria-label="Tutup"><ion-icon name="close-outline"></ion-icon></button>
+    </div>
+    <div class="maintenance-detail-body" data-maint-detail-body></div>
+  </section>
+</div>
+
+<!-- Complete maintenance -->
+<div class="lapisan maintenance-layer maintenance-complete-layer" data-maint-complete-layer hidden>
+  <section class="bottom-sheet maintenance-sheet maintenance-complete-sheet" role="dialog" aria-modal="true" aria-labelledby="maint-complete-title">
+    <div class="sheet-handle"></div>
+    <div class="sheet-header maintenance-sheet-header">
+      <div><h2 id="maint-complete-title">Perawatan selesai</h2><p class="sheet-subjudul" data-maint-complete-subtitle>Catat kapan benar-benar dilakukan.</p></div>
+      <button class="tombol-ikon" type="button" data-maint-complete-close aria-label="Tutup"><ion-icon name="close-outline"></ion-icon></button>
+    </div>
+    <form class="maintenance-form" data-maint-complete-form>
+      <div class="maintenance-field">
+        <label for="maint-performed">Dilakukan pada</label>
+        <input id="maint-performed" name="performedOn" type="date" required>
+        <small>Tanggal ini menjadi tanggal riwayat dan tanggal pengeluaran Keuangan—bukan tanggal jadwal lama.</small>
+      </div>
+      <div class="maintenance-field">
+        <label for="maint-complete-note">Catatan <span>Opsional</span></label>
+        <textarea id="maint-complete-note" name="note" maxlength="2000" rows="3" placeholder="Contoh: filter ikut dibersihkan"></textarea>
+      </div>
+
+      <button class="maintenance-cost-trigger" type="button" data-maint-cost-open>
+        <span class="maintenance-cost-icon"><ion-icon name="wallet-outline"></ion-icon></span>
+        <span><strong data-maint-cost-title>Catat biaya ke Keuangan?</strong><small data-maint-cost-copy>Opsional · isi dompet dan nominal jika ada pengeluaran.</small></span>
+        <ion-icon name="chevron-forward-outline"></ion-icon>
+      </button>
+
+      <p class="maintenance-form-message" data-maint-complete-message hidden></p>
+      <button class="tombol-utama maintenance-save" type="submit" data-maint-complete-submit>Simpan sebagai selesai</button>
+    </form>
+  </section>
+</div>
+
+<!-- Finance contextual popup -->
+<div class="lapisan maintenance-layer maintenance-cost-layer" data-maint-cost-layer hidden>
+  <section class="bottom-sheet maintenance-sheet maintenance-cost-sheet" role="dialog" aria-modal="true" aria-labelledby="maint-cost-heading">
+    <div class="sheet-handle"></div>
+    <div class="sheet-header maintenance-sheet-header">
+      <div><h2 id="maint-cost-heading">Catat biaya perawatan</h2><p class="sheet-subjudul">Tetap di Maintenance. RuangKitha akan membuat pengeluaran Keuangan saat perawatan disimpan.</p></div>
+      <button class="tombol-ikon" type="button" data-maint-cost-close aria-label="Tutup"><ion-icon name="close-outline"></ion-icon></button>
+    </div>
+    <form class="maintenance-form" data-maint-cost-form>
+      <div class="maintenance-finance-derived">
+        <span><ion-icon name="arrow-down-circle-outline"></ion-icon></span>
+        <div><strong>Pengeluaran · Maintenance</strong><small>Tanggal &amp; catatan mengikuti perawatan yang benar-benar dilakukan.</small></div>
+      </div>
+      <div class="maintenance-field">
+        <label for="maint-wallet">Dompet</label>
+        <select id="maint-wallet" name="wallet" required data-maint-wallet-select></select>
+      </div>
+      <div class="maintenance-field">
+        <label for="maint-amount">Nominal</label>
+        <div class="maintenance-money-input"><span>Rp</span><input id="maint-amount" name="amount" type="text" inputmode="numeric" autocomplete="off" placeholder="0" required></div>
+      </div>
+      <p class="maintenance-form-message" data-maint-cost-message hidden></p>
+      <div class="maintenance-cost-actions">
+        <button type="button" data-maint-cost-clear>Tanpa biaya</button>
+        <button class="tombol-utama" type="submit" data-maint-cost-apply>Gunakan biaya ini</button>
+      </div>
+    </form>
+  </section>
+</div>
+
+<!-- Manage groups and assets -->
+<div class="lapisan maintenance-layer" data-maint-manage-layer hidden>
+  <section class="bottom-sheet maintenance-sheet maintenance-manage-sheet" role="dialog" aria-modal="true" aria-labelledby="maint-manage-title">
+    <div class="sheet-handle"></div>
+    <div class="sheet-header maintenance-sheet-header">
+      <div><h2 id="maint-manage-title">Kelola kelompok &amp; aset</h2><p class="sheet-subjudul">Kelompok hanya untuk menyusun. Perawatan selalu menempel ke aset.</p></div>
+      <button class="tombol-ikon" type="button" data-maint-manage-close aria-label="Tutup"><ion-icon name="close-outline"></ion-icon></button>
+    </div>
+    <div class="maintenance-manage-body">
+      <div class="maintenance-manage-actions">
+        <button type="button" data-maint-group-add><ion-icon name="folder-open-outline"></ion-icon><span>Tambah kelompok</span></button>
+        <button type="button" data-maint-asset-add><ion-icon name="cube-outline"></ion-icon><span>Tambah aset</span></button>
+      </div>
+      <div data-maint-manage-list></div>
+      <p class="maintenance-form-message" data-maint-manage-message hidden></p>
+    </div>
+  </section>
+</div>
+
+<!-- Generic group/asset editor -->
+<div class="lapisan maintenance-layer maintenance-editor-layer" data-maint-editor-layer hidden>
+  <section class="bottom-sheet maintenance-sheet maintenance-editor-sheet" role="dialog" aria-modal="true" aria-labelledby="maint-editor-title">
+    <div class="sheet-handle"></div>
+    <div class="sheet-header maintenance-sheet-header">
+      <div><h2 id="maint-editor-title" data-maint-editor-title>Tambah</h2><p class="sheet-subjudul" data-maint-editor-subtitle></p></div>
+      <button class="tombol-ikon" type="button" data-maint-editor-close aria-label="Tutup"><ion-icon name="close-outline"></ion-icon></button>
+    </div>
+    <form class="maintenance-form" data-maint-editor-form>
+      <div class="maintenance-field" data-maint-editor-group-field hidden>
+        <label for="maint-editor-group">Kelompok</label>
+        <select id="maint-editor-group" name="group"></select>
+      </div>
+      <div class="maintenance-field">
+        <label for="maint-editor-name" data-maint-editor-name-label>Nama</label>
+        <input id="maint-editor-name" name="name" type="text" maxlength="120" autocomplete="off" required>
+      </div>
+      <p class="maintenance-form-message" data-maint-editor-message hidden></p>
+      <button class="tombol-utama maintenance-save" type="submit">Simpan</button>
+    </form>
+  </section>
+</div>
+
+<div class="maintenance-toast" data-maint-toast role="status" hidden></div>
+
+<script type="module" src="https://unpkg.com/ionicons@8.0.13/dist/ionicons/ionicons.esm.js"></script>
+<script nomodule src="https://unpkg.com/ionicons@8.0.13/dist/ionicons/ionicons.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.116.0"></script>
+<script src="js/backend/supabase.js"></script>
+<script src="js/backend/auth-service.js?v=20260912-v200a49d"></script>
+<script src="js/backend/family-service.js?v=20260908-10"></script>
+<script src="js/backend/finance-service.js?v=20260908-e1"></script>
+<script src="js/backend/auth-router.js?v=20260912-v200a49d"></script>
+<script src="js/backend/auth-guard.js?v=20260912-v200a49d"></script>
+<script src="js/backend/maintenance-service.js?v=20260913-v200a52"></script>
+<script src="js/pages/maintenance.js?v=20260913-v200a52"></script>
+<script src="js/pwa.js?v=20260912-v200a49d2"></script>
+</body>
+</html>

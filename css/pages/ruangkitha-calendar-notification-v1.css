@@ -193,6 +193,7 @@ html[data-rk-module="calendar"][data-rk-calendar-page="kalender"] .calendar-shel
 
 .calendar-dot.is-finance { background: var(--rk-calendar-finance) !important; }
 .calendar-dot.is-notes { background: var(--rk-calendar-notes) !important; }
+.calendar-dot.is-maintenance { background: var(--rk-success) !important; }
 .calendar-dot.is-calendar { background: var(--rk-calendar-human) !important; }
 .calendar-dot.is-holiday { background: var(--rk-danger) !important; }
 
@@ -257,6 +258,7 @@ html[data-rk-module="calendar"][data-rk-calendar-page="kalender"] .calendar-shel
 
 .calendar-agenda-card.is-finance { --rk-event-accent: var(--rk-calendar-finance); }
 .calendar-agenda-card.is-notes { --rk-event-accent: var(--rk-calendar-notes); }
+.calendar-agenda-card.is-maintenance { --rk-event-accent: var(--rk-success); }
 .calendar-agenda-card.is-calendar { --rk-event-accent: var(--rk-calendar-human); }
 .calendar-agenda-card.is-holiday { --rk-event-accent: var(--rk-danger); }
 

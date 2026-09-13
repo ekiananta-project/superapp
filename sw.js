@@ -1,4 +1,4 @@
-const CACHE_NAME = "ruangkitha-v2.0.0a49d-web-security-hardening-security-qa-a49d2-home-lottie-first-paint-hotfix-a50a-document-record-optional-attachments-v1-a50a1-documents-ux-polish-v1-a50a2-attention-first-landing-a50b-family-document-sharing-v1-a50b1-initial-sharing-flow-modal-stack-hotfix-a50c-documents-lifecycle-management-v1-a50d-documents-search-filter-smart-organization-v1-a50e-documents-reminder-calendar-notification-v1-a50e1-documents-reminder-projection-hotfix-a50f-documents-home-insight-summary-polish-v1-a51-agenda-resolution-foundation-v1-a51a-agenda-dekat-v1";
+const CACHE_NAME = "ruangkitha-v2.0.0a49d-web-security-hardening-security-qa-a49d2-home-lottie-first-paint-hotfix-a50a-document-record-optional-attachments-v1-a50a1-documents-ux-polish-v1-a50a2-attention-first-landing-a50b-family-document-sharing-v1-a50b1-initial-sharing-flow-modal-stack-hotfix-a50c-documents-lifecycle-management-v1-a50d-documents-search-filter-smart-organization-v1-a50e-documents-reminder-calendar-notification-v1-a50e1-documents-reminder-projection-hotfix-a50f-documents-home-insight-summary-polish-v1-a51-agenda-resolution-foundation-v1-a51a-agenda-dekat-v1-a52-maintenance-core-v1";
 const OFFLINE_URL = "./offline.html";
 
 const APP_FILES = [
@@ -76,6 +76,7 @@ const APP_FILES = [
   "./assets/brand/ruangkitha-monochrome-light.png",
   "./index.html",
   "./dokumen.html",
+  "./maintenance.html",
   "./catatan.html",
   "./catatan-keluarga.html",
   "./catatan-pribadi.html",
@@ -112,15 +113,18 @@ const APP_FILES = [
   "./css/pages/notifications.css",
   "./js/backend/notification-service.js",
   "./js/backend/document-reminder-service.js",
+  "./js/backend/maintenance-service.js",
   "./js/pages/notification-health.js",
   "./js/pages/notification-badge.js",
   "./js/pages/notifications.js",
   "./profil.html",
   "./css/pages/superapp-home.css",
+  "./css/pages/ruangkitha-maintenance-v1.css",
   "./css/pages/superapp-shell.css",
   "./css/pages/calendar.css",
   "./css/pages/finance-container.css",
   "./js/pages/superapp-home.js",
+  "./js/pages/maintenance.js",
   "./js/pages/superapp-home-lottie.js",
   "./js/pages/superapp-home-lottie-palette.js",
   "./assets/lottie/today-family.json",

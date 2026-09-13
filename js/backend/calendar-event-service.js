@@ -1,8 +1,8 @@
-// RuangKitha v2.0.0a50e1 — Calendar projection + Documents reminder projection hotfix.
+// RuangKitha v2.0.0a52 — Calendar projection + Documents + Maintenance.
 (() => {
   "use strict";
 
-  const CACHE_VERSION = "a50e1-projection-v1";
+  const CACHE_VERSION = "a52-maintenance-projection-v1";
   const CACHE_PREFIX = "ruangkitha:calendar-range:";
   const inflight = new Map();
 
@@ -153,6 +153,7 @@
       if (error) throw error;
 
       let documentItems = [];
+      let maintenanceItems = [];
       if (window.RuangKithaDocumentReminders?.loadCalendarEvents) {
         try {
           documentItems = await window.RuangKithaDocumentReminders.loadCalendarEvents({
@@ -164,8 +165,19 @@
           console.debug?.("[Calendar documents projection]", documentError);
         }
       }
+      if (window.RuangKithaMaintenance?.loadCalendarEvents) {
+        try {
+          maintenanceItems = await window.RuangKithaMaintenance.loadCalendarEvents({
+            familyId,
+            start: rangeStart,
+            end: rangeEnd
+          });
+        } catch (maintenanceError) {
+          console.debug?.("[Calendar maintenance projection]", maintenanceError);
+        }
+      }
 
-      const items = sortItems([...(data || []), ...(documentItems || [])]);
+      const items = sortItems([...(data || []), ...(documentItems || []), ...(maintenanceItems || [])]);
       saveRange({ viewerId: resolvedViewerId, familyId, start: rangeStart, end: rangeEnd, items });
       return items;
     })();
@@ -191,7 +203,7 @@
   }
 
   function moduleLabel(module) {
-    const labels = { finance: "Keuangan", notes: "Catatan", documents: "Dokumen", calendar: "Kalender" };
+    const labels = { finance: "Keuangan", notes: "Catatan", documents: "Dokumen", maintenance: "Maintenance", calendar: "Kalender" };
     return labels[module] || "RuangKitha";
   }
 

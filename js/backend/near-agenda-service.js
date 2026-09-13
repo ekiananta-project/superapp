@@ -1,8 +1,8 @@
-// RuangKitha v2.0.0a51a — Agenda Dekat V1 projection helpers.
+// RuangKitha v2.0.0a52 — Agenda Dekat + Maintenance source-owned resolution.
 (() => {
   "use strict";
 
-  const BUILD = "v2.0.0a51a";
+  const BUILD = "v2.0.0a52";
   const RESOLVED_STATUSES = new Set(["paid", "completed", "complete", "resolved", "done", "archived", "cancelled", "canceled"]);
 
   function isoDate(value = new Date()) {
@@ -50,6 +50,7 @@
     if (module === "finance") return true;      // unpaid / partial bill stays active
     if (module === "notes") return true;        // active Reminder; a51 completion removes/advances it
     if (module === "documents") return true;    // old expiry/reminder; renewal moves the source date
+    if (module === "maintenance") return true;  // active due item; completion advances/finishes the source cycle
 
     // Calendar/holiday items are time-based history, not unfinished tasks.
     return false;

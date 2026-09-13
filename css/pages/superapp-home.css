@@ -956,6 +956,25 @@ html[data-theme="dark"] .today-agenda-card { background:rgba(32,36,33,.80); }
   color: var(--module-accent);
 }
 
+/* a52 · Maintenance state tone follows real schedule state without turning the
+   whole Home card into an alarm surface. */
+.maintenance-preview.is-safe > span {
+  background: color-mix(in srgb, var(--rk-success) 12%, var(--rk-surface));
+  color: var(--rk-success);
+}
+.maintenance-preview.is-upcoming > span {
+  background: color-mix(in srgb, var(--rk-secondary) 14%, var(--rk-surface));
+  color: var(--rk-secondary);
+}
+.maintenance-preview.is-today > span {
+  background: color-mix(in srgb, var(--rk-accent) 14%, var(--rk-surface));
+  color: var(--rk-accent);
+}
+.maintenance-preview.is-overdue > span {
+  background: var(--rk-danger-soft);
+  color: var(--rk-danger);
+}
+
 .fun-preview {
   grid-template-columns: minmax(0,1fr) 104px;
   background: linear-gradient(135deg, var(--rk-accent-soft), color-mix(in srgb, var(--rk-surface) 88%, transparent)) !important;

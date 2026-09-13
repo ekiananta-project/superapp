@@ -1,4 +1,4 @@
-// RuangKitha v2.0.0a46e — delivered history + cross-tab read sync + stable deep links.
+// RuangKitha v2.0.0a50e — notification history + Documents reminder sync.
 (() => {
   "use strict";
 
@@ -323,11 +323,29 @@
   }
 
   async function syncInbox(hours = SYNC_HOURS) {
+    const horizon = Math.max(24, Math.min(Number(hours || SYNC_HOURS), 24 * 90));
     const { data, error } = await client().rpc("notification_sync_my_inbox_v1", {
-      p_horizon_hours: Math.max(24, Math.min(Number(hours || SYNC_HOURS), 24 * 90))
+      p_horizon_hours: horizon
     });
     if (error) throw error;
-    return Number(data || 0);
+
+    let documentCount = 0;
+    let maintenanceCount = 0;
+    if (window.RuangKithaDocumentReminders?.syncNotifications) {
+      try {
+        documentCount = await window.RuangKithaDocumentReminders.syncNotifications(horizon);
+      } catch (documentError) {
+        console.debug?.("[Notification documents sync]", documentError);
+      }
+    }
+    if (window.RuangKithaMaintenance?.syncNotifications) {
+      try {
+        maintenanceCount = await window.RuangKithaMaintenance.syncNotifications(horizon);
+      } catch (maintenanceError) {
+        console.debug?.("[Notification maintenance sync]", maintenanceError);
+      }
+    }
+    return Number(data || 0) + Number(documentCount || 0) + Number(maintenanceCount || 0);
   }
 
   async function listInbox({ unreadOnly = false, deliveredOnly = true, limit = 100 } = {}) {
