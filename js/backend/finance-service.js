@@ -56,6 +56,17 @@
     return data;
   }
 
+  async function pastikanKategoriMaintenance(familyId) {
+    if (!familyId) throw new Error("familyId wajib diisi.");
+    const { data, error } = await client.rpc(
+      "maintenance_ensure_finance_category_v1",
+      { p_family_id: familyId }
+    );
+    lemparJikaError(error);
+    if (window.FinanceCache) window.FinanceCache.remove("categories", familyId);
+    return data;
+  }
+
   async function ambilAkun(familyId, kind = null) {
     let query = client
       .from("finance_accounts")
@@ -1266,6 +1277,7 @@
     ambilDompetById,
     ambilTotalKeluarga,
     ambilAkun,
+    pastikanKategoriMaintenance,
     ambilAkunById,
     ambilTransaksi,
     ambilTransaksiDompet,

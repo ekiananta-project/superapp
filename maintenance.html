@@ -22,7 +22,7 @@
   <link rel="stylesheet" href="css/theme.css">
   <link rel="stylesheet" href="css/ruangkitha-design-system-v1.css?v=v2.0.0a50a" data-ruangkitha-design-system="1.0.7">
   <link rel="stylesheet" href="css/ruangkitha-shell-v1.css?v=v2.0.0a50a" data-ruangkitha-shell="1.0.7">
-  <link rel="stylesheet" href="css/pages/ruangkitha-maintenance-v1.css?v=20260913-v200a52">
+  <link rel="stylesheet" href="css/pages/ruangkitha-maintenance-v1.css?v=20260913-v200a52a">
   <style id="ruangkitha-auth-cloak">html[data-auth-guard] body{visibility:hidden!important}</style>
 </head>
 <body>
@@ -32,9 +32,7 @@
       <ion-icon name="arrow-back-outline" aria-hidden="true"></ion-icon><span>RuangKitha</span>
     </a>
     <h1>Maintenance</h1>
-    <button class="maintenance-manage-shortcut" type="button" data-maint-manage-open aria-label="Kelola kelompok dan aset">
-      <ion-icon name="options-outline" aria-hidden="true"></ion-icon>
-    </button>
+    <span class="maintenance-header-spacer" aria-hidden="true"></span>
   </header>
 
   <main class="maintenance-main">
@@ -53,9 +51,16 @@
       <div><strong data-maint-upcoming>0</strong><span>30 hari</span></div>
     </section>
 
+    <section class="maintenance-attention" aria-labelledby="maint-attention-title">
+      <div class="maintenance-attention-heading">
+        <div><small>Prioritas dekat</small><h2 id="maint-attention-title">Perlu diperhatikan</h2></div>
+      </div>
+      <div class="maintenance-attention-list" data-maint-attention-list></div>
+    </section>
+
     <div class="maintenance-section-head">
       <div><small>Aset keluarga</small><h2>Yang sedang dijaga</h2></div>
-      <button type="button" data-maint-add-item><ion-icon name="add-outline"></ion-icon><span>Perawatan</span></button>
+      <button type="button" data-maint-manage-open><ion-icon name="options-outline"></ion-icon><span>Kelola kelompok &amp; aset</span></button>
     </div>
 
     <section class="maintenance-message" data-maint-message role="status" hidden></section>
@@ -251,6 +256,21 @@
   </section>
 </div>
 
+<!-- RuangKitha destructive confirmation -->
+<div class="lapisan maintenance-layer maintenance-confirm-layer" data-maint-confirm-layer hidden>
+  <section class="bottom-sheet maintenance-sheet maintenance-confirm-sheet" role="alertdialog" aria-modal="true" aria-labelledby="maint-confirm-title" aria-describedby="maint-confirm-copy">
+    <div class="sheet-handle"></div>
+    <div class="sheet-header maintenance-sheet-header">
+      <div><h2 id="maint-confirm-title" data-maint-confirm-title>Hapus?</h2><p class="sheet-subjudul" id="maint-confirm-copy" data-maint-confirm-copy></p></div>
+      <button class="tombol-ikon" type="button" data-maint-confirm-close aria-label="Tutup"><ion-icon name="close-outline"></ion-icon></button>
+    </div>
+    <div class="maintenance-confirm-actions">
+      <button type="button" data-maint-confirm-cancel>Batal</button>
+      <button class="is-danger" type="button" data-maint-confirm-accept>Hapus</button>
+    </div>
+  </section>
+</div>
+
 <div class="maintenance-toast" data-maint-toast role="status" hidden></div>
 
 <script type="module" src="https://unpkg.com/ionicons@8.0.13/dist/ionicons/ionicons.esm.js"></script>
@@ -259,11 +279,11 @@
 <script src="js/backend/supabase.js"></script>
 <script src="js/backend/auth-service.js?v=20260912-v200a49d"></script>
 <script src="js/backend/family-service.js?v=20260908-10"></script>
-<script src="js/backend/finance-service.js?v=20260908-e1"></script>
+<script src="js/backend/finance-service.js?v=20260913-v200a52a"></script>
 <script src="js/backend/auth-router.js?v=20260912-v200a49d"></script>
 <script src="js/backend/auth-guard.js?v=20260912-v200a49d"></script>
-<script src="js/backend/maintenance-service.js?v=20260913-v200a52"></script>
-<script src="js/pages/maintenance.js?v=20260913-v200a52"></script>
+<script src="js/backend/maintenance-service.js?v=20260913-v200a52a"></script>
+<script src="js/pages/maintenance.js?v=20260913-v200a52a"></script>
 <script src="js/pwa.js?v=20260912-v200a49d2"></script>
 </body>
 </html>

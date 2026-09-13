@@ -162,6 +162,9 @@
       const cached = window.FinanceCache?.read("categories", family.id, userId);
       if (cached) render(cached);
 
+      await FinanceService.pastikanKategoriMaintenance(family.id).catch(error => {
+        console.warn("[Kategori Maintenance standard]", error);
+      });
       const categories = await FinanceService.ambilAkun(family.id);
       render(categories || []);
       window.FinanceCache?.write("categories", family.id, categories || [], userId);

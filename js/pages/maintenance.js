@@ -1,4 +1,4 @@
-/* RuangKitha v2.0.0a52 — Maintenance Core V1 page */
+/* RuangKitha v2.0.0a52a — Maintenance UX + Finance Hotfix V1 page */
 (() => {
   "use strict";
 
@@ -15,7 +15,9 @@
   let financeSelection = null;
   let financeOptionsCache = null;
   let financeContext = { mode: "completion", historyId: "" };
-  let editorContext = { type: "group", id: "", returnToItem: false };
+  let editorContext = { type: "group", id: "", returnToItem: false, returnToManage: false };
+  let expandedGroups = new Set();
+  let confirmResolver = null;
   let toastTimer = null;
 
   function readPrefs() {
@@ -129,6 +131,85 @@
     return node;
   }
 
+  function assetIconName(name) {
+    const value = String(name || "").trim().toLowerCase();
+    if (/\b(ac|air conditioner|pendingin)\b/.test(value)) return "snow-outline";
+    if (/pompa|tandon|toren|mesin cuci|water|air/.test(value)) return "water-outline";
+    if (/mobil|car|kendaraan roda empat/.test(value)) return "car-sport-outline";
+    if (/motor|scooter|skuter/.test(value)) return "speedometer-outline";
+    if (/sepeda|bike|bicycle/.test(value)) return "bicycle-outline";
+    if (/kulkas|freezer|refrigerator/.test(value)) return "snow-outline";
+    if (/televisi|\btv\b/.test(value)) return "tv-outline";
+    if (/laptop|notebook|komputer|computer/.test(value)) return "laptop-outline";
+    if (/printer/.test(value)) return "print-outline";
+    if (/router|modem|wifi|wi-fi/.test(value)) return "wifi-outline";
+    if (/lampu|bulb/.test(value)) return "bulb-outline";
+    if (/listrik|panel|generator|genset/.test(value)) return "flash-outline";
+    return "cube-outline";
+  }
+
+  function closeConfirm(result = false) {
+    setLayer("[data-maint-confirm-layer]", false);
+    const resolve = confirmResolver;
+    confirmResolver = null;
+    if (resolve) resolve(Boolean(result));
+  }
+
+  function askConfirm({ title = "Konfirmasi", copy = "", confirmLabel = "Hapus" } = {}) {
+    if (confirmResolver) closeConfirm(false);
+    q("[data-maint-confirm-title]").textContent = title;
+    q("[data-maint-confirm-copy]").textContent = copy;
+    q("[data-maint-confirm-accept]").textContent = confirmLabel;
+    setLayer("[data-maint-confirm-layer]", true);
+    return new Promise(resolve => { confirmResolver = resolve; });
+  }
+
+  function renderAttention() {
+    const root = q("[data-maint-attention-list]");
+    if (!root) return;
+    root.replaceChildren();
+    const today = window.RuangKithaMaintenance.todayISO();
+    const rows = (data.items || [])
+      .map(item => ({ item, diff: window.RuangKithaMaintenance.daysBetween(today, item.next_due_on) }))
+      .filter(row => row.diff !== null && row.diff <= 7)
+      .sort((a, b) => {
+        const rankA = a.diff < 0 ? 0 : a.diff === 0 ? 1 : 2;
+        const rankB = b.diff < 0 ? 0 : b.diff === 0 ? 1 : 2;
+        return rankA - rankB || a.diff - b.diff || String(a.item.title || "").localeCompare(String(b.item.title || ""), "id");
+      })
+      .slice(0, 3);
+
+    if (!rows.length) {
+      const empty = document.createElement("div");
+      empty.className = "maintenance-attention-empty";
+      empty.textContent = "Tidak ada yang perlu ditangani sekarang.";
+      root.appendChild(empty);
+      return;
+    }
+
+    rows.forEach(({ item }) => {
+      const state = dueState(item);
+      const button = document.createElement("button");
+      button.type = "button";
+      button.className = "maintenance-attention-item";
+      const visual = document.createElement("span");
+      visual.className = "maintenance-attention-icon";
+      visual.appendChild(icon(assetIconName(item.asset_name)));
+      const copy = document.createElement("span");
+      copy.className = "maintenance-attention-copy";
+      const strong = document.createElement("strong"); strong.textContent = item.title || "Perawatan";
+      const small = document.createElement("small"); small.textContent = `${item.asset_name || "Aset"} · ${item.group_name || "Maintenance"}`;
+      copy.append(strong, small);
+      const right = document.createElement("span");
+      right.className = "maintenance-attention-right";
+      const pill = document.createElement("span"); pill.className = `maintenance-state-pill is-${state.key}`; pill.textContent = state.label;
+      right.append(pill, icon("chevron-forward-outline"));
+      button.append(visual, copy, right);
+      button.addEventListener("click", () => openItemDetail(item.id));
+      root.appendChild(button);
+    });
+  }
+
   function renderGroups() {
     const root = q("[data-maint-groups]");
     if (!root) return;
@@ -145,20 +226,37 @@
       return;
     }
 
+    const validIds = new Set(data.groups.map(group => group.id));
+    expandedGroups = new Set([...expandedGroups].filter(id => validIds.has(id)));
+
     data.groups.forEach(group => {
       const card = document.createElement("section");
-      card.className = "maintenance-group-card";
+      const open = expandedGroups.has(group.id);
+      card.className = `maintenance-group-card${open ? " is-open" : ""}`;
 
-      const head = document.createElement("div");
+      const head = document.createElement("button");
+      head.type = "button";
       head.className = "maintenance-group-heading";
+      head.setAttribute("aria-expanded", String(open));
+      const listId = `maintenance-group-${String(group.id).replace(/[^a-zA-Z0-9_-]/g, "-")}`;
+      head.setAttribute("aria-controls", listId);
       const title = document.createElement("strong"); title.textContent = group.name;
       const assets = data.assets.filter(asset => asset.group_id === group.id);
+      const meta = document.createElement("span"); meta.className = "maintenance-group-heading-meta";
       const count = document.createElement("span"); count.textContent = `${assets.length} aset`;
-      head.append(title, count);
+      meta.append(count, icon(open ? "chevron-up-outline" : "chevron-down-outline"));
+      head.append(title, meta);
+      head.addEventListener("click", () => {
+        if (expandedGroups.has(group.id)) expandedGroups.delete(group.id);
+        else expandedGroups.add(group.id);
+        renderGroups();
+      });
       card.appendChild(head);
 
       const list = document.createElement("div");
+      list.id = listId;
       list.className = "maintenance-asset-list";
+      list.hidden = !open;
       if (!assets.length) {
         const empty = document.createElement("div");
         empty.className = "maintenance-empty-group";
@@ -174,7 +272,7 @@
 
           const visual = document.createElement("span");
           visual.className = "maintenance-asset-icon";
-          visual.appendChild(icon("cube-outline"));
+          visual.appendChild(icon(assetIconName(asset.name)));
 
           const copy = document.createElement("span");
           copy.className = "maintenance-asset-copy";
@@ -205,6 +303,7 @@
     try {
       data = await window.RuangKithaMaintenance.dashboard(familyId);
       renderSummary();
+      renderAttention();
       renderGroups();
       renderManageList();
       fillAssetSelect();
@@ -354,7 +453,10 @@
     actions.className = "maintenance-detail-actions";
     const add = document.createElement("button");
     add.type = "button"; add.className = "is-primary"; add.textContent = "+ Tambah perawatan";
-    add.addEventListener("click", () => openItemForm("", assetId));
+    add.addEventListener("click", () => {
+      setLayer("[data-maint-detail-layer]", false);
+      openItemForm("", assetId);
+    });
     const manage = document.createElement("button");
     manage.type = "button"; manage.textContent = "Kelola aset";
     manage.addEventListener("click", () => { setLayer("[data-maint-detail-layer]", false); openManage(); });
@@ -436,14 +538,11 @@
 
     if (item.next_due_on) {
       const actions = document.createElement("div");
-      actions.className = "maintenance-detail-actions";
+      actions.className = "maintenance-detail-actions is-single";
       const complete = document.createElement("button");
       complete.type = "button"; complete.className = "is-primary"; complete.textContent = "✓ Sudah dirawat";
       complete.addEventListener("click", () => openComplete(item.id));
-      const edit = document.createElement("button");
-      edit.type = "button"; edit.textContent = "Ubah jadwal";
-      edit.addEventListener("click", () => openItemForm(item.id));
-      actions.append(complete, edit);
+      actions.append(complete);
       root.appendChild(actions);
     }
 
@@ -458,7 +557,7 @@
 
     const secondary = document.createElement("div");
     secondary.className = "maintenance-item-secondary-actions";
-    const editAny = document.createElement("button"); editAny.type = "button"; editAny.textContent = "Ubah perawatan"; editAny.addEventListener("click", () => openItemForm(item.id));
+    const editAny = document.createElement("button"); editAny.type = "button"; editAny.textContent = "Ubah perawatan"; editAny.addEventListener("click", () => { setLayer("[data-maint-detail-layer]", false); openItemForm(item.id); });
     const archive = document.createElement("button"); archive.type = "button"; archive.className = "is-danger"; archive.textContent = "Arsipkan";
     archive.addEventListener("click", () => archiveItem(item.id));
     secondary.append(editAny, archive);
@@ -580,7 +679,6 @@
     try {
       const options = await loadFinanceOptions();
       if (!options.wallets.length) showMessage(q("[data-maint-cost-message]"), "Belum ada dompet aktif di Keuangan.");
-      else if (!options.category) showMessage(q("[data-maint-cost-message]"), 'Kategori pengeluaran "Maintenance" tidak tersedia di Keuangan. Buat atau kembalikan kategori tersebut terlebih dahulu.');
     } catch (error) {
       showMessage(q("[data-maint-cost-message]"), error?.message || "Data Keuangan belum dapat dimuat.");
     }
@@ -597,8 +695,6 @@
     const message = q("[data-maint-cost-message]");
     const amount = parseMoney(form.elements.amount.value);
     const walletId = form.elements.wallet.value;
-    const category = financeOptionsCache?.category;
-    if (!category) return showMessage(message, 'Kategori "Maintenance" di Keuangan belum tersedia.');
     if (!walletId) return showMessage(message, "Pilih dompet Keuangan.");
     if (!amount) return showMessage(message, "Nominal biaya harus lebih dari Rp 0.");
 
@@ -610,8 +706,7 @@
           familyId,
           historyId: financeContext.historyId,
           walletId,
-          amount,
-          financeAccountId: category.id
+          amount
         });
         setLayer("[data-maint-cost-layer]", false);
         showToast("Biaya perawatan tercatat di Keuangan pada tanggal perawatan.");
@@ -624,7 +719,7 @@
       return;
     }
 
-    financeSelection = { walletId, amount, financeAccountId: category.id };
+    financeSelection = { walletId, amount };
     updateCostTrigger();
     setLayer("[data-maint-cost-layer]", false);
   }
@@ -648,8 +743,7 @@
         performedOn,
         note: form.elements.note.value,
         walletId: financeSelection?.walletId || null,
-        amount: financeSelection?.amount || null,
-        financeAccountId: financeSelection?.financeAccountId || null
+        amount: financeSelection?.amount || null
       });
       setLayer("[data-maint-complete-layer]", false);
       setLayer("[data-maint-cost-layer]", false);
@@ -672,7 +766,7 @@
       const head = document.createElement("div"); head.className = "maintenance-manage-group-head";
       const strong = document.createElement("strong"); strong.textContent = group.name;
       const actions = document.createElement("span"); actions.className = "maintenance-manage-row-actions";
-      const edit = document.createElement("button"); edit.type = "button"; edit.setAttribute("aria-label", `Ubah ${group.name}`); edit.appendChild(icon("create-outline")); edit.addEventListener("click", () => openEditor("group", group.id));
+      const edit = document.createElement("button"); edit.type = "button"; edit.setAttribute("aria-label", `Ubah ${group.name}`); edit.appendChild(icon("create-outline")); edit.addEventListener("click", () => openEditor("group", group.id, { returnToManage: true }));
       const remove = document.createElement("button"); remove.type = "button"; remove.className = "is-danger"; remove.setAttribute("aria-label", `Hapus ${group.name}`); remove.appendChild(icon("trash-outline")); remove.addEventListener("click", () => removeGroup(group.id));
       actions.append(edit, remove); head.append(strong, actions); section.appendChild(head);
 
@@ -683,7 +777,7 @@
         const row = document.createElement("div"); row.className = "maintenance-manage-asset";
         const name = document.createElement("span"); name.textContent = asset.name;
         const rowActions = document.createElement("span"); rowActions.className = "maintenance-manage-row-actions";
-        const assetEdit = document.createElement("button"); assetEdit.type = "button"; assetEdit.setAttribute("aria-label", `Ubah ${asset.name}`); assetEdit.appendChild(icon("create-outline")); assetEdit.addEventListener("click", () => openEditor("asset", asset.id));
+        const assetEdit = document.createElement("button"); assetEdit.type = "button"; assetEdit.setAttribute("aria-label", `Ubah ${asset.name}`); assetEdit.appendChild(icon("create-outline")); assetEdit.addEventListener("click", () => openEditor("asset", asset.id, { returnToManage: true }));
         const assetRemove = document.createElement("button"); assetRemove.type = "button"; assetRemove.className = "is-danger"; assetRemove.setAttribute("aria-label", `Hapus ${asset.name}`); assetRemove.appendChild(icon("trash-outline")); assetRemove.addEventListener("click", () => removeAsset(asset.id));
         rowActions.append(assetEdit, assetRemove); row.append(name, rowActions); section.appendChild(row);
       });
@@ -706,7 +800,10 @@
   }
 
   function openEditor(type, id = "", options = {}) {
-    editorContext = { type, id, returnToItem: Boolean(options.returnToItem) };
+    const manageLayer = q("[data-maint-manage-layer]");
+    const returnToManage = options.returnToManage ?? Boolean(manageLayer && !manageLayer.hidden);
+    editorContext = { type, id, returnToItem: Boolean(options.returnToItem), returnToManage: Boolean(returnToManage) };
+    if (returnToManage) setLayer("[data-maint-manage-layer]", false);
     const form = q("[data-maint-editor-form]");
     form.reset();
     showMessage(q("[data-maint-editor-message]"), "");
@@ -726,6 +823,12 @@
     setTimeout(() => form.elements.name.focus(), 80);
   }
 
+  function closeEditor({ restore = true } = {}) {
+    const returnToManage = editorContext.returnToManage;
+    setLayer("[data-maint-editor-layer]", false);
+    if (restore && returnToManage) openManage();
+  }
+
   async function submitEditor(event) {
     event.preventDefault();
     const form = event.currentTarget;
@@ -742,10 +845,12 @@
         savedId = await window.RuangKithaMaintenance.saveAsset({ familyId, assetId: editorContext.id || null, groupId: form.elements.group.value, name: form.elements.name.value });
       }
       const shouldReturnToItem = editorContext.type === "asset" && editorContext.returnToItem;
-      setLayer("[data-maint-editor-layer]", false);
+      const shouldReturnToManage = editorContext.returnToManage;
+      closeEditor({ restore: false });
       showToast(`${editorContext.type === "group" ? "Kelompok" : "Aset"} tersimpan.`);
       await refresh({ silent: true });
       renderManageList();
+      if (shouldReturnToManage) openManage();
       if (shouldReturnToItem && savedId) {
         fillAssetSelect(String(savedId));
         const itemForm = q("[data-maint-item-form]");
@@ -763,7 +868,7 @@
     if (!group) return;
     const assetCount = data.assets.filter(asset => asset.group_id === groupId).length;
     const copy = assetCount ? `Hapus kelompok “${group.name}” beserta ${assetCount} aset yang belum pernah dipakai? Aset yang sudah punya jadwal/riwayat harus dipindahkan atau diarsipkan dulu.` : `Hapus kelompok “${group.name}”?`;
-    if (!confirm(copy)) return;
+    if (!(await askConfirm({ title: "Hapus kelompok?", copy, confirmLabel: "Hapus kelompok" }))) return;
     try {
       await window.RuangKithaMaintenance.removeGroup({ familyId, groupId });
       showToast("Kelompok dihapus.");
@@ -775,7 +880,13 @@
 
   async function removeAsset(assetId) {
     const asset = assetById(assetId);
-    if (!asset || !confirm(`Hapus “${asset.name}”? Jika sudah punya jadwal atau riwayat, RuangKitha akan mengarsipkannya agar histori tidak hilang.`)) return;
+    if (!asset) return;
+    const approved = await askConfirm({
+      title: "Hapus aset?",
+      copy: `Hapus “${asset.name}”? Jika sudah punya jadwal atau riwayat, RuangKitha akan mengarsipkannya agar histori tidak hilang.`,
+      confirmLabel: "Hapus aset"
+    });
+    if (!approved) return;
     try {
       const result = await window.RuangKithaMaintenance.removeAsset({ familyId, assetId });
       showToast(result?.mode === "archived" ? "Aset diarsipkan karena memiliki riwayat." : "Aset dihapus.");
@@ -786,7 +897,6 @@
   }
 
   function setupEvents() {
-    q("[data-maint-add-item]")?.addEventListener("click", () => openItemForm());
     q("[data-maint-add-item-fab]")?.addEventListener("click", () => openItemForm());
     q("[data-maint-manage-open]")?.addEventListener("click", openManage);
     q("[data-maint-manage-close]")?.addEventListener("click", () => setLayer("[data-maint-manage-layer]", false));
@@ -794,7 +904,10 @@
     q("[data-maint-detail-close]")?.addEventListener("click", () => setLayer("[data-maint-detail-layer]", false));
     q("[data-maint-complete-close]")?.addEventListener("click", () => setLayer("[data-maint-complete-layer]", false));
     q("[data-maint-cost-close]")?.addEventListener("click", () => setLayer("[data-maint-cost-layer]", false));
-    q("[data-maint-editor-close]")?.addEventListener("click", () => setLayer("[data-maint-editor-layer]", false));
+    q("[data-maint-editor-close]")?.addEventListener("click", () => closeEditor());
+    q("[data-maint-confirm-close]")?.addEventListener("click", () => closeConfirm(false));
+    q("[data-maint-confirm-cancel]")?.addEventListener("click", () => closeConfirm(false));
+    q("[data-maint-confirm-accept]")?.addEventListener("click", () => closeConfirm(true));
 
     q("[data-maint-item-form]")?.addEventListener("submit", submitItem);
     qa('[data-maint-item-form] input[name="scheduleMode"]').forEach(input => input.addEventListener("change", setRepeatVisibility));
@@ -818,8 +931,8 @@
       setLayer("[data-maint-cost-layer]", false);
     });
 
-    q("[data-maint-group-add]")?.addEventListener("click", () => openEditor("group"));
-    q("[data-maint-asset-add]")?.addEventListener("click", () => openEditor("asset"));
+    q("[data-maint-group-add]")?.addEventListener("click", () => openEditor("group", "", { returnToManage: true }));
+    q("[data-maint-asset-add]")?.addEventListener("click", () => openEditor("asset", "", { returnToManage: true }));
     q("[data-maint-quick-asset]")?.addEventListener("click", () => {
       if (!data.groups.length) {
         showMessage(q("[data-maint-item-message]"), "Buat kelompok terlebih dahulu sebelum menambahkan aset.");
@@ -833,8 +946,9 @@
     qa(".maintenance-layer").forEach(layer => {
       layer.addEventListener("click", event => {
         if (event.target !== layer) return;
-        if (layer.matches("[data-maint-cost-layer]")) setLayer("[data-maint-cost-layer]", false);
-        else if (layer.matches("[data-maint-editor-layer]")) setLayer("[data-maint-editor-layer]", false);
+        if (layer.matches("[data-maint-confirm-layer]")) closeConfirm(false);
+        else if (layer.matches("[data-maint-cost-layer]")) setLayer("[data-maint-cost-layer]", false);
+        else if (layer.matches("[data-maint-editor-layer]")) closeEditor();
         else if (layer.matches("[data-maint-complete-layer]")) setLayer("[data-maint-complete-layer]", false);
         else if (layer.matches("[data-maint-item-layer]")) setLayer("[data-maint-item-layer]", false);
         else if (layer.matches("[data-maint-detail-layer]")) setLayer("[data-maint-detail-layer]", false);

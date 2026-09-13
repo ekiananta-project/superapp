@@ -1,8 +1,8 @@
-/* RuangKitha v2.0.0a52 — Maintenance Core V1 */
+/* RuangKitha v2.0.0a52a — Maintenance UX + Finance Hotfix V1 */
 (() => {
   "use strict";
 
-  const BUILD = "v2.0.0a52";
+  const BUILD = "v2.0.0a52a";
   const PREF_KEY = "keuangan_pengaturan_v1";
 
   function client() {
@@ -163,7 +163,7 @@
     amount = null,
     financeAccountId = null
   } = {}) {
-    const hasCost = walletId || amount || financeAccountId;
+    const hasCost = walletId || amount;
     const result = await rpc("maintenance_complete_v1", {
       p_family_id: familyId,
       p_item_id: itemId,
@@ -171,7 +171,7 @@
       p_note: String(note || "").trim() || null,
       p_wallet_id: hasCost ? walletId || null : null,
       p_amount: hasCost ? Math.round(Number(amount || 0)) : null,
-      p_finance_account_id: hasCost ? financeAccountId || null : null
+      p_finance_account_id: null
     });
     signalChanged();
     if (window.FinanceCache) window.FinanceCache.remove("wallets", familyId);
@@ -179,13 +179,13 @@
     return result;
   }
 
-  async function addHistoryExpense({ familyId, historyId, walletId, amount, financeAccountId } = {}) {
+  async function addHistoryExpense({ familyId, historyId, walletId, amount, financeAccountId = null } = {}) {
     const result = await rpc("maintenance_history_add_expense_v1", {
       p_family_id: familyId,
       p_history_id: historyId,
       p_wallet_id: walletId,
       p_amount: Math.round(Number(amount || 0)),
-      p_finance_account_id: financeAccountId
+      p_finance_account_id: null
     });
     if (window.FinanceCache) window.FinanceCache.remove("wallets", familyId);
     return result;
@@ -198,15 +198,13 @@
 
   async function financeOptions(familyId) {
     if (!window.FinanceService) return { wallets: [], category: null, preferredWalletId: "" };
-    const [wallets, accounts] = await Promise.all([
+    const [wallets, categoryId] = await Promise.all([
       window.FinanceService.ambilSaldoDompet(familyId),
-      window.FinanceService.ambilAkun(familyId, "expense")
+      window.FinanceService.pastikanKategoriMaintenance(familyId)
     ]);
-    const category = (accounts || []).find(item => String(item?.name || "").trim().toLowerCase() === "maintenance")
-      || (accounts || []).find(item => String(item?.name || "").trim().toLowerCase() === "perawatan")
-      || null;
     const prefs = readFinancePrefs();
     const preferredWalletId = (wallets || []).some(item => item.wallet_id === prefs.dompetAktif) ? prefs.dompetAktif : (wallets?.[0]?.wallet_id || "");
+    const category = categoryId ? { id: categoryId, name: "Maintenance", kind: "expense" } : null;
     return { wallets: wallets || [], category, preferredWalletId };
   }
 
