@@ -1,3 +1,4 @@
+// RuangKitha v2.0.0a50e — Home Documents reminder insight integration.
 (() => {
   "use strict";
 
@@ -173,7 +174,33 @@
   }
 
   function iconForEvent(item) {
-    return item?.icon || ({ finance: "receipt-outline", notes: "alarm-outline", calendar: "calendar-clear-outline" }[item?.module] || "notifications-outline");
+    return item?.icon || ({ finance: "receipt-outline", notes: "alarm-outline", documents: "document-text-outline", calendar: "calendar-clear-outline" }[item?.module] || "notifications-outline");
+  }
+
+
+  function renderDocumentAttention(summary) {
+    const title = q("[data-documents-attention]");
+    const helper = q("[data-documents-helper]");
+    const count = Math.max(0, Number(summary?.attentionCount || 0));
+    const expired = Math.max(0, Number(summary?.expiredCount || 0));
+    const today = Math.max(0, Number(summary?.todayCount || 0));
+
+    if (title) {
+      if (count === 0) title.textContent = "Semua masih aman";
+      else if (expired > 0) title.textContent = `${expired} dokumen sudah kedaluwarsa`;
+      else if (today > 0) title.textContent = `${today} dokumen berakhir hari ini`;
+      else title.textContent = `${count} dokumen perlu perhatian`;
+    }
+    if (helper) {
+      helper.textContent = count === 0
+        ? "Tidak ada masa berlaku yang perlu ditindak."
+        : "Buka Dokumen untuk melihat yang perlu dijaga.";
+    }
+  }
+
+  async function loadDocumentAttention(familyId) {
+    if (!window.RuangKithaDocumentReminders?.attentionSummary) return { attentionCount: 0 };
+    return window.RuangKithaDocumentReminders.attentionSummary(familyId);
   }
 
   function eventMeta(item) {
@@ -313,9 +340,10 @@
       saveActiveFamily(family.id);
 
       activeFamilyId = family.id;
-      const [cashflowResult, reminderResult] = await Promise.allSettled([
+      const [cashflowResult, reminderResult, documentsResult] = await Promise.allSettled([
         loadCashflow(family.id),
-        loadTodayEvents(family.id)
+        loadTodayEvents(family.id),
+        loadDocumentAttention(family.id)
       ]);
 
       if (cashflowResult.status === "fulfilled") renderCashflow(cashflowResult.value);
@@ -330,6 +358,12 @@
         renderReminders([]);
       }
 
+      if (documentsResult.status === "fulfilled") renderDocumentAttention(documentsResult.value);
+      else {
+        console.warn("[Superapp Home documents]", documentsResult.reason);
+        renderDocumentAttention({ attentionCount: 0 });
+      }
+
       // Warm the exact Calendar grid range after Home is usable. This is intentionally
       // idle/background work and never blocks the Home card.
       prefetchCurrentCalendarMonth(family.id);
@@ -337,6 +371,7 @@
       console.error("[Superapp Home]", error);
       renderReminders([]);
       renderCashflow({ net: 0 });
+      renderDocumentAttention({ attentionCount: 0 });
     } finally {
       q("[data-superapp-home]")?.setAttribute("aria-busy", "false");
     }
@@ -344,8 +379,14 @@
 
   async function refreshTodayFromExternalChange() {
     if (!activeFamilyId || document.hidden) return;
-    try { renderReminders(await loadTodayEvents(activeFamilyId)); }
-    catch (error) { console.warn("[Superapp Home Today refresh]", error); }
+    const [todayResult, documentsResult] = await Promise.allSettled([
+      loadTodayEvents(activeFamilyId),
+      loadDocumentAttention(activeFamilyId)
+    ]);
+    if (todayResult.status === "fulfilled") renderReminders(todayResult.value);
+    else console.warn("[Superapp Home Today refresh]", todayResult.reason);
+    if (documentsResult.status === "fulfilled") renderDocumentAttention(documentsResult.value);
+    else console.warn("[Superapp Home Documents refresh]", documentsResult.reason);
   }
 
   window.addEventListener("pageshow", event => {

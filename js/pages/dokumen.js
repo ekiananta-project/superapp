@@ -1,4 +1,4 @@
-/* RuangKitha v2.0.0a50d — Documents Search, Filter & Smart Organization V1 */
+/* RuangKitha v2.0.0a50e — Documents Reminder + Calendar + Notification Integration V1 */
 (() => {
   "use strict";
 
@@ -1334,6 +1334,19 @@
     detailLayer.hidden = false;
   }
 
+  async function openDeepLinkedDocument() {
+    const documentId = new URLSearchParams(location.search).get("document");
+    if (!documentId || !/^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(documentId)) return false;
+    try {
+      const record = await Service().getRecord(documentId, { familyId: activeFamily?.id || null });
+      openDetail(record);
+      return true;
+    } catch (error) {
+      console.debug?.("[Documents deep link]", error);
+      return false;
+    }
+  }
+
   async function refreshCurrentRecord() {
     if (!currentRecord) return null;
     try {
@@ -1691,6 +1704,7 @@
       syncTabs();
       renderDiscoveryState();
       await Promise.all([refreshVaultStatus(), loadRecords()]);
+      await openDeepLinkedDocument();
     } catch (error) {
       countLabel.textContent = "Gagal memuat";
       setMessage(error?.message || "Dokumen gagal dimulai.", true);
