@@ -496,3 +496,16 @@ html[data-theme="dark"] .dokumen-filter-options input:checked+span{background:rg
   .dokumen-filter-count{position:absolute;top:-4px;right:-4px}
   .dokumen-filter-options-compact{grid-template-columns:1fr}
 }
+
+/* RuangKitha v2.0.0a51 — Document renewal resolution flow */
+.dokumen-renew-action{display:flex!important;align-items:center;justify-content:center;gap:7px}
+.dokumen-renew-action ion-icon{font-size:16px}
+.dokumen-renew-layer{z-index:2660}
+.dokumen-renew-sheet{max-height:min(76dvh,620px);overflow:auto;padding-bottom:max(18px,env(safe-area-inset-bottom))}
+.dokumen-renew-body{padding:2px 16px 16px;display:grid;gap:14px}
+.dokumen-renew-current{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:11px 12px;border-radius:14px;background:rgba(111,124,116,.055);border:1px solid rgba(103,118,109,.09)}
+.dokumen-renew-current span{font-size:9.5px;color:var(--warna-teks-sekunder,#737b76)}
+.dokumen-renew-current strong{font-size:10px;color:var(--warna-teks,#292e2b);text-align:right}
+.dokumen-renew-note{margin:0;padding:10px 11px;border-radius:13px;background:rgba(80,130,101,.06);color:var(--warna-teks-sekunder,#737b76);font-size:9px;line-height:1.5}
+.dokumen-renew-body .tombol-utama{width:100%}
+html[data-theme="dark"] .dokumen-renew-current{background:rgba(255,255,255,.025);border-color:rgba(223,232,226,.08)}

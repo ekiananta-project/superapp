@@ -1,4 +1,5 @@
 /* RuangKitha v2.0.0a50e — Documents Reminder + Calendar + Notification Integration V1 */
+// a51 Agenda Resolution Foundation V1: same-record Document renewal flow.
 (() => {
   "use strict";
 
@@ -73,6 +74,7 @@
   const detailAddAttachment = q("[data-doc-detail-add-attachment]");
   const detailFile = q("[data-doc-detail-file]");
   const detailEdit = q("[data-doc-detail-edit]");
+  const detailRenew = q("[data-doc-detail-renew]");
   const detailArchive = q("[data-doc-detail-archive]");
   const shareSection = q("[data-doc-share-section]");
   const shareSummary = q("[data-doc-share-summary]");
@@ -81,6 +83,15 @@
   const shareClose = q("[data-doc-share-close]");
   const shareList = q("[data-doc-share-list]");
   const shareMessage = q("[data-doc-share-message]");
+
+  const renewLayer = q("[data-doc-renew-layer]");
+  const renewClose = q("[data-doc-renew-close]");
+  const renewForm = q("[data-doc-renew-form]");
+  const renewCurrent = q("[data-doc-renew-current]");
+  const renewExpiry = q("[data-doc-renew-expiry]");
+  const renewReminder = q("[data-doc-renew-reminder]");
+  const renewMessage = q("[data-doc-renew-message]");
+  const renewSave = q("[data-doc-renew-save]");
 
   const archiveLayer = q("[data-doc-archive-layer]");
   const archiveClose = q("[data-doc-archive-close]");
@@ -862,7 +873,53 @@
     openUnlock(purpose, action);
   }
 
+  function setRenewMessage(text = "", isError = false) {
+    if (!renewMessage) return;
+    renewMessage.textContent = text;
+    renewMessage.hidden = !text;
+    renewMessage.classList.toggle("is-error", Boolean(isError));
+  }
+
+  function localDateOnly(date = new Date()) {
+    return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
+  }
+
+  function nextDateAfter(dateOnly) {
+    const parts = parseDateOnly(dateOnly);
+    if (!parts) return "";
+    const date = new Date(parts.y, parts.m - 1, parts.d + 1);
+    return localDateOnly(date);
+  }
+
+  function renewMinimumDate(currentExpiry) {
+    const afterCurrent = nextDateAfter(currentExpiry);
+    const tomorrow = new Date();
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    const afterToday = localDateOnly(tomorrow);
+    return afterCurrent > afterToday ? afterCurrent : afterToday;
+  }
+
+  function openRenew(record = currentRecord) {
+    if (!record?.can_edit || !record?.expires_on || !renewLayer) return;
+    setRenewMessage("");
+    renewCurrent.textContent = formatDate(record.expires_on);
+    renewExpiry.min = renewMinimumDate(record.expires_on);
+    renewExpiry.value = "";
+    renewReminder.value = record.reminder_days == null ? "" : String(record.reminder_days);
+    if (!["", "7", "14", "30", "60", "90"].includes(renewReminder.value)) renewReminder.value = "30";
+    renewLayer.hidden = false;
+    setTimeout(() => renewExpiry.focus(), 70);
+  }
+
+  function closeRenew() {
+    if (!renewLayer) return;
+    renewLayer.hidden = true;
+    setRenewMessage("");
+    renewExpiry.value = "";
+  }
+
   function closeDetail() {
+    closeRenew();
     detailLayer.hidden = true;
     currentRecord = null;
     attachmentBody.replaceChildren();
@@ -1328,6 +1385,7 @@
     detailAttention.classList.toggle("is-expired", expiry.expired);
     detailAttention.textContent = expiry.attention ? expiry.text : "";
     detailEdit.hidden = !record.can_edit;
+    detailRenew.hidden = !record.can_edit || !record.expires_on;
     detailArchive.hidden = !record.can_edit;
     updateShareSection(record);
     renderAttachmentLockedState(record);
@@ -1558,6 +1616,50 @@
 
   detailClose.addEventListener("click", closeDetail);
   detailLayer.addEventListener("click", (event) => { if (event.target === detailLayer && !busy) closeDetail(); });
+  detailRenew?.addEventListener("click", () => {
+    if (!currentRecord?.can_edit || !currentRecord?.expires_on) return;
+    openRenew(currentRecord);
+  });
+  renewClose?.addEventListener("click", closeRenew);
+  renewLayer?.addEventListener("click", (event) => { if (event.target === renewLayer && !busy) closeRenew(); });
+  renewForm?.addEventListener("submit", async (event) => {
+    event.preventDefault();
+    if (busy || !currentRecord?.can_edit || !currentRecord?.expires_on) return;
+    const previousExpiry = currentRecord.expires_on;
+    const nextExpiry = renewExpiry.value;
+    if (!nextExpiry) {
+      setRenewMessage("Pilih masa berlaku baru.", true);
+      return;
+    }
+    if (nextExpiry < renewMinimumDate(previousExpiry)) {
+      setRenewMessage("Untuk perpanjangan, pilih tanggal baru setelah masa berlaku sekarang dan setelah hari ini. Gunakan Edit informasi jika hanya ingin mengoreksi tanggal.", true);
+      return;
+    }
+    busy = true;
+    renewSave.disabled = true;
+    renewSave.textContent = "Menyimpan…";
+    setRenewMessage("");
+    try {
+      const recordId = currentRecord.document_id;
+      await Service().renewRecord(recordId, {
+        familyId: activeFamily?.id || null,
+        expiresOn: nextExpiry,
+        reminderDays: renewReminder.value || null
+      });
+      closeRenew();
+      await loadRecords();
+      const fresh = await Service().getRecord(recordId, { familyId: activeFamily?.id || null });
+      openDetail(fresh);
+      setMessage(`Masa berlaku diperbarui ke ${formatDate(nextExpiry)}. Agenda lama tidak lagi perlu ditindak.`);
+    } catch (error) {
+      setRenewMessage(error?.message || "Masa berlaku belum dapat diperbarui.", true);
+    } finally {
+      busy = false;
+      renewSave.disabled = false;
+      renewSave.textContent = "Simpan pembaruan";
+    }
+  });
+
   detailEdit.addEventListener("click", () => {
     if (!currentRecord?.can_edit) return;
     const record = currentRecord;

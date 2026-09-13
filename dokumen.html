@@ -26,7 +26,7 @@
   <link rel="stylesheet" href="css/theme.css">
   <link rel="stylesheet" href="css/ruangkitha-design-system-v1.css?v=v2.0.0a50a" data-ruangkitha-design-system="1.0.7">
   <link rel="stylesheet" href="css/ruangkitha-shell-v1.css?v=v2.0.0a50a" data-ruangkitha-shell="1.0.7">
-  <link rel="stylesheet" href="css/pages/ruangkitha-documents-v1.css?v=20260912-v200a50b1-a50c-a50d">
+  <link rel="stylesheet" href="css/pages/ruangkitha-documents-v1.css?v=20260912-v200a50b1-a50c-a50d-a51">
   <style id="ruangkitha-auth-cloak">html[data-auth-guard] body{visibility:hidden!important}</style>
 </head>
 <body>
@@ -314,10 +314,52 @@
       </section>
 
       <div class="dokumen-detail-actions">
+        <button class="tombol-sekunder dokumen-renew-action" type="button" data-doc-detail-renew hidden>
+          <ion-icon name="refresh-outline" aria-hidden="true"></ion-icon>
+          <span>Perbarui masa berlaku</span>
+        </button>
         <button class="tombol-sekunder" type="button" data-doc-detail-edit hidden>Edit informasi</button>
         <button class="dokumen-archive-action" type="button" data-doc-detail-archive hidden>Arsipkan dokumen</button>
       </div>
     </div>
+  </section>
+</div>
+
+<!-- a51: renewing updates the same Document Record; archive/delete is not required. -->
+<div class="lapisan dokumen-renew-layer" data-doc-renew-layer hidden>
+  <section class="bottom-sheet dokumen-renew-sheet" role="dialog" aria-modal="true" aria-labelledby="doc-renew-title">
+    <div class="sheet-handle"></div>
+    <div class="sheet-header dokumen-sheet-header">
+      <div>
+        <h2 id="doc-renew-title">Perbarui masa berlaku</h2>
+        <p class="sheet-subjudul">Gunakan record yang sama setelah dokumen diperpanjang. Tidak perlu arsip atau membuat dokumen baru.</p>
+      </div>
+      <button class="tombol-ikon" type="button" data-doc-renew-close aria-label="Tutup"><ion-icon name="close-outline"></ion-icon></button>
+    </div>
+    <form class="dokumen-renew-body" data-doc-renew-form>
+      <div class="dokumen-renew-current">
+        <span>Masa berlaku sekarang</span>
+        <strong data-doc-renew-current>—</strong>
+      </div>
+      <label class="dokumen-field" for="doc-renew-expiry">
+        <span>Masa berlaku baru</span>
+        <input id="doc-renew-expiry" class="input" data-doc-renew-expiry type="date" required>
+      </label>
+      <label class="dokumen-field" for="doc-renew-reminder">
+        <span>Pengingat</span>
+        <select id="doc-renew-reminder" class="input" data-doc-renew-reminder>
+          <option value="7">7 hari sebelumnya</option>
+          <option value="14">14 hari sebelumnya</option>
+          <option value="30">30 hari sebelumnya</option>
+          <option value="60">60 hari sebelumnya</option>
+          <option value="90">90 hari sebelumnya</option>
+          <option value="">Tanpa pengingat</option>
+        </select>
+      </label>
+      <p class="dokumen-renew-note">Lampiran lama tetap aman. Kalau kamu punya foto/file versi baru, ganti lampirannya secara terpisah setelah masa berlaku diperbarui.</p>
+      <p class="dokumen-sheet-message" data-doc-renew-message role="alert" hidden></p>
+      <button class="tombol-utama" type="submit" data-doc-renew-save>Simpan pembaruan</button>
+    </form>
   </section>
 </div>
 
@@ -412,8 +454,8 @@
 <script src="js/security/ruangkitha-recovery-kit.js?v=20260912-v200a50b-shareproof"></script>
 <script src="js/security/ruangkitha-documents-crypto.js?v=20260912-v200a50b"></script>
 <script src="js/backend/document-reminder-service.js?v=20260913-v200a50e1"></script>
-<script src="js/backend/documents-service.js?v=20260912-v200a50b1-a50c-a50e"></script>
-<script src="js/pages/dokumen.js?v=20260912-v200a50b1-a50c-a50d-a50e"></script>
+<script src="js/backend/documents-service.js?v=20260912-v200a50b1-a50c-a50e-a51"></script>
+<script src="js/pages/dokumen.js?v=20260912-v200a50b1-a50c-a50d-a50e-a51"></script>
 <script src="js/pwa.js?v=20260912-v200a49d"></script>
 </body>
 </html>

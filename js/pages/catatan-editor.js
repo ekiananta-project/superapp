@@ -1,4 +1,4 @@
-// RuangKitha v2.0.0a43 — Relation Graph + Protected Internal Links
+// RuangKitha v2.0.0a51 — Agenda Resolution Foundation V1 (Catatan Reminder completion/reschedule)
 (() => {
   "use strict";
 
@@ -40,6 +40,10 @@
   let reminderRecipientsDirty = false;
   let reminderRecipientSaveRunning = false;
   let currentReminderRecipientSavePromise = null;
+  let reminderCompletedAt = "";
+  let reminderCompletedFromAt = "";
+  let reminderResolutionResetPending = false;
+  let reminderResolutionRunning = false;
 
   // v2.0.0a38 — editor foundation + inline navigation/formatting; backend note core began at a29.
   let noteId = "";
@@ -240,7 +244,9 @@
   function showBackendWarning(error) {
     if (backendWarningShown) return;
     backendWarningShown = true;
-    if (reminderPreset && window.NotesService?.reminderSchemaBelumTerpasang?.(error)) {
+    if (reminderPreset && window.NotesService?.reminderResolutionSchemaBelumTerpasang?.(error)) {
+      showToast("Status selesai Reminder belum aktif — jalankan SQL 007H di Supabase dulu.");
+    } else if (reminderPreset && window.NotesService?.reminderSchemaBelumTerpasang?.(error)) {
       showToast("Backend Reminder belum aktif — jalankan SQL 004J di Supabase dulu.");
     } else if (window.NotesService?.folderSchemaBelumTerpasang?.(error)) {
       showToast("Backend kolaborasi/folder belum aktif — jalankan SQL 004D di Supabase dulu.");
@@ -306,6 +312,24 @@
         }
         if (noteId && cardColor !== "default" && window.NotesService?.setWarnaKartuCatatan) {
           try { await window.NotesService.setWarnaKartuCatatan(noteId, cardColor); } catch (error) { console.warn("[Catatan Color Save]", error); }
+        }
+        if (reminderPreset && noteId && reminderResolutionResetPending && window.NotesService?.bukaUlangReminder) {
+          try {
+            await window.NotesService.bukaUlangReminder(noteId);
+            reminderCompletedAt = "";
+            reminderCompletedFromAt = "";
+            reminderResolutionResetPending = false;
+            renderReminder();
+            syncReminderProjectionAfterResolution();
+          } catch (error) {
+            reminderResolutionResetPending = true;
+            console.error("[Reminder Reopen]", error);
+            if (window.NotesService?.reminderResolutionSchemaBelumTerpasang?.(error)) {
+              showToast("Jalankan SQL 007H agar status selesai/jadwalkan ulang aktif.");
+            } else {
+              showToast(error?.message || "Status reminder belum dapat diperbarui.");
+            }
+          }
         }
         if (announce) showToast(reminderPreset ? "Reminder tersimpan." : "Catatan tersimpan.");
         if (reminderPreset && snapshot.reminderAt && window.RuangKithaNotifications) {
@@ -534,6 +558,9 @@
       if (reminderPreset) {
         if (scope === "family") await loadReminderMembers();
         reminderRecurrence = normalizeReminderRecurrence(note.reminder_recurrence);
+        reminderCompletedAt = clean(note.reminder_completed_at);
+        reminderCompletedFromAt = clean(note.reminder_completed_from_at);
+        reminderResolutionResetPending = false;
         if (note.reminder_at) {
           const due = new Date(note.reminder_at);
           if (!Number.isNaN(due.getTime())) {
@@ -573,7 +600,8 @@
       return true;
     } catch (error) {
       console.error(reminderPreset ? "[Catatan Reminder Load]" : "[Catatan Basic Load]", error);
-      if (reminderPreset && window.NotesService?.reminderSchemaBelumTerpasang?.(error)) noteBackendReady = false;
+      if (reminderPreset && window.NotesService?.reminderResolutionSchemaBelumTerpasang?.(error)) noteBackendReady = false;
+      else if (reminderPreset && window.NotesService?.reminderSchemaBelumTerpasang?.(error)) noteBackendReady = false;
       else if (window.NotesService?.schemaBelumTerpasang?.(error)) noteBackendReady = false;
       showBackendWarning(error);
       return false;
@@ -1667,6 +1695,136 @@
     setLayer("[data-reminder-recipient-layer]", false);
   }
 
+  function reminderResolutionDateLabel(value) {
+    if (!value) return "";
+    const date = new Date(value);
+    if (Number.isNaN(date.getTime())) return "";
+    return new Intl.DateTimeFormat("id-ID", {
+      day: "numeric", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit"
+    }).format(date).replace(" pukul ", ", ");
+  }
+
+  function reminderDueDate() {
+    if (!reminderDate || !reminderTime) return null;
+    const value = new Date(`${reminderDate}T${reminderTime}:00`);
+    return Number.isNaN(value.getTime()) ? null : value;
+  }
+
+  function syncReminderProjectionAfterResolution() {
+    try {
+      if (activeFamilyId) window.RuangKithaCalendarEvents?.invalidateFamily?.({ viewerId: userId, familyId: activeFamilyId });
+    } catch {}
+    if (window.RuangKithaNotifications?.syncInbox) {
+      setTimeout(() => window.RuangKithaNotifications.syncInbox(24 * 30).catch?.(() => {}), 0);
+    }
+  }
+
+  function renderReminderResolution() {
+    const box = q("[data-reminder-resolution]");
+    if (!box) return;
+    const title = q("[data-reminder-resolution-title]");
+    const copy = q("[data-reminder-resolution-copy]");
+    const icon = q("[data-reminder-resolution-icon]");
+    const complete = q("[data-reminder-complete]");
+    const reschedule = q("[data-reminder-reschedule]");
+    const due = reminderDueDate();
+    const hasActiveSchedule = Boolean(due);
+    const hasCompletion = Boolean(reminderCompletedAt);
+    const completedWithoutNext = hasCompletion && !hasActiveSchedule;
+    const overdue = hasActiveSchedule && due.getTime() < Date.now();
+
+    box.hidden = !reminderPreset || !noteId || noteReadOnly || (!hasActiveSchedule && !hasCompletion);
+    box.classList.toggle("is-overdue", overdue && !completedWithoutNext);
+    box.classList.toggle("is-completed", hasCompletion);
+    if (complete) {
+      complete.hidden = completedWithoutNext;
+      complete.disabled = reminderResolutionRunning || !hasActiveSchedule;
+    }
+    if (reschedule) reschedule.disabled = reminderResolutionRunning;
+    if (box.hidden) return;
+
+    if (completedWithoutNext) {
+      if (title) title.textContent = "Reminder selesai";
+      if (copy) copy.textContent = reminderCompletedAt
+        ? `Ditandai selesai ${reminderResolutionDateLabel(reminderCompletedAt)}. Catatan tetap tersimpan dan tidak perlu diarsipkan.`
+        : "Reminder selesai. Catatan tetap tersimpan dan tidak perlu diarsipkan.";
+      icon?.setAttribute("name", "checkmark-circle-outline");
+      return;
+    }
+
+    if (hasCompletion && hasActiveSchedule && reminderRecurrence !== "none") {
+      if (title) title.textContent = "Siklus sebelumnya selesai";
+      if (copy) copy.textContent = `Jadwal berikutnya ${reminderLabel()}. Tandai selesai lagi setelah occurrence berikutnya ditindak.`;
+      icon?.setAttribute("name", "repeat-outline");
+      return;
+    }
+
+    if (overdue) {
+      if (title) title.textContent = "Reminder sudah lewat";
+      if (copy) copy.textContent = "Kalau sudah ditindak, tandai selesai. Kalau belum sempat, jadwalkan ulang tanpa mengarsipkan catatan.";
+      icon?.setAttribute("name", "alert-circle-outline");
+      return;
+    }
+
+    if (title) title.textContent = "Reminder masih aktif";
+    if (copy) copy.textContent = "Kalau urusan ini selesai lebih awal, tandai selesai agar agenda tidak tetap muncul saat tanggalnya tiba.";
+    icon?.setAttribute("name", "checkmark-circle-outline");
+  }
+
+  function applyReminderResolutionResult(result = {}) {
+    reminderCompletedAt = clean(result?.completed_at);
+    reminderCompletedFromAt = clean(result?.completed_from_at);
+    const next = clean(result?.next_reminder_at);
+    if (next) {
+      const date = new Date(next);
+      if (!Number.isNaN(date.getTime())) {
+        reminderDate = localDateString(date);
+        reminderTime = `${String(date.getHours()).padStart(2, "0")}:${String(date.getMinutes()).padStart(2, "0")}`;
+      }
+    } else {
+      reminderDate = "";
+      reminderTime = "";
+    }
+    reminderResolutionResetPending = false;
+    lastSavedFingerprint = noteFingerprint();
+    noteDirty = false;
+    renderReminder();
+  }
+
+  async function completeReminderOccurrence() {
+    if (!reminderPreset || !noteId || noteReadOnly || reminderResolutionRunning) return;
+    if (!window.NotesService?.tandaiReminderSelesai) {
+      showToast("Status selesai reminder belum tersedia.");
+      return;
+    }
+    reminderResolutionRunning = true;
+    renderReminderResolution();
+    try {
+      await saveBasicNoteNow();
+      const result = await window.NotesService.tandaiReminderSelesai(noteId);
+      applyReminderResolutionResult(result || {});
+      syncReminderProjectionAfterResolution();
+      showToast(result?.next_reminder_at
+        ? `Reminder selesai. Jadwal berikutnya ${reminderLabel()}.`
+        : "Reminder ditandai selesai. Catatan tetap tersimpan.");
+    } catch (error) {
+      console.error("[Reminder Complete]", error);
+      if (window.NotesService?.reminderResolutionSchemaBelumTerpasang?.(error)) {
+        showToast("Jalankan SQL 007H agar Tandai selesai aktif.");
+      } else {
+        showToast(error?.message || "Reminder belum dapat ditandai selesai.");
+      }
+    } finally {
+      reminderResolutionRunning = false;
+      renderReminderResolution();
+    }
+  }
+
+  function rescheduleReminder() {
+    if (!reminderPreset || noteReadOnly || reminderResolutionRunning) return;
+    openReminderSheet();
+  }
+
   function renderReminder() {
     const hasReminder = Boolean(reminderDate && reminderTime);
     const chip = q("[data-reminder-chip]");
@@ -1680,6 +1838,7 @@
     if (info) info.textContent = hasReminder ? label : "Belum diatur";
     if (remove) remove.hidden = !hasReminder;
     renderReminderDedicated();
+    renderReminderResolution();
   }
 
   function renderReminderDedicated() {
@@ -1713,8 +1872,12 @@
     if (tagCard) tagCard.disabled = Boolean(noteReadOnly);
 
     if (scheduleValue) {
-      const schedule = reminderDate && reminderTime ? reminderLabel() : "Atur tanggal & waktu";
-      scheduleValue.textContent = reminderRecurrence === "none" ? schedule : `${schedule} · ${reminderRecurrenceLabel()}`;
+      const schedule = reminderDate && reminderTime
+        ? reminderLabel()
+        : (reminderCompletedAt ? "Selesai" : "Atur tanggal & waktu");
+      scheduleValue.textContent = reminderRecurrence === "none" || !reminderDate
+        ? schedule
+        : `${schedule} · ${reminderRecurrenceLabel()}`;
     }
 
     const eligibleIds = reminderEligibleMembers().map(member => clean(member?.user_id)).filter(Boolean);
@@ -1818,6 +1981,7 @@
     reminderDate = date;
     reminderTime = time;
     reminderRecurrence = normalizeReminderRecurrence(q("[data-reminder-recurrence]")?.value);
+    if (reminderCompletedAt) reminderResolutionResetPending = true;
     reminderPreset = true;
     renderReminder();
     setLayer("[data-reminder-layer]", false);
@@ -2267,6 +2431,8 @@
     q("[data-reminder-close]")?.addEventListener("click", () => setLayer("[data-reminder-layer]", false));
     q("[data-reminder-chip]")?.addEventListener("click", openReminderSheet);
     q("[data-reminder-save]")?.addEventListener("click", saveReminder);
+    q("[data-reminder-complete]")?.addEventListener("click", completeReminderOccurrence);
+    q("[data-reminder-reschedule]")?.addEventListener("click", rescheduleReminder);
     q("[data-reminder-date]")?.addEventListener("input", renderReminderDraftPreview);
     q("[data-reminder-time]")?.addEventListener("input", renderReminderDraftPreview);
     q("[data-reminder-recurrence]")?.addEventListener("change", renderReminderDraftPreview);

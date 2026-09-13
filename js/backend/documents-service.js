@@ -1,4 +1,4 @@
-/* RuangKitha v2.0.0a50e — Documents Service + Reminder Integration V1 */
+/* RuangKitha v2.0.0a51 — Agenda Resolution Foundation V1 (Document renewal helper) */
 (function initRuangKithaDocumentsService(root) {
   "use strict";
 
@@ -159,6 +159,25 @@
     });
     notifyCatalogChanged();
     return result;
+  }
+
+  async function renewRecord(documentId, {
+    familyId = null,
+    expiresOn,
+    reminderDays = null
+  } = {}) {
+    const expiry = normalizeDate(expiresOn);
+    if (!expiry) throw new Error("Tanggal masa berlaku baru wajib diisi.");
+    const current = await getRecord(documentId, { familyId });
+    if (!current?.can_edit) throw new Error("Dokumen ini tidak dapat diperbarui oleh akunmu.");
+    return updateRecord(documentId, {
+      familyId: current.scope === "family" ? (current.family_id || familyId || null) : null,
+      scope: current.scope || "private",
+      displayName: current.display_name,
+      documentType: current.document_type || "Lainnya",
+      expiresOn: expiry,
+      reminderDays
+    });
   }
 
   async function archiveRecord(documentId) {
@@ -759,6 +778,7 @@
     listRecords,
     getRecord,
     updateRecord,
+    renewRecord,
     archiveRecord,
     listArchivedRecords,
     restoreRecord,

@@ -23,6 +23,8 @@
     "archived_at"
   ].join(",");
 
+  const NOTE_DETAIL_FIELDS = `${NOTE_FIELDS},reminder_completed_at,reminder_completed_from_at`;
+
   const ACTIVE_NOTE_TYPES = ["basic", "checklist", "reminder"];
 
   function client() {
@@ -250,13 +252,29 @@
     return data || [];
   }
 
+  async function tandaiReminderSelesai(noteId) {
+    const id = clean(noteId);
+    if (!id) throw new Error("Reminder tidak ditemukan.");
+    const { data, error } = await client().rpc("notes_complete_reminder_v1", { p_note_id: id });
+    if (error) throw error;
+    return data || null;
+  }
+
+  async function bukaUlangReminder(noteId) {
+    const id = clean(noteId);
+    if (!id) throw new Error("Reminder tidak ditemukan.");
+    const { data, error } = await client().rpc("notes_reopen_reminder_v1", { p_note_id: id });
+    if (error) throw error;
+    return data || null;
+  }
+
   async function ambilCatatan(id) {
     const noteId = clean(id);
     if (!noteId) return null;
 
     const { data, error } = await client()
       .from("notes")
-      .select(NOTE_FIELDS)
+      .select(NOTE_DETAIL_FIELDS)
       .eq("id", noteId)
       .is("archived_at", null)
       .maybeSingle();
@@ -1179,6 +1197,17 @@
       message.includes("reminder_recurrence");
   }
 
+  function reminderResolutionSchemaBelumTerpasang(error) {
+    const code = String(error?.code || "").toUpperCase();
+    const message = String(error?.message || error?.details || error?.hint || "").toLowerCase();
+    return code === "PGRST202" ||
+      code === "PGRST204" ||
+      message.includes("notes_complete_reminder_v1") ||
+      message.includes("notes_reopen_reminder_v1") ||
+      message.includes("reminder_completed_at") ||
+      message.includes("reminder_completed_from_at");
+  }
+
   function linkAccessSchemaBelumTerpasang(error) {
     const code = String(error?.code || "").toUpperCase();
     const message = String(error?.message || error?.details || error?.hint || "").toLowerCase();
@@ -1215,6 +1244,8 @@
     ambilReminderRecipients,
     syncReminderRecipients,
     claimDueReminders,
+    tandaiReminderSelesai,
+    bukaUlangReminder,
     resolveFolder,
     buatFolder,
     ambilFolderCatalog,
@@ -1265,6 +1296,7 @@
     tagSchemaBelumTerpasang,
     checklistSchemaBelumTerpasang,
     reminderSchemaBelumTerpasang,
+    reminderResolutionSchemaBelumTerpasang,
     linkAccessSchemaBelumTerpasang,
     schemaBelumTerpasang
   };

@@ -7,3 +7,24 @@
 .catatan-reminder-preview.is-warning ion-icon,.catatan-reminder-preview.is-warning strong{color:#f4b83f}
 .catatan-reminder-actions .is-primary:disabled{opacity:.45;cursor:not-allowed;filter:saturate(.55)}
 @media (prefers-color-scheme:light){.catatan-reminder-preview strong{color:#172019}.catatan-reminder-preview small{color:#647069}}
+
+/* RuangKitha v2.0.0a51 — Reminder resolution foundation */
+.catatan-reminder-resolution{display:grid;gap:11px;padding:13px 14px;border-radius:17px;border:1px solid rgba(80,130,101,.16);background:rgba(80,130,101,.055)}
+.catatan-reminder-resolution[hidden]{display:none!important}
+.catatan-reminder-resolution-status{display:flex;align-items:flex-start;gap:10px}
+.catatan-reminder-resolution-icon{width:31px;height:31px;flex:0 0 31px;border-radius:10px;display:grid;place-items:center;background:rgba(80,130,101,.11);color:#4f8064}
+.catatan-reminder-resolution-icon ion-icon{font-size:18px}
+.catatan-reminder-resolution-status>div{min-width:0;display:grid;gap:3px}
+.catatan-reminder-resolution-status strong{font-size:11px;line-height:1.35;color:var(--text-primary,var(--warna-teks,#292e2b))}
+.catatan-reminder-resolution-status p{margin:0;font-size:9.2px;line-height:1.5;color:var(--text-secondary,var(--warna-teks-sekunder,#747b77))}
+.catatan-reminder-resolution-actions{display:grid;grid-template-columns:1fr 1fr;gap:7px}
+.catatan-reminder-resolution-actions button{min-height:38px;border-radius:12px;font:inherit;font-size:9.5px;font-weight:750;cursor:pointer}
+.catatan-reminder-resolution-actions .is-complete{border:1px solid rgba(80,130,101,.18);background:rgba(80,130,101,.10);color:#4f8064}
+.catatan-reminder-resolution-actions .is-reschedule{border:1px solid rgba(111,124,116,.15);background:rgba(111,124,116,.07);color:var(--text-primary,var(--warna-teks,#292e2b))}
+.catatan-reminder-resolution-actions button:disabled{opacity:.46;cursor:not-allowed}
+.catatan-reminder-resolution.is-overdue{border-color:rgba(221,155,56,.22);background:rgba(221,155,56,.075)}
+.catatan-reminder-resolution.is-overdue .catatan-reminder-resolution-icon{background:rgba(221,155,56,.13);color:#a06b1c}
+.catatan-reminder-resolution.is-completed{border-color:rgba(80,130,101,.16);background:rgba(80,130,101,.045)}
+.catatan-reminder-resolution.is-completed .catatan-reminder-resolution-icon{background:rgba(80,130,101,.12);color:#4f8064}
+html[data-theme="dark"] .catatan-reminder-resolution{border-color:rgba(223,232,226,.09);background:rgba(255,255,255,.025)}
+@media(max-width:390px){.catatan-reminder-resolution-actions{grid-template-columns:1fr}}

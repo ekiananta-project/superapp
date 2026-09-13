@@ -32,7 +32,7 @@
   <link rel="stylesheet" href="css/pages/catatan-editor.css?v=20260911-v200a43">
   <style id="ruangkitha-auth-cloak">html[data-auth-guard] body{visibility:hidden!important}</style>
   <link rel="stylesheet" href="css/pages/catatan-management.css?v=20260911-v200a43">
-  <link rel="stylesheet" href="css/pages/catatan-reminder-guard.css?v=20260912-v200a47">
+  <link rel="stylesheet" href="css/pages/catatan-reminder-guard.css?v=20260913-v200a51">
 </head>
 <body>
 <div class="aplikasi catatan-editor" data-catatan-editor aria-busy="true">
@@ -83,6 +83,20 @@
         </span>
         <ion-icon class="catatan-reminder-editor-chevron" name="chevron-forward-outline" aria-hidden="true"></ion-icon>
       </button>
+
+      <section class="catatan-reminder-resolution" data-reminder-resolution hidden aria-live="polite">
+        <div class="catatan-reminder-resolution-status">
+          <span class="catatan-reminder-resolution-icon"><ion-icon data-reminder-resolution-icon name="checkmark-circle-outline" aria-hidden="true"></ion-icon></span>
+          <div>
+            <strong data-reminder-resolution-title>Reminder aktif</strong>
+            <p data-reminder-resolution-copy>Kalau sudah ditindak, tandai selesai tanpa perlu mengarsipkan catatan.</p>
+          </div>
+        </div>
+        <div class="catatan-reminder-resolution-actions">
+          <button class="is-complete" type="button" data-reminder-complete>Tandai selesai</button>
+          <button class="is-reschedule" type="button" data-reminder-reschedule>Jadwalkan ulang</button>
+        </div>
+      </section>
 
       <div class="catatan-reminder-editor-split">
         <button class="catatan-reminder-editor-card is-family is-locked" type="button" data-reminder-family-card>
@@ -465,12 +479,12 @@
 <script src="js/backend/auth-router.js?v=20260912-v200a49d"></script>
 <script src="js/backend/auth-guard.js?v=20260912-v200a49d"></script>
 <script type="module" src="https://unpkg.com/@dotlottie/player-component@2.7.12/dist/dotlottie-player.mjs"></script>
-<script src="js/backend/notes-service.js?v=20260911-v200a43"></script>
+<script src="js/backend/notes-service.js?v=20260913-v200a51"></script>
 <script src="js/pages/catatan-management.js?v=20260911-v200a43"></script>
 <script src="js/pages/catatan-performance.js?v=20260911-v200a43"></script>
 <script src="js/pages/catatan-related.js?v=20260911-v200a43"></script>
 <script src="js/backend/notification-service.js?v=20260911-v200a46e"></script>
-<script src="js/pages/catatan-editor.js?v=20260912-v200a47"></script>
+<script src="js/pages/catatan-editor.js?v=20260913-v200a51"></script>
 <script src="js/pages/catatan-reminder-runtime.js?v=20260911-v200a46d"></script>
 <script src="js/pwa.js?v=20260912-v200a49d"></script>
 </body>
