@@ -55,7 +55,7 @@
       if (health.state === "blocked") {
         setBanner({
           title: "Notifikasi diblokir di perangkat ini",
-          body: "Agenda tetap aman di Kalender dan Hari Ini, tetapi RuangKitha belum bisa mengingatkan dari luar aplikasi.",
+          body: "Agenda tetap aman di Kalender dan Agenda Dekat, tetapi RuangKitha belum bisa mengingatkan dari luar aplikasi.",
           icon: "notifications-off-outline",
           action: "Periksa"
         });
@@ -69,21 +69,21 @@
       } else if (health.state === "repair") {
         setBanner({
           title: "Notifikasi perlu diaktifkan ulang",
-          body: "Perangkat ini sudah punya izin, tetapi jalur push tidak lagi aktif. Kalender dan Hari Ini tetap aman.",
+          body: "Perangkat ini sudah punya izin, tetapi jalur push tidak lagi aktif. Kalender dan Agenda Dekat tetap aman.",
           icon: "refresh-circle-outline",
           action: "Perbaiki"
         });
       } else if (health.state === "unsupported") {
         setBanner({
           title: "Pengingat perangkat belum tersedia",
-          body: "Browser/perangkat ini belum bisa menerima Web Push. Gunakan Kalender dan Hari Ini sebagai pengingat utama.",
+          body: "Browser/perangkat ini belum bisa menerima Web Push. Gunakan Kalender dan Agenda Dekat sebagai pengingat utama.",
           icon: "alert-circle-outline",
           action: "Detail"
         });
       } else {
         setBanner({
           title: "Aktifkan pengingat perangkat",
-          body: "Agenda tetap tersimpan di Kalender dan Hari Ini. Aktifkan notifikasi agar RuangKitha juga bisa mengingatkan dari luar aplikasi.",
+          body: "Agenda tetap tersimpan di Kalender dan Agenda Dekat. Aktifkan notifikasi agar RuangKitha juga bisa mengingatkan dari luar aplikasi.",
           icon: "notifications-outline",
           action: "Aktifkan"
         });

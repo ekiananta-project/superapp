@@ -1089,3 +1089,128 @@ html[data-theme="dark"] .notes-paper {
   -webkit-box-orient: vertical;
   -webkit-line-clamp: 2;
 }
+
+/* ==================================================================
+   v2.0.0a51a — Agenda Dekat V1
+   H-3..H+3 with source-owned resolution state. Archive is not done.
+   ================================================================== */
+.near-agenda-past,
+.near-agenda-day {
+  min-width: 0;
+}
+
+.near-agenda-past {
+  margin-bottom: 12px;
+  border: 1px solid color-mix(in srgb, var(--rk-warning) 24%, var(--rk-border));
+  border-radius: 15px;
+  background: color-mix(in srgb, var(--rk-warning-soft) 56%, var(--rk-surface));
+  overflow: hidden;
+}
+.near-agenda-past-trigger {
+  appearance: none;
+  width: 100%;
+  display: grid;
+  grid-template-columns: 34px minmax(0, 1fr) 18px;
+  align-items: center;
+  gap: 9px;
+  padding: 10px;
+  border: 0;
+  background: transparent;
+  color: var(--rk-text);
+  text-align: left;
+  font: inherit;
+  cursor: pointer;
+}
+.near-agenda-past-icon {
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 11px;
+  background: var(--rk-warning-soft);
+  color: var(--rk-warning);
+  font-size: 18px;
+}
+.near-agenda-past-copy { min-width: 0; }
+.near-agenda-past-copy strong,
+.near-agenda-past-copy small { display: block; }
+.near-agenda-past-copy strong { font-size: 11.5px; line-height: 1.35; }
+.near-agenda-past-copy small { margin-top: 2px; color: var(--rk-text-secondary); font-size: 9px; line-height: 1.4; }
+.near-agenda-past-chevron { color: var(--rk-text-secondary); font-size: 16px; }
+.near-agenda-past-panel {
+  display: grid;
+  gap: 7px;
+  padding: 0 9px 9px;
+}
+.near-agenda-past-panel[hidden] { display: none; }
+.near-agenda-past-date {
+  padding: 3px 2px 0;
+  color: var(--rk-text-secondary);
+  font-size: 8.5px;
+  font-weight: 800;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+}
+.today-agenda-card.is-past-due {
+  border-color: color-mix(in srgb, var(--rk-warning) 22%, var(--rk-border));
+  background: color-mix(in srgb, var(--rk-surface) 88%, var(--rk-warning-soft));
+}
+.today-agenda-card.is-past-due .today-agenda-copy strong { color: var(--rk-text); }
+
+.near-agenda-day + .near-agenda-day { margin-top: 14px; }
+.near-agenda-day-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin: 0 2px 7px;
+}
+.near-agenda-day-head strong {
+  color: var(--rk-text-secondary);
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: .08em;
+}
+.near-agenda-day-head span {
+  color: var(--rk-text-secondary);
+  font-size: 8.5px;
+  font-weight: 700;
+}
+.near-agenda-day.is-today .near-agenda-day-head strong {
+  color: var(--rk-primary);
+  font-size: 10px;
+}
+.near-agenda-day-list { display: grid; gap: 7px; }
+.near-agenda-day-empty,
+.near-agenda-future-calm {
+  margin: 0;
+  padding: 8px 4px;
+  color: var(--rk-text-secondary);
+  font-size: 9.5px;
+  line-height: 1.45;
+}
+.near-agenda-future-calm {
+  margin-top: 8px;
+  border-top: 1px solid var(--rk-border);
+}
+.near-agenda-all-clear {
+  display: grid;
+  gap: 3px;
+  max-width: 260px;
+}
+.near-agenda-all-clear strong {
+  color: var(--rk-text);
+  font-size: 12px;
+}
+.near-agenda-all-clear small {
+  color: var(--rk-text-secondary);
+  font-size: 9.5px;
+  line-height: 1.5;
+}
+
+html[data-theme="dark"] .near-agenda-past {
+  background: color-mix(in srgb, var(--rk-warning-soft) 34%, var(--rk-surface));
+}
+html[data-theme="dark"] .today-agenda-card.is-past-due {
+  background: color-mix(in srgb, var(--rk-warning-soft) 18%, var(--rk-surface));
+}

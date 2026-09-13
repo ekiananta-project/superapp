@@ -141,7 +141,7 @@
       addMeta(health.verified ? "Terverifikasi" : "Perlu tes", health.verified ? "success" : "warning");
       if (title) title.textContent = health.verified ? "Siap mengingatkan" : "Aktif di perangkat ini";
       if (body) body.textContent = health.verified
-        ? "Push sudah diuji dan terlihat di perangkat ini. Kalender dan Hari Ini tetap menjadi sumber pengingat utama."
+        ? "Push sudah diuji dan terlihat di perangkat ini. Kalender dan Agenda Dekat tetap menjadi sumber pengingat utama."
         : "Izin dan subscription sudah aktif. Kirim tes singkat untuk memastikan banner benar-benar terlihat.";
       test.hidden = false;
       disable.hidden = false;
@@ -152,7 +152,7 @@
       icon?.setAttribute("name", "notifications-off-outline");
       addMeta("Izin diblokir", "danger");
       if (title) title.textContent = "Notifikasi diblokir";
-      if (body) body.textContent = "Ubah izin notifikasi pada browser atau sistem, lalu kembali ke halaman ini. Reminder tetap tersimpan di Kalender dan Hari Ini.";
+      if (body) body.textContent = "Ubah izin notifikasi pada browser atau sistem, lalu kembali ke halaman ini. Reminder tetap tersimpan di Kalender dan Agenda Dekat.";
       help.hidden = false;
       return;
     }
@@ -180,7 +180,7 @@
       icon?.setAttribute("name", "alert-circle-outline");
       addMeta("Tidak didukung", "danger");
       if (title) title.textContent = "Web Push belum tersedia";
-      if (body) body.textContent = "Perangkat atau browser ini belum mendukung jalur push RuangKitha. Reminder tetap aman di Kalender dan Hari Ini.";
+      if (body) body.textContent = "Perangkat atau browser ini belum mendukung jalur push RuangKitha. Reminder tetap aman di Kalender dan Agenda Dekat.";
       help.hidden = false;
       return;
     }
@@ -359,7 +359,7 @@
       setStatus("Menonaktifkan perangkat ini…");
       try {
         await window.RuangKithaNotifications.deactivate();
-        setStatus("Push dinonaktifkan pada perangkat ini. Reminder tetap tersimpan di Kalender dan Hari Ini.", "success");
+        setStatus("Push dinonaktifkan pada perangkat ini. Reminder tetap tersimpan di Kalender dan Agenda Dekat.", "success");
         await refreshHealth();
       } catch (error) {
         setStatus(error?.message || "Perangkat belum dapat dinonaktifkan.", "error");

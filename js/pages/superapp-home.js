@@ -1,4 +1,4 @@
-// RuangKitha v2.0.0a50f — Documents Home Insight + Summary Polish V1.
+// RuangKitha v2.0.0a51a — Agenda Dekat V1 + a50f Home Insight baseline.
 (() => {
   "use strict";
 
@@ -6,7 +6,7 @@
   const AVATAR_BUCKET = "profile-avatars";
   const PAGE_SIZE = 1000;
   const MAX_ROWS = 20000;
-  let reminderSummary = [];
+  let reminderSummary = null;
   let activeFamilyId = "";
   let toastTimer = null;
 
@@ -237,10 +237,20 @@
     return [time, item?.subtitle, source].filter(Boolean).join(" · ");
   }
 
-  async function loadTodayEvents(familyId) {
-    const today = todayISO();
-    const items = await window.RuangKithaCalendarEvents.loadRange({ familyId, start: today, end: today });
-    return (items || []).filter(item => item.status !== "paid");
+  function nearAgendaRange(now = new Date()) {
+    const today = todayISO(now);
+    const agenda = window.RuangKithaNearAgenda;
+    return {
+      start: agenda?.addDays ? agenda.addDays(today, -3) : today,
+      end: agenda?.addDays ? agenda.addDays(today, 3) : today
+    };
+  }
+
+  async function loadNearAgenda(familyId) {
+    if (!window.RuangKithaNearAgenda?.project) throw new Error("Agenda Dekat belum tersedia.");
+    const range = nearAgendaRange();
+    const items = await window.RuangKithaCalendarEvents.loadRange({ familyId, start: range.start, end: range.end });
+    return window.RuangKithaNearAgenda.project(items || [], new Date());
   }
 
   function calendarGridRange(date = new Date()) {
@@ -267,59 +277,200 @@
     else setTimeout(run, 700);
   }
 
-  function renderReminders(items) {
-    reminderSummary = items || [];
-    q(".today-card")?.classList.toggle("is-empty", reminderSummary.length === 0);
+  function shortDateLabel(dateString, offset = null) {
+    if (offset === 0) return "Hari ini";
+    if (offset === 1) return "Besok";
+    const date = new Date(`${dateString}T12:00:00`);
+    if (Number.isNaN(date.getTime())) return dateString;
+    const weekday = new Intl.DateTimeFormat("id-ID", { weekday: "long" }).format(date);
+    const dayMonth = new Intl.DateTimeFormat("id-ID", { day: "numeric", month: "short" }).format(date);
+    return `${weekday} · ${dayMonth}`;
+  }
+
+  function pastDateLabel(dateString, todayString) {
+    const days = Math.max(1, window.RuangKithaNearAgenda?.dayDelta?.(dateString, todayString) || 1);
+    if (days === 1) return "Kemarin";
+    return `${days} hari lalu`;
+  }
+
+  function buildAgendaRow(item, { past = false, today = todayISO() } = {}) {
+    const row = document.createElement(item.href ? "button" : "div");
+    if (item.href) row.type = "button";
+    row.className = `today-item today-agenda-card is-${item.tone || item.module || "calendar"}${past ? " is-past-due" : ""}`;
+
+    const icon = document.createElement("span");
+    icon.className = "today-item-icon";
+    const ion = document.createElement("ion-icon");
+    ion.setAttribute("name", iconForEvent(item));
+    ion.setAttribute("aria-hidden", "true");
+    icon.appendChild(ion);
+
+    const copy = document.createElement("span");
+    copy.className = "today-agenda-copy";
+    const title = document.createElement("strong");
+    title.textContent = item.title;
+    const meta = document.createElement("small");
+    const baseMeta = eventMeta(item) || "Agenda RuangKitha";
+    meta.textContent = past ? `${pastDateLabel(item.date, today)} · ${baseMeta}` : baseMeta;
+    copy.append(title, meta);
+    row.append(icon, copy);
+
+    const chevron = document.createElement("ion-icon");
+    chevron.className = "today-agenda-chevron";
+    chevron.setAttribute("name", item.href ? "chevron-forward-outline" : "ellipse-outline");
+    chevron.setAttribute("aria-hidden", "true");
+    row.appendChild(chevron);
+    if (item.href) row.addEventListener("click", () => window.RuangKithaCalendarEvents.open(item));
+    return row;
+  }
+
+  function appendDayGroup(root, { label, items, date, today = false, forceEmpty = false } = {}) {
+    if (!items?.length && !forceEmpty) return;
+    const section = document.createElement("section");
+    section.className = `near-agenda-day${today ? " is-today" : ""}`;
+
+    const head = document.createElement("div");
+    head.className = "near-agenda-day-head";
+    const title = document.createElement("strong");
+    title.textContent = label;
+    const count = document.createElement("span");
+    count.textContent = items?.length ? `${items.length} agenda` : "Tenang";
+    head.append(title, count);
+    section.appendChild(head);
+
+    if (!items?.length) {
+      const empty = document.createElement("p");
+      empty.className = "near-agenda-day-empty";
+      empty.textContent = today ? "Tidak ada agenda yang perlu ditindak hari ini." : "Tidak ada agenda.";
+      section.appendChild(empty);
+      root.appendChild(section);
+      return;
+    }
+
+    const list = document.createElement("div");
+    list.className = "near-agenda-day-list";
+    items.slice(0, 3).forEach(item => list.appendChild(buildAgendaRow(item)));
+    section.appendChild(list);
+
+    if (items.length > 3) {
+      const more = document.createElement("button");
+      more.type = "button";
+      more.className = "today-more-agenda";
+      more.innerHTML = `<span>+${items.length - 3} agenda lainnya</span><ion-icon name="chevron-forward-outline" aria-hidden="true"></ion-icon>`;
+      more.addEventListener("click", () => { location.href = `kalender.html?date=${encodeURIComponent(date)}`; });
+      section.appendChild(more);
+    }
+    root.appendChild(section);
+  }
+
+  function appendPastReview(root, projection) {
+    const items = projection?.pastReview || [];
+    if (!items.length) return;
+
+    const wrap = document.createElement("section");
+    wrap.className = "near-agenda-past";
+
+    const trigger = document.createElement("button");
+    trigger.type = "button";
+    trigger.className = "near-agenda-past-trigger";
+    trigger.setAttribute("aria-expanded", "false");
+
+    const warning = document.createElement("span");
+    warning.className = "near-agenda-past-icon";
+    warning.innerHTML = '<ion-icon name="alert-circle-outline" aria-hidden="true"></ion-icon>';
+    const copy = document.createElement("span");
+    copy.className = "near-agenda-past-copy";
+    const title = document.createElement("strong");
+    title.textContent = `${items.length} hal perlu ditinjau`;
+    const helper = document.createElement("small");
+    helper.textContent = "Dari 3 hari terakhir · hanya yang masih aktif";
+    copy.append(title, helper);
+    const chevron = document.createElement("ion-icon");
+    chevron.className = "near-agenda-past-chevron";
+    chevron.setAttribute("name", "chevron-down-outline");
+    chevron.setAttribute("aria-hidden", "true");
+    trigger.append(warning, copy, chevron);
+
+    const panel = document.createElement("div");
+    panel.className = "near-agenda-past-panel";
+    panel.hidden = true;
+    const groups = window.RuangKithaNearAgenda?.groupPastByDate?.(items) || [];
+    groups.forEach(group => {
+      const label = document.createElement("div");
+      label.className = "near-agenda-past-date";
+      label.textContent = pastDateLabel(group.date, projection.today);
+      panel.appendChild(label);
+      group.items.forEach(item => panel.appendChild(buildAgendaRow(item, { past: true, today: projection.today })));
+    });
+
+    trigger.addEventListener("click", () => {
+      const open = trigger.getAttribute("aria-expanded") !== "true";
+      trigger.setAttribute("aria-expanded", String(open));
+      panel.hidden = !open;
+      chevron.setAttribute("name", open ? "chevron-up-outline" : "chevron-down-outline");
+    });
+
+    wrap.append(trigger, panel);
+    root.appendChild(wrap);
+  }
+
+  function renderReminders(projection) {
+    reminderSummary = projection || { pastReview: [], todayItems: [], upcoming: [], activeCount: 0, today: todayISO() };
+    const past = reminderSummary.pastReview || [];
+    const todayItems = reminderSummary.todayItems || [];
+    const upcoming = reminderSummary.upcoming || [];
+    const upcomingCount = upcoming.reduce((sum, group) => sum + (group.items?.length || 0), 0);
+    const activeCount = past.length + todayItems.length + upcomingCount;
+
+    q(".today-card")?.classList.toggle("is-empty", activeCount === 0);
     const root = q("[data-reminder-list]");
     if (!root) return;
     root.replaceChildren();
 
     const caption = q("[data-today-caption]");
-    if (!reminderSummary.length) {
-      const empty = document.createElement("p");
-      empty.className = "today-empty";
-      empty.textContent = "Belum ada agenda penting dari modul yang aktif.";
+    if (caption) {
+      if (!activeCount) caption.textContent = "3 hari terakhir · hari ini · 3 hari ke depan";
+      else if (past.length) caption.textContent = `${past.length} perlu ditinjau · ${todayItems.length} agenda hari ini`;
+      else caption.textContent = `${todayItems.length} agenda hari ini · ${upcomingCount} akan datang`;
+    }
+
+    if (!activeCount) {
+      const empty = document.createElement("div");
+      empty.className = "near-agenda-all-clear";
+      const strong = document.createElement("strong");
+      strong.textContent = "Agenda dekat masih tenang";
+      const small = document.createElement("small");
+      small.textContent = "Tidak ada hal aktif dari 3 hari terakhir sampai 3 hari ke depan.";
+      empty.append(strong, small);
       root.appendChild(empty);
-      if (caption) caption.textContent = "Semua aman untuk saat ini";
       return;
     }
 
-    if (caption) caption.textContent = `${reminderSummary.length} agenda hari ini`;
-    reminderSummary.slice(0, 3).forEach(item => {
-      const row = document.createElement(item.href ? "button" : "div");
-      if (item.href) row.type = "button";
-      row.className = `today-item today-agenda-card is-${item.tone || item.module || "calendar"}`;
-
-      const icon = document.createElement("span");
-      icon.className = "today-item-icon";
-      const ion = document.createElement("ion-icon");
-      ion.setAttribute("name", iconForEvent(item));
-      icon.appendChild(ion);
-
-      const copy = document.createElement("span");
-      copy.className = "today-agenda-copy";
-      const title = document.createElement("strong");
-      title.textContent = item.title;
-      const meta = document.createElement("small");
-      meta.textContent = eventMeta(item) || "Agenda RuangKitha";
-      copy.append(title, meta);
-      row.append(icon, copy);
-
-      const chevron = document.createElement("ion-icon");
-      chevron.className = "today-agenda-chevron";
-      chevron.setAttribute("name", item.href ? "chevron-forward-outline" : "ellipse-outline");
-      row.appendChild(chevron);
-      if (item.href) row.addEventListener("click", () => window.RuangKithaCalendarEvents.open(item));
-      root.appendChild(row);
+    appendPastReview(root, reminderSummary);
+    appendDayGroup(root, {
+      label: "HARI INI",
+      items: todayItems,
+      date: reminderSummary.today,
+      today: true,
+      forceEmpty: true
     });
 
-    if (reminderSummary.length > 3) {
-      const more = document.createElement("button");
-      more.type = "button";
-      more.className = "today-more-agenda";
-      more.innerHTML = `<span>+${reminderSummary.length - 3} agenda lainnya</span><ion-icon name="chevron-forward-outline" aria-hidden="true"></ion-icon>`;
-      more.addEventListener("click", () => { location.href = `kalender.html?date=${encodeURIComponent(todayISO())}`; });
-      root.appendChild(more);
+    let futureRendered = 0;
+    upcoming.forEach(group => {
+      if (!group.items?.length) return;
+      futureRendered += group.items.length;
+      appendDayGroup(root, {
+        label: String(shortDateLabel(group.date, group.offset)).toUpperCase(),
+        items: group.items,
+        date: group.date
+      });
+    });
+
+    if (!futureRendered) {
+      const calm = document.createElement("p");
+      calm.className = "near-agenda-future-calm";
+      calm.textContent = "3 hari ke depan masih tenang.";
+      root.appendChild(calm);
     }
   }
 
@@ -370,7 +521,7 @@
       activeFamilyId = family.id;
       const [cashflowResult, reminderResult, documentsResult] = await Promise.allSettled([
         loadCashflow(family.id),
-        loadTodayEvents(family.id),
+        loadNearAgenda(family.id),
         loadDocumentAttention(family.id)
       ]);
 
@@ -408,7 +559,7 @@
   async function refreshTodayFromExternalChange() {
     if (!activeFamilyId || document.hidden) return;
     const [todayResult, documentsResult] = await Promise.allSettled([
-      loadTodayEvents(activeFamilyId),
+      loadNearAgenda(activeFamilyId),
       loadDocumentAttention(activeFamilyId)
     ]);
     if (todayResult.status === "fulfilled") renderReminders(todayResult.value);
