@@ -1,8 +1,8 @@
-/* RuangKitha v2.0.0a50c — Documents Lifecycle & Management Service V1 */
+/* RuangKitha v2.0.0a50e — Documents Service + Reminder Integration V1 */
 (function initRuangKithaDocumentsService(root) {
   "use strict";
 
-  const BUILD = "v2.0.0a50c";
+  const BUILD = "v2.0.0a50e";
   const RECORD_BUILD = "v2.0.0a50a";
   const BUCKET = "ruangkitha-documents-v1";
   const LEGACY_BUILD = "v2.0.0a50";
@@ -63,6 +63,19 @@
     return root.crypto.randomUUID();
   }
 
+  function notifyCatalogChanged() {
+    try { root.RuangKithaDocumentReminders?.signalChanged?.(); } catch {}
+    try {
+      const task = root.RuangKithaDocumentReminders?.syncNotifications?.(24 * 30);
+      if (task && typeof task.catch === "function") {
+        task.catch(error => console.debug?.("[Documents reminder sync]", error));
+      }
+    } catch (error) {
+      console.debug?.("[Documents reminder sync]", error);
+    }
+  }
+
+
   // ---------------------------------------------------------------------------
   // Catalog / reminder layer — intentionally does not require Vault unlock.
   // ---------------------------------------------------------------------------
@@ -83,7 +96,7 @@
     if (!name) throw new Error("Nama dokumen wajib diisi.");
     if (!type) throw new Error("Jenis dokumen wajib diisi.");
     if (normalizedScope === "family" && !familyId) throw new Error("Keluarga aktif diperlukan.");
-    return rpc(client, "document_records_create_v1", {
+    const result = await rpc(client, "document_records_create_v1", {
       p_document_id: documentId || newUuid("Document ID"),
       p_family_id: normalizedScope === "family" ? familyId : null,
       p_scope: normalizedScope,
@@ -92,6 +105,8 @@
       p_expires_on: expiry,
       p_reminder_days: normalizeReminder(reminderDays, expiry)
     });
+    notifyCatalogChanged();
+    return result;
   }
 
   async function listRecords({ familyId = null, view = "personal" } = {}) {
@@ -133,7 +148,7 @@
     const expiry = normalizeDate(expiresOn);
     if (!name) throw new Error("Nama dokumen wajib diisi.");
     if (!type) throw new Error("Jenis dokumen wajib diisi.");
-    return rpc(client, "document_records_update_v1", {
+    const result = await rpc(client, "document_records_update_v1", {
       p_document_id: documentId,
       p_family_id: normalizedScope === "family" ? familyId : null,
       p_scope: normalizedScope,
@@ -142,11 +157,15 @@
       p_expires_on: expiry,
       p_reminder_days: normalizeReminder(reminderDays, expiry)
     });
+    notifyCatalogChanged();
+    return result;
   }
 
   async function archiveRecord(documentId) {
     const client = clientOnly();
-    return rpc(client, "document_records_archive_v1", { p_document_id: documentId });
+    const result = await rpc(client, "document_records_archive_v1", { p_document_id: documentId });
+    notifyCatalogChanged();
+    return result;
   }
 
   async function listArchivedRecords({ familyId = null } = {}) {
@@ -159,16 +178,20 @@
 
   async function restoreRecord(documentId, { familyId = null } = {}) {
     const client = clientOnly();
-    return rpc(client, "document_records_restore_v1", {
+    const result = await rpc(client, "document_records_restore_v1", {
       p_document_id: documentId,
       p_family_id: familyId || null
     });
+    notifyCatalogChanged();
+    return result;
   }
 
   async function deleteArchivedRecord(documentId, { hasAttachments = false } = {}) {
     if (!hasAttachments) {
       const client = clientOnly();
-      return rpc(client, "document_records_delete_empty_v1", { p_document_id: documentId });
+      const result = await rpc(client, "document_records_delete_empty_v1", { p_document_id: documentId });
+      notifyCatalogChanged();
+      return result;
     }
 
     const { client, status } = await secureContext({ requireUnlocked: true });
@@ -190,10 +213,12 @@
       const { error } = await client.storage.from(bucket).remove(paths);
       if (error) throw new Error(error.message || "Ciphertext lampiran gagal dihapus.");
     }
-    return rpc(client, "document_records_delete_finalize_v1", {
+    const result = await rpc(client, "document_records_delete_finalize_v1", {
       p_document_id: documentId,
       p_device_client_id: status.deviceInstanceId
     });
+    notifyCatalogChanged();
+    return result;
   }
 
   // ---------------------------------------------------------------------------
